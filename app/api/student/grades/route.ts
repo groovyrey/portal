@@ -79,10 +79,10 @@ export async function POST(req: NextRequest) {
     let $rc = cheerio.load(res.data);
 
     // 4. Handle Confirmation/Disclaimer Page
-    if (res.data.includes('ocbAcknowledgement') || res.data.includes('Confirm') || res.data.includes('Disclaimer')) {
+    if (res.data.includes('ocbAcknowledgement') || res.data.includes('Confirm') || res.data.includes('Disclaimer') || res.data.includes('obtnAcknowledgeAndProceed')) {
         debugLog += `Step 4: Handling acknowledgement/confirmation page\n`;
         const confirmData: any = {};
-        $rc('input[type="hidden"]').each((_, el) => {
+        $rc('input[type="hidden"], input[type="text"], input[type="password"]').each((_, el) => {
             const name = $rc(el).attr('name');
             if (name) confirmData[name] = $rc(el).val() || '';
         });
@@ -90,18 +90,23 @@ export async function POST(req: NextRequest) {
         // Check the acknowledgement checkbox if it exists
         if (res.data.includes('ocbAcknowledgement')) {
             confirmData['ocbAcknowledgement'] = 'on';
+            debugLog += `  Found and checked ocbAcknowledgement checkbox.\n`;
         }
 
         // Auto-click the acknowledgement button or the first submit button
         const ackBtn = $rc('input[name="obtnAcknowledgeAndProceed"]');
         if (ackBtn.length > 0) {
             confirmData['obtnAcknowledgeAndProceed'] = ackBtn.val() || 'Acknowledge and Proceed';
+            debugLog += `  Found obtnAcknowledgeAndProceed button.\n`;
         } else {
             const firstBtn = $rc('input[type="submit"]').first();
             if (firstBtn.length > 0) {
                 confirmData[firstBtn.attr('name')!] = firstBtn.val() || '';
+                debugLog += `  Using fallback submit button: ${firstBtn.attr('name')}\n`;
             }
         }
+
+        debugLog += `  Submitting acknowledgement with ${Object.keys(confirmData).length} fields.\n`;
 
         res = await client.post(reportCardUrl, qs.stringify(confirmData), {
             headers: { 
@@ -110,46 +115,62 @@ export async function POST(req: NextRequest) {
             }
         });
         $rc = cheerio.load(res.data);
+
+        // Check if we are STILL on the acknowledgement page
+        if (res.data.includes('ocbAcknowledgement') || res.data.includes('obtnAcknowledgeAndProceed')) {
+            debugLog += `  WARNING: Still on acknowledgement page after submission. Redirection failed.\n`;
+        } else {
+            debugLog += `  Successfully moved past acknowledgement page. New Title: ${$rc('title').text()}\n`;
+        }
     }
     
     // 5. Scrape the Grades Table
     const subjects: any[] = [];
-    // The grades are typically in a table inside #divMiddleTable or just a generic table
-    $rc('table tr').each((_, row) => {
-      const cells = $rc(row).find('td');
-      // We look for rows that have subject-like data
-      // Typical row: Code | Description | Prelim | Midterm | Final | ... | Grade | Remarks
-      if (cells.length >= 4) {
-        const text = $rc(row).text().toLowerCase();
-        // Skip header rows
-        if (text.includes('course') || text.includes('subject') || text.includes('description') || text.includes('units')) return;
+    debugLog += `Scraping tables... Found ${$rc('table').length} tables.\n`;
+    
+    $rc('table').each((tIdx, table) => {
+      const rows = $rc(table).find('tr');
+      debugLog += `Table ${tIdx}: ${rows.length} rows\n`;
+      
+      rows.each((rIdx, row) => {
+        const cells = $rc(row).find('td');
+        if (cells.length >= 3) {
+          const code = $rc(cells[0]).text().trim();
+          const desc = $rc(cells[1]).text().trim();
+          
+          // Log first few rows of each table for debugging
+          if (rIdx < 3) {
+            debugLog += `  Row ${rIdx}: ${cells.length} cells. [${code}] [${desc.substring(0, 20)}...]\n`;
+          }
 
-        const code = $rc(cells[0]).text().trim();
-        const desc = $rc(cells[1]).text().trim();
-        
-        // The grade is usually one of the last few columns
-        // We'll try to find a column that looks like a numeric grade or has a final grade label
-        let grade = "";
-        let remarks = "";
+          const text = $rc(row).text().toLowerCase();
+          if (text.includes('course') || text.includes('subject') || text.includes('description') || text.includes('units')) return;
 
-        if (cells.length > 5) {
-            // Usually: Code, Desc, Units, Prelim, Midterm, Final, Grade, Remarks
-            // Let's take the second to last for grade and last for remarks if it's a long table
-            grade = $rc(cells[cells.length - 2]).text().trim();
-            remarks = $rc(cells[cells.length - 1]).text().trim();
-        } else {
-            grade = $rc(cells[2]).text().trim();
-            remarks = $rc(cells[3]).text().trim();
+          let grade = "";
+          let remarks = "";
+
+          // Flexible column detection
+          if (cells.length >= 7) {
+              // Code, Desc, Unit, Prelim, Midterm, Final, Grade, Remarks
+              grade = $rc(cells[cells.length - 2]).text().trim();
+              remarks = $rc(cells[cells.length - 1]).text().trim();
+          } else if (cells.length >= 5) {
+              // Code, Desc, Unit, Grade, Remarks
+              grade = $rc(cells[cells.length - 2]).text().trim();
+              remarks = $rc(cells[cells.length - 1]).text().trim();
+          } else if (cells.length >= 4) {
+              // Code, Desc, Grade, Remarks
+              grade = $rc(cells[2]).text().trim();
+              remarks = $rc(cells[3]).text().trim();
+          }
+
+          if (code.length >= 3 && desc.length > 0 && !code.includes('Total') && !code.includes('---')) {
+              if (grade || remarks || code.match(/[A-Z]{2,}/)) {
+                  subjects.push({ code, description: desc, grade, remarks });
+              }
+          }
         }
-
-        // Basic validation: subject code should exist and be reasonably long
-        if (code.length >= 3 && desc.length > 0 && !code.includes('Total')) {
-            // Only add if there's some grade or remark, or it looks like a subject row
-            if (grade || remarks || code.match(/[A-Z]{2,}/)) {
-                subjects.push({ code, description: desc, grade, remarks });
-            }
-        }
-      }
+      });
     });
 
     if (subjects.length === 0) {
