@@ -1,0 +1,131 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD html 4.0 Transitional//EN" >
+<HTML>
+	<HEAD>
+		<title>Login</title>
+		<link rel="stylesheet" type="text/css" href="../Styles/Main.css">
+			<link rel="stylesheet" type="text/css" href="../Styles/serp_main.css">
+				<link rel="stylesheet" type="text/css" href="../Styles/serp_header.css">
+					<link rel="stylesheet" type="text/css" href="../Styles/serp_menu.css">
+						<link rel="stylesheet" type="text/css" href="../Styles/serp_button.css">
+							<link rel="stylesheet" type="text/css" href="../Styles/serp_container.css">
+	</HEAD>
+	<style>
+		.login_text
+		{
+			color:white;
+			font-weight:bold;
+		}
+
+		.login_textbox
+		{
+			/*background-color:transparent;*/
+			border: solid 2px #011b4b;
+			color:#011b4b;
+			font-weight:bold;
+			width:150px;
+		}
+
+		.buttonLogin
+		{
+			background-color:#004F92;
+			border-width: 0px;
+			height:25px;
+			border-top: solid 2px #aaaaaa;	
+			border-bottom: solid 2px #aaaaaa;
+			padding: 0px 10px 0px 10px;
+			font-weight:bold;
+			font-size: 9pt;	
+			color: #ffffff;
+			cursor:hand;
+		}
+
+		.background_login
+		{
+			background-image: url("../Images/LCC.Background.jpg");
+		}
+
+	</style>
+
+	<body>
+		<form name="Login" method="post" action="./LCC.Login.aspx" id="Login">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUJLTkyODk1NjEyD2QWAgIBD2QWBAIFDw8WAh4JTWF4TGVuZ3RoAkBkZAIHDw8WAh8AAiBkZGQd8oVkiUWqE+cU40FoYSo/fiuZjToKVOKB+PpkLFxUTw==" />
+
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="6EDD46ED" />
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdAAQHG8imPGbPMy2MURRqTrm+uChXEYibEVghRB75ZH/Rv/OuKXHZd45bD9K2JjgfO3l/UEBGNlGURuXj7Jh+4ze6mARNpkNPr840wrtbif6evwhqkKUB/4qXZgdDafedyRg=" />
+			<table class="main_table">
+				<tr>
+					<td>
+						
+						<div id="left_head">
+						<div id="logo_head">
+						<div id="right_head">
+						<div id="header_menu">
+							<a href="../Index.aspx" class="menu_item_inactive">HOME</a><a href="../Gate/Login.aspx" class="menu_item_active">LOGIN</a><a href="../Applicant/LCC.Register.aspx" class="menu_item_active">APPLICANT REGISTRATION</a></div>
+						</div>
+						</div>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td align="center">
+						
+
+
+					</td>
+				</tr>
+				<tr>
+					<table  align="center" class="background_login" style="border-left: solid; border-right: solid; border-radius: 0px 0px 18px 18px; border-bottom: solid; border-top: solid; border-width: 1px;">
+						<tr>
+							<td>
+                                                            	<div style="top:0.5in; width:90%; left: 1in;" ><img src="../Images/LCC.ImageBackLogin.png" height="100px"></div>
+							</td>
+						</tr>
+				</tr>
+				<tr>
+					<td class="main_table_detail_content_loggedout">
+						<table class="container" id="otbMain" align="center">
+							<tr valign="top">
+                                                              <td>
+                                                              <table class="container" style="margin-top:0in;">
+								<td class="login_text">USER ID</td>
+								<td><input name="otbUserID" type="text" maxlength="64" id="otbUserID" class="login_textbox" /></td>
+							</tr>
+							<tr>
+								<td class="login_text">PASSWORD</td>
+								<td><input name="otbPassword" type="password" maxlength="32" id="otbPassword" class="login_textbox" /></td>
+							</tr>
+							<tr>
+								<td colspan="2" align="center">
+									<div>
+										<input type="submit" name="obtnLogin" value="LOGIN" id="obtnLogin" class="buttonLogin" />
+									</div>
+								</td>
+							</tr>
+                                                               </td>
+                                                                 </table>
+
+
+
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td align="right">
+						<div style="color:white; font-style: italic; font-family: Arial; font-size: 10px;">For technical concerns,  please email <b style="color: yellow; font-size:12px;">sis@laconcepcioncollege.com</b> </div>
+					</td>
+				</tr>
+				</table>
+				</tr>	
+				<tr>
+					<td>
+						<div id="footer">
+© 2022 <a class="links" href="http://www.ledgea.com">Ledgea Systems, Inc.</a> All rights reserved.</div>
+
+					</td>
+				</tr>
+
+			</table>
+		</form>
+	</body>
+</HTML>
