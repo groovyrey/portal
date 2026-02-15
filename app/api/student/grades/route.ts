@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
     const baseUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=Main&_nm=`;
     debugLog += `Step 1: Visiting ${baseUrl}\n`;
     const initRes = await client.get(baseUrl);
+    const finalInitUrl = initRes.request.res.responseUrl || baseUrl;
     const $init = cheerio.load(initRes.data);
     
     const formData: any = {};
@@ -41,10 +42,13 @@ export async function POST(req: NextRequest) {
 
     // 2. Perform Login
     debugLog += `Step 2: Performing POST login\n`;
-    const loginRes = await client.post('https://premium.schoolista.com/LCC/Student/LCC.Login.aspx', qs.stringify(formData), {
+    const loginAction = $init('#Login').attr('action') || './LCC.Login.aspx';
+    const loginUrl = new URL(loginAction, finalInitUrl).toString();
+
+    const loginRes = await client.post(loginUrl, qs.stringify(formData), {
       headers: { 
         'Content-Type': 'application/x-www-form-urlencoded', 
-        'Referer': baseUrl,
+        'Referer': finalInitUrl,
         'Origin': 'https://premium.schoolista.com'
       }
     });
@@ -60,8 +64,18 @@ export async function POST(req: NextRequest) {
     debugLog += `Step 3: Visiting Report Card: ${reportCardUrl}\n`;
     
     let res = await client.get(reportCardUrl, {
-        headers: { 'Referer': 'https://premium.schoolista.com/LCC/Student/Main.aspx' }
+        headers: { 'Referer': finalInitUrl }
     });
+
+    // If we were redirected back to login page even after "success" login
+    if (res.data.includes('otbUserID') && res.data.includes('otbPassword')) {
+        debugLog += `WARNING: Redirected to login page. Retrying one more time with main dashboard visit...\n`;
+        await client.get(finalInitUrl); // Re-establish session context
+        res = await client.get(reportCardUrl, {
+            headers: { 'Referer': finalInitUrl }
+        });
+    }
+
     let $rc = cheerio.load(res.data);
 
     // 4. Handle Confirmation/Disclaimer Page
@@ -108,7 +122,7 @@ export async function POST(req: NextRequest) {
       if (cells.length >= 4) {
         const text = $rc(row).text().toLowerCase();
         // Skip header rows
-        if (text.includes('course') || text.includes('subject') || text.includes('description')) return;
+        if (text.includes('course') || text.includes('subject') || text.includes('description') || text.includes('units')) return;
 
         const code = $rc(cells[0]).text().trim();
         const desc = $rc(cells[1]).text().trim();
@@ -129,7 +143,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Basic validation: subject code should exist and be reasonably long
-        if (code.length >= 3 && desc.length > 0) {
+        if (code.length >= 3 && desc.length > 0 && !code.includes('Total')) {
             // Only add if there's some grade or remark, or it looks like a subject row
             if (grade || remarks || code.match(/[A-Z]{2,}/)) {
                 subjects.push({ code, description: desc, grade, remarks });
@@ -138,12 +152,17 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    if (subjects.length === 0) {
+      debugLog += `No subjects found. Page Title: ${$rc('title').text()}\n`;
+      debugLog += `Page Snippet: ${res.data.substring(0, 1000).replace(/\s+/g, ' ')}\n`;
+    }
+
     return NextResponse.json({ 
       success: true, 
       subjects,
-      debug: debugLog
+      raw_snippet: debugLog
     });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message, debug: debugLog });
+    return NextResponse.json({ success: false, error: error.message, raw_snippet: debugLog });
   }
 }

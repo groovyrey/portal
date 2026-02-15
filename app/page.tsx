@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LoginResponse, Student } from '../types';
 import LoginForm from '../components/LoginForm';
 import DashboardHeader from '../components/DashboardHeader';
@@ -15,6 +15,35 @@ export default function Home() {
   const [password, setPassword] = useState<string>(''); // Store password for authenticated requests
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedStudent = localStorage.getItem('student_data');
+    const savedPassword = localStorage.getItem('student_pass');
+    if (savedStudent && savedPassword) {
+      try {
+        setStudent(JSON.parse(savedStudent));
+        setPassword(savedPassword);
+      } catch (e) {
+        console.error('Failed to parse saved student data');
+      }
+    }
+    setIsInitialized(true);
+  }, []);
+
+  // Save to localStorage when state changes
+  useEffect(() => {
+    if (isInitialized) {
+      if (student) {
+        localStorage.setItem('student_data', JSON.stringify(student));
+        localStorage.setItem('student_pass', password);
+      } else {
+        localStorage.removeItem('student_data');
+        localStorage.removeItem('student_pass');
+      }
+    }
+  }, [student, password, isInitialized]);
 
   const handleLogin = async (userId: string, pass: string) => {
     setLoading(true);
@@ -47,6 +76,14 @@ export default function Home() {
     setPassword('');
     setError(undefined);
   };
+
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   if (!student) {
     return <LoginForm onLogin={handleLogin} loading={loading} error={error} />;
