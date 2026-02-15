@@ -1,350 +1,170 @@
---- Login Diagnostic Started ---
-UserId: 20241322
-Searching for SubjectList link in dashboard...
-  MATCH: "View subjects offered on 2nd Semester, School Year 2025-2026" -> https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=20241322&_pc=SY2025-2026-2&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=
-Final Target URL: https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=20241322&_pc=SY2025-2026-2&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=
-SubjectList Page Title: Student Main
-SubjectList Response URL: https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=20241322&_pc=SY2025-2026-2&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=
-SubjectList Snippet:  <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" > <HTML> <HEAD> <title>Student Main</title> <link rel="stylesheet" type="text/css" href="../Styles/Main.css" /> <link rel="stylesheet" type="text/css" href="../Styles/Schedule.css" /> <link rel="stylesheet" type="text/css
---- Subject List Scraping --- Found 10 tables.
-Targeting Table 9: 264 rows
-  Row 0: [List of Subjects for SY2025-2026-2]
-  Row 1: [Subject] | [Desc] | [Advise] | [Units] | [Sections] | [DeptCode] | [CrsCode] | [LvlCode] | [RegType] | [MajType] | [Class] | [SClass] | [] | []
-  Row 2: [ACCT-CA] | [Accounting Course Audit] | [] | [1.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [CA] | [] | [] | [List Sections] | [View Schedule]
-  Row 3: [ACCT100] | [Financial Accounting and Reporting] | [] | [3.00] | [6] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 4: [ACCT103] | [Intermediate Accounting 2] | [] | [3.00] | [5] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 5: [ACCT105] | [Cost Accounting and Control] | [] | [3.00] | [6] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 6: [ACCT153] | [Auditing Assurance: Concepts and Applications 2] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 7: [ACCT154] | [Auditing Assurance: Specialized Industries] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 8: [ACCT155] | [Auditing in CIS Environment] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 9: [ACCT158] | [Accounting for Government and Non-Profit Organizations] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 10: [ACCT199] | [Accounting Research 1: Methods] | [] | [3.00] | [3] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 11: [ACCT200] | [Accounting Research 2: Thesis] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 12: [AH1] | [Purposive Communication] | [] | [3.00] | [51] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 13: [AH2] | [Art Appreciation] | [] | [3.00] | [7] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 14: [AIS100] | [Accounting Information Systems] | [] | [3.00] | [5] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 15: [AIS152] | [Managing Information Technology] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 16: [AIS153] | [Information Systems Operations and Maintenance] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 17: [AIS154] | [Information Security and Management] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 18: [AIS155] | [Enterprise Resource Planning and Management] | [] | [3.00] | [1] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-  Row 19: [AIS156] | [Data Warehousing and Management] | [] | [3.00] | [1] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
-Scraping Results: 261 Offered, 0 in Prospectus hierarchy.
-
 --- Account Page Diagnostic ---
 URL: https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=20241322&_pc=SY2025-2026-2&_dm=Account&_nm=
-Account Page Title: Student Main
-Found 13 tables.
-Table 0 (47 rows):
-  T0 R0 (15 cells): [Centeno, Reymart P. - 20241322
-					
-						SY2025-2026-2
-					
-						Bachelor of Science in Information Systems
-					
-				User SetupLogout
-			
-		
-	
-		
-			
-				
-					
-						MainScheduleStudent AccountsGrades] | [Centeno, Reymart P. - 20241322
-					
-						SY2025-2026-2
-					
-						Bachelor of Science in Information Systems
-					
-				User SetupLogout] | [] | [Centeno, Reymart P. - 20241322
-					
-						SY2025-2026-2
-					
-						Bachelor of Science in Information Systems] | [Centeno, Reymart P. - 20241322] | [SY2025-2026-2] | [Bachelor of Science in Information Systems] | [User SetupLogout] | [MainScheduleStudent AccountsGrades] | [MainScheduleStudent AccountsGrades] | [Main] | [Schedule] | [Student Accounts] | [Grades] | []
-  T0 R1 (7 cells): [Centeno, Reymart P. - 20241322
-					
-						SY2025-2026-2
-					
-						Bachelor of Science in Information Systems
-					
-				User SetupLogout] | [] | [Centeno, Reymart P. - 20241322
-					
-						SY2025-2026-2
-					
-						Bachelor of Science in Information Systems] | [Centeno, Reymart P. - 20241322] | [SY2025-2026-2] | [Bachelor of Science in Information Systems] | [User SetupLogout]
-  T0 R2 (6 cells): [] | [Centeno, Reymart P. - 20241322
-					
-						SY2025-2026-2
-					
-						Bachelor of Science in Information Systems] | [Centeno, Reymart P. - 20241322] | [SY2025-2026-2] | [Bachelor of Science in Information Systems] | [User SetupLogout]
-  T0 R3 (1 cells): [Centeno, Reymart P. - 20241322]
-  T0 R4 (1 cells): [SY2025-2026-2]
-  T0 R5 (1 cells): [Bachelor of Science in Information Systems]
-  T0 R6 (7 cells): [MainScheduleStudent AccountsGrades] | [MainScheduleStudent AccountsGrades] | [Main] | [Schedule] | [Student Accounts] | [Grades] | []
-  T0 R7 (6 cells): [MainScheduleStudent AccountsGrades] | [Main] | [Schedule] | [Student Accounts] | [Grades] | []
-  T0 R8 (5 cells): [Main] | [Schedule] | [Student Accounts] | [Grades] | []
-  T0 R9 (113 cells): [Enrolled SubjectsSubjectSecUnitsScheduleRoom
-ELEC2-AHBSIS2A3.00SAT 10:00AM-12:00PMFCM2-311
-IS121BSIS2A3.00TUE 1:00PM-3:00PMFCM2-308
-IS123BSIS2A3.00FRI 10:00AM-12:00PMFCM2-308
-IS151BSIS2A3.00FRI 8:00AM-10:00AMFCM2-511
-IT172BSIS2A3.00TUE 3:00PM-5:00PMCADLAB
-MST2BSIS2A3.00SAT 8:00AM-10:00AMFCM2-310
-PE4BSIS2A2.00TUE 10:00AM-12:00PMFCM2-310
-20.00
+
+RAW_HTML_START
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" >
+<HTML>
+	<HEAD>
+		<title>Student Main</title>
+		<link rel="stylesheet" type="text/css" href="../Styles/Main.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/Schedule.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/FlowChart.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/serp_main.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/serp_header.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/serp_menu.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/serp_button.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/serp_container.css" />
+<script language="javascript" type="text/javascript">
+    function showWindow(sURL, sName, sSpecs) {
+        popupWindow = window.open(sURL, sName, sSpecs);
+        popupWindow.focus();
+    }
+</script>
+	</HEAD>
+	<body>
+		<form name="Main" method="post" action="./Main.aspx?_sid=20241322&amp;_pc=SY2025-2026-2&amp;_dm=Account&amp;_nm=" id="Main">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUJOTM4MTM5MDQzD2QWAmYPZBYiAgUPDxYCHgdWaXNpYmxlaGRkAgcPDxYCHwBoZGQCCw8PFgIfAGhkZAINDw8WAh8AaGRkAg8PDxYCHwBnZGQCEQ8PFgIfAGdkZAITDw8WAh8AZ2RkAhUPDxYCHwBnZGQCFw8PFg4eBVdpZHRoGwAAAAAAwHJAAQAAAB4Jb2FsQWRqS2V5FgAeDm9hbEFkalNlbGVjdElEFgAeD29hbEFkaklzQ2hlY2tlZBYAHgpvYWxBZGpEYXRhFgAeBF8hU0ICgAIfAGdkZAIZDw8WAh8AaGRkAhsPDxYCHwBoZGQCHQ8PFgIfAGhkZAIfDw8WAh8AaGRkAiEPDxYCHwBoZGQCIw8PFgIfAGhkZAIlDw8WAh8AaGQWBAIBDw8WAh8AaGRkAgUPDxYMHgpvYWxGaWxlS2V5FgAeD29hbEZpbGVTZWxlY3RJRBYAHhBvYWxJc0ZpbGVDaGVja2VkFgAeC29hbEZpbGVEYXRhFgAeDUN1cnJlbnRBY3Rpb25lHwBoZGQCJw8PFgIfAGhkFgoCAQ8PFgIfAGhkZAIFDxYCHwBoZAIHDw8WAh8AaGRkAgkPFgIfAGhkAgsPDxYCHwBoZGRkdx3cmxeG+wl8SBKz1po50ggG4UFNWP5zBnM4gysth7o=" />
+
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="81D1DD1A" />
+			<table class="main_table">
+				<tr>
+					<td>
+						<table id="oHeaderNav" border="0">
+	<tr>
+		<td><table id="top_container" border="0">
+			<tr>
+				<td id="logo"></td><td><table id="enrollment_student_info" border="0">
+					<tr>
+						<td align="left" valign="middle"><span class="enrollment_student_info_cell_name">Centeno, Reymart P. - 20241322</span></td>
+					</tr><tr>
+						<td align="left" valign="middle"><span class="enrollment_student_info_cell_sy">SY2025-2026-2</span></td>
+					</tr><tr>
+						<td align="left" valign="middle"><span class="enrollment_student_info_cell_course">Bachelor of Science in Information Systems</span></td>
+					</tr>
+				</table></td><td class="enrollment_top_menu" valign="top"><a class="nav_button_inactive" href="Main.aspx?_sid=20241322&amp;_pc=SY2025-2026-2&amp;_am=UserSetup&amp;_nm=" target="_self">User Setup</a><a class="nav_button_inactive" href="https://premium.schoolista.com/LCC/Gate/LCC.Login.aspx" target="_self">Logout</a></td>
+			</tr>
+		</table></td>
+	</tr><tr>
+		<td><table id="bottom_container" border="0">
+			<tr>
+				<td><table id="student_nav_container" border="0">
+					<tr align="center">
+						<td class="enrollment_nav_cell" align="center" valign="middle"><a class="nav_button_inactive" href="Main.aspx?_sid=20241322&amp;_pc=SY2025-2026-2&amp;_dm=Main&amp;_nm=" target="_self">Main</a></td><td class="enrollment_nav_cell" align="center" valign="middle"><a class="nav_button_inactive" href="Main.aspx?_sid=20241322&amp;_pc=SY2025-2026-2&amp;_dm=StudentSchedule&amp;_nm=" target="_self">Schedule</a></td><td class="enrollment_nav_cell" align="center" valign="middle"><a class="nav_button_inactive" href="Main.aspx?_sid=20241322&amp;_pc=SY2025-2026-2&amp;_dm=Account&amp;_nm=" target="_self">Student Accounts</a></td><td class="enrollment_nav_cell" align="center" valign="middle"><a class="nav_button_inactive" href="Main.aspx?_sid=20241322&amp;_pc=SY2025-2026-2&amp;_dm=Grades&amp;_nm=" target="_self">Grades</a></td><td class="enrollment_nav_cell" align="center" valign="middle" style="width:100%;"></td>
+					</tr>
+				</table></td>
+			</tr>
+		</table></td>
+	</tr>
+</table>
+					</td>
+				</tr>
+				<tr>
+					<td class="main_table_detail_content">
+						<TABLE id="otbMain" cellSpacing="1" cellPadding="1" border="0" width="100%">
+							<TR>
+								<TD valign="top" width="25%">
+									<table  id="otbEnrollmentTable"  width="100%">
+<tr><td id="otbEnrollmentTable_TabTitle_Enrolled_Subjects" class="HeaderTitle" align="center" colspan="5">Enrolled Subjects</td></tr><tr><td id="otbEnrollmentTable_ColTitle_Subject" class="HeaderText" align="center">Subject</td><td id="otbEnrollmentTable_ColTitle_Sec" class="HeaderText" align="center">Sec</td><td id="otbEnrollmentTable_ColTitle_Units" class="HeaderText" align="right">Units</td><td id="otbEnrollmentTable_ColTitle_Schedule" class="HeaderText" align="center">Schedule</td><td id="otbEnrollmentTable_ColTitle_Room" class="HeaderText" align="center">Room</td></tr>
+<tr><td class="DetailText" align="center">ELEC2-AH</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">SAT 10:00AM-12:00PM</td><td class="DetailText" align="center">FCM2-311</td></tr>
+<tr><td class="DetailText" align="center">IS121</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">TUE 1:00PM-3:00PM</td><td class="DetailText" align="center">FCM2-308</td></tr>
+<tr><td class="DetailText" align="center">IS123</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">FRI 10:00AM-12:00PM</td><td class="DetailText" align="center">FCM2-308</td></tr>
+<tr><td class="DetailText" align="center">IS151</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">FRI 8:00AM-10:00AM</td><td class="DetailText" align="center">FCM2-511</td></tr>
+<tr><td class="DetailText" align="center">IT172</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">TUE 3:00PM-5:00PM</td><td class="DetailText" align="center">CADLAB</td></tr>
+<tr><td class="DetailText" align="center">MST2</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">SAT 8:00AM-10:00AM</td><td class="DetailText" align="center">FCM2-310</td></tr>
+<tr><td class="DetailText" align="center">PE4</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">2.00</td><td class="DetailText" align="center">TUE 10:00AM-12:00PM</td><td class="DetailText" align="center">FCM2-310</td></tr>
+<tr><td class="FooterText" align="right" colspan="1"></td><td class="FooterText" align="right" colspan="1"></td><td class="FooterText" align="right" colspan="1">20.00</td><td class="FooterText" align="left" colspan="1"></td><td class="FooterText" align="right" colspan="1"></td></tr></table>
 									
 			                        
-								
-								
+								</TD>
+								<TD valign="top" width="65%">
+									
+									
+									
+									<table width="300px">
+<tr><td  nowrap=""><div><br><a href="../Reports/Enrollment/LCC.EAF.aspx?_sid=20241322&_pc=SY2025-2026-2" target="_blank">EAF of SY2025-2026-2</a><br><a href="../Reports/Enrollment/LCC.EAF.aspx?_sid=20241322&_pc=SY2025-2026-1" target="_blank">EAF of SY2025-2026-1</a><br><a href="../Reports/Enrollment/LCC.EAF.aspx?_sid=20241322&_pc=SY2024-2025-2" target="_blank">EAF of SY2024-2025-2</a><br><a href="../Reports/Enrollment/LCC.EAF.aspx?_sid=20241322&_pc=SY2024-2025-1" target="_blank">EAF of SY2024-2025-1</a><br></div>
+</td></tr>
+</table>
+
+
+									<table  id="otbStatementOfAccountTable"  width="300px">
+<tr><td class="HeaderTitle" align="center" colspan="5">Due Accounts</td></tr><tr><td class="HeaderText" align="center">DueDate</td><td class="HeaderText" align="center">Desc</td><td class="HeaderText" align="right">Amount</td><td class="HeaderText" align="center">Paid</td><td class="HeaderText" align="center">Due</td></tr><tr><td class="DetailText">2026-02-14</td><td class="DetailText">1st Installment</td><td class="DetailText" align="right">2,650.00</td><td class="DetailText" align="right">0.00</td><td class="DetailTextWarning" align="right">2,650.00</td></tr><tr><td class="FooterText" align="right" colspan="5">Total: 2,650.00</td></tr><tr><td class="FooterText" align="right" colspan="5">Due (Feb 16): 2,650.00</td></tr></table>
+
+
+									<table  id="otbPaymentTable"  width="300px">
+<tr><td class="HeaderTitle" align="center" colspan="3">Payments</td></tr><tr><td class="HeaderText" align="center">Detail</td><td class="HeaderText" align="center">Ref</td><td class="HeaderText" align="center">Amount</td></tr><tr><td class="DetailText">2026/01/07</td><td class="DetailText">ORMZ2025-37898</td><td class="DetailText" align="right">500.00</td></tr><tr><td class="FooterText" align="right" colspan="3">Paid: 500.00</td></tr></table>
+									<table  id="otbAssessmentDueDetailsTable"  width="300px">
+<tr><td id="otbAssessmentDueDetailsTable_TabTitle_AssDueDet" class="HeaderTitle" align="center" colspan="4">Assessment of Fees</td></tr><tr><td id="otbAssessmentDueDetailsTable_TabTitle_AssDueDetPay" class="HeaderTitle" align="center" colspan="4">(Installment)</td></tr><tr class="HeaderText"><td colspan="4" align="right"><div class="HeaderTextPreTotal" align="right">Forwarded:  0.00</div><div class="HeaderTextTotal" align="right">Back Balance:  0.00</div></td></tr><tr><td id="otbAssessmentDueDetailsTable_ColTitle_DueDate" class="HeaderText" align="center">DueDate</td><td id="otbAssessmentDueDetailsTable_ColTitle_Desc" class="HeaderText" align="center">Desc</td><td id="otbAssessmentDueDetailsTable_ColTitle_Assessed" class="HeaderText" align="center">Assessed</td><td id="otbAssessmentDueDetailsTable_ColTitle_Outstanding" class="HeaderText" align="center">Outstanding</td></tr>
+<tr><td class="DetailText">2026/01/07</td><td class="DetailText">Down payment</td><td class="DetailText" align="right" nowrap>500.00</td><td class="DetailText" align="right" nowrap>0.00</td></tr>
+<tr><td class="DetailText">2026/02/14</td><td class="DetailText">1st Installment</td><td class="DetailText" align="right" nowrap>2,650.00</td><td class="DetailText" align="right" nowrap>2,650.00</td></tr>
+<tr><td class="DetailText">2026/03/07</td><td class="DetailText">2nd Installment</td><td class="DetailText" align="right" nowrap>2,650.00</td><td class="DetailText" align="right" nowrap>2,650.00</td></tr>
+<tr><td class="DetailText">2026/05/07</td><td class="DetailText">3rd Installment</td><td class="DetailText" align="right" nowrap>2,650.00</td><td class="DetailText" align="right" nowrap>2,650.00</td></tr>
+<tr><td class="DetailText">2026/06/01</td><td class="DetailText">4th Installment</td><td class="DetailText" align="right" nowrap>2,650.00</td><td class="DetailText" align="right" nowrap>2,650.00</td></tr>
+<tr><td class="DetailTextWarning" align="right" colspan="2" title="10,600.00 is outstanding">Net Total</td><td class="FooterText" align="right" colspan="1">11,100.00</td><td class="DetailTextWarning" align="right" colspan="1" title="10,600.00 is outstanding">10,600.00</td></tr>
+<tr><td class="DetailTextNegative" align="right" colspan="2" title="2,650.00 is due as of today">Due Today</td><td class="FooterText" align="right" colspan="1">3,150.00</td><td class="DetailTextNegative" align="right" colspan="1" title="2,650.00 is due as of today">2,650.00</td></tr>
+
+</table>
+									<table id="otbAdjustmentTable" border="0" style="width:300px;">
+	<tr>
+		<td id="otbAdjustmentTable_TabTitle_Adjustments" align="center" class="HeaderTitle" colspan="4" rowspan="1">Adjustments</td>
+	</tr><tr>
+		<td id="otbAdjustmentTable_ColTitle_DueDate" align="center" class="HeaderText" colspan="1" rowspan="1">DueDate</td><td id="otbAdjustmentTable_ColTitle_Desc" align="center" class="HeaderText" colspan="1" rowspan="1">Desc</td><td id="otbAdjustmentTable_ColTitle_Adjustment" align="center" class="HeaderText" colspan="1" rowspan="1">Adjustment</td><td id="otbAdjustmentTable_ColTitle_Outstanding" align="center" class="HeaderText" colspan="1" rowspan="1">Outstanding</td>
+	</tr><tr>
+		<td align="center" class="DetailText" colspan="4" rowspan="1">***No adjustments***</td>
+	</tr><tr>
+		<td align="right" class="FooterText" colspan="2" rowspan="1">Total Adjustments</td><td align="right" class="HeaderText" colspan="1" rowspan="1">0.00</td><td align="right" class="HeaderText" colspan="1" rowspan="1">0.00</td>
+	</tr>
+</table>
 									
 									
 									
 									
-EAF of SY2025-2026-2EAF of SY2025-2026-1EAF of SY2024-2025-2EAF of SY2024-2025-1
-
-
-
-
 									
-Due AccountsDueDateDescAmountPaidDue2026-02-141st Installment2,650.000.002,650.00Total: 2,650.00Due (Feb 16): 2,650.00
+		   					        
 
+                                    
 
+									<b>
 									
-PaymentsDetailRefAmount2026/01/07ORMZ2025-37898500.00Paid: 500.00
-									
-Assessment of Fees(Installment)Forwarded:  0.00Back Balance:  0.00DueDateDescAssessedOutstanding
-2026/01/07Down payment500.000.00
-2026/02/141st Installment2,650.002,650.00
-2026/03/072nd Installment2,650.002,650.00
-2026/05/073rd Installment2,650.002,650.00
-2026/06/014th Installment2,650.002,650.00
-Net Total11,100.0010,600.00
-Due Today3,150.002,650.00
+									</b>
 
+								</TD>
+							</TR>
+						</TABLE>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<div id="footer">
+<a class="links" href="../User/Menu.aspx">User: 20241322  [reymartcenteno03@gmail.com]</a></br>
+© 2022 <a class="links" href="http://www.ledgea.com">Ledgea Systems, Inc.</a> All rights reserved.</div>
 
-									
-	
-		Adjustments
-	
-		DueDateDescAdjustmentOutstanding
-	
-		***No adjustments***
-	
-		Total Adjustments0.000.00] | [Enrolled SubjectsSubjectSecUnitsScheduleRoom
-ELEC2-AHBSIS2A3.00SAT 10:00AM-12:00PMFCM2-311
-IS121BSIS2A3.00TUE 1:00PM-3:00PMFCM2-308
-IS123BSIS2A3.00FRI 10:00AM-12:00PMFCM2-308
-IS151BSIS2A3.00FRI 8:00AM-10:00AMFCM2-511
-IT172BSIS2A3.00TUE 3:00PM-5:00PMCADLAB
-MST2BSIS2A3.00SAT 8:00AM-10:00AMFCM2-310
-PE4BSIS2A2.00TUE 10:00AM-12:00PMFCM2-310
-20.00] | [Enrolled Subjects] | [Subject] | [Sec] | [Units] | [Schedule] | [Room] | [ELEC2-AH] | [BSIS2A] | [3.00] | [SAT 10:00AM-12:00PM] | [FCM2-311] | [IS121] | [BSIS2A] | [3.00] | [TUE 1:00PM-3:00PM] | [FCM2-308] | [IS123] | [BSIS2A] | [3.00] | [FRI 10:00AM-12:00PM] | [FCM2-308] | [IS151] | [BSIS2A] | [3.00] | [FRI 8:00AM-10:00AM] | [FCM2-511] | [IT172] | [BSIS2A] | [3.00] | [TUE 3:00PM-5:00PM] | [CADLAB] | [MST2] | [BSIS2A] | [3.00] | [SAT 8:00AM-10:00AM] | [FCM2-310] | [PE4] | [BSIS2A] | [2.00] | [TUE 10:00AM-12:00PM] | [FCM2-310] | [] | [] | [20.00] | [] | [] | [EAF of SY2025-2026-2EAF of SY2025-2026-1EAF of SY2024-2025-2EAF of SY2024-2025-1
+					</td>
+				</tr>
+			</table>
+		</form>
+    <script type="text/javascript">
+        if (!window.File) {
+            alert(Your browser doesn't support the File API. Last modified date will not be available.);
+        }
+        else {
+            document.getElementById(fileupload).onchange = function () {
+                if (this.files.length > 0) {
+                    if (typeof this.files[0].lastModifiedDate === undefined) {
+                        alert(Your browser doesn't support the File API. Last modified date will not be available.);
+                    }
+                    else {
+                        var dtLMDate = this.files[0].lastModifiedDate;
+                        var hiddenLMDate = document.getElementById(ohiddenLastModifiedDate);
+                        //hidden.value = lmDate.getFullYear() + - + (lmDate.getMonth() + 1) + - + lmDate.getDate();
+                        hiddenLMDate.value = dtLMDate.getFullYear() + - + (dtLMDate.getMonth() + 1) + - + dtLMDate.getDate() +   + dtLMDate.getHours() + : + dtLMDate.getMinutes() + : + dtLMDate.getSeconds() + . + dtLMDate.getMilliseconds();
+                        //hidden.value = lmDate.getFullYear() + - + (lmDate.getMonth() + 1) + - + lmDate.getDate() +   + lmDate.getHours() + : + lmDate.getMinutes() + : + lmDate.getSeconds();
+                    }
+                }
+            };
+        }
+    </script>
+	</body>
+</HTML>
 
-
-
-
-									
-Due AccountsDueDateDescAmountPaidDue2026-02-141st Installment2,650.000.002,650.00Total: 2,650.00Due (Feb 16): 2,650.00
-
-
-									
-PaymentsDetailRefAmount2026/01/07ORMZ2025-37898500.00Paid: 500.00
-									
-Assessment of Fees(Installment)Forwarded:  0.00Back Balance:  0.00DueDateDescAssessedOutstanding
-2026/01/07Down payment500.000.00
-2026/02/141st Installment2,650.002,650.00
-2026/03/072nd Installment2,650.002,650.00
-2026/05/073rd Installment2,650.002,650.00
-2026/06/014th Installment2,650.002,650.00
-Net Total11,100.0010,600.00
-Due Today3,150.002,650.00
-
-
-									
-	
-		Adjustments
-	
-		DueDateDescAdjustmentOutstanding
-	
-		***No adjustments***
-	
-		Total Adjustments0.000.00] | [EAF of SY2025-2026-2EAF of SY2025-2026-1EAF of SY2024-2025-2EAF of SY2024-2025-1] | [Due Accounts] | [DueDate] | [Desc] | [Amount] | [Paid] | [Due] | [2026-02-14] | [1st Installment] | [2,650.00] | [0.00] | [2,650.00] | [Total: 2,650.00] | [Due (Feb 16): 2,650.00] | [Payments] | [Detail] | [Ref] | [Amount] | [2026/01/07] | [ORMZ2025-37898] | [500.00] | [Paid: 500.00] | [Assessment of Fees] | [(Installment)] | [Forwarded:  0.00Back Balance:  0.00] | [DueDate] | [Desc] | [Assessed] | [Outstanding] | [2026/01/07] | [Down payment] | [500.00] | [0.00] | [2026/02/14] | [1st Installment] | [2,650.00] | [2,650.00] | [2026/03/07] | [2nd Installment] | [2,650.00] | [2,650.00] | [2026/05/07] | [3rd Installment] | [2,650.00] | [2,650.00] | [2026/06/01] | [4th Installment] | [2,650.00] | [2,650.00] | [Net Total] | [11,100.00] | [10,600.00] | [Due Today] | [3,150.00] | [2,650.00] | [Adjustments] | [DueDate] | [Desc] | [Adjustment] | [Outstanding] | [***No adjustments***] | [Total Adjustments] | [0.00] | [0.00]
-  T0 R10 (112 cells): [Enrolled SubjectsSubjectSecUnitsScheduleRoom
-ELEC2-AHBSIS2A3.00SAT 10:00AM-12:00PMFCM2-311
-IS121BSIS2A3.00TUE 1:00PM-3:00PMFCM2-308
-IS123BSIS2A3.00FRI 10:00AM-12:00PMFCM2-308
-IS151BSIS2A3.00FRI 8:00AM-10:00AMFCM2-511
-IT172BSIS2A3.00TUE 3:00PM-5:00PMCADLAB
-MST2BSIS2A3.00SAT 8:00AM-10:00AMFCM2-310
-PE4BSIS2A2.00TUE 10:00AM-12:00PMFCM2-310
-20.00] | [Enrolled Subjects] | [Subject] | [Sec] | [Units] | [Schedule] | [Room] | [ELEC2-AH] | [BSIS2A] | [3.00] | [SAT 10:00AM-12:00PM] | [FCM2-311] | [IS121] | [BSIS2A] | [3.00] | [TUE 1:00PM-3:00PM] | [FCM2-308] | [IS123] | [BSIS2A] | [3.00] | [FRI 10:00AM-12:00PM] | [FCM2-308] | [IS151] | [BSIS2A] | [3.00] | [FRI 8:00AM-10:00AM] | [FCM2-511] | [IT172] | [BSIS2A] | [3.00] | [TUE 3:00PM-5:00PM] | [CADLAB] | [MST2] | [BSIS2A] | [3.00] | [SAT 8:00AM-10:00AM] | [FCM2-310] | [PE4] | [BSIS2A] | [2.00] | [TUE 10:00AM-12:00PM] | [FCM2-310] | [] | [] | [20.00] | [] | [] | [EAF of SY2025-2026-2EAF of SY2025-2026-1EAF of SY2024-2025-2EAF of SY2024-2025-1
-
-
-
-
-									
-Due AccountsDueDateDescAmountPaidDue2026-02-141st Installment2,650.000.002,650.00Total: 2,650.00Due (Feb 16): 2,650.00
-
-
-									
-PaymentsDetailRefAmount2026/01/07ORMZ2025-37898500.00Paid: 500.00
-									
-Assessment of Fees(Installment)Forwarded:  0.00Back Balance:  0.00DueDateDescAssessedOutstanding
-2026/01/07Down payment500.000.00
-2026/02/141st Installment2,650.002,650.00
-2026/03/072nd Installment2,650.002,650.00
-2026/05/073rd Installment2,650.002,650.00
-2026/06/014th Installment2,650.002,650.00
-Net Total11,100.0010,600.00
-Due Today3,150.002,650.00
-
-
-									
-	
-		Adjustments
-	
-		DueDateDescAdjustmentOutstanding
-	
-		***No adjustments***
-	
-		Total Adjustments0.000.00] | [EAF of SY2025-2026-2EAF of SY2025-2026-1EAF of SY2024-2025-2EAF of SY2024-2025-1] | [Due Accounts] | [DueDate] | [Desc] | [Amount] | [Paid] | [Due] | [2026-02-14] | [1st Installment] | [2,650.00] | [0.00] | [2,650.00] | [Total: 2,650.00] | [Due (Feb 16): 2,650.00] | [Payments] | [Detail] | [Ref] | [Amount] | [2026/01/07] | [ORMZ2025-37898] | [500.00] | [Paid: 500.00] | [Assessment of Fees] | [(Installment)] | [Forwarded:  0.00Back Balance:  0.00] | [DueDate] | [Desc] | [Assessed] | [Outstanding] | [2026/01/07] | [Down payment] | [500.00] | [0.00] | [2026/02/14] | [1st Installment] | [2,650.00] | [2,650.00] | [2026/03/07] | [2nd Installment] | [2,650.00] | [2,650.00] | [2026/05/07] | [3rd Installment] | [2,650.00] | [2,650.00] | [2026/06/01] | [4th Installment] | [2,650.00] | [2,650.00] | [Net Total] | [11,100.00] | [10,600.00] | [Due Today] | [3,150.00] | [2,650.00] | [Adjustments] | [DueDate] | [Desc] | [Adjustment] | [Outstanding] | [***No adjustments***] | [Total Adjustments] | [0.00] | [0.00]
-  T0 R11 (1 cells): [Enrolled Subjects]
-  T0 R12 (5 cells): [Subject] | [Sec] | [Units] | [Schedule] | [Room]
-  T0 R13 (5 cells): [ELEC2-AH] | [BSIS2A] | [3.00] | [SAT 10:00AM-12:00PM] | [FCM2-311]
-  T0 R14 (5 cells): [IS121] | [BSIS2A] | [3.00] | [TUE 1:00PM-3:00PM] | [FCM2-308]
-Table 1 (8 rows):
-  T1 R0 (7 cells): [Centeno, Reymart P. - 20241322
-					
-						SY2025-2026-2
-					
-						Bachelor of Science in Information Systems
-					
-				User SetupLogout] | [] | [Centeno, Reymart P. - 20241322
-					
-						SY2025-2026-2
-					
-						Bachelor of Science in Information Systems] | [Centeno, Reymart P. - 20241322] | [SY2025-2026-2] | [Bachelor of Science in Information Systems] | [User SetupLogout]
-  T1 R1 (6 cells): [] | [Centeno, Reymart P. - 20241322
-					
-						SY2025-2026-2
-					
-						Bachelor of Science in Information Systems] | [Centeno, Reymart P. - 20241322] | [SY2025-2026-2] | [Bachelor of Science in Information Systems] | [User SetupLogout]
-  T1 R2 (1 cells): [Centeno, Reymart P. - 20241322]
-  T1 R3 (1 cells): [SY2025-2026-2]
-  T1 R4 (1 cells): [Bachelor of Science in Information Systems]
-  T1 R5 (7 cells): [MainScheduleStudent AccountsGrades] | [MainScheduleStudent AccountsGrades] | [Main] | [Schedule] | [Student Accounts] | [Grades] | []
-  T1 R6 (6 cells): [MainScheduleStudent AccountsGrades] | [Main] | [Schedule] | [Student Accounts] | [Grades] | []
-  T1 R7 (5 cells): [Main] | [Schedule] | [Student Accounts] | [Grades] | []
-Table 2 (4 rows):
-  T2 R0 (6 cells): [] | [Centeno, Reymart P. - 20241322
-					
-						SY2025-2026-2
-					
-						Bachelor of Science in Information Systems] | [Centeno, Reymart P. - 20241322] | [SY2025-2026-2] | [Bachelor of Science in Information Systems] | [User SetupLogout]
-  T2 R1 (1 cells): [Centeno, Reymart P. - 20241322]
-  T2 R2 (1 cells): [SY2025-2026-2]
-  T2 R3 (1 cells): [Bachelor of Science in Information Systems]
-Table 3 (3 rows):
-  T3 R0 (1 cells): [Centeno, Reymart P. - 20241322]
-  T3 R1 (1 cells): [SY2025-2026-2]
-  T3 R2 (1 cells): [Bachelor of Science in Information Systems]
-Table 4 (2 rows):
-  T4 R0 (6 cells): [MainScheduleStudent AccountsGrades] | [Main] | [Schedule] | [Student Accounts] | [Grades] | []
-  T4 R1 (5 cells): [Main] | [Schedule] | [Student Accounts] | [Grades] | []
-Table 5 (1 rows):
-  T5 R0 (5 cells): [Main] | [Schedule] | [Student Accounts] | [Grades] | []
-Table 6 (36 rows):
-  T6 R0 (112 cells): [Enrolled SubjectsSubjectSecUnitsScheduleRoom
-ELEC2-AHBSIS2A3.00SAT 10:00AM-12:00PMFCM2-311
-IS121BSIS2A3.00TUE 1:00PM-3:00PMFCM2-308
-IS123BSIS2A3.00FRI 10:00AM-12:00PMFCM2-308
-IS151BSIS2A3.00FRI 8:00AM-10:00AMFCM2-511
-IT172BSIS2A3.00TUE 3:00PM-5:00PMCADLAB
-MST2BSIS2A3.00SAT 8:00AM-10:00AMFCM2-310
-PE4BSIS2A2.00TUE 10:00AM-12:00PMFCM2-310
-20.00] | [Enrolled Subjects] | [Subject] | [Sec] | [Units] | [Schedule] | [Room] | [ELEC2-AH] | [BSIS2A] | [3.00] | [SAT 10:00AM-12:00PM] | [FCM2-311] | [IS121] | [BSIS2A] | [3.00] | [TUE 1:00PM-3:00PM] | [FCM2-308] | [IS123] | [BSIS2A] | [3.00] | [FRI 10:00AM-12:00PM] | [FCM2-308] | [IS151] | [BSIS2A] | [3.00] | [FRI 8:00AM-10:00AM] | [FCM2-511] | [IT172] | [BSIS2A] | [3.00] | [TUE 3:00PM-5:00PM] | [CADLAB] | [MST2] | [BSIS2A] | [3.00] | [SAT 8:00AM-10:00AM] | [FCM2-310] | [PE4] | [BSIS2A] | [2.00] | [TUE 10:00AM-12:00PM] | [FCM2-310] | [] | [] | [20.00] | [] | [] | [EAF of SY2025-2026-2EAF of SY2025-2026-1EAF of SY2024-2025-2EAF of SY2024-2025-1
-
-
-
-
-									
-Due AccountsDueDateDescAmountPaidDue2026-02-141st Installment2,650.000.002,650.00Total: 2,650.00Due (Feb 16): 2,650.00
-
-
-									
-PaymentsDetailRefAmount2026/01/07ORMZ2025-37898500.00Paid: 500.00
-									
-Assessment of Fees(Installment)Forwarded:  0.00Back Balance:  0.00DueDateDescAssessedOutstanding
-2026/01/07Down payment500.000.00
-2026/02/141st Installment2,650.002,650.00
-2026/03/072nd Installment2,650.002,650.00
-2026/05/073rd Installment2,650.002,650.00
-2026/06/014th Installment2,650.002,650.00
-Net Total11,100.0010,600.00
-Due Today3,150.002,650.00
-
-
-									
-	
-		Adjustments
-	
-		DueDateDescAdjustmentOutstanding
-	
-		***No adjustments***
-	
-		Total Adjustments0.000.00] | [EAF of SY2025-2026-2EAF of SY2025-2026-1EAF of SY2024-2025-2EAF of SY2024-2025-1] | [Due Accounts] | [DueDate] | [Desc] | [Amount] | [Paid] | [Due] | [2026-02-14] | [1st Installment] | [2,650.00] | [0.00] | [2,650.00] | [Total: 2,650.00] | [Due (Feb 16): 2,650.00] | [Payments] | [Detail] | [Ref] | [Amount] | [2026/01/07] | [ORMZ2025-37898] | [500.00] | [Paid: 500.00] | [Assessment of Fees] | [(Installment)] | [Forwarded:  0.00Back Balance:  0.00] | [DueDate] | [Desc] | [Assessed] | [Outstanding] | [2026/01/07] | [Down payment] | [500.00] | [0.00] | [2026/02/14] | [1st Installment] | [2,650.00] | [2,650.00] | [2026/03/07] | [2nd Installment] | [2,650.00] | [2,650.00] | [2026/05/07] | [3rd Installment] | [2,650.00] | [2,650.00] | [2026/06/01] | [4th Installment] | [2,650.00] | [2,650.00] | [Net Total] | [11,100.00] | [10,600.00] | [Due Today] | [3,150.00] | [2,650.00] | [Adjustments] | [DueDate] | [Desc] | [Adjustment] | [Outstanding] | [***No adjustments***] | [Total Adjustments] | [0.00] | [0.00]
-  T6 R1 (1 cells): [Enrolled Subjects]
-  T6 R2 (5 cells): [Subject] | [Sec] | [Units] | [Schedule] | [Room]
-  T6 R3 (5 cells): [ELEC2-AH] | [BSIS2A] | [3.00] | [SAT 10:00AM-12:00PM] | [FCM2-311]
-  T6 R4 (5 cells): [IS121] | [BSIS2A] | [3.00] | [TUE 1:00PM-3:00PM] | [FCM2-308]
-  T6 R5 (5 cells): [IS123] | [BSIS2A] | [3.00] | [FRI 10:00AM-12:00PM] | [FCM2-308]
-  T6 R6 (5 cells): [IS151] | [BSIS2A] | [3.00] | [FRI 8:00AM-10:00AM] | [FCM2-511]
-  T6 R7 (5 cells): [IT172] | [BSIS2A] | [3.00] | [TUE 3:00PM-5:00PM] | [CADLAB]
-  T6 R8 (5 cells): [MST2] | [BSIS2A] | [3.00] | [SAT 8:00AM-10:00AM] | [FCM2-310]
-  T6 R9 (5 cells): [PE4] | [BSIS2A] | [2.00] | [TUE 10:00AM-12:00PM] | [FCM2-310]
-  T6 R10 (5 cells): [] | [] | [20.00] | [] | []
-  T6 R11 (1 cells): [EAF of SY2025-2026-2EAF of SY2025-2026-1EAF of SY2024-2025-2EAF of SY2024-2025-1]
-  T6 R12 (1 cells): [Due Accounts]
-  T6 R13 (5 cells): [DueDate] | [Desc] | [Amount] | [Paid] | [Due]
-  T6 R14 (5 cells): [2026-02-14] | [1st Installment] | [2,650.00] | [0.00] | [2,650.00]
-Table 7 (10 rows):
-  T7 R0 (1 cells): [Enrolled Subjects]
-  T7 R1 (5 cells): [Subject] | [Sec] | [Units] | [Schedule] | [Room]
-  T7 R2 (5 cells): [ELEC2-AH] | [BSIS2A] | [3.00] | [SAT 10:00AM-12:00PM] | [FCM2-311]
-  T7 R3 (5 cells): [IS121] | [BSIS2A] | [3.00] | [TUE 1:00PM-3:00PM] | [FCM2-308]
-  T7 R4 (5 cells): [IS123] | [BSIS2A] | [3.00] | [FRI 10:00AM-12:00PM] | [FCM2-308]
-  T7 R5 (5 cells): [IS151] | [BSIS2A] | [3.00] | [FRI 8:00AM-10:00AM] | [FCM2-511]
-  T7 R6 (5 cells): [IT172] | [BSIS2A] | [3.00] | [TUE 3:00PM-5:00PM] | [CADLAB]
-  T7 R7 (5 cells): [MST2] | [BSIS2A] | [3.00] | [SAT 8:00AM-10:00AM] | [FCM2-310]
-  T7 R8 (5 cells): [PE4] | [BSIS2A] | [2.00] | [TUE 10:00AM-12:00PM] | [FCM2-310]
-  T7 R9 (5 cells): [] | [] | [20.00] | [] | []
-Table 8 (1 rows):
-  T8 R0 (1 cells): [EAF of SY2025-2026-2EAF of SY2025-2026-1EAF of SY2024-2025-2EAF of SY2024-2025-1]
-Table 9 (5 rows):
-  T9 R0 (1 cells): [Due Accounts]
-  T9 R1 (5 cells): [DueDate] | [Desc] | [Amount] | [Paid] | [Due]
-  T9 R2 (5 cells): [2026-02-14] | [1st Installment] | [2,650.00] | [0.00] | [2,650.00]
-  T9 R3 (1 cells): [Total: 2,650.00]
-  T9 R4 (1 cells): [Due (Feb 16): 2,650.00]
-Table 10 (4 rows):
-  T10 R0 (1 cells): [Payments]
-  T10 R1 (3 cells): [Detail] | [Ref] | [Amount]
-  T10 R2 (3 cells): [2026/01/07] | [ORMZ2025-37898] | [500.00]
-  T10 R3 (1 cells): [Paid: 500.00]
-Table 11 (11 rows):
-  T11 R0 (1 cells): [Assessment of Fees]
-  T11 R1 (1 cells): [(Installment)]
-  T11 R2 (1 cells): [Forwarded:  0.00Back Balance:  0.00]
-  T11 R3 (4 cells): [DueDate] | [Desc] | [Assessed] | [Outstanding]
-  T11 R4 (4 cells): [2026/01/07] | [Down payment] | [500.00] | [0.00]
-  T11 R5 (4 cells): [2026/02/14] | [1st Installment] | [2,650.00] | [2,650.00]
-  T11 R6 (4 cells): [2026/03/07] | [2nd Installment] | [2,650.00] | [2,650.00]
-  T11 R7 (4 cells): [2026/05/07] | [3rd Installment] | [2,650.00] | [2,650.00]
-  T11 R8 (4 cells): [2026/06/01] | [4th Installment] | [2,650.00] | [2,650.00]
-  T11 R9 (3 cells): [Net Total] | [11,100.00] | [10,600.00]
-  T11 R10 (3 cells): [Due Today] | [3,150.00] | [2,650.00]
-Table 12 (4 rows):
-  T12 R0 (1 cells): [Adjustments]
-  T12 R1 (4 cells): [DueDate] | [Desc] | [Adjustment] | [Outstanding]
-  T12 R2 (1 cells): [***No adjustments***]
-  T12 R3 (3 cells): [Total Adjustments] | [0.00] | [0.00]
-
+RAW_HTML_END

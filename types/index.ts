@@ -9,6 +9,7 @@ export interface ScheduleItem {
 export interface Financials {
   total: string;
   balance: string;
+  dueToday?: string;
   dueAccounts?: {
     dueDate: string;
     description: string;

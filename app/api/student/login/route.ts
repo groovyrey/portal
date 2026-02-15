@@ -94,7 +94,8 @@ export async function POST(req: NextRequest) {
       $dashboard('#lblStudentName').text().trim() || 
       $dashboard('#lblFullName').text().trim() ||
       $dashboard('#lblName').text().trim() ||
-      $dashboard('.student-name').text().trim();
+      $dashboard('.student-name').text().trim() ||
+      $dashboard('.enrollment_student_info_cell_name').text().trim();
 
     const pageText = $dashboard('body').text().replace(/\s+/g, ' ');
 
@@ -110,6 +111,7 @@ export async function POST(req: NextRequest) {
 
     const courseMatch = pageText.match(/Bachelor of [^ ]+ in [^ ]+ [^ ]+/i) || 
                        pageText.match(/BS [^ ]+/i) ||
+                       $dashboard('.enrollment_student_info_cell_course').text().trim() ||
                        pageText.match(new RegExp(`${userId}\\s+SY\\d{4}-\\d{4}-\\d\\s+(.*?) (User Setup|Logout|Main)`, 'i'));
     
     const course = courseMatch ? courseMatch[courseMatch.length - 1].trim() : "Not specified";
@@ -287,109 +289,96 @@ export async function POST(req: NextRequest) {
     let payments: any[] = [];
     let installments: any[] = [];
     let adjustments: any[] = [];
-    const seenDue = new Set();
-    const seenPayments = new Set();
-    const seenInstallments = new Set();
-    const seenAdjustments = new Set();
     let scrapedTotal = "---";
     let scrapedBalance = "---";
+    let scrapedDueToday = "---";
 
-    $acc('table').each((_, table) => {
-        const $table = $acc(table);
-        const tableText = $table.text();
-
-        // Detect Due Accounts Table
-        if (tableText.includes('Due Accounts') && tableText.includes('DueDate') && tableText.includes('Amount')) {
-            $table.find('tr').each((i, row) => {
-                const cells = $acc(row).find('td');
-                if (cells.length === 5 && i > 1) {
-                    const dueDate = $acc(cells[0]).text().trim();
-                    const description = $acc(cells[1]).text().trim();
-                    const amount = $acc(cells[2]).text().trim();
-                    const paid = $acc(cells[3]).text().trim();
-                    const due = $acc(cells[4]).text().trim();
-                    if (dueDate && description && !dueDate.toLowerCase().includes('total') && !dueDate.toLowerCase().includes('due')) {
-                        const key = `${dueDate}-${description}-${amount}`.toLowerCase();
-                        if (!seenDue.has(key)) {
-                            dueAccounts.push({ dueDate, description, amount, paid, due });
-                            seenDue.add(key);
-                        }
-                    }
+    // 1. Due Accounts (Statement of Account)
+    const $dueTable = $acc('#otbStatementOfAccountTable');
+    if ($dueTable.length > 0) {
+        $dueTable.find('tr').each((i, row) => {
+            const cells = $acc(row).find('td');
+            if (cells.length === 5 && i > 1) { // Skip title and header
+                const dueDate = $acc(cells[0]).text().trim();
+                const description = $acc(cells[1]).text().trim();
+                const amount = $acc(cells[2]).text().trim();
+                const paid = $acc(cells[3]).text().trim();
+                const due = $acc(cells[4]).text().trim();
+                if (dueDate && description && !dueDate.toLowerCase().includes('total') && !dueDate.toLowerCase().includes('due')) {
+                    dueAccounts.push({ dueDate, description, amount, paid, due });
                 }
-            });
-        }
+            }
+        });
+    }
 
-        // Detect Payments Table
-        if (tableText.includes('Payments') && tableText.includes('Detail') && tableText.includes('Ref')) {
-            $table.find('tr').each((i, row) => {
-                const cells = $acc(row).find('td');
-                if (cells.length === 3 && i > 1) {
-                    const date = $acc(cells[0]).text().trim();
-                    const reference = $acc(cells[1]).text().trim();
-                    const amount = $acc(cells[2]).text().trim();
-                    if (date && reference && !date.toLowerCase().includes('paid')) {
-                        const key = `${date}-${reference}-${amount}`.toLowerCase();
-                        if (!seenPayments.has(key)) {
-                            payments.push({ date, reference, amount });
-                            seenPayments.add(key);
-                        }
-                    }
+    // 2. Payments
+    const $paymentTable = $acc('#otbPaymentTable');
+    if ($paymentTable.length > 0) {
+        $paymentTable.find('tr').each((i, row) => {
+            const cells = $acc(row).find('td');
+            if (cells.length === 3 && i > 1) {
+                const date = $acc(cells[0]).text().trim();
+                const reference = $acc(cells[1]).text().trim();
+                const amount = $acc(cells[2]).text().trim();
+                if (date && reference && !date.toLowerCase().includes('paid')) {
+                    payments.push({ date, reference, amount });
                 }
-            });
-        }
+            }
+        });
+    }
 
-        // Detect Assessment of Fees Table
-        if (tableText.includes('Assessment of Fees') && tableText.includes('Assessed') && tableText.includes('Outstanding')) {
-            $table.find('tr').each((i, row) => {
-                const cells = $acc(row).find('td');
-                const rowText = $acc(row).text().trim();
+    // 3. Assessment of Fees (Installments)
+    const $assessmentTable = $acc('#otbAssessmentDueDetailsTable');
+    if ($assessmentTable.length > 0) {
+        $assessmentTable.find('tr').each((i, row) => {
+            const cells = $acc(row).find('td');
+            const rowText = $acc(row).text().trim();
 
-                if (cells.length === 4 && i > 2) {
-                    const dueDate = $acc(cells[0]).text().trim();
-                    const description = $acc(cells[1]).text().trim();
-                    const assessed = $acc(cells[2]).text().trim();
-                    const outstanding = $acc(cells[3]).text().trim();
-                    
-                    if (dueDate && description && !dueDate.toLowerCase().includes('due today') && !dueDate.toLowerCase().includes('net total')) {
-                        const key = `${dueDate}-${description}-${assessed}`.toLowerCase();
-                        if (!seenInstallments.has(key)) {
-                            installments.push({ dueDate, description, assessed, outstanding });
-                            seenInstallments.add(key);
-                        }
-                    }
+            if (cells.length === 4 && i > 3) { // Skip title1, title2, forwarded/balance, and header
+                const dueDate = $acc(cells[0]).text().trim();
+                const description = $acc(cells[1]).text().trim();
+                const assessed = $acc(cells[2]).text().trim();
+                const outstanding = $acc(cells[3]).text().trim();
+                
+                if (dueDate && description && !dueDate.toLowerCase().includes('due today') && !dueDate.toLowerCase().includes('net total')) {
+                    installments.push({ dueDate, description, assessed, outstanding });
                 }
+            }
 
-                // Extract Totals from this table if possible
-                if (rowText.includes('Net Total')) {
-                    const cells = $acc(row).find('td');
-                    if (cells.length >= 3) {
-                        scrapedTotal = $acc(cells[1]).text().trim();
-                        scrapedBalance = $acc(cells[2]).text().trim();
-                    }
+            // Extract Totals from this table
+            if (rowText.includes('Net Total')) {
+                const totalCells = $acc(row).find('td');
+                if (totalCells.length >= 3) {
+                    scrapedTotal = $acc(totalCells[totalCells.length - 2]).text().trim();
+                    scrapedBalance = $acc(totalCells[totalCells.length - 1]).text().trim();
                 }
-            });
-        }
+            }
 
-        // Detect Adjustments Table
-        if (tableText.includes('Adjustments') && tableText.includes('Adjustment') && tableText.includes('Outstanding')) {
-            $table.find('tr').each((i, row) => {
-                const cells = $acc(row).find('td');
-                if (cells.length === 4 && i > 1) {
-                    const dueDate = $acc(cells[0]).text().trim();
-                    const description = $acc(cells[1]).text().trim();
-                    const adjustment = $acc(cells[2]).text().trim();
-                    const outstanding = $acc(cells[3]).text().trim();
-                    if (dueDate && description && !dueDate.toLowerCase().includes('total')) {
-                        const key = `${dueDate}-${description}-${adjustment}`.toLowerCase();
-                        if (!seenAdjustments.has(key)) {
-                            adjustments.push({ dueDate, description, adjustment, outstanding });
-                            seenAdjustments.add(key);
-                        }
-                    }
+            if (rowText.includes('Due Today')) {
+                const dueCells = $acc(row).find('td');
+                if (dueCells.length >= 3) {
+                    scrapedDueToday = $acc(dueCells[dueCells.length - 1]).text().trim();
                 }
-            });
-        }
-    });
+            }
+        });
+    }
+
+    // 4. Adjustments
+    const $adjustmentTable = $acc('#otbAdjustmentTable');
+    if ($adjustmentTable.length > 0) {
+        $adjustmentTable.find('tr').each((i, row) => {
+            const cells = $acc(row).find('td');
+            if (cells.length === 4 && i > 1) {
+                const dueDate = $acc(cells[0]).text().trim();
+                const description = $acc(cells[1]).text().trim();
+                const adjustment = $acc(cells[2]).text().trim();
+                const outstanding = $acc(cells[3]).text().trim();
+                if (dueDate && description && !dueDate.toLowerCase().includes('total') && !dueDate.toLowerCase().includes('no adjustments')) {
+                    adjustments.push({ dueDate, description, adjustment, outstanding });
+                }
+            }
+        });
+    }
 
 
 
@@ -422,6 +411,7 @@ export async function POST(req: NextRequest) {
     // Ensure currency symbol if missing
     if (totalAssessment !== "---" && !totalAssessment.includes('₱')) totalAssessment = '₱' + totalAssessment;
     if (totalBalance !== "---" && !totalBalance.includes('₱')) totalBalance = '₱' + totalBalance;
+    if (scrapedDueToday !== "---" && !scrapedDueToday.includes('₱')) scrapedDueToday = '₱' + scrapedDueToday;
 
                         if (studentName && studentName.length > 2) {
                           return NextResponse.json({
@@ -444,6 +434,7 @@ export async function POST(req: NextRequest) {
                                                 financials: { 
                                                   total: totalAssessment, 
                                                   balance: totalBalance,
+                                                  dueToday: scrapedDueToday,
                                                   dueAccounts: dueAccounts.length > 0 ? dueAccounts : null,
                                                   payments: payments.length > 0 ? payments : null,
                                                   installments: installments.length > 0 ? installments : null,
