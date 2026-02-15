@@ -62,7 +62,21 @@ export async function POST(req: NextRequest) {
 
     const $dashboard = cheerio.load(loginRes.data);
     
-    // 3. Check for specific failure patterns
+    // 3. Extract Period Code (_pc) from dashboard links
+    let periodCode = "SY2025-2026-2"; // Fallback
+    $dashboard('a').each((_, el) => {
+        const href = $dashboard(el).attr('href');
+        if (href && href.includes('_pc=')) {
+            const match = href.match(/_pc=([^&]+)/);
+            if (match) {
+                periodCode = match[1];
+                return false; // break loop
+            }
+        }
+    });
+    subDebug += `Detected Period Code: ${periodCode}\n`;
+
+    // 4. Check for specific failure patterns
     if (loginRes.data.includes('unexpected error')) {
       const debugPath = path.join(process.cwd(), '.next', 'login_error.html');
       fs.writeFileSync(debugPath, loginRes.data);
@@ -136,7 +150,7 @@ export async function POST(req: NextRequest) {
     const finalSchedule = schedule;
 
     // 6. Fetch EAF and Subject List
-    const eafUrl = `https://premium.schoolista.com/LCC/Reports/Enrollment/LCC.EAF.aspx?_sid=${userId}&_pc=SY2025-2026-2`;
+    const eafUrl = `https://premium.schoolista.com/LCC/Reports/Enrollment/LCC.EAF.aspx?_sid=${userId}&_pc=${periodCode}`;
     const eafRes = await client.get(eafUrl);
     const $eaf = cheerio.load(eafRes.data);
 
@@ -159,7 +173,7 @@ export async function POST(req: NextRequest) {
 
     if (!subjectListUrl) {
         subDebug += "  FALLBACK: No link found, using default URL construction.\n";
-        subjectListUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=`;
+        subjectListUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=`;
     }
 
     subDebug += `Final Target URL: ${subjectListUrl}\n`;
@@ -178,7 +192,7 @@ export async function POST(req: NextRequest) {
     subDebug += `SubjectList Snippet: ${subListRes.data.substring(0, 300).replace(/\s+/g, ' ')}\n`;
     
     // 8. Extract Available Report Card Links
-    const gradesUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=Grades&_nm=`;
+    const gradesUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=Grades&_nm=`;
     const gradesRes = await client.get(gradesUrl, { headers: { 'Referer': baseUrl } });
     const $grades = cheerio.load(gradesRes.data);
     
@@ -263,7 +277,7 @@ export async function POST(req: NextRequest) {
     subDebug += `Scraping Results: ${offeredSubjects.length} Offered, ${seenProspectus.size} in Prospectus hierarchy.\n`;
 
     // 8. Financials & Ledger Scraping
-    const accountUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=Account&_nm=`;
+    const accountUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=Account&_nm=`;
     const accRes = await client.get(accountUrl, { headers: { 'Referer': subListRes.config.url || baseUrl } });
     const $acc = cheerio.load(accRes.data);
     
@@ -272,83 +286,122 @@ export async function POST(req: NextRequest) {
     let dueAccounts: any[] = [];
     let payments: any[] = [];
     let installments: any[] = [];
+    let adjustments: any[] = [];
+    let scrapedTotal = "---";
+    let scrapedBalance = "---";
 
-    // Table 9: Due Accounts
-    const table9Acc = $acc('table').eq(9);
-    if (table9Acc.length > 0) {
-        table9Acc.find('tr').each((i: number, row: any) => {
-            const cells = $acc(row).find('td');
-            if (cells.length === 5 && i > 1) {
-                const dueDate = $acc(cells[0]).text().trim();
-                const description = $acc(cells[1]).text().trim();
-                const amount = $acc(cells[2]).text().trim();
-                const paid = $acc(cells[3]).text().trim();
-                const due = $acc(cells[4]).text().trim();
-                if (dueDate && description) {
-                    dueAccounts.push({ dueDate, description, amount, paid, due });
+    $acc('table').each((_, table) => {
+        const $table = $acc(table);
+        const tableText = $table.text();
+
+        // Detect Due Accounts Table
+        if (tableText.includes('Due Accounts') && tableText.includes('DueDate') && tableText.includes('Amount')) {
+            $table.find('tr').each((i, row) => {
+                const cells = $acc(row).find('td');
+                if (cells.length === 5 && i > 1) {
+                    const dueDate = $acc(cells[0]).text().trim();
+                    const description = $acc(cells[1]).text().trim();
+                    const amount = $acc(cells[2]).text().trim();
+                    const paid = $acc(cells[3]).text().trim();
+                    const due = $acc(cells[4]).text().trim();
+                    if (dueDate && description && !dueDate.toLowerCase().includes('total') && !dueDate.toLowerCase().includes('due')) {
+                        dueAccounts.push({ dueDate, description, amount, paid, due });
+                    }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    // Table 10: Payments
-    const table10Acc = $acc('table').eq(10);
-    if (table10Acc.length > 0) {
-        table10Acc.find('tr').each((i: number, row: any) => {
-            const cells = $acc(row).find('td');
-            if (cells.length === 3 && i > 1) {
-                const date = $acc(cells[0]).text().trim();
-                const reference = $acc(cells[1]).text().trim();
-                const amount = $acc(cells[2]).text().trim();
-                if (date && reference) {
-                    payments.push({ date, reference, amount });
+        // Detect Payments Table
+        if (tableText.includes('Payments') && tableText.includes('Detail') && tableText.includes('Ref')) {
+            $table.find('tr').each((i, row) => {
+                const cells = $acc(row).find('td');
+                if (cells.length === 3 && i > 1) {
+                    const date = $acc(cells[0]).text().trim();
+                    const reference = $acc(cells[1]).text().trim();
+                    const amount = $acc(cells[2]).text().trim();
+                    if (date && reference && !date.toLowerCase().includes('paid')) {
+                        payments.push({ date, reference, amount });
+                    }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    // Table 11: Assessment of Fees (Installments)
-    const table11Acc = $acc('table').eq(11);
-    if (table11Acc.length > 0) {
-        table11Acc.find('tr').each((i: number, row: any) => {
-            const cells = $acc(row).find('td');
-            if (cells.length === 4 && i > 3) { // Headers are on Row 3
-                const dueDate = $acc(cells[0]).text().trim();
-                const description = $acc(cells[1]).text().trim();
-                const assessed = $acc(cells[2]).text().trim();
-                const outstanding = $acc(cells[3]).text().trim();
-                if (dueDate && description && !dueDate.toLowerCase().includes('net total')) {
-                    installments.push({ dueDate, description, assessed, outstanding });
+        // Detect Assessment of Fees Table
+        if (tableText.includes('Assessment of Fees') && tableText.includes('Assessed') && tableText.includes('Outstanding')) {
+            $table.find('tr').each((i, row) => {
+                const cells = $acc(row).find('td');
+                const rowText = $acc(row).text().trim();
+
+                if (cells.length === 4 && i > 2) {
+                    const dueDate = $acc(cells[0]).text().trim();
+                    const description = $acc(cells[1]).text().trim();
+                    const assessed = $acc(cells[2]).text().trim();
+                    const outstanding = $acc(cells[3]).text().trim();
+                    
+                    if (dueDate && description && !dueDate.toLowerCase().includes('due today') && !dueDate.toLowerCase().includes('net total')) {
+                        installments.push({ dueDate, description, assessed, outstanding });
+                    }
                 }
-            }
-        });
-    }
 
-    subDebug += `Scraped: ${dueAccounts.length} Due, ${payments.length} Payments, ${installments.length} Installments.\n`;
+                // Extract Totals from this table if possible
+                if (rowText.includes('Net Total')) {
+                    const cells = $acc(row).find('td');
+                    if (cells.length >= 3) {
+                        scrapedTotal = $acc(cells[1]).text().trim();
+                        scrapedBalance = $acc(cells[2]).text().trim();
+                    }
+                }
+            });
+        }
 
-    // Financials Summary (EAF fallback)
+        // Detect Adjustments Table
+        if (tableText.includes('Adjustments') && tableText.includes('Adjustment') && tableText.includes('Outstanding')) {
+            $table.find('tr').each((i, row) => {
+                const cells = $acc(row).find('td');
+                if (cells.length === 4 && i > 1) {
+                    const dueDate = $acc(cells[0]).text().trim();
+                    const description = $acc(cells[1]).text().trim();
+                    const adjustment = $acc(cells[2]).text().trim();
+                    const outstanding = $acc(cells[3]).text().trim();
+                    if (dueDate && description && !dueDate.toLowerCase().includes('total')) {
+                        adjustments.push({ dueDate, description, adjustment, outstanding });
+                    }
+                }
+            });
+        }
+    });
+
+    subDebug += `Scraped: ${dueAccounts.length} Due, ${payments.length} Payments, ${installments.length} Installments, ${adjustments.length} Adjustments.\n`;
+
+    // Financials Summary (Fallback to EAF if not scraped from Account page)
     const eafText = $eaf('body').text().replace(/\s+/g, ' ');
     const currencyRegex = /\d{1,3}(,\d{3})*(\.\d{2})/g;
     const allAmounts = eafText.match(currencyRegex) || [];
-    let totalAssessment = "---";
-    let totalBalance = "---";
+    let totalAssessment = scrapedTotal !== "---" ? scrapedTotal : "---";
+    let totalBalance = scrapedBalance !== "---" ? scrapedBalance : "---";
 
-    if (allAmounts.length >= 2) {
-        const totalIdx = eafText.indexOf("Total Assessment");
-        if (totalIdx !== -1) {
-            const afterTotal = eafText.substring(totalIdx, totalIdx + 200);
-            const matches = afterTotal.match(currencyRegex);
-            if (matches) totalAssessment = matches.find(m => parseFloat(m.replace(/,/g, '')) > 0) || matches[0];
+    if (totalAssessment === "---" || totalBalance === "---") {
+        if (allAmounts.length >= 2) {
+            const totalIdx = eafText.indexOf("Total Assessment");
+            if (totalIdx !== -1) {
+                const afterTotal = eafText.substring(totalIdx, totalIdx + 200);
+                const matches = afterTotal.match(currencyRegex);
+                if (matches) totalAssessment = matches.find(m => parseFloat(m.replace(/,/g, '')) > 0) || matches[0];
+            }
+            const balanceIdx = eafText.lastIndexOf("Balance");
+            if (balanceIdx !== -1) {
+                const afterBalance = eafText.substring(balanceIdx, balanceIdx + 200);
+                const matches = afterBalance.match(currencyRegex);
+                if (matches) totalBalance = matches[0];
+            }
+            if (totalAssessment === "---") totalAssessment = allAmounts.find(m => parseFloat(m.replace(/,/g, '')) > 500) || allAmounts[0] || "---";
+            if (totalBalance === "---") totalBalance = allAmounts[allAmounts.length - 1] || "---";
         }
-        const balanceIdx = eafText.lastIndexOf("Balance");
-        if (balanceIdx !== -1) {
-            const afterBalance = eafText.substring(balanceIdx, balanceIdx + 200);
-            const matches = afterBalance.match(currencyRegex);
-            if (matches) totalBalance = matches[0];
-        }
-        if (totalAssessment === "---") totalAssessment = allAmounts.find(m => parseFloat(m.replace(/,/g, '')) > 500) || allAmounts[0] || "---";
-        if (totalBalance === "---") totalBalance = allAmounts[allAmounts.length - 1] || "---";
     }
+
+    // Ensure currency symbol if missing
+    if (totalAssessment !== "---" && !totalAssessment.includes('₱')) totalAssessment = '₱' + totalAssessment;
+    if (totalBalance !== "---" && !totalBalance.includes('₱')) totalBalance = '₱' + totalBalance;
 
                         if (studentName && studentName.length > 2) {
                           return NextResponse.json({
@@ -373,7 +426,8 @@ export async function POST(req: NextRequest) {
                                                   balance: totalBalance,
                                                   dueAccounts: dueAccounts.length > 0 ? dueAccounts : null,
                                                   payments: payments.length > 0 ? payments : null,
-                                                  installments: installments.length > 0 ? installments : null
+                                                  installments: installments.length > 0 ? installments : null,
+                                                  adjustments: adjustments.length > 0 ? adjustments : null
                                                 }
                                               }
                                             });

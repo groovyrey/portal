@@ -27,6 +27,12 @@ export interface Financials {
     assessed: string;
     outstanding: string;
   }[];
+  adjustments?: {
+    dueDate: string;
+    description: string;
+    adjustment: string;
+    outstanding: string;
+  }[];
 }
 
 export interface ProspectusSubject {
