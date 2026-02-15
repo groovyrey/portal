@@ -34,6 +34,10 @@ export interface Financials {
     adjustment: string;
     outstanding: string;
   }[];
+  assessment?: {
+    description: string;
+    amount: string;
+  }[];
 }
 
 export interface ProspectusSubject {
@@ -41,14 +45,6 @@ export interface ProspectusSubject {
   description: string;
   units: string;
   preReq: string;
-}
-
-export interface ProspectusYear {
-  year: string;
-  semesters: {
-    semester: string;
-    subjects: ProspectusSubject[];
-  }[];
 }
 
 export interface SubjectGrade {
@@ -81,7 +77,6 @@ export interface Student {
   section?: string;
   schedule?: ScheduleItem[];
   financials?: Financials;
-  prospectus?: ProspectusYear[];
   offeredSubjects?: ProspectusSubject[];
   grades?: SemesterGrade[];
   availableReports?: ReportLink[];

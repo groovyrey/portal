@@ -7,7 +7,6 @@ import DashboardHeader from '../components/DashboardHeader';
 import FinancialSummary from '../components/FinancialSummary';
 import ScheduleTable from '../components/ScheduleTable';
 import PersonalInfo from '../components/PersonalInfo';
-import Prospectus from '../components/Prospectus';
 import GradesList from '../components/GradesList';
 import Link from 'next/link';
 

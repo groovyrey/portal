@@ -55,15 +55,6 @@ export async function initDatabase() {
       );
     `;
 
-    // Student Prospectus (Specific to student)
-    await sql`
-      CREATE TABLE IF NOT EXISTS student_prospectus (
-        student_id TEXT PRIMARY KEY REFERENCES students(id) ON DELETE CASCADE,
-        data JSONB,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-    `;
-
     // Grades table
     await sql`
       CREATE TABLE IF NOT EXISTS grades (

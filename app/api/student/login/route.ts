@@ -208,46 +208,16 @@ export async function POST(req: NextRequest) {
         }
     });
 
-    // 5. Scrape the Subject List / Prospectus (Targeting Table 9)
-    const prospectus: any[] = [];
-    let currentYear: any = null;
-    let currentSem: any = null;
-    const seenProspectus = new Set();
+    // 5. Scrape the Subject List (Targeting Table 9)
     let offeredSubjects: any[] = [];
     
-
-
     const table9 = $sub('table').eq(9);
     if (table9.length > 0) {
         const rows = table9.find('tr');
 
-        
         rows.each((rIdx, row) => {
             const cells = $sub(row).find('td');
-            const rowText = $sub(row).text().trim();
             
-            // Log first 20 rows raw for discovery
-            if (rIdx < 20) {
-                let rowData: string[] = [];
-                cells.each((_, td) => { rowData.push($sub(td).text().trim()); });
-
-            }
-
-            // Detection for Prospectus Hierarchical structure
-            if (rowText.match(/Year\s+Level/i) || (cells.length === 1 && rowText.includes('Year'))) {
-                if (currentYear) prospectus.push(currentYear);
-                currentYear = { year: rowText, semesters: [] };
-                currentSem = null;
-
-                return;
-            }
-            if (rowText.match(/\d(?:st|nd|rd|th)\s+Semester/i) && currentYear) {
-                currentSem = { semester: rowText, subjects: [] };
-                currentYear.semesters.push(currentSem);
-
-                return;
-            }
-
             // Subject rows
             if (cells.length >= 8) {
                 const code = $sub(cells[0]).text().trim();
@@ -260,30 +230,17 @@ export async function POST(req: NextRequest) {
                     
                     // Always add to offered list
                     offeredSubjects.push(subjObj);
-                    
-                    // Add to prospectus ONLY if we are currently inside a detected Year/Sem
-                    if (currentSem) {
-                        const key = `${code}-${desc}`.toLowerCase();
-                        if (!seenProspectus.has(key)) {
-                            currentSem.subjects.push(subjObj);
-                            seenProspectus.add(key);
-                        }
-                    }
                 }
             }
         });
     }
-
-    if (currentYear) prospectus.push(currentYear);
-
-
 
     // 8. Financials & Ledger Scraping
     const accountUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=Account&_nm=`;
     const accRes = await client.get(accountUrl, { headers: { 'Referer': subListRes.config.url || baseUrl } });
     
     // User requested to ONLY have the account page raw output for diagnostic
-    subDebug = `--- Account Page Diagnostic ---\nURL: ${accountUrl}\n\nRAW_HTML_START\n${accRes.data}\nRAW_HTML_END`;
+    subDebug = `--- Account Page Diagnostic ---\nURL: ${accountUrl}\n\nRAW_HTML_START\n${accRes.data}\nRAW_HTML_END\n\n--- EAF Page Diagnostic ---\nURL: ${eafUrl}\n\nRAW_HTML_START\n${eafRes.data}\nRAW_HTML_END`;
     
     const $acc = cheerio.load(accRes.data);
     
@@ -415,6 +372,21 @@ export async function POST(req: NextRequest) {
     if (totalBalance !== "---" && !totalBalance.includes('₱')) totalBalance = '₱' + totalBalance;
     if (scrapedDueToday !== "---" && !scrapedDueToday.includes('₱')) scrapedDueToday = '₱' + scrapedDueToday;
 
+    // EAF Detailed Assessment Scraping
+    let eafAssessment: any[] = [];
+    $eaf('table tr').each((_, row) => {
+        const cells = $eaf(row).find('td');
+        if (cells.length === 2) {
+            const desc = $eaf(cells[0]).text().trim();
+            const amount = $eaf(cells[1]).text().trim();
+            if (desc && amount && /^\d{1,3}(,\d{3})*(\.\d{2})/.test(amount)) {
+                if (!desc.toLowerCase().includes('total') && !desc.toLowerCase().includes('assessment') && desc.length > 2) {
+                    eafAssessment.push({ description: desc, amount: '₱' + amount.replace('₱', '') });
+                }
+            }
+        }
+    });
+
     // Save to database
     try {
       await initDatabase();
@@ -443,7 +415,8 @@ export async function POST(req: NextRequest) {
         dueAccounts: dueAccounts.length > 0 ? dueAccounts : null,
         payments: payments.length > 0 ? payments : null,
         installments: installments.length > 0 ? installments : null,
-        adjustments: adjustments.length > 0 ? adjustments : null
+        adjustments: adjustments.length > 0 ? adjustments : null,
+        assessment: eafAssessment.length > 0 ? eafAssessment : null
       };
 
       await sql`
@@ -482,17 +455,6 @@ export async function POST(req: NextRequest) {
           `;
         }
       }
-
-      // Update Student Prospectus
-      if (prospectus && prospectus.length > 0) {
-        await sql`
-          INSERT INTO student_prospectus (student_id, data)
-          VALUES (${userId}, ${JSON.stringify(prospectus)})
-          ON CONFLICT (student_id) DO UPDATE SET
-            data = EXCLUDED.data,
-            updated_at = CURRENT_TIMESTAMP
-        `;
-      }
     } catch (dbError) {
       console.error('Database sync error:', dbError);
     }
@@ -512,7 +474,6 @@ export async function POST(req: NextRequest) {
                               semester: semMatch ? semMatch[0] : "2nd Semester",
                               yearLevel: yearMatch ? `${yearMatch[1]}th Year` : "2nd Year",
                               schedule: finalSchedule.length > 0 ? finalSchedule : null,
-                              prospectus: prospectus.length > 0 ? prospectus : null,
                               offeredSubjects: offeredSubjects.length > 0 ? offeredSubjects : null,
                                                 availableReports: availableReports.length > 0 ? availableReports : null,
                                                 financials: { 
@@ -522,7 +483,8 @@ export async function POST(req: NextRequest) {
                                                   dueAccounts: dueAccounts.length > 0 ? dueAccounts : null,
                                                   payments: payments.length > 0 ? payments : null,
                                                   installments: installments.length > 0 ? installments : null,
-                                                  adjustments: adjustments.length > 0 ? adjustments : null
+                                                  adjustments: adjustments.length > 0 ? adjustments : null,
+                                                  assessment: eafAssessment.length > 0 ? eafAssessment : null
                                                 }
                                               }
                                             });
