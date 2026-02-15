@@ -43,69 +43,29 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
 
   const getDays = (timeStr: string) => {
     const ts = timeStr.toUpperCase().split(/\d/)[0].trim(); // Get only the prefix (days)
-    const found = new Set<string>();
+    const found: string[] = [];
 
-    const dayCodeMap: { [key: string]: string } = {
-      'M': 'Monday',
-      'T': 'Tuesday',
-      'W': 'Wednesday',
-      'R': 'Thursday', // 'R' is often used for Thursday in schedules
-      'TH': 'Thursday',
-      'F': 'Friday',
-      'S': 'Saturday',
-      'U': 'Sunday', // 'U' is sometimes used for Sunday
-      'SU': 'Sunday',
-      'SUN': 'Sunday',
-    };
-
-    // Prioritize checking for known multi-day codes or longer codes first
-    // This helps avoid 'T' matching for 'TH' or 'TTH'
     if (ts.includes('MWF')) {
-      found.add('Monday');
-      found.add('Wednesday');
-      found.add('Friday');
-    }
-    if (ts.includes('TTH')) {
-      found.add('Tuesday');
-      found.add('Thursday');
-    }
-    if (ts.includes('SUN')) {
-      found.add('Sunday');
-    }
-
-    // Now check for individual day codes, ensuring they haven't been added by multi-day codes
-    // Or if the time string only contains individual codes (e.g., "MTH")
-    if (ts.includes('M') && !found.has('Monday')) found.add('Monday');
-    if (ts.includes('W') && !found.has('Wednesday')) found.add('Wednesday');
-    if (ts.includes('F') && !found.has('Friday')) found.add('Friday');
-    
-    // Handle 'TH' and 'T' carefully to avoid 'T' being matched for Thursday
-    if (ts.includes('TH') && !found.has('Thursday')) {
-      found.add('Thursday');
-    } else if (ts.includes('T') && !found.has('Tuesday') && !found.has('Thursday')) { 
-      // Only add Tuesday if 'TTH' and 'TH' were not found, and Tuesday isn't already added
-      found.add('Tuesday');
-    }
-
-    // Handle 'R' as an alternative for Thursday
-    if (ts.includes('R') && !found.has('Thursday')) {
-      found.add('Thursday');
-    }
-
-    // Handle 'S' for Saturday, if 'SUN' or 'SU' was not found for Sunday
-    if (ts.includes('S') && !found.has('Saturday') && !found.has('Sunday')) {
-      found.add('Saturday');
-    }
-    // Handle 'U' or 'SU' for Sunday if 'SUN' wasn't matched
-    if (ts.includes('U') && !found.has('Sunday')) {
-      // Check for 'SU' specifically to avoid 'U' from other contexts
-      if (ts.includes('SU')) {
-        found.add('Sunday');
+      found.push('Monday', 'Wednesday', 'Friday');
+    } else if (ts.includes('TTH')) {
+      found.push('Tuesday', 'Thursday');
+    } else {
+      if (ts.includes('M')) found.push('Monday');
+      if (ts.includes('W')) found.push('Wednesday');
+      if (ts.includes('F')) found.push('Friday');
+      if (ts.includes('TH')) {
+          found.push('Thursday');
+      } else if (ts.includes('T')) {
+          // If it has T but not TH
+          found.push('Tuesday');
+      }
+      if (ts.includes('S')) {
+          if (ts.includes('SUN')) found.push('Sunday');
+          else found.push('Saturday');
       }
     }
-
-
-    return found.size > 0 ? Array.from(found) : null;
+    
+    return found.length > 0 ? Array.from(new Set(found)) : null;
   };
 
   return (
@@ -130,85 +90,62 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
             </tr>
           </thead>
           <tbody>
-            {/* Initialize cellSpans outside the HOURS.map to persist state across rows */}
-            {(() => {
-              const cellSpans: number[] = Array(DAYS.length).fill(0);
-              return HOURS.map((hourStr, hIdx) => {
-                const currentHour = 7 + hIdx; // Assuming 7 AM is the start hour for the table
+            {HOURS.map((hourStr, hIdx) => {
+              const currentHour = 7 + hIdx;
+              return (
+                <tr key={hourStr} className="h-28">
+                  <td className="p-4 border-b border-r border-slate-100 text-center align-middle bg-slate-50/10">
+                    <span className="text-[10px] font-black text-blue-600/70 uppercase tabular-nums">{hourStr}</span>
+                  </td>
+                  {DAYS.map(day => {
+                    // Find classes that belong to this day and fall into this specific hour slot
+                    const activeClasses = schedule.filter(item => {
+                      const days = getDays(item.time);
+                      const range = parseTimeRange(item.time);
+                      if (!days || !range) return false;
+                      
+                      const matchesDay = days.includes(day);
+                      // A class "occupies" this hour slot if it starts at or before this hour, and ends after it.
+                      const occupiesSlot = currentHour >= Math.floor(range.start) && currentHour < Math.ceil(range.end);
+                      
+                      return matchesDay && occupiesSlot;
+                    });
 
-                return (
-                  <tr key={hourStr}>
-                    <td className="p-4 border-b border-r border-slate-100 text-center align-middle bg-slate-50/10">
-                      <span className="text-[10px] font-black text-blue-600/70 uppercase tabular-nums">{hourStr}</span>
-                    </td>
-                    {DAYS.map((day, dayIdx) => {
-                      // If the current cell is part of a rowspan from a previous hour, skip rendering
-                      if (cellSpans[dayIdx] > 0) {
-                        cellSpans[dayIdx]--;
-                        return null; // Skip rendering this td, it's covered by a rowspan
-                      }
+                    return (
+                      <td key={day} className="p-1 border-b border-r border-slate-100 align-top relative">
+                        {activeClasses.map((item, idx) => {
+                          const range = parseTimeRange(item.time);
+                          const isStartHour = range && Math.floor(range.start) === currentHour;
+                          
+                          // To avoid chaos, only render the card on the starting hour
+                          if (!isStartHour) return null;
 
-                      // Find classes that start at this specific hour and day
-                      const startingClasses = schedule.filter(item => {
-                        const days = getDays(item.time);
-                        const range = parseTimeRange(item.time);
-                        if (!days || !range) return false;
-
-                        const matchesDay = days.includes(day);
-                        const startsAtCurrentHour = Math.floor(range.start) === currentHour;
-
-                        return matchesDay && startsAtCurrentHour;
-                      });
-
-                      // For simplicity, let's assume one class per slot. If multiple, it will only render the first.
-                      const classToRender = startingClasses[0];
-
-                      if (classToRender) {
-                        const range = parseTimeRange(classToRender.time);
-                        const durationInHours = range ? Math.ceil(range.end) - Math.floor(range.start) : 1;
-
-                        // Update cellSpans for this day
-                        if (durationInHours > 1) {
-                          cellSpans[dayIdx] = durationInHours - 1; // Mark subsequent cells as spanned
-                        }
-
-                        return (
-                          <td
-                            key={day}
-                            rowSpan={durationInHours > 0 ? durationInHours : 1}
-                            className="p-1 border-b border-r border-slate-100 align-top relative"
-                          >
-                            <div
+                          return (
+                            <div 
+                              key={idx} 
                               className={`rounded-2xl p-4 border shadow-sm transition-all hover:shadow-md cursor-default z-10 relative h-full flex flex-col
-                                ${dayIdx % 2 === 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-indigo-50 border-indigo-100 text-indigo-700'}`}
+                                ${idx % 2 === 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-indigo-50 border-indigo-100 text-indigo-700'}`}
                             >
                               <div className="text-[9px] font-black uppercase tracking-tighter mb-1 opacity-60">
-                                {classToRender.time.split(/\s+/) .slice(1).join(' ')}
+                                {item.time.split(/\s+/) .slice(1).join(' ')}
                               </div>
-                              <div className="text-[10px] font-black leading-tight mb-2 line-clamp-2 uppercase">{classToRender.subject}</div>
+                              <div className="text-[10px] font-black leading-tight mb-2 line-clamp-2 uppercase">{item.subject}</div>
                               <div className="mt-auto space-y-1">
-                                <div className="text-[8px] font-bold uppercase truncate">{classToRender.room}</div>
+                                <div className="text-[8px] font-bold uppercase truncate">{item.room}</div>
                                 <div className="flex justify-between items-center text-[8px] font-black">
-                                  <span className="opacity-40">{classToRender.section}</span>
-                                  <span className="bg-white/40 px-1.5 py-0.5 rounded border border-current/5">{classToRender.units}U</span>
+                                  <span className="opacity-40">{item.section}</span>
+                                  <span className="bg-white/40 px-1.5 py-0.5 rounded border border-current/5">{item.units}U</span>
                                 </div>
                               </div>
                             </div>
-                          </td>
-                        );
-                      } else {
-                        // Render an empty cell if no class starts here and it's not spanned
-                        return (
-                          <td key={day} className="p-1 border-b border-r border-slate-100 align-top relative">
-                            {/* Empty cell */}
-                          </td>
-                        );
-                      }
-                    })}
-                  </tr>
-                );
-              });
-            })()}
+                          );
+                        })}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
