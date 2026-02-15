@@ -135,39 +135,61 @@ export async function POST(req: NextRequest) {
       rows.each((rIdx, row) => {
         const cells = $rc(row).find('td');
         if (cells.length >= 3) {
-          const code = $rc(cells[0]).text().trim();
-          const desc = $rc(cells[1]).text().trim();
+          const col0 = $rc(cells[0]).text().trim();
+          const col1 = $rc(cells[1]).text().trim();
+          const col2 = $rc(cells[2]).text().trim();
           
           // Log first few rows of each table for debugging
           if (rIdx < 3) {
-            debugLog += `  Row ${rIdx}: ${cells.length} cells. [${code}] [${desc.substring(0, 20)}...]\n`;
+            debugLog += `  Row ${rIdx}: ${cells.length} cells. [${col0}] [${col1.substring(0, 15)}...] [${col2}]\n`;
           }
 
           const text = $rc(row).text().toLowerCase();
           if (text.includes('course') || text.includes('subject') || text.includes('description') || text.includes('units')) return;
 
+          let code = "";
+          let desc = "";
           let grade = "";
           let remarks = "";
 
           // Flexible column detection
-          if (cells.length >= 7) {
-              // Code, Desc, Unit, Prelim, Midterm, Final, Grade, Remarks
-              grade = $rc(cells[cells.length - 2]).text().trim();
-              remarks = $rc(cells[cells.length - 1]).text().trim();
-          } else if (cells.length >= 5) {
-              // Code, Desc, Unit, Grade, Remarks
-              grade = $rc(cells[cells.length - 2]).text().trim();
-              remarks = $rc(cells[cells.length - 1]).text().trim();
-          } else if (cells.length >= 4) {
-              // Code, Desc, Grade, Remarks
-              grade = $rc(cells[2]).text().trim();
-              remarks = $rc(cells[3]).text().trim();
+          if (cells.length === 3) {
+              // Observed in Table 2: [Subject Name] [Section/Units?] [Grade?]
+              desc = col0;
+              code = col1;
+              grade = col2;
+              remarks = "N/A";
+          } else {
+              code = col0;
+              desc = col1;
+              
+              // More aggressive grade detection for rows with 4+ cells
+              cells.each((cIdx, cell) => {
+                  const cellText = $rc(cell).text().trim();
+                  if (/^(\d+\.?\d*|INC|DRP|PASS|FAIL)$/i.test(cellText) && cIdx > 1) {
+                      grade = cellText;
+                      remarks = $rc(cells[cIdx + 1]).text().trim() || $rc(cells[cells.length - 1]).text().trim();
+                  }
+              });
+
+              if (!grade && cells.length >= 4) {
+                  if (cells.length >= 7) {
+                      grade = $rc(cells[cells.length - 2]).text().trim();
+                      remarks = $rc(cells[cells.length - 1]).text().trim();
+                  } else {
+                      grade = $rc(cells[2]).text().trim();
+                      remarks = $rc(cells[3]).text().trim();
+                  }
+              }
           }
 
-          if (code.length >= 3 && desc.length > 0 && !code.includes('Total') && !code.includes('---')) {
-              if (grade || remarks || code.match(/[A-Z]{2,}/)) {
-                  subjects.push({ code, description: desc, grade, remarks });
-              }
+          if (desc.length >= 3 && !desc.includes('Total') && !desc.includes('---')) {
+              subjects.push({ 
+                  code: code || "SUBJ", 
+                  description: desc, 
+                  grade: grade || "---", 
+                  remarks: (remarks && remarks !== "---") ? remarks : (parseFloat(grade) <= 3.0 ? "PASSED" : "N/A")
+              });
           }
         }
       });
