@@ -195,6 +195,7 @@ export async function POST(req: NextRequest) {
     let currentYear: any = null;
     let currentSem: any = null;
     const seenProspectus = new Set();
+    let offeredSubjects: any[] = [];
     subDebug += `--- Subject List Scraping --- Found ${$sub('table').length} tables.\n`;
 
     // Specifically target Table 9 as identified by the user
@@ -205,16 +206,8 @@ export async function POST(req: NextRequest) {
         
         rows.each((rIdx, row) => {
             const cells = $sub(row).find('td');
-            let rowData: string[] = [];
-            cells.each((_, td) => {
-                rowData.push($sub(td).text().trim());
-            });
             
-            // Log first 20 rows completely raw
-            if (rIdx < 20) {
-                subDebug += `  Row ${rIdx} (${cells.length} cells): [${rowData.join('] | [')}]\n`;
-            }
-
+            // Header detection for Prospectus structure (if any)
             const rowText = $sub(row).text().trim();
             if (rowText.match(/Year\s+Level/i)) {
                 if (currentYear) prospectus.push(currentYear);
@@ -228,17 +221,26 @@ export async function POST(req: NextRequest) {
                 return;
             }
 
-            // Subject rows in an 8-column table
+            // Subject rows in an 8-column table (actually 14 cells observed)
             if (cells.length >= 8) {
                 const code = $sub(cells[0]).text().trim();
                 const desc = $sub(cells[1]).text().trim();
-                const units = $sub(cells[2]).text().trim();
-                
-                if (code && desc && !code.toLowerCase().includes('code')) {
-                    subDebug += `    Scraped: [${code}] [${desc.substring(0, 20)}...] - CurrentSem Active: ${!!currentSem}\n`;
+                const units = $sub(cells[3]).text().trim(); // Units is col 3 in diagnostic
+                const preReq = cells.length >= 6 ? $sub(cells[5]).text().trim() : "";
+
+                if (code && desc && !code.toLowerCase().includes('subject')) {
                     const key = `${code}-${desc}`.toLowerCase();
-                    if (!seenProspectus.has(key) && currentSem) {
-                        currentSem.subjects.push({ code, description: desc, units, preReq: $sub(cells[5]).text().trim() });
+                    if (!seenProspectus.has(key)) {
+                        const subjObj = { code, description: desc, units, preReq };
+                        
+                        // Add to flat offered list
+                        offeredSubjects.push(subjObj);
+                        
+                        // Also add to hierarchical prospectus if a sem is active
+                        if (currentSem) {
+                            currentSem.subjects.push(subjObj);
+                        }
+                        
                         seenProspectus.add(key);
                     }
                 }
@@ -247,23 +249,9 @@ export async function POST(req: NextRequest) {
     } else {
         subDebug += "ERROR: Table 9 not found.\n";
     }
-    
     if (currentYear) prospectus.push(currentYear);
 
-    subDebug += `Total Prospectus Subjects: ${seenProspectus.size}\n`;
-
-    // 7. Identify "Currently Offered" subjects (for the current sem/year)
-    const currentSemText = semMatch ? semMatch[0] : "2nd Semester";
-    const currentYearText = yearMatch ? `${yearMatch[1]}th Year` : "2nd Year";
-    
-    let offeredSubjects: any[] = [];
-    const activeYearObj = prospectus.find(y => y.year.includes(yearMatch ? yearMatch[1] : "2"));
-    if (activeYearObj) {
-        const activeSemObj = activeYearObj.semesters.find((s: any) => s.semester.toLowerCase().includes(currentSemText.toLowerCase().split(' ')[0]));
-        if (activeSemObj) {
-            offeredSubjects = activeSemObj.subjects;
-        }
-    }
+    subDebug += `Total Offered Subjects Scraped: ${offeredSubjects.length}\n`;
 
     // Financials
     const eafText = $eaf('body').text().replace(/\s+/g, ' ');

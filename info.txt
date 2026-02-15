@@ -7,15 +7,288 @@ SubjectList Page Title: Student Main
 SubjectList Response URL: https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=20241322&_pc=SY2025-2026-2&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=
 SubjectList Snippet:  <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" > <HTML> <HEAD> <title>Student Main</title> <link rel="stylesheet" type="text/css" href="../Styles/Main.css" /> <link rel="stylesheet" type="text/css" href="../Styles/Schedule.css" /> <link rel="stylesheet" type="text/css
 --- Subject List Scraping --- Found 10 tables.
-Table 0: 287 rows
-Table 1: 8 rows
-Table 2: 4 rows
-Table 3: 3 rows
-Table 4: 2 rows
-Table 5: 1 rows
-Table 6: 276 rows
-Table 7: 10 rows
-Table 8: 1 rows
-Table 9: 264 rows
+Targeting Table 9: 264 rows
+  Row 0 (1 cells): [List of Subjects for SY2025-2026-2]
+  Row 1 (14 cells): [Subject] | [Desc] | [Advise] | [Units] | [Sections] | [DeptCode] | [CrsCode] | [LvlCode] | [RegType] | [MajType] | [Class] | [SClass] | [] | []
+    Scraped: [Subject] [Desc...] - CurrentSem Active: false
+  Row 2 (14 cells): [ACCT-CA] | [Accounting Course Audit] | [] | [1.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [CA] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [ACCT-CA] [Accounting Course Au...] - CurrentSem Active: false
+  Row 3 (14 cells): [ACCT100] | [Financial Accounting and Reporting] | [] | [3.00] | [6] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [ACCT100] [Financial Accounting...] - CurrentSem Active: false
+  Row 4 (14 cells): [ACCT103] | [Intermediate Accounting 2] | [] | [3.00] | [5] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [ACCT103] [Intermediate Account...] - CurrentSem Active: false
+  Row 5 (14 cells): [ACCT105] | [Cost Accounting and Control] | [] | [3.00] | [6] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [ACCT105] [Cost Accounting and ...] - CurrentSem Active: false
+  Row 6 (14 cells): [ACCT153] | [Auditing Assurance: Concepts and Applications 2] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [ACCT153] [Auditing Assurance: ...] - CurrentSem Active: false
+  Row 7 (14 cells): [ACCT154] | [Auditing Assurance: Specialized Industries] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [ACCT154] [Auditing Assurance: ...] - CurrentSem Active: false
+  Row 8 (14 cells): [ACCT155] | [Auditing in CIS Environment] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [ACCT155] [Auditing in CIS Envi...] - CurrentSem Active: false
+  Row 9 (14 cells): [ACCT158] | [Accounting for Government and Non-Profit Organizations] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [ACCT158] [Accounting for Gover...] - CurrentSem Active: false
+  Row 10 (14 cells): [ACCT199] | [Accounting Research 1: Methods] | [] | [3.00] | [3] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [ACCT199] [Accounting Research ...] - CurrentSem Active: false
+  Row 11 (14 cells): [ACCT200] | [Accounting Research 2: Thesis] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [ACCT200] [Accounting Research ...] - CurrentSem Active: false
+  Row 12 (14 cells): [AH1] | [Purposive Communication] | [] | [3.00] | [51] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [AH1] [Purposive Communicat...] - CurrentSem Active: false
+  Row 13 (14 cells): [AH2] | [Art Appreciation] | [] | [3.00] | [7] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [AH2] [Art Appreciation...] - CurrentSem Active: false
+  Row 14 (14 cells): [AIS100] | [Accounting Information Systems] | [] | [3.00] | [5] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [AIS100] [Accounting Informati...] - CurrentSem Active: false
+  Row 15 (14 cells): [AIS152] | [Managing Information Technology] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [AIS152] [Managing Information...] - CurrentSem Active: false
+  Row 16 (14 cells): [AIS153] | [Information Systems Operations and Maintenance] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [AIS153] [Information Systems ...] - CurrentSem Active: false
+  Row 17 (14 cells): [AIS154] | [Information Security and Management] | [] | [3.00] | [2] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [AIS154] [Information Security...] - CurrentSem Active: false
+  Row 18 (14 cells): [AIS155] | [Enterprise Resource Planning and Management] | [] | [3.00] | [1] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [AIS155] [Enterprise Resource ...] - CurrentSem Active: false
+  Row 19 (14 cells): [AIS156] | [Data Warehousing and Management] | [] | [3.00] | [1] | [COLLEGE] | [*] | [*] | [Regular] | [Major] | [] | [] | [List Sections] | [View Schedule]
+    Scraped: [AIS156] [Data Warehousing and...] - CurrentSem Active: false
+    Scraped: [AIS157] [Management Informati...] - CurrentSem Active: false
+    Scraped: [AIS199] [Accounting Informati...] - CurrentSem Active: false
+    Scraped: [AIS200] [Accounting Informati...] - CurrentSem Active: false
+    Scraped: [BA190] [Statistical Techniqu...] - CurrentSem Active: false
+    Scraped: [BA199] [Business Research 1:...] - CurrentSem Active: false
+    Scraped: [BA200] [Business Research 2:...] - CurrentSem Active: false
+    Scraped: [BAKING] [Bread and Pastry...] - CurrentSem Active: false
+    Scraped: [BARMGT] [Bar and Beverage Man...] - CurrentSem Active: false
+    Scraped: [BIO12] [Human Anatomy and Ph...] - CurrentSem Active: false
+    Scraped: [BIO51] [Cell and Molecular B...] - CurrentSem Active: false
+    Scraped: [BIO52] [Genetics with Lab...] - CurrentSem Active: false
+    Scraped: [BUSETH] [Governance, Business...] - CurrentSem Active: false
+    Scraped: [BUSLAW1] [Law on Obligation an...] - CurrentSem Active: false
+    Scraped: [BUSLAW3] [Regulatory Framework...] - CurrentSem Active: false
+    Scraped: [CA101] [Intitutional Correct...] - CurrentSem Active: false
+    Scraped: [CA102] [Non-Institutional Co...] - CurrentSem Active: false
+    Scraped: [CA103] [Therapeutic Modaliti...] - CurrentSem Active: false
+    Scraped: [CDI103] [Specialized Crime In...] - CurrentSem Active: false
+    Scraped: [CDI105] [Technical English 1 ...] - CurrentSem Active: false
+    Scraped: [CDI107] [Vice and Drug Educat...] - CurrentSem Active: false
+    Scraped: [CE-CA] [Civil Enginering Cou...] - CurrentSem Active: false
+    Scraped: [CE101] [Fundamentals of Surv...] - CurrentSem Active: false
+    Scraped: [CE105] [Building System Desi...] - CurrentSem Active: false
+    Scraped: [CE106] [Principles of Steel ...] - CurrentSem Active: false
+    Scraped: [CE107] [Principles of Reinfo...] - CurrentSem Active: false
+    Scraped: [CE108] [Hydraulics...] - CurrentSem Active: false
+    Scraped: [CE109] [Hydrology...] - CurrentSem Active: false
+    Scraped: [CE110] [CE Law, Ethics and C...] - CurrentSem Active: false
+    Scraped: [CE113] [Quantity Surveying...] - CurrentSem Active: false
+    Scraped: [CE114] [Construction Methods...] - CurrentSem Active: false
+    Scraped: [CE200] [CE Project 2...] - CurrentSem Active: false
+    Scraped: [CEM103] [Construction Cost En...] - CurrentSem Active: false
+    Scraped: [CEM104] [Database Management ...] - CurrentSem Active: false
+    Scraped: [CEM105] [Construction Occupat...] - CurrentSem Active: false
+    Scraped: [CFLM101] [Character Formation ...] - CurrentSem Active: false
+    Scraped: [CFLM102] [Character Formation ...] - CurrentSem Active: false
+    Scraped: [CHEM11] [General Chemistry (o...] - CurrentSem Active: false
+    Scraped: [CHEM12] [Biochemistry...] - CurrentSem Active: false
+    Scraped: [CHEM50] [Inorganic Chemistry...] - CurrentSem Active: false
+    Scraped: [CHEM53] [Biochemistry...] - CurrentSem Active: false
+    Scraped: [CLJ10] [Introduction to Crim...] - CurrentSem Active: false
+    Scraped: [CLJ11] [Human Rights Educati...] - CurrentSem Active: false
+    Scraped: [CLJ13] [Criminal Law 2...] - CurrentSem Active: false
+    Scraped: [CLJ15] [Criminal Procedure a...] - CurrentSem Active: false
+    Scraped: [COMM101] [Communication Theory...] - CurrentSem Active: false
+    Scraped: [COMM103] [Introduction to Film...] - CurrentSem Active: false
+    Scraped: [CRIM-CA] [Course Audit in Crim...] - CurrentSem Active: false
+    Scraped: [CRIM102] [Theories of Crime Ca...] - CurrentSem Active: false
+    Scraped: [CRIM106] [Dispute Resolution a...] - CurrentSem Active: false
+    Scraped: [CRIM181] [Criminology Internsh...] - CurrentSem Active: false
+    Scraped: [CRIM190] [Statistical Techniqu...] - CurrentSem Active: false
+    Scraped: [CRIM199] [Criminological Resea...] - CurrentSem Active: false
+    Scraped: [EDUC-CA] [Course Audit in Teac...] - CurrentSem Active: false
+    Scraped: [EDUC101] [The Child Adolescent...] - CurrentSem Active: false
+    Scraped: [EDUC102] [The Teaching Profess...] - CurrentSem Active: false
+    Scraped: [EDUC103] [The Teacher and the ...] - CurrentSem Active: false
+    Scraped: [EDUC105] [Facilitating Learner...] - CurrentSem Active: false
+    Scraped: [EDUC106.1] [Assessment of Learni...] - CurrentSem Active: false
+    Scraped: [EDUC106.2] [Assessment of Learni...] - CurrentSem Active: false
+    Scraped: [EDUC107.1] [Technology for Teach...] - CurrentSem Active: false
+    Scraped: [EDUC107.2] [Technology for Teach...] - CurrentSem Active: false
+    Scraped: [EDUC108] [The Teacher and the ...] - CurrentSem Active: false
+    Scraped: [EDUC190] [Statistical Techniqu...] - CurrentSem Active: false
+    Scraped: [EDUC199] [Research in Educatio...] - CurrentSem Active: false
+    Scraped: [ELEC2-AH] [Kontekstwalisadong K...] - CurrentSem Active: false
+    Scraped: [ELEC2-AH-KP] [Kulturang Popular...] - CurrentSem Active: false
+    Scraped: [ELEC2-MST-IT] [Living in the IT Era...] - CurrentSem Active: false
+    Scraped: [ELEC2-SSP] [The Entrepreneurial ...] - CurrentSem Active: false
+    Scraped: [ELEC3-SSP] [The Entrepreneurial ...] - CurrentSem Active: false
+    Scraped: [ELEC3-SSP-GS] [Gender and Society...] - CurrentSem Active: false
+    Scraped: [EM-ENG2] [Teahing English in t...] - CurrentSem Active: false
+    Scraped: [EM-FIL2] [Pagtuturo ng Filipin...] - CurrentSem Active: false
+    Scraped: [EM-MATH1] [Teaching Math in the...] - CurrentSem Active: false
+    Scraped: [EM-MATH2] [Teaching Math in the...] - CurrentSem Active: false
+    Scraped: [EM-SCI1] [Teaching Science in ...] - CurrentSem Active: false
+    Scraped: [EM-SCI2] [Teaching Science in ...] - CurrentSem Active: false
+    Scraped: [EM-SOC1] [Teaching Social Stud...] - CurrentSem Active: false
+    Scraped: [EM-SOC2] [Teaching Social Stud...] - CurrentSem Active: false
+    Scraped: [EM-SPT] [Teaching Internship ...] - CurrentSem Active: false
+    Scraped: [EM-TLE2] [Edukasyong Pantahana...] - CurrentSem Active: false
+    Scraped: [EM-VED] [Good Manners and Rig...] - CurrentSem Active: false
+    Scraped: [ENG-SPT] [Teaching Internship ...] - CurrentSem Active: false
+    Scraped: [ENG101] [Introduction to the ...] - CurrentSem Active: false
+    Scraped: [ENG151] [English Language Tea...] - CurrentSem Active: false
+    Scraped: [ENG154] [English Language Cur...] - CurrentSem Active: false
+    Scraped: [ENG155] [Business Communicati...] - CurrentSem Active: false
+    Scraped: [ENG172] [Language and Adverti...] - CurrentSem Active: false
+    Scraped: [ENG174] [Survey of Afro-Asian...] - CurrentSem Active: false
+    Scraped: [ENG175] [Varieties of English...] - CurrentSem Active: false
+    Scraped: [ENG177] [Speech and Stage Art...] - CurrentSem Active: false
+    Scraped: [ENG190] [Statistical Techniqu...] - CurrentSem Active: false
+    Scraped: [ENG199] [Language Research 1:...] - CurrentSem Active: false
+    Scraped: [ENG50] [Technical Writing...] - CurrentSem Active: false
+    Scraped: [ENG51] [Teaching and Assessm...] - CurrentSem Active: false
+    Scraped: [ENG52] [Remedial Instruction...] - CurrentSem Active: false
+    Scraped: [ENG70] [Literary Critism...] - CurrentSem Active: false
+    Scraped: [ENG71] [Mythology and Folklo...] - CurrentSem Active: false
+    Scraped: [ENGLISH181] [Internship Across th...] - CurrentSem Active: false
+    Scraped: [ENTREP] [Entrepreneurial Mana...] - CurrentSem Active: false
+    Scraped: [ES12] [Engineering Drawing ...] - CurrentSem Active: false
+    Scraped: [ES13] [Computer Fundamental...] - CurrentSem Active: false
+    Scraped: [ES16] [Dynamics of Rigid Bo...] - CurrentSem Active: false
+    Scraped: [ES17] [Mechanics of Deforma...] - CurrentSem Active: false
+    Scraped: [ES18] [Engineering Economic...] - CurrentSem Active: false
+    Scraped: [ES19] [Technopreneurship 10...] - CurrentSem Active: false
+    Scraped: [F.LANG2] [European Foreign Lan...] - CurrentSem Active: false
+    Scraped: [F.LANG4] [Asian Foreign Langua...] - CurrentSem Active: false
+    Scraped: [FINMGT] [Financial Management...] - CurrentSem Active: false
+    Scraped: [FLANG2] [Asian Foreign Langua...] - CurrentSem Active: false
+    Scraped: [FM-SPT] [Teaching Internship ...] - CurrentSem Active: false
+    Scraped: [FM100] [Finance...] - CurrentSem Active: false
+    Scraped: [FM103] [Ang Filipino sa Kuri...] - CurrentSem Active: false
+    Scraped: [FM104] [Estruktura ng Wikang...] - CurrentSem Active: false
+    Scraped: [FM115] [Panunuring Pampaniti...] - CurrentSem Active: false
+    Scraped: [FM116] [Maikling Kwento at N...] - CurrentSem Active: false
+    Scraped: [FM117] [Panulaang Filipino...] - CurrentSem Active: false
+    Scraped: [FM118] [Dulaang Filipino...] - CurrentSem Active: false
+    Scraped: [FM151] [Financial Management...] - CurrentSem Active: false
+    Scraped: [FM152] [Capital Market...] - CurrentSem Active: false
+    Scraped: [FM153] [Credit and Collectio...] - CurrentSem Active: false
+    Scraped: [FM158] [Financial Analysis a...] - CurrentSem Active: false
+    Scraped: [FM199] [Introduksyon sa Pana...] - CurrentSem Active: false
+    Scraped: [FRSC102] [Personal Identificat...] - CurrentSem Active: false
+    Scraped: [FRSC103] [Forensic Chemistry a...] - CurrentSem Active: false
+    Scraped: [FRSC105] [Lie Detection Techni...] - CurrentSem Active: false
+    Scraped: [FRSTND] [Updates in Financial...] - CurrentSem Active: false
+    Scraped: [FS101] [Field Study 1...] - CurrentSem Active: false
+    Scraped: [GEOL31] [Geology for Enginees...] - CurrentSem Active: false
+    Scraped: [HED102] [Personal, Community ...] - CurrentSem Active: false
+    Scraped: [HM104] [Leagl Aspects in Tou...] - CurrentSem Active: false
+    Scraped: [HM108] [Tourism and Hospital...] - CurrentSem Active: false
+    Scraped: [HM110] [Entrepreneurship in ...] - CurrentSem Active: false
+    Scraped: [HM151] [Kitchen Essentials a...] - CurrentSem Active: false
+    Scraped: [HM153] [Fundamentals in Lodg...] - CurrentSem Active: false
+    Scraped: [HM154] [Applied Business Too...] - CurrentSem Active: false
+    Scraped: [HM157] [Ergonomics and Facil...] - CurrentSem Active: false
+    Scraped: [HM190] [Statistical Techniqu...] - CurrentSem Active: false
+    Scraped: [HM199] [Research in Hospital...] - CurrentSem Active: false
+    Scraped: [HM200] [Research in Hospital...] - CurrentSem Active: false
+    Scraped: [HRM151] [Administrative Offic...] - CurrentSem Active: false
+    Scraped: [HRM152] [Labor Law and Legisl...] - CurrentSem Active: false
+    Scraped: [HRM153] [Recruitment and Sele...] - CurrentSem Active: false
+    Scraped: [HRM158] [Organizational Devel...] - CurrentSem Active: false
+    Scraped: [INTLBUS] [International and Bu...] - CurrentSem Active: false
+    Scraped: [IS120] [Fundamentals of Info...] - CurrentSem Active: false
+    Scraped: [IS121] [Professional Issues ...] - CurrentSem Active: false
+    Scraped: [IS123] [System Analysis and ...] - CurrentSem Active: false
+    Scraped: [IS125] [IS Project Managemen...] - CurrentSem Active: false
+    Scraped: [IS126] [IS Strategy Manageme...] - CurrentSem Active: false
+    Scraped: [IS151] [Accounting and Finan...] - CurrentSem Active: false
+    Scraped: [IS153] [Evaluation of Busine...] - CurrentSem Active: false
+    Scraped: [IS190] [Methods of Research...] - CurrentSem Active: false
+    Scraped: [IS200] [Capstone Project 2...] - CurrentSem Active: false
+    Scraped: [IT122] [Introduction to Prog...] - CurrentSem Active: false
+    Scraped: [IT124] [Information Manageme...] - CurrentSem Active: false
+    Scraped: [IT172] [Fundamentals of Data...] - CurrentSem Active: false
+    Scraped: [IT173] [Web Development...] - CurrentSem Active: false
+    Scraped: [LEA101] [Law Enforcement Orga...] - CurrentSem Active: false
+    Scraped: [LEA102] [Comparative Models i...] - CurrentSem Active: false
+    Scraped: [LEA104] [Law Enforcement Oper...] - CurrentSem Active: false
+    Scraped: [MATH11] [Calculus 1...] - CurrentSem Active: false
+    Scraped: [MATH14] [Engineering Data Ana...] - CurrentSem Active: false
+    Scraped: [MKT100] [Marketing...] - CurrentSem Active: false
+    Scraped: [MKT151] [Marketing Management...] - CurrentSem Active: false
+    Scraped: [MKT152] [Product Management...] - CurrentSem Active: false
+    Scraped: [MKT153] [Advertising...] - CurrentSem Active: false
+    Scraped: [MKT158] [Marketing Research...] - CurrentSem Active: false
+    Scraped: [MM-SPT] [Teaching Internship ...] - CurrentSem Active: false
+    Scraped: [MM101] [History of Mathemati...] - CurrentSem Active: false
+    Scraped: [MM104] [Plane and Solid Geom...] - CurrentSem Active: false
+    Scraped: [MM106] [Elementary Statistic...] - CurrentSem Active: false
+    Scraped: [MM107] [Analytic Geometry wi...] - CurrentSem Active: false
+    Scraped: [MM109] [Calculus 3...] - CurrentSem Active: false
+    Scraped: [MM111] [Mathematics of Inves...] - CurrentSem Active: false
+    Scraped: [MM114] [Advanced Statistics...] - CurrentSem Active: false
+    Scraped: [MM115] [Problem Solving, Mat...] - CurrentSem Active: false
+    Scraped: [MM116] [Abstract Algebra...] - CurrentSem Active: false
+    Scraped: [MM199] [Research in Mathemat...] - CurrentSem Active: false
+    Scraped: [MST1] [Mathematics in the M...] - CurrentSem Active: false
+    Scraped: [MST2] [Science Technology a...] - CurrentSem Active: false
+    Scraped: [NSTP-CWTS1] [Civic Welfare Traini...] - CurrentSem Active: false
+    Scraped: [NSTP-CWTS2] [Civic Welfare Traini...] - CurrentSem Active: false
+    Scraped: [NSTP-LTS2] [Literacy Training Se...] - CurrentSem Active: false
+    Scraped: [OM-TQM] [Operations Managemen...] - CurrentSem Active: false
+    Scraped: [OPSAUDIT] [Operations Auditing...] - CurrentSem Active: false
+    Scraped: [PE-SPT] [Teaching Internship ...] - CurrentSem Active: false
+    Scraped: [PE103] [Physiology of Exerci...] - CurrentSem Active: false
+    Scraped: [PE106] [Curriculum and Asses...] - CurrentSem Active: false
+    Scraped: [PE109] [Movement Education...] - CurrentSem Active: false
+    Scraped: [PE111] [International Dance ...] - CurrentSem Active: false
+    Scraped: [PE113] [Team Sports...] - CurrentSem Active: false
+    Scraped: [PE115] [Swimming and Aquatic...] - CurrentSem Active: false
+    Scraped: [PE199] [Research in Physical...] - CurrentSem Active: false
+    Scraped: [PE2] [Physical Activities ...] - CurrentSem Active: false
+    Scraped: [PE2A] [Arnis and Disarming ...] - CurrentSem Active: false
+    Scraped: [PE3] [Physical Activities ...] - CurrentSem Active: false
+    Scraped: [PE4] [Physical Activities ...] - CurrentSem Active: false
+    Scraped: [PE4A] [Fundamentals of Mark...] - CurrentSem Active: false
+    Scraped: [PED5A] [Principles of Teachi...] - CurrentSem Active: false
+    Scraped: [PED5B] [Principles of Teachi...] - CurrentSem Active: false
+    Scraped: [PHYS31] [Physics for Engineer...] - CurrentSem Active: false
+    Scraped: [PHYS50] [Thermodynamics w/ La...] - CurrentSem Active: false
+    Scraped: [PHYS51] [Electricity and Magn...] - CurrentSem Active: false
+    Scraped: [PSY-CA] [Psychology Course Au...] - CurrentSem Active: false
+    Scraped: [PSY102] [Psychological Statis...] - CurrentSem Active: false
+    Scraped: [PSY151] [Developmental Psycho...] - CurrentSem Active: false
+    Scraped: [PSY154] [Biological Psycholog...] - CurrentSem Active: false
+    Scraped: [PSY156] [Field Methods in Psy...] - CurrentSem Active: false
+    Scraped: [PSY157] [Social Psychology...] - CurrentSem Active: false
+    Scraped: [PSY159] [Abnormal Psychology...] - CurrentSem Active: false
+    Scraped: [PSY171] [Introduction to Coun...] - CurrentSem Active: false
+    Scraped: [PSY172] [Group Dynamics...] - CurrentSem Active: false
+    Scraped: [PSY199] [Research in Psycholo...] - CurrentSem Active: false
+    Scraped: [PSY200] [Research in Psycholo...] - CurrentSem Active: false
+    Scraped: [RIZAL] [Life and Works of Ri...] - CurrentSem Active: false
+    Scraped: [ROTC2] [Reserved Officers Tr...] - CurrentSem Active: false
+    Scraped: [ROTC4] [Advance ROTC...] - CurrentSem Active: false
+    Scraped: [ROTC6] [Advance ROTC...] - CurrentSem Active: false
+    Scraped: [SM-SPT] [Teaching Internship ...] - CurrentSem Active: false
+    Scraped: [SM102] [Earth Science...] - CurrentSem Active: false
+    Scraped: [SM199] [Research in Science ...] - CurrentSem Active: false
+    Scraped: [SOCRES] [Good Governance and ...] - CurrentSem Active: false
+    Scraped: [SSM-SPT] [Teaching Internship ...] - CurrentSem Active: false
+    Scraped: [SSM101] [Foundation of Social...] - CurrentSem Active: false
+    Scraped: [SSM105] [Geography 2 (Philipp...] - CurrentSem Active: false
+    Scraped: [SSM109] [World History 1 (Asi...] - CurrentSem Active: false
+    Scraped: [SSM114] [Comparative Governme...] - CurrentSem Active: false
+    Scraped: [SSM115] [Law-Related Studies...] - CurrentSem Active: false
+    Scraped: [SSM116] [Teaching Approaches ...] - CurrentSem Active: false
+    Scraped: [SSM119] [Assessment and Evalu...] - CurrentSem Active: false
+    Scraped: [SSM199] [Research in Social S...] - CurrentSem Active: false
+    Scraped: [SSP1] [Understanding the Se...] - CurrentSem Active: false
+    Scraped: [SSP2] [Readings in Philippi...] - CurrentSem Active: false
+    Scraped: [SSP3] [The Contemporary Wor...] - CurrentSem Active: false
+    Scraped: [SSP4] [Ethics...] - CurrentSem Active: false
+    Scraped: [SSP5] [Introduction to Taxa...] - CurrentSem Active: false
+    Scraped: [STRAT] [Strategic Management...] - CurrentSem Active: false
+    Scraped: [STRATANL] [Strategic Business A...] - CurrentSem Active: false
+    Scraped: [TAX2] [Business Taxation...] - CurrentSem Active: false
+    Scraped: [VM-SPT] [Teaching Internship ...] - CurrentSem Active: false
+    Scraped: [VM103] [Psychological Theori...] - CurrentSem Active: false
+    Scraped: [VM104] [Foundations of Value...] - CurrentSem Active: false
+    Scraped: [VM105] [Contemporary Family ...] - CurrentSem Active: false
 Total Prospectus Subjects: 0
 

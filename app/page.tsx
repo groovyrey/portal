@@ -9,7 +9,7 @@ import ScheduleTable from '../components/ScheduleTable';
 import PersonalInfo from '../components/PersonalInfo';
 import Prospectus from '../components/Prospectus';
 import GradesList from '../components/GradesList';
-import OfferedSubjects from '../components/OfferedSubjects';
+import Link from 'next/link';
 
 export default function Home() {
   const [student, setStudent] = useState<Student | null>(null);
@@ -128,7 +128,30 @@ export default function Home() {
           <div className="lg:col-span-2">
             {student.financials && <FinancialSummary financials={student.financials} />}
             {student.availableReports && <GradesList reports={student.availableReports} userId={student.id} password={password} />}
-            {student.offeredSubjects && <OfferedSubjects subjects={student.offeredSubjects} />}
+            
+            {student.offeredSubjects && (
+              <Link href="/offered-subjects">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-6 hover:border-blue-200 transition-all group flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-50 p-3 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-800">Offered Subjects</h3>
+                      <p className="text-slate-500 text-xs font-medium uppercase tracking-widest mt-0.5">View all subjects for this semester</p>
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded-lg text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+            )}
+
             {student.schedule && <ScheduleTable schedule={student.schedule} />}
             {student.prospectus && <Prospectus prospectus={student.prospectus} />}
           </div>
