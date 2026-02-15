@@ -10,76 +10,115 @@ async function diagnose() {
     const client = wrapper(axios.create({ 
         jar, 
         withCredentials: true,
+        maxRedirects: 5,
         headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Connection': 'keep-alive'
         }
     }));
     
     const userId = '20241322';
     const password = '09129927548';
     
-    const baseUrl = 'https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=' + userId;
-    const reportCardUrl = 'https://premium.schoolista.com/LCC/Student/LCC.ReportCardHED.aspx?_sid=20241322&_pc=SY2024-2025-2';
+    // Using the exact URL from your info.txt
+    const baseUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=Main&_nm=`;
     const loginUrl = 'https://premium.schoolista.com/LCC/Student/LCC.Login.aspx';
 
-    console.log('1. Initializing Session...');
-    const initRes = await client.get(baseUrl);
-    const $init = cheerio.load(initRes.data);
-    
-    const formData = {};
-    $init('input[type="hidden"]').each((_, el) => {
-        formData[$init(el).attr('name')] = $init(el).val();
-    });
-    formData.otbUserID = userId;
-    formData.otbPassword = password;
-    formData.obtnLogin = 'LOGIN';
-
-    console.log('2. Logging in...');
-    await client.post(loginUrl, qs.stringify(formData), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Referer': baseUrl }
-    });
-
-    console.log('3. Fetching Report Card...');
-    let res = await client.get(reportCardUrl, { headers: { 'Referer': baseUrl } });
-    let $ = cheerio.load(res.data);
-
-    if (res.data.includes('ocbAcknowledgement')) {
-        console.log('4. Handling Acknowledgement Page...');
-        const ackData = {};
-        $('input[type="hidden"]').each((_, el) => {
-            ackData[$(el).attr('name')] = $(el).val();
+    try {
+        console.log('--- STEP 1: INITIAL VISIT ---');
+        const initRes = await client.get(baseUrl);
+        const $init = cheerio.load(initRes.data);
+        
+        const formData = {};
+        $init('input[type="hidden"]').each((_, el) => {
+            formData[$init(el).attr('name')] = $init(el).val();
         });
-        ackData['ocbAcknowledgement'] = 'on';
-        ackData['obtnAcknowledgeAndProceed'] = 'Acknowledge and Proceed';
+        formData.otbUserID = userId;
+        formData.otbPassword = password;
+        formData.obtnLogin = 'LOGIN';
 
-        res = await client.post(reportCardUrl, qs.stringify(ackData), {
+        console.log('Tokens found:', Object.keys(formData).filter(k => k.startsWith('__')));
+        
+        console.log('\n--- STEP 2: LOGIN POST ---');
+        const loginRes = await client.post(loginUrl, qs.stringify(formData), {
             headers: { 
                 'Content-Type': 'application/x-www-form-urlencoded', 
-                'Referer': reportCardUrl 
+                'Referer': baseUrl,
+                'Origin': 'https://premium.schoolista.com'
             }
         });
-        $ = cheerio.load(res.data);
-        console.log('Acknowledgement Submitted.');
-    }
 
-    console.log('5. Final Page Analysis...');
-    fs.writeFileSync('diag_result.html', res.data);
-    console.log('Title:', $('title').text());
-    
-    const subjects = [];
-    $('table tr').each((_, row) => {
-        const cells = $(row).find('td');
-        if (cells.length >= 4) {
-            const code = $(cells[0]).text().trim();
-            const desc = $(cells[1]).text().trim();
-            if (code && desc && !code.toLowerCase().includes('code')) {
-                subjects.push({ code, desc, grade: $(cells[cells.length-2]).text().trim() });
-            }
+        console.log('Login Response URL:', loginRes.config.url);
+        console.log('Login Status:', loginRes.status);
+        
+        if (loginRes.data.includes('USER ID') && loginRes.data.includes('PASSWORD')) {
+            console.log('RESULT: Login FAILED (Still on login page)');
+            fs.writeFileSync('login_failed_debug.html', loginRes.data);
+            return;
         }
-    });
 
-    console.log('Subjects Found:', subjects.length);
-    if (subjects.length > 0) console.table(subjects.slice(0, 5));
+        console.log('RESULT: Login likely SUCCESSFUL');
+
+        console.log('\n--- STEP 3: FETCHING REPORT CARD ---');
+        // Let's try to get the link from the dashboard or use the known one
+        const reportCardUrl = `https://premium.schoolista.com/LCC/Student/LCC.ReportCardHED.aspx?_sid=${userId}&_pc=SY2024-2025-2`;
+        
+        let rcRes = await client.get(reportCardUrl, {
+            headers: { 'Referer': loginRes.config.url }
+        });
+        let $rc = cheerio.load(rcRes.data);
+
+        if (rcRes.data.includes('ocbAcknowledgement')) {
+            console.log('--- STEP 4: ACKNOWLEDGEMENT ---');
+            const ackData = {};
+            $rc('input[type="hidden"]').each((_, el) => {
+                ackData[$rc(el).attr('name')] = $rc(el).val();
+            });
+            ackData['ocbAcknowledgement'] = 'on';
+            ackData['obtnAcknowledgeAndProceed'] = 'Acknowledge and Proceed';
+
+            rcRes = await client.post(reportCardUrl, qs.stringify(ackData), {
+                headers: { 
+                    'Content-Type': 'application/x-www-form-urlencoded', 
+                    'Referer': reportCardUrl 
+                }
+            });
+            $rc = cheerio.load(rcRes.data);
+            console.log('Acknowledgement submitted.');
+        }
+
+        fs.writeFileSync('final_grades_debug.html', rcRes.data);
+        console.log('\n--- FINAL VERIFICATION ---');
+        console.log('Title:', $rc('title').text().trim());
+        
+        const subjects = [];
+        $rc('table tr').each((_, row) => {
+            const cells = $rc(row).find('td');
+            if (cells.length >= 4) {
+                const code = $rc(cells[0]).text().trim();
+                if (code && code.length > 2 && !code.toLowerCase().includes('code')) {
+                    subjects.push(code);
+                }
+            }
+        });
+
+        if (subjects.length > 0) {
+            console.log('SUCCESS! Found', subjects.length, 'subjects.');
+            console.log('Subjects:', subjects.join(', '));
+        } else {
+            console.log('FAILED: No subjects found in table.');
+            console.log('Page snippet:', rcRes.data.replace(/\s+/g, ' ').substring(0, 500));
+        }
+
+    } catch (e) {
+        console.error('\nFATAL ERROR:', e.message);
+        if (e.response) {
+            console.error('Status:', e.response.status);
+            fs.writeFileSync('error_dump.html', e.response.data);
+        }
+    }
 }
 
 diagnose();
