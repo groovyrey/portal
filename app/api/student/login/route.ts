@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { sql } from '@/lib/db';
 import { initDatabase } from '@/lib/db-init';
+import { encrypt } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
     const { userId, password } = await req.json();
@@ -459,36 +460,51 @@ export async function POST(req: NextRequest) {
       console.error('Database sync error:', dbError);
     }
 
-                        if (studentName && studentName.length > 2) {
-                          return NextResponse.json({
-                            success: true,
-                            debugLog: subDebug,
-                            data: { 
-                              name: studentName, 
-                              id: userId, 
-                              course, 
-                              gender, 
-                              email, 
-                              contact, 
-                              address,
-                              semester: semMatch ? semMatch[0] : "2nd Semester",
-                              yearLevel: yearMatch ? `${yearMatch[1]}th Year` : "2nd Year",
-                              schedule: finalSchedule.length > 0 ? finalSchedule : null,
-                              offeredSubjects: offeredSubjects.length > 0 ? offeredSubjects : null,
-                                                availableReports: availableReports.length > 0 ? availableReports : null,
-                                                financials: { 
-                                                  total: totalAssessment, 
-                                                  balance: totalBalance,
-                                                  dueToday: scrapedDueToday,
-                                                  dueAccounts: dueAccounts.length > 0 ? dueAccounts : null,
-                                                  payments: payments.length > 0 ? payments : null,
-                                                  installments: installments.length > 0 ? installments : null,
-                                                  adjustments: adjustments.length > 0 ? adjustments : null,
-                                                  assessment: eafAssessment.length > 0 ? eafAssessment : null
-                                                }
-                                              }
-                                            });
-                        }
+    if (studentName && studentName.length > 2) {
+        // Encrypt credentials for session cookie
+        const sessionData = JSON.stringify({ userId, password });
+        const encryptedSession = encrypt(sessionData);
+
+        const response = NextResponse.json({
+            success: true,
+            debugLog: subDebug,
+            data: { 
+                name: studentName, 
+                id: userId, 
+                course, 
+                gender, 
+                email, 
+                contact, 
+                address,
+                semester: semMatch ? semMatch[0] : "2nd Semester",
+                yearLevel: yearMatch ? `${yearMatch[1]}th Year` : "2nd Year",
+                schedule: finalSchedule.length > 0 ? finalSchedule : null,
+                offeredSubjects: offeredSubjects.length > 0 ? offeredSubjects : null,
+                availableReports: availableReports.length > 0 ? availableReports : null,
+                financials: { 
+                    total: totalAssessment, 
+                    balance: totalBalance,
+                    dueToday: scrapedDueToday,
+                    dueAccounts: dueAccounts.length > 0 ? dueAccounts : null,
+                    payments: payments.length > 0 ? payments : null,
+                    installments: installments.length > 0 ? installments : null,
+                    adjustments: adjustments.length > 0 ? adjustments : null,
+                    assessment: eafAssessment.length > 0 ? eafAssessment : null
+                }
+            }
+        });
+
+        // Set secure HttpOnly cookie
+        response.cookies.set('session_token', encryptedSession, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 60 * 60 * 24 * 7, // 1 week
+            path: '/',
+        });
+
+        return response;
+    }
     const title = $dashboard('title').text();
     const snippet = pageText.substring(0, 500).replace(/\s+/g, ' ');
     return NextResponse.json({ 

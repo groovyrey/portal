@@ -6,18 +6,15 @@ import Link from 'next/link';
 
 export default function OfferedSubjectsPage() {
   const [student, setStudent] = useState<Student | null>(null);
-  const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const savedStudent = localStorage.getItem('student_data');
-    const savedPassword = localStorage.getItem('student_pass');
     if (savedStudent) {
       try {
         setStudent(JSON.parse(savedStudent));
-        if (savedPassword) setPassword(savedPassword);
       } catch (e) {
         console.error('Failed to parse saved student data');
       }
@@ -26,27 +23,21 @@ export default function OfferedSubjectsPage() {
   }, []);
 
   const handleRefresh = async () => {
-    if (!student || !password) return;
+    if (!student) return;
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/student/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: student.id, password }),
-      });
+      // Refresh session/data using HttpOnly cookie (no credentials sent)
+      const response = await fetch('/api/student/me');
+      const result = await response.json();
 
-      const result: LoginResponse = await response.json();
-
-      if (result.success && result.data) {
+      if (response.ok && result.success && result.data) {
         setStudent(result.data);
         localStorage.setItem('student_data', JSON.stringify(result.data));
-        if (result.debugLog) localStorage.setItem('debug_log', result.debugLog);
-        // Dispatch event so other components (like Navbar) stay in sync
         window.dispatchEvent(new Event('local-storage-update'));
       } else {
-        setError(result.error || 'Refresh failed.');
+        setError(result.error || 'Refresh failed. Your session may have expired.');
       }
     } catch (err) {
       setError('Network error. Please try again.');

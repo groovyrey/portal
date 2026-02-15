@@ -6,14 +6,32 @@ import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
 import { sql } from '@/lib/db';
 import { initDatabase } from '@/lib/db-init';
+import { decrypt } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   let debugLog = "";
   try {
-    const { userId, password, href } = await req.json();
+    const body = await req.json();
+    const { href } = body;
+    let { userId, password } = body;
+
+    // Try to get credentials from session cookie if not provided in body
+    const sessionCookie = req.cookies.get('session_token');
+    if (sessionCookie && sessionCookie.value) {
+      try {
+        const decrypted = decrypt(sessionCookie.value);
+        const sessionData = JSON.parse(decrypted);
+        if (sessionData.userId && sessionData.password) {
+          userId = sessionData.userId;
+          password = sessionData.password;
+        }
+      } catch (e) {
+        console.error('Failed to decrypt session cookie');
+      }
+    }
 
     if (!userId || !password || !href) {
-      return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing required parameters or valid session' }, { status: 401 });
     }
 
     const jar = new CookieJar();

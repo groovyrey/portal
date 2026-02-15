@@ -3,11 +3,9 @@ import { Student, SubjectGrade } from '../types';
 
 interface GradesListProps {
   reports: Student['availableReports'];
-  userId: string;
-  password: string;
 }
 
-export default function GradesList({ reports, userId, password }: GradesListProps) {
+export default function GradesList({ reports }: GradesListProps) {
   const [selectedSem, setSelectedSem] = useState<string | null>(null);
   const [grades, setGrades] = useState<SubjectGrade[] | null>(null);
   const [debugSnippet, setDebugSnippet] = useState<string | null>(null);
@@ -25,7 +23,7 @@ export default function GradesList({ reports, userId, password }: GradesListProp
       const response = await fetch('/api/student/grades', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ href, userId, password }),
+        body: JSON.stringify({ href }), // Credentials handled by session cookie
       });
       const result = await response.json();
       if (result.success) {

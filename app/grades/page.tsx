@@ -8,20 +8,17 @@ import Link from 'next/link';
 
 export default function GradesPage() {
   const [student, setStudent] = useState<Student | null>(null);
-  const [password, setPassword] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
   const [allGrades, setAllGrades] = useState<SubjectGrade[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
 
   useEffect(() => {
     const savedStudent = localStorage.getItem('student_data');
-    const savedPassword = localStorage.getItem('student_pass');
     const savedAllGrades = localStorage.getItem('all_grades_cache');
     
-    if (savedStudent && savedPassword) {
+    if (savedStudent) {
       try {
         setStudent(JSON.parse(savedStudent));
-        setPassword(savedPassword);
         if (savedAllGrades) setAllGrades(JSON.parse(savedAllGrades));
       } catch (e) {
         console.error('Failed to parse saved student data');
@@ -36,12 +33,12 @@ export default function GradesPage() {
     let gathered: SubjectGrade[] = [];
 
     try {
-      // Fetch each semester in parallel
+      // Fetch each semester in parallel - Session cookie handles auth
       const promises = student.availableReports.map(report => 
         fetch('/api/student/grades', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ href: report.href, userId: student.id, password }),
+          body: JSON.stringify({ href: report.href }),
         }).then(res => res.json())
       );
 
@@ -128,7 +125,7 @@ export default function GradesPage() {
 
         {allGrades.length > 0 && <GradeStats allGrades={allGrades} />}
         
-        <GradesList reports={student.availableReports} userId={student.id} password={password} />
+        <GradesList reports={student.availableReports} />
       </main>
     </div>
   );

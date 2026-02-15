@@ -4,51 +4,67 @@ import { useState, useEffect } from 'react';
 import { LoginResponse, Student } from '../types';
 import LoginForm from '../components/LoginForm';
 import DashboardHeader from '../components/DashboardHeader';
-import FinancialSummary from '../components/FinancialSummary';
 import ScheduleTable from '../components/ScheduleTable';
 import PersonalInfo from '../components/PersonalInfo';
-import GradesList from '../components/GradesList';
-import Link from 'next/link';
 
 export default function Home() {
   const [student, setStudent] = useState<Student | null>(null);
-  const [password, setPassword] = useState<string>(''); // Store password for authenticated requests
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [debugLog, setDebugLog] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load from localStorage on mount
+  // Initial session check
   useEffect(() => {
-    const savedStudent = localStorage.getItem('student_data');
-    const savedPassword = localStorage.getItem('student_pass');
-    const savedDebug = localStorage.getItem('debug_log');
-    if (savedStudent && savedPassword) {
-      try {
-        setStudent(JSON.parse(savedStudent));
-        setPassword(savedPassword);
-        if (savedDebug) setDebugLog(savedDebug);
-      } catch (e) {
-        console.error('Failed to parse saved student data');
+    const checkSession = async () => {
+      // Optimistic UI: Load from cache if available
+      const savedStudent = localStorage.getItem('student_data');
+      if (savedStudent) {
+        try {
+          setStudent(JSON.parse(savedStudent));
+        } catch (e) { /* ignore */ }
       }
-    }
-    setIsInitialized(true);
+
+      try {
+        const res = await fetch('/api/student/me');
+        if (res.ok) {
+          const result = await res.json();
+          if (result.success && result.data) {
+            setStudent(result.data);
+            localStorage.setItem('student_data', JSON.stringify(result.data));
+            // Trigger login event
+            window.dispatchEvent(new Event('local-storage-update'));
+          }
+        } else {
+          // Session invalid/expired
+          if (savedStudent) {
+            setStudent(null);
+            localStorage.removeItem('student_data');
+            window.dispatchEvent(new Event('local-storage-update'));
+          }
+        }
+      } catch (err) {
+        console.error('Session check failed', err);
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+
+    checkSession();
   }, []);
 
-  // Save to localStorage when state changes
+  // Update localStorage only for data caching (NO credentials)
   useEffect(() => {
     if (isInitialized) {
       if (student) {
         localStorage.setItem('student_data', JSON.stringify(student));
-        localStorage.setItem('student_pass', password);
         if (debugLog) localStorage.setItem('debug_log', debugLog);
       } else {
         localStorage.removeItem('student_data');
-        localStorage.removeItem('student_pass');
         localStorage.removeItem('debug_log');
       }
     }
-  }, [student, password, debugLog, isInitialized]);
+  }, [student, debugLog, isInitialized]);
 
   const handleLogin = async (userId: string, pass: string) => {
     setLoading(true);
@@ -65,16 +81,15 @@ export default function Home() {
       const result: LoginResponse = await response.json();
 
       if (result.success && result.data) {
-        // Set localStorage immediately so the Navbar can see it
-        localStorage.setItem('student_data', JSON.stringify(result.data));
-        localStorage.setItem('student_pass', pass);
-        if (result.debugLog) localStorage.setItem('debug_log', result.debugLog);
+        // Clear any old credentials if they exist
+        localStorage.removeItem('student_pass'); 
         
         setStudent(result.data);
-        setPassword(pass);
         if (result.debugLog) setDebugLog(result.debugLog);
+        
+        // Cache data only
+        localStorage.setItem('student_data', JSON.stringify(result.data));
         window.dispatchEvent(new Event('local-storage-update'));
-        window.dispatchEvent(new Event('storage')); // Trigger standard storage event for good measure
       } else {
         setError(result.error || 'Login failed. Please check your credentials.');
       }
@@ -85,13 +100,18 @@ export default function Home() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+        await fetch('/api/student/logout', { method: 'POST' });
+    } catch (e) {
+        console.error('Logout API failed', e);
+    }
+    
     setStudent(null);
-    setPassword('');
     setError(undefined);
     setDebugLog(null);
     localStorage.removeItem('student_data');
-    localStorage.removeItem('student_pass');
+    localStorage.removeItem('student_pass'); // Ensure this is gone
     localStorage.removeItem('debug_log');
     window.dispatchEvent(new Event('local-storage-update'));
   };

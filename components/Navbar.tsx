@@ -28,14 +28,19 @@ export default function Navbar() {
     };
   }, []);
 
-  if (!isLoggedIn) return null;
+  const publicLinks = [
+    { name: 'Docs', href: '/docs' },
+    { name: 'Disclaimer', href: '/disclaimer' },
+  ];
 
-  const navLinks = [
+  const authLinks = [
     { name: 'Dashboard', href: '/' },
     { name: 'Grades', href: '/grades' },
     { name: 'Offered Subjects', href: '/offered-subjects' },
     { name: 'Accounts', href: '/accounts' },
   ];
+
+  const navLinks = isLoggedIn ? [...authLinks, ...publicLinks] : publicLinks;
 
   const isActive = (path: string) => pathname === path;
 
