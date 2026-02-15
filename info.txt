@@ -1,1 +1,185 @@
- <!DOCTYPE html PUBLIC "-//W3C//DTD html 4.0 Transitional//EN" > <HTML> <HEAD> <title>Login</title> <link rel="stylesheet" type="text/css" href="../Styles/Main.css"> <link rel="stylesheet" type="text/css" href="../Styles/serp_main.css"> <link rel="stylesheet" type="text/css" href="../Styles/serp_header.css"> <link rel="stylesheet" type="text/css" href="../Styles/serp_menu.css"> <link rel="stylesheet" type="text/css" href="../Styles/serp_button.css"> <link rel="stylesheet" type="text/css" href="../Styles/serp_container.css"> </HEAD> <style> .login_text { color:white; font-weight:bold; } .login_textbox { /*background-color:transparent;*/ border: solid 2px #011b4b; color:#011b4b; font-weight:bold; width:150px; } .buttonLogin { background-color:#004F92; border-width: 0px; height:25px; border-top: solid 2px #aaaaaa; border-bottom: solid 2px #aaaaaa; padding: 0px 10px 0px 10px; font-weight:bold; font-size: 9pt; color: #ffffff; cursor:hand; } .background_login { background-image: url("../Images/LCC.Background.jpg"); } </style> <body> <form name="Login" method="post" action="./LCC.Login.aspx" id="Login"> <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUJLTkyODk1NjEyD2QWAgIBD2QWBAIFDw8WAh4JTWF4TGVuZ3RoAkBkZAIHDw8WAh8AAiBkZGQd8oVkiUWqE+cU40FoYSo/fiuZjToKVOKB+PpkLFxUTw==" /> <input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="6EDD46ED" /> <input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdAAQHG8imPGbPMy2MURRqTrm+uChXEYibEVghRB75ZH/Rv/OuKXHZd45bD9K2JjgfO3l/UEBGNlGURuXj7Jh+4ze6mARNpkNPr840wrtbif6evwhqkKUB/4qXZgdDafedyRg=" /> <table class="main_table"> <tr> <td> <div id="left_head"> <div id="logo_head"> <div id="right_head"> <div id="header_menu"> <a href="../Index.aspx" class="menu_item_inactive">HOME</a><a href="../Gate/Login.aspx" class="menu_item_active">LOGIN</a><a href="../Applicant/LCC.Register.aspx" class="menu_item_active">APPLICANT REGISTRATION</a></div> </div> </div> </div> </td> </tr> <tr> <td align="center"> </td> </tr> <tr> <table align="center" class="background_login" style="border-left: solid; border-right: solid; border-radius: 0px 0px 18px 18px; border-bottom: solid; border-top: solid; border-width: 1px;"> <tr> <td> <div style="top:0.5in; width:90%; left: 1in;" ><img src="../Images/LCC.ImageBackLogin.png" height="100px"></div> </td> </tr> </tr> <tr> <td class="main_table_detail_content_loggedout"> <table class="container" id="otbMain" align="center"> <tr valign="top"> <td> <table class="container" style="margin-top:0in;"> <td class="login_text">USER ID</td> <td><input name="otbUserID" type="text" maxlength="64" id="otbUserID" class="login_textbox" /></td> </tr> <tr> <td class="login_text">PASSWORD</td> <td><input name="otbPassword" type="password" maxlength="32" id="otbPassword" class="login_textbox" /></td> </tr> <tr> <td colspan="2" align="center"> <div> <input type="submit" name="obtnLogin" value="LOGIN" id="obtnLogin" class="buttonLogin" /> </div> </td> </tr> </td> </table> </table> </td> </tr> <tr> <td align="right"> <div style="color:white; font-style: italic; font-family: Arial; font-size: 10px;">For technical concerns, please email <b style="color: yellow; font-size:12px;">sis@laconcepcioncollege.com</b> </div> </td> </tr> </table> </tr> <tr> <td> <div id="footer"> © 2022 <a class="links" href="http://www.ledgea.com">Ledgea Systems, Inc.</a> All rights reserved.</div> </td> </tr> </table> </form> </body> </HTML> 
+<html><head>
+		<title>Report Card</title>
+		<script language="javascript" src="../Styles/Main.js"></script>
+		<link rel="stylesheet" type="text/css" href="../Styles/Main.css">
+			<link rel="stylesheet" type="text/css" href="../Styles/Schedule.css">
+				<link rel="stylesheet" type="text/css" href="../Styles/FlowChart.css">
+					<link rel="stylesheet" type="text/css" href="../Styles/serp_main.css">
+						<link rel="stylesheet" type="text/css" href="../Styles/serp_header.css">
+							<link rel="stylesheet" type="text/css" href="../Styles/serp_menu.css">
+								<link rel="stylesheet" type="text/css" href="../Styles/serp_button.css">
+									<link rel="stylesheet" type="text/css" href="../Styles/serp_container.css">
+										
+		<style type="text/css">
+		    .assessmentLegend
+		    {
+		        font-size:16pt; 
+		        font-weight:bold; 
+		        text-align:center; 
+		       
+		    }
+		    
+		    .letterGrdLegend
+		    {
+		        width:190px; 
+		        float:left; 
+		        
+		        text-align:center;
+		    }
+			#fldData 
+			{
+				position:absolute;
+				margin-top:-100px;
+				margin-left:-100px;
+			}
+		</style>
+	</head>
+	<body onload="initObjects();">
+		<script language="javascript">
+		function initObjects( )
+		{
+			if( xgetObjectText( txtName ) !=  )
+			{
+				// initialized
+				return;
+			}
+			
+			//
+			xsetObjectText( txtDatePrinted, xgetObjectText( fldSystemUser ) + / + xgetObjectText( fldSystemDate ) );
+			// xsetObjectText( txtDatePrinted2, xgetObjectText( fldSystemUser ) + / + xgetObjectText( fldSystemDate ) );
+			xsetObjectText( txtName, xgetObjectText( fldName ).toUpperCase( ) );
+			xsetObjectText( txtStudentID, ID:  + xgetObjectText( fldStuID ) );
+			xsetObjectText(txtCourseLevel, Course:  + xgetObjectText(fldLvlCode));
+			//alert(xgetObjectText(fldSecCode));
+			
+			xsetObjectText( txtPeriod, xgetObjectText(fldPrdCode));
+			
+			
+			//
+			window.status = "Report Card";
+		}
+		</script>
+		<script language="javascript" event="onload" for="window">
+			initObjects( );
+		</script>
+		<form name="Main" method="post" action="./LCC.ReportCardHED.aspx?_sid=20241322&amp;_pc=SY2024-2025-2" id="Main">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE4ODg4NDc2NjcPZBYCAgEPZBZoAgEPFgIeCWlubmVyaHRtbAUTMjAyNi0wMi0xNSAyMzo0NzoxN2QCAw8WAh8ABQgyMDI0MTMyMmQCBQ8WAh8ABRNDZW50ZW5vLCBSZXltYXJ0IFAuZAIHDxYCHwAFCDIwMjQxMzIyZAIJDxYCHwAFBEJTSVNkAgsPFgIfAAUFQlNJUzFkAg0PFgIfAAUNU1kyMDI0LTIwMjUtMmQCDw8WAh8ABRYybmQgU2VtZXN0ZXIgMjAyNC0yMDI1ZAIRDxYCHwAFCzIwMjUtSmFuLTE3ZAITDxYCHwAFBUJsb2NrZAIVDxYCHwAFB1JlZ3VsYXJkAhcPFgIfAAUGQlNJUzFDZAIZDxYCHwAFC0luc3RhbGxtZW50ZAIbDxYCHwAFCEVucm9sbGVkZAIdDxYCHwAFA09sZGQCHw8WAh8AZWQCIQ8WAh8ABQJPa2QCIw8WAh8ABQQxNy4wZAIlDxYCHwAFAzAuMGQCJw8WAh8ABQMwLjBkAikPFgIfAAUEMTcuMGQCKw8WAh8ABQMwLjBkAi0PFgIfAAUGT25saW5lZAIvDxYCHwBlZAIxDxYCHwAFB1ByaW50ZWRkAjMPFgIfAAUBNmQCNQ8WAh8ABQdDZW50ZW5vZAI3DxYCHwAFB1JleW1hcnRkAjkPFgIfAAUHUHJpZXRvc2QCOw8WAh8ABQJQLmQCPQ8WAh8ABQVNdXpvbmQCPw8WAh8ABQRNYWxlZAJBDxYCHwAFKEJsayAxNyBsb3QgNiBzZWMgMTQgcGhhc2UgMiBwYWJhaGF5IDIwMDBkAkMPFgIfAAUFTXV6b25kAkUPFgIfAAUSU2FuIEpvc2UgRGVsIE1vbnRlZAJHDxYCHwAFB0J1bGFjYW5kAkkPFgIfAAUEMzAyOGQCSw8WAh8ABQtQaGlsaXBwaW5lc2QCTQ8WAh8ABQswOTI2ODQwMzg0M2QCTw8WAh8AZWQCUQ8WAh8ABRZmYWNlYm9vay5jb20vcmV5eXltYXJ0ZAJTDxYCHwAFCzA5MjY4NDAzODQzZAJVDxYCHwAFGnJleW1hcnRjZW50ZW5vMDNAZ21haWwuY29tZAJXDxYCHwBlZAJZDxYCHwAFCEZpbGlwaW5vZAJbDxYCHwAFBlNpbmdsZWQCXQ8WAh8AZWQCXw8WAh8ABQhGaWxpcGlub2QCYQ8WAh8AZWQCZQ8WAh8AZWQCaw8PFgIeB1Zpc2libGVoZGQCbQ8PFgIfAWhkZBgBBR5fX0NvbnRyb2xzUmVxdWlyZVBvc3RCYWNrS2V5X18WAQUSb2NiQWNrbm93bGVkZ2VtZW501BERRhCXVek/JfYuTfbEoSllrAqVFT7GvGUShritqsI=">
+
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="310F9153">
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdAAOWDU/2ryavtRAgvdAJiHOAq1w6zGoRjvxxO1y+w8daZl2orP5cv8z778JlBs3drgznmfufQsMyKlEVlbYebc5Uy56RaME4PL9T2sxAgoWT+Q==">
+			<div id="fldData" style="border:solid 1px black;">
+				<div id="fldSystemDate" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">2026-02-15 23:47:17</div>
+				<div id="fldSystemUser" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">20241322</div>
+				<div id="fldName" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Centeno, Reymart P.</div>
+				<div id="fldStuID" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">20241322</div>
+				<div id="fldCrsCode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">BSIS</div>
+				<div id="fldLvlCode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">BSIS1</div>
+				<div id="fldPrdCode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">SY2024-2025-2</div>
+				<div id="fldPrdDesc" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">2nd Semester 2024-2025</div>
+				<div id="fldEnrolDate" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">2025-Jan-17</div>
+				<div id="fldSecType" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Block</div>
+				<div id="fldEnrolType" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Regular</div>
+				<div id="fldSecCode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">BSIS1C</div>
+				<div id="fldPaymtMode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Installment</div>
+				<div id="fldPrdStat" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Enrolled</div>
+				<div id="fldPPrdStat" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Old</div>
+				<div id="fldRem" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; "></div>
+				<div id="fldStatus" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Ok</div>
+				<div id="fldTUnits" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">17.0</div>
+				<div id="fldAUnits" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">0.0</div>
+				<div id="fldNAUnits" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">0.0</div>
+				<div id="fldUnitsTotal" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">17.0</div>
+				<div id="fldMUnitsTotal" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">0.0</div>
+				<div id="fldAccStatus" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Online</div>
+				<div id="fldRCmpsCode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; "></div>
+				<div id="fldRStatus" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Printed</div>
+				<div id="fldSCount" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">6</div>
+				<div id="fldLName" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Centeno</div>
+				<div id="fldFName" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Reymart</div>
+				<div id="fldMName" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Prietos</div>
+				<div id="fldMInitl" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">P.</div>
+				<div id="fldTitle" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Muzon</div>
+				<div id="fldGender" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Male</div>
+				<div id="fldAddress" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Blk 17 lot 6 sec 14 phase 2 pabahay 2000</div>
+				<div id="fldBrgy" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Muzon</div>
+				<div id="fldCity" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">San Jose Del Monte</div>
+				<div id="fldProvince" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Bulacan</div>
+				<div id="fldPostCode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">3028</div>
+				<div id="fldCountry" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Philippines</div>
+				<div id="fldPhone1" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">09268403843</div>
+				<div id="fldPhone2" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; "></div>
+				<div id="fldFax" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">facebook.com/reyyymart</div>
+				<div id="fldMobile" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">09268403843</div>
+				<div id="fldEMail" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">reymartcenteno03@gmail.com</div>
+				<div id="fldWebSite" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; "></div>
+				<div id="fldNationality" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Filipino</div>
+				<div id="fldMStat" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Single</div>
+				<div id="fldNickName" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; "></div>
+				<div id="fldCitizen" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; ">Filipino</div>
+				<div id="fldReferID" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; "></div>
+				<div id="fldReferralInfo" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; "></div>
+				<div id="fldEPrnID" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in; "></div>
+			</div>
+<div id="divAcknowledgementArea">
+	<div></div>
+	<div><input id="ocbAcknowledgement" type="checkbox" name="ocbAcknowledgement"><label for="ocbAcknowledgement">I agree to all online grade sheet viewing policies.</label></div>
+	<div><input type="submit" name="obtnAcknowledgeAndProceed" value="Acknowledge and Proceed" id="obtnAcknowledgeAndProceed"></div>
+</div>
+
+				<div id="divPHeaderTable" style="display: inline-block;float: left; clear: both;">
+					<table width="100%">
+						<tbody><tr>
+							<td id="txtDatePrinted" style="FONT-SIZE: 8pt" valign="top" nowrap="" align="right">20241322/2026-02-15 23:47:17</td>
+						</tr>
+					</tbody></table>
+				</div>
+
+                
+				
+				<div id="divHeaderTable" style="BORDER-RIGHT: thin solid; BORDER-TOP: thin solid; BORDER-LEFT: thin solid; BORDER-BOTTOM: thin solid; display: inline-block; float: left; clear: both;">
+					<table>
+						<tbody><tr>
+							<td style="FONT-WEIGHT: bold" nowrap="" align="center" colspan="7">LA CONCEPCION COLLEGE
+							</td>
+						</tr>
+						<tr>
+							<td style="FONT-WEIGHT: bold" nowrap="" align="center" colspan="7">REPORT OF RATINGS
+							</td>
+						</tr>
+						<tr>
+							<td id="txtPeriod" nowrap="" align="center" colspan="7">SY2024-2025-2</td>
+						</tr>
+						<tr>
+							<td id="txtName" nowrap="" style="font-weight:bold;">CENTENO, REYMART P.</td>
+							<td nowrap="" width="0.25in"></td>
+							<td id="txtStudentID" nowrap="">ID: 20241322</td>
+							<td nowrap="" width="0.25in"></td>
+							<td colspan="3" rowspan="3">
+								
+							</td>
+
+						</tr>
+						<tr>
+							<td id="txtCourseLevel" nowrap="">Course: BSIS1</td>
+							<td nowrap="" width="0.25in"></td>
+						</tr>
+						
+						<tr>
+							<td colspan="7">
+					            
+							</td>
+                        </tr>
+					</tbody></table>
+				</div>
+				<div id="divMiddleTable" style="display: inline-block; float: left; clear: both;">
+                    
+                </div>
+				<div id="divPFooterTable" style="display: inline-block; float: left; clear: both;">
+					<div style="width:5in; font-size:8pt;">Note: This printout is for informational purposes only and not valid for transfer.</div>
+				</div>
+
+			
+				
+			</form>
+	
+</body></html>

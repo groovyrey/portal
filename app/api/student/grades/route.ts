@@ -65,37 +65,75 @@ export async function POST(req: NextRequest) {
     let $rc = cheerio.load(res.data);
 
     // 4. Handle Confirmation/Disclaimer Page
-    if (res.data.includes('Confirm') || res.data.includes('VIEW') || res.data.includes('Disclaimer')) {
-        debugLog += `Step 4: Handling confirmation page\n`;
+    if (res.data.includes('ocbAcknowledgement') || res.data.includes('Confirm') || res.data.includes('Disclaimer')) {
+        debugLog += `Step 4: Handling acknowledgement/confirmation page\n`;
         const confirmData: any = {};
         $rc('input[type="hidden"]').each((_, el) => {
             const name = $rc(el).attr('name');
             if (name) confirmData[name] = $rc(el).val() || '';
         });
         
-        // Auto-click the first submit button
-        const btnName = $rc('input[type="submit"]').first().attr('name');
-        const btnVal = $rc('input[type="submit"]').first().val();
-        if (btnName) confirmData[btnName] = btnVal;
+        // Check the acknowledgement checkbox if it exists
+        if (res.data.includes('ocbAcknowledgement')) {
+            confirmData['ocbAcknowledgement'] = 'on';
+        }
+
+        // Auto-click the acknowledgement button or the first submit button
+        const ackBtn = $rc('input[name="obtnAcknowledgeAndProceed"]');
+        if (ackBtn.length > 0) {
+            confirmData['obtnAcknowledgeAndProceed'] = ackBtn.val() || 'Acknowledge and Proceed';
+        } else {
+            const firstBtn = $rc('input[type="submit"]').first();
+            if (firstBtn.length > 0) {
+                confirmData[firstBtn.attr('name')!] = firstBtn.val() || '';
+            }
+        }
 
         res = await client.post(reportCardUrl, qs.stringify(confirmData), {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Referer': reportCardUrl }
+            headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded', 
+                'Referer': reportCardUrl 
+            }
         });
         $rc = cheerio.load(res.data);
     }
     
     // 5. Scrape the Grades Table
     const subjects: any[] = [];
+    // The grades are typically in a table inside #divMiddleTable or just a generic table
     $rc('table tr').each((_, row) => {
       const cells = $rc(row).find('td');
+      // We look for rows that have subject-like data
+      // Typical row: Code | Description | Prelim | Midterm | Final | ... | Grade | Remarks
       if (cells.length >= 4) {
+        const text = $rc(row).text().toLowerCase();
+        // Skip header rows
+        if (text.includes('course') || text.includes('subject') || text.includes('description')) return;
+
         const code = $rc(cells[0]).text().trim();
         const desc = $rc(cells[1]).text().trim();
-        const grade = $rc(cells[cells.length - 2]).text().trim();
-        const remarks = $rc(cells[cells.length - 1]).text().trim();
+        
+        // The grade is usually one of the last few columns
+        // We'll try to find a column that looks like a numeric grade or has a final grade label
+        let grade = "";
+        let remarks = "";
 
-        if (code.length > 2 && (grade.match(/\d/) || remarks.match(/Pass|Fail|Ext/i))) {
-          subjects.push({ code, description: desc, grade, remarks });
+        if (cells.length > 5) {
+            // Usually: Code, Desc, Units, Prelim, Midterm, Final, Grade, Remarks
+            // Let's take the second to last for grade and last for remarks if it's a long table
+            grade = $rc(cells[cells.length - 2]).text().trim();
+            remarks = $rc(cells[cells.length - 1]).text().trim();
+        } else {
+            grade = $rc(cells[2]).text().trim();
+            remarks = $rc(cells[3]).text().trim();
+        }
+
+        // Basic validation: subject code should exist and be reasonably long
+        if (code.length >= 3 && desc.length > 0) {
+            // Only add if there's some grade or remark, or it looks like a subject row
+            if (grade || remarks || code.match(/[A-Z]{2,}/)) {
+                subjects.push({ code, description: desc, grade, remarks });
+            }
         }
       }
     });
@@ -103,7 +141,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       subjects,
-      raw_snippet: debugLog + "\n--- PAGE CONTENT ---\n" + res.data.substring(0, 10000).replace(/\s+/g, ' ')
+      debug: debugLog
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message, debug: debugLog });
