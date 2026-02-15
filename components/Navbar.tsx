@@ -40,7 +40,7 @@ export default function Navbar() {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <nav className="bg-white border-b border-slate-200 sticky top-0 z-50 backdrop-blur-lg bg-white/80">
+    <nav className="bg-white/80 border-b border-slate-200 fixed top-0 left-0 right-0 z-50 backdrop-blur-lg">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center gap-3">
@@ -89,27 +89,60 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className="md:hidden bg-white border-b border-slate-100 animate-slide-down">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
+      {/* Mobile Menu (Drawer) */}
+      <div 
+        className={`fixed inset-0 z-[60] md:hidden transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        {/* Overlay */}
+        <div 
+          className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+          onClick={() => setIsOpen(false)}
+        ></div>
+        
+        {/* Drawer */}
+        <div 
+          className={`absolute right-0 top-0 bottom-0 w-72 bg-white shadow-2xl transition-transform duration-300 transform ${
+            isOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          <div className="flex flex-col h-full">
+            <div className="flex items-center justify-between p-6 border-b border-slate-50">
+              <span className="font-black text-xs uppercase tracking-widest text-slate-400">Navigation</span>
+              <button 
                 onClick={() => setIsOpen(false)}
-                className={`block px-3 py-4 rounded-xl text-sm font-black uppercase tracking-widest ${
-                  isActive(link.href)
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-slate-500 hover:bg-slate-50'
-                }`}
+                className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-slate-600 transition-colors"
               >
-                {link.name}
-              </Link>
-            ))}
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="flex-1 px-4 py-6 space-y-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-4 px-4 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all ${
+                    isActive(link.href)
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-[1.02]'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </div>
+
+            <div className="p-6 border-t border-slate-50 text-center">
+              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Student Portal App v1.0</p>
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 }

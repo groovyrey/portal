@@ -1,28 +1,74 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Student } from '../../types';
+import { Student, SubjectGrade } from '../../types';
 import GradesList from '../../components/GradesList';
+import GradeStats from '../../components/GradeStats';
 import Link from 'next/link';
 
 export default function GradesPage() {
   const [student, setStudent] = useState<Student | null>(null);
   const [password, setPassword] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [allGrades, setAllGrades] = useState<SubjectGrade[]>([]);
+  const [isCalculating, setIsCalculating] = useState(false);
 
   useEffect(() => {
     const savedStudent = localStorage.getItem('student_data');
     const savedPassword = localStorage.getItem('student_pass');
+    const savedAllGrades = localStorage.getItem('all_grades_cache');
+    
     if (savedStudent && savedPassword) {
       try {
         setStudent(JSON.parse(savedStudent));
         setPassword(savedPassword);
+        if (savedAllGrades) setAllGrades(JSON.parse(savedAllGrades));
       } catch (e) {
         console.error('Failed to parse saved student data');
       }
     }
     setIsInitialized(true);
   }, []);
+
+  const calculateStats = async () => {
+    if (!student || !student.availableReports || isCalculating) return;
+    setIsCalculating(true);
+    let gathered: SubjectGrade[] = [];
+
+    try {
+      // Fetch each semester in parallel
+      const promises = student.availableReports.map(report => 
+        fetch('/api/student/grades', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ href: report.href, userId: student.id, password }),
+        }).then(res => res.json())
+      );
+
+      const results = await Promise.all(promises);
+      results.forEach(res => {
+        if (res.success && res.subjects) {
+          gathered = [...gathered, ...res.subjects];
+        }
+      });
+
+      // De-duplicate gathered grades
+      const seen = new Set();
+      const unique = gathered.filter(g => {
+        const key = `${g.description}-${g.grade}`.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      setAllGrades(unique);
+      localStorage.setItem('all_grades_cache', JSON.stringify(unique));
+    } catch (err) {
+      console.error('Failed to gather grades for stats', err);
+    } finally {
+      setIsCalculating(false);
+    }
+  };
 
   if (!isInitialized) {
     return (
@@ -47,10 +93,40 @@ export default function GradesPage() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-        <div className="mb-8">
-          <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Academic Reports</h1>
-          <p className="text-slate-500 text-sm font-medium mt-1">Select a semester to view your grade breakdown.</p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Academic Reports</h1>
+            <p className="text-slate-500 text-sm font-medium mt-1">Detailed breakdown of your scholastic performance.</p>
+          </div>
+          <button 
+            onClick={calculateStats}
+            disabled={isCalculating}
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+              isCalculating 
+                ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+                : 'bg-blue-600 text-white shadow-md hover:bg-blue-700 active:scale-95'
+            }`}
+          >
+            {isCalculating ? (
+              <>
+                <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Gathering Data...
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
+                </svg>
+                Calculate Overall Stats
+              </>
+            )}
+          </button>
         </div>
+
+        {allGrades.length > 0 && <GradeStats allGrades={allGrades} />}
         
         <GradesList reports={student.availableReports} userId={student.id} password={password} />
       </main>

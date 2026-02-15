@@ -191,14 +191,15 @@ export async function POST(req: NextRequest) {
         }
     });
 
+    // 5. Scrape the Subject List / Prospectus (Targeting Table 9)
     const prospectus: any[] = [];
     let currentYear: any = null;
     let currentSem: any = null;
     const seenProspectus = new Set();
     let offeredSubjects: any[] = [];
+    
     subDebug += `--- Subject List Scraping --- Found ${$sub('table').length} tables.\n`;
 
-    // Specifically target Table 9 as identified by the user
     const table9 = $sub('table').eq(9);
     if (table9.length > 0) {
         const rows = table9.find('tr');
@@ -206,42 +207,50 @@ export async function POST(req: NextRequest) {
         
         rows.each((rIdx, row) => {
             const cells = $sub(row).find('td');
-            
-            // Header detection for Prospectus structure (if any)
             const rowText = $sub(row).text().trim();
-            if (rowText.match(/Year\s+Level/i)) {
+            
+            // Log first 20 rows raw for discovery
+            if (rIdx < 20) {
+                let rowData: string[] = [];
+                cells.each((_, td) => { rowData.push($sub(td).text().trim()); });
+                subDebug += `  Row ${rIdx}: [${rowData.join('] | [')}]\n`;
+            }
+
+            // Detection for Prospectus Hierarchical structure
+            if (rowText.match(/Year\s+Level/i) || (cells.length === 1 && rowText.includes('Year'))) {
                 if (currentYear) prospectus.push(currentYear);
                 currentYear = { year: rowText, semesters: [] };
                 currentSem = null;
+                subDebug += `  Matched Year: ${rowText}\n`;
                 return;
             }
             if (rowText.match(/\d(?:st|nd|rd|th)\s+Semester/i) && currentYear) {
                 currentSem = { semester: rowText, subjects: [] };
                 currentYear.semesters.push(currentSem);
+                subDebug += `    Matched Sem: ${rowText}\n`;
                 return;
             }
 
-            // Subject rows in an 8-column table (actually 14 cells observed)
+            // Subject rows
             if (cells.length >= 8) {
                 const code = $sub(cells[0]).text().trim();
                 const desc = $sub(cells[1]).text().trim();
-                const units = $sub(cells[3]).text().trim(); // Units is col 3 in diagnostic
+                const units = $sub(cells[3]).text().trim() || $sub(cells[2]).text().trim(); 
                 const preReq = cells.length >= 6 ? $sub(cells[5]).text().trim() : "";
 
                 if (code && desc && !code.toLowerCase().includes('subject')) {
-                    const key = `${code}-${desc}`.toLowerCase();
-                    if (!seenProspectus.has(key)) {
-                        const subjObj = { code, description: desc, units, preReq };
-                        
-                        // Add to flat offered list
-                        offeredSubjects.push(subjObj);
-                        
-                        // Also add to hierarchical prospectus if a sem is active
-                        if (currentSem) {
+                    const subjObj = { code, description: desc, units, preReq };
+                    
+                    // Always add to offered list
+                    offeredSubjects.push(subjObj);
+                    
+                    // Add to prospectus ONLY if we are currently inside a detected Year/Sem
+                    if (currentSem) {
+                        const key = `${code}-${desc}`.toLowerCase();
+                        if (!seenProspectus.has(key)) {
                             currentSem.subjects.push(subjObj);
+                            seenProspectus.add(key);
                         }
-                        
-                        seenProspectus.add(key);
                     }
                 }
             }
@@ -251,7 +260,7 @@ export async function POST(req: NextRequest) {
     }
     if (currentYear) prospectus.push(currentYear);
 
-    subDebug += `Total Offered Subjects Scraped: ${offeredSubjects.length}\n`;
+    subDebug += `Scraping Results: ${offeredSubjects.length} Offered, ${seenProspectus.size} in Prospectus hierarchy.\n`;
 
     // Financials
     const eafText = $eaf('body').text().replace(/\s+/g, ' ');
