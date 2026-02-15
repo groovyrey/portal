@@ -262,33 +262,71 @@ export async function POST(req: NextRequest) {
 
     subDebug += `Scraping Results: ${offeredSubjects.length} Offered, ${seenProspectus.size} in Prospectus hierarchy.\n`;
 
-    // 8. Raw Financial Diagnostic (Discovery Mode)
+    // 8. Financials & Ledger Scraping
     const accountUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=Account&_nm=`;
-    subDebug += `\n--- Account Page Diagnostic ---\nURL: ${accountUrl}\n`;
     const accRes = await client.get(accountUrl, { headers: { 'Referer': subListRes.config.url || baseUrl } });
     const $acc = cheerio.load(accRes.data);
     
     subDebug += `Account Page Title: ${$acc('title').text()}\n`;
-    subDebug += `Found ${$acc('table').length} tables.\n`;
+    
+    let dueAccounts: any[] = [];
+    let payments: any[] = [];
+    let installments: any[] = [];
 
-    $acc('table').each((tIdx, table) => {
-        const rows = $acc(table).find('tr');
-        subDebug += `Table ${tIdx} (${rows.length} rows):\n`;
-        
-        rows.each((rIdx, row) => {
-            // Log first 15 rows of each table raw
-            if (rIdx < 15) {
-                const cells = $acc(row).find('td');
-                let rowData: string[] = [];
-                cells.each((_, td) => {
-                    rowData.push($acc(td).text().trim());
-                });
-                subDebug += `  T${tIdx} R${rIdx} (${cells.length} cells): [${rowData.join('] | [')}]\n`;
+    // Table 9: Due Accounts
+    const table9Acc = $acc('table').eq(9);
+    if (table9Acc.length > 0) {
+        table9Acc.find('tr').each((i: number, row: any) => {
+            const cells = $acc(row).find('td');
+            if (cells.length === 5 && i > 1) {
+                const dueDate = $acc(cells[0]).text().trim();
+                const description = $acc(cells[1]).text().trim();
+                const amount = $acc(cells[2]).text().trim();
+                const paid = $acc(cells[3]).text().trim();
+                const due = $acc(cells[4]).text().trim();
+                if (dueDate && description) {
+                    dueAccounts.push({ dueDate, description, amount, paid, due });
+                }
             }
         });
-    });
+    }
 
-    // Financials
+    // Table 10: Payments
+    const table10Acc = $acc('table').eq(10);
+    if (table10Acc.length > 0) {
+        table10Acc.find('tr').each((i: number, row: any) => {
+            const cells = $acc(row).find('td');
+            if (cells.length === 3 && i > 1) {
+                const date = $acc(cells[0]).text().trim();
+                const reference = $acc(cells[1]).text().trim();
+                const amount = $acc(cells[2]).text().trim();
+                if (date && reference) {
+                    payments.push({ date, reference, amount });
+                }
+            }
+        });
+    }
+
+    // Table 11: Assessment of Fees (Installments)
+    const table11Acc = $acc('table').eq(11);
+    if (table11Acc.length > 0) {
+        table11Acc.find('tr').each((i: number, row: any) => {
+            const cells = $acc(row).find('td');
+            if (cells.length === 4 && i > 3) { // Headers are on Row 3
+                const dueDate = $acc(cells[0]).text().trim();
+                const description = $acc(cells[1]).text().trim();
+                const assessed = $acc(cells[2]).text().trim();
+                const outstanding = $acc(cells[3]).text().trim();
+                if (dueDate && description && !dueDate.toLowerCase().includes('net total')) {
+                    installments.push({ dueDate, description, assessed, outstanding });
+                }
+            }
+        });
+    }
+
+    subDebug += `Scraped: ${dueAccounts.length} Due, ${payments.length} Payments, ${installments.length} Installments.\n`;
+
+    // Financials Summary (EAF fallback)
     const eafText = $eaf('body').text().replace(/\s+/g, ' ');
     const currencyRegex = /\d{1,3}(,\d{3})*(\.\d{2})/g;
     const allAmounts = eafText.match(currencyRegex) || [];
@@ -329,10 +367,16 @@ export async function POST(req: NextRequest) {
                               schedule: finalSchedule.length > 0 ? finalSchedule : null,
                               prospectus: prospectus.length > 0 ? prospectus : null,
                               offeredSubjects: offeredSubjects.length > 0 ? offeredSubjects : null,
-                              availableReports: availableReports.length > 0 ? availableReports : null,
-                              financials: { total: totalAssessment, balance: totalBalance }
-                            }
-                          });
+                                                availableReports: availableReports.length > 0 ? availableReports : null,
+                                                financials: { 
+                                                  total: totalAssessment, 
+                                                  balance: totalBalance,
+                                                  dueAccounts: dueAccounts.length > 0 ? dueAccounts : null,
+                                                  payments: payments.length > 0 ? payments : null,
+                                                  installments: installments.length > 0 ? installments : null
+                                                }
+                                              }
+                                            });
                         }
     const title = $dashboard('title').text();
     const snippet = pageText.substring(0, 500).replace(/\s+/g, ' ');

@@ -34,6 +34,7 @@ export default function Navbar() {
     { name: 'Dashboard', href: '/' },
     { name: 'Grades', href: '/grades' },
     { name: 'Offered Subjects', href: '/offered-subjects' },
+    { name: 'Accounts', href: '/accounts' },
   ];
 
   const isActive = (path: string) => pathname === path;

@@ -9,12 +9,23 @@ export interface ScheduleItem {
 export interface Financials {
   total: string;
   balance: string;
-  ledger?: {
-    date: string;
+  dueAccounts?: {
+    dueDate: string;
     description: string;
-    debit: string;
-    credit: string;
-    balance: string;
+    amount: string;
+    paid: string;
+    due: string;
+  }[];
+  payments?: {
+    date: string;
+    reference: string;
+    amount: string;
+  }[];
+  installments?: {
+    dueDate: string;
+    description: string;
+    assessed: string;
+    outstanding: string;
   }[];
 }
 
