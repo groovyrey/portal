@@ -21,7 +21,6 @@ const DocsPage: React.FC = () => {
               <a href="#security" className="block px-4 py-2 text-sm font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">Security</a>
               <a href="#features" className="block px-4 py-2 text-sm font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">Features</a>
               <a href="#troubleshooting" className="block px-4 py-2 text-sm font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">Troubleshooting</a>
-              <a href="#support" className="block px-4 py-2 text-sm font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">Support</a>
             </nav>
           </aside>
 
@@ -200,19 +199,6 @@ const DocsPage: React.FC = () => {
                 </div>
               </div>
             </section>
-
-             {/* Support */}
-             <section id="support" className="scroll-mt-24">
-               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100 text-center">
-                 <h2 className="text-2xl font-bold text-blue-900 mb-4">Need More Help?</h2>
-                 <p className="text-blue-700 max-w-2xl mx-auto mb-6">
-                   If you're facing persistent issues or have suggestions, please reach out. Remember, this is an independent project.
-                 </p>
-                 <a href="mailto:support@example.com" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:text-lg transition-colors shadow-lg shadow-blue-200">
-                   Contact Support
-                 </a>
-               </div>
-             </section>
 
           </main>
         </div>

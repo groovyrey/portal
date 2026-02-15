@@ -397,8 +397,8 @@ export async function POST(req: NextRequest) {
 
       // Upsert Student
       await sql`
-        INSERT INTO students (id, name, course, gender, address, contact, email, year_level, semester)
-        VALUES (${userId}, ${studentName}, ${course}, ${gender}, ${address}, ${contact}, ${email}, ${yearLevel}, ${semesterStr})
+        INSERT INTO students (id, name, course, gender, address, contact, email, year_level, semester, available_reports)
+        VALUES (${userId}, ${studentName}, ${course}, ${gender}, ${address}, ${contact}, ${email}, ${yearLevel}, ${semesterStr}, ${JSON.stringify(availableReports)})
         ON CONFLICT (id) DO UPDATE SET
           name = EXCLUDED.name,
           course = EXCLUDED.course,
@@ -408,6 +408,7 @@ export async function POST(req: NextRequest) {
           email = EXCLUDED.email,
           year_level = EXCLUDED.year_level,
           semester = EXCLUDED.semester,
+          available_reports = EXCLUDED.available_reports,
           updated_at = CURRENT_TIMESTAMP
       `;
 

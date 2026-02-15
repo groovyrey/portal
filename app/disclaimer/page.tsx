@@ -9,7 +9,7 @@ const DisclaimerPage: React.FC = () => {
             Disclaimer & User Agreement
           </h1>
           <p className="text-lg text-slate-500 font-medium bg-slate-100 inline-block px-4 py-1 rounded-full border border-slate-200">
-            Last Updated: October 26, 2023
+            Last Updated: February 16, 2026
           </p>
         </header>
 
@@ -41,43 +41,62 @@ const DisclaimerPage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                 </svg>
               </div>
-            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Data & Security</h2>
+            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Data & Professional Security</h2>
           </div>
           
           <div className="space-y-6">
             <p className="text-lg text-slate-600">
-              By using this application, you understand, acknowledge, and consent to the following:
+              By using this application, you understand, acknowledge, and consent to the following security protocols:
             </p>
             
             <div className="grid md:grid-cols-2 gap-6">
               <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                <h3 className="font-bold text-slate-900 mb-2">Credential Use</h3>
+                <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
+                  Credential Use
+                </h3>
                 <p className="text-slate-600 text-sm leading-relaxed">
                   You are required to provide your student portal User ID and Password. These are submitted directly to the school's official portal to establish a session.
                 </p>
               </div>
 
-               <div className="p-6 bg-red-50 rounded-2xl border border-red-100">
-                <h3 className="font-bold text-red-900 mb-2 flex items-center gap-2">
-                  Local Storage Risk
-                  <span className="bg-red-200 text-red-800 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">Important</span>
+               <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <h3 className="font-bold text-emerald-900 mb-2 flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                  HttpOnly Cookies
                 </h3>
-                <p className="text-red-800/80 text-sm leading-relaxed">
-                  Credentials are saved in your browser's <code className="bg-red-100 px-1 py-0.5 rounded font-bold">localStorage</code>. This poses a security risk on shared computers. <strong>Do not use this app on public devices.</strong>
+                <p className="text-emerald-800/80 text-sm leading-relaxed">
+                  We use secure <strong>HttpOnly cookies</strong> for session management. These tokens are invisible to client-side JavaScript, effectively neutralizing Cross-Site Scripting (XSS) risks.
+                </p>
+              </div>
+
+               <div className="p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
+                <h3 className="font-bold text-indigo-900 mb-2 flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
+                  AES-256 Encryption
+                </h3>
+                <p className="text-indigo-800/80 text-sm leading-relaxed">
+                  All session data is encrypted using the <strong>AES-256-CBC</strong> algorithm. Your credentials are never stored in plaintext anywhere in the system.
                 </p>
               </div>
 
                <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                <h3 className="font-bold text-slate-900 mb-2">Data Collection</h3>
+                <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
+                  No Local Password Storage
+                </h3>
                 <p className="text-slate-600 text-sm leading-relaxed">
-                  We scrape personal, academic, and financial information to display it in the app's interface.
+                  Unlike conventional student tools, this app <strong>never</strong> saves your password in <code>localStorage</code> or any persistent browser storage.
                 </p>
               </div>
 
                <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                <h3 className="font-bold text-slate-900 mb-2">Server Caching</h3>
+                <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
+                  Server Caching
+                </h3>
                 <p className="text-slate-600 text-sm leading-relaxed">
-                  Data is temporarily cached on a secure database (<a href="https://neon.tech/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">NeonDB</a>) to improve performance and reliability.
+                  Non-sensitive data is temporarily cached on a secure <a href="https://neon.tech/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">NeonDB</a> to provide a fast and reliable user experience.
                 </p>
               </div>
             </div>
@@ -95,11 +114,11 @@ const DisclaimerPage: React.FC = () => {
             <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Limitation of Liability</h2>
           </div>
           <div className="prose prose-slate max-w-none text-slate-600">
-            <p className="text-lg">
-              This application is provided <strong>"as-is"</strong> without any warranties. We do not guarantee accuracy or availability.
+            <p className="text-lg leading-relaxed mb-4">
+              This application is provided <strong>"as-is"</strong> without any warranties. While we have implemented professional-grade security measures, we do not guarantee absolute protection against all potential threats.
             </p>
-            <p className="text-lg">
-              By using this tool, you agree that the developers are not liable for any damages (data breaches, financial loss, academic issues) arising from its use. You assume all risks associated with providing your credentials to a third-party interface.
+            <p className="text-lg leading-relaxed">
+              By using this tool, you agree that the developers and maintainers are not liable for any damages (data breaches, financial loss, academic issues) arising from its use. You assume all risks associated with providing your credentials to a third-party interface.
             </p>
           </div>
         </section>
@@ -107,8 +126,8 @@ const DisclaimerPage: React.FC = () => {
         {/* Philippine Laws Section */}
         <section className="mb-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl shadow-xl shadow-blue-200 p-8 md:p-12 text-white">
           <h2 className="text-3xl font-bold mb-6 tracking-tight">Governing Law & Your Rights</h2>
-          <p className="text-blue-100 text-lg leading-relaxed mb-8 max-w-3xl">
-            We strive to operate in accordance with the laws of the Republic of the Philippines. As a data subject, you have rights under the <strong>Data Privacy Act of 2012 (RA 10173)</strong>.
+          <p className="text-blue-100 text-lg leading-relaxed mb-8 max-w-3xl font-medium">
+            We operate in accordance with the laws of the Republic of the Philippines. As a data subject, you have rights under the <strong>Data Privacy Act of 2012 (RA 10173)</strong>.
           </p>
           <a 
             href="https://www.privacy.gov.ph/" 
@@ -126,7 +145,7 @@ const DisclaimerPage: React.FC = () => {
         {/* Footer */}
         <footer className="text-center border-t border-slate-200 pt-8">
           <p className="text-slate-500 mb-4 max-w-2xl mx-auto">
-            By proceeding to use this application, you confirm that you have read, understood, and agreed to the terms outlined in this disclaimer.
+            By proceeding to use this application, you confirm that you have read, understood, and agreed to the professional security terms outlined in this disclaimer.
           </p>
           <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
             &copy; {new Date().getFullYear()} Student Portal App. All Rights Reserved.

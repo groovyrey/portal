@@ -14,9 +14,15 @@ export async function initDatabase() {
         email TEXT,
         year_level TEXT,
         semester TEXT,
+        available_reports JSONB,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
+
+    // Ensure available_reports column exists
+    try {
+      await sql`ALTER TABLE students ADD COLUMN IF NOT EXISTS available_reports JSONB;`;
+    } catch (e) { /* ignore if column already exists */ }
 
     // Schedules table
     await sql`

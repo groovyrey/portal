@@ -70,9 +70,7 @@ export async function GET(req: NextRequest) {
       schedule: schedule.length > 0 ? schedule : null,
       financials: financials,
       offeredSubjects: offeredSubjects.length > 0 ? offeredSubjects : null,
-      // availableReports is not persisted in the DB currently based on the previous scraping logic
-      // We might need to add it to the DB or just accept it's null on refresh until scraped again
-      availableReports: null 
+      availableReports: student.available_reports 
     };
 
     return NextResponse.json({ success: true, data: studentData });
