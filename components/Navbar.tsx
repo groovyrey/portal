@@ -33,14 +33,13 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Dashboard', href: '/' },
     { name: 'Grades', href: '/grades' },
-    { name: 'Prospectus', href: '/prospectus' },
     { name: 'Offered Subjects', href: '/offered-subjects' },
   ];
 
   const isActive = (path: string) => pathname === path;
 
   return (
-    <nav className="bg-white/80 border-b border-slate-200 fixed top-0 left-0 right-0 z-50 backdrop-blur-lg">
+    <nav className="bg-white/80 border-b border-slate-200 fixed top-0 left-0 right-0 z-[100] backdrop-blur-lg">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center gap-3">
@@ -91,7 +90,7 @@ export default function Navbar() {
 
       {/* Mobile Menu (Drawer) */}
       <div 
-        className={`fixed inset-0 z-[60] md:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[110] md:hidden transition-opacity duration-300 ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
