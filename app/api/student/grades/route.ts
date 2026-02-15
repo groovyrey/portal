@@ -125,25 +125,22 @@ export async function POST(req: NextRequest) {
     }
     
     // 5. Scrape the Grades Table
-    const subjects: any[] = [];
+    let subjects: any[] = [];
     debugLog += `Scraping tables... Found ${$rc('table').length} tables.\n`;
     
     $rc('table').each((tIdx, table) => {
       const rows = $rc(table).find('tr');
-      debugLog += `Table ${tIdx}: ${rows.length} rows\n`;
       
       rows.each((rIdx, row) => {
+        // Ensure the row belongs directly to this table (handle nested tables)
+        if ($rc(row).closest('table')[0] !== table) return;
+
         const cells = $rc(row).find('td');
         if (cells.length >= 3) {
           const col0 = $rc(cells[0]).text().trim();
           const col1 = $rc(cells[1]).text().trim();
           const col2 = $rc(cells[2]).text().trim();
           
-          // Log first few rows of each table for debugging
-          if (rIdx < 3) {
-            debugLog += `  Row ${rIdx}: ${cells.length} cells. [${col0}] [${col1.substring(0, 15)}...] [${col2}]\n`;
-          }
-
           const text = $rc(row).text().toLowerCase();
           if (text.includes('course') || text.includes('subject') || text.includes('description') || text.includes('units')) return;
 
@@ -154,7 +151,6 @@ export async function POST(req: NextRequest) {
 
           // Flexible column detection
           if (cells.length === 3) {
-              // Observed in Table 2: [Subject Name] [Section/Units?] [Grade?]
               desc = col0;
               code = col1;
               grade = col2;
@@ -163,7 +159,6 @@ export async function POST(req: NextRequest) {
               code = col0;
               desc = col1;
               
-              // More aggressive grade detection for rows with 4+ cells
               cells.each((cIdx, cell) => {
                   const cellText = $rc(cell).text().trim();
                   if (/^(\d+\.?\d*|INC|DRP|PASS|FAIL)$/i.test(cellText) && cIdx > 1) {
@@ -193,6 +188,15 @@ export async function POST(req: NextRequest) {
           }
         }
       });
+    });
+
+    // De-duplication
+    const seen = new Set();
+    subjects = subjects.filter(s => {
+      const key = `${s.description}-${s.code}`.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
     });
 
     if (subjects.length === 0) {
