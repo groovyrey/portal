@@ -95,62 +95,85 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
             </tr>
           </thead>
           <tbody>
-            {HOURS.map((hourStr, hIdx) => {
-              const currentHour = 7 + hIdx;
-              return (
-                <tr key={hourStr} className="h-28">
-                  <td className="p-4 border-b border-r border-slate-100 text-center align-middle bg-slate-50/10">
-                    <span className="text-[10px] font-black text-blue-600/70 uppercase tabular-nums">{hourStr}</span>
-                  </td>
-                  {DAYS.map(day => {
-                    // Find classes that belong to this day and fall into this specific hour slot
-                    const activeClasses = schedule.filter(item => {
-                      const days = getDays(item.time);
-                      const range = parseTimeRange(item.time);
-                      if (!days || !range) return false;
-                      
-                      const matchesDay = days.includes(day);
-                      // A class "occupies" this hour slot if it starts at or before this hour, and ends after it.
-                      const occupiesSlot = currentHour >= Math.floor(range.start) && currentHour < Math.ceil(range.end);
-                      
-                      return matchesDay && occupiesSlot;
-                    });
+            {/* Initialize cellSpans outside the HOURS.map to persist state across rows */}
+            {(() => {
+              const cellSpans: number[] = Array(DAYS.length).fill(0);
+              return HOURS.map((hourStr, hIdx) => {
+                const currentHour = 7 + hIdx; // Assuming 7 AM is the start hour for the table
 
-                    return (
-                      <td key={day} className="p-1 border-b border-r border-slate-100 align-top relative">
-                        {activeClasses.map((item, idx) => {
-                          const range = parseTimeRange(item.time);
-                          const isStartHour = range && Math.floor(range.start) === currentHour;
-                          
-                          // To avoid chaos, only render the card on the starting hour
-                          if (!isStartHour) return null;
+                return (
+                  <tr key={hourStr}>
+                    <td className="p-4 border-b border-r border-slate-100 text-center align-middle bg-slate-50/10">
+                      <span className="text-[10px] font-black text-blue-600/70 uppercase tabular-nums">{hourStr}</span>
+                    </td>
+                    {DAYS.map((day, dayIdx) => {
+                      // If the current cell is part of a rowspan from a previous hour, skip rendering
+                      if (cellSpans[dayIdx] > 0) {
+                        cellSpans[dayIdx]--;
+                        return null; // Skip rendering this td, it's covered by a rowspan
+                      }
 
-                          return (
-                            <div 
-                              key={idx} 
+                      // Find classes that start at this specific hour and day
+                      const startingClasses = schedule.filter(item => {
+                        const days = getDays(item.time);
+                        const range = parseTimeRange(item.time);
+                        if (!days || !range) return false;
+
+                        const matchesDay = days.includes(day);
+                        const startsAtCurrentHour = Math.floor(range.start) === currentHour;
+
+                        return matchesDay && startsAtCurrentHour;
+                      });
+
+                      // For simplicity, let's assume one class per slot. If multiple, it will only render the first.
+                      const classToRender = startingClasses[0];
+
+                      if (classToRender) {
+                        const range = parseTimeRange(classToRender.time);
+                        const durationInHours = range ? Math.ceil(range.end) - Math.floor(range.start) : 1;
+
+                        // Update cellSpans for this day
+                        if (durationInHours > 1) {
+                          cellSpans[dayIdx] = durationInHours - 1; // Mark subsequent cells as spanned
+                        }
+
+                        return (
+                          <td
+                            key={day}
+                            rowSpan={durationInHours > 0 ? durationInHours : 1}
+                            className="p-1 border-b border-r border-slate-100 align-top relative"
+                          >
+                            <div
                               className={`rounded-2xl p-4 border shadow-sm transition-all hover:shadow-md cursor-default z-10 relative h-full flex flex-col
-                                ${idx % 2 === 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-indigo-50 border-indigo-100 text-indigo-700'}`}
+                                ${dayIdx % 2 === 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-indigo-50 border-indigo-100 text-indigo-700'}`}
                             >
                               <div className="text-[9px] font-black uppercase tracking-tighter mb-1 opacity-60">
-                                {item.time.split(/\s+/) .slice(1).join(' ')}
+                                {classToRender.time.split(/\s+/) .slice(1).join(' ')}
                               </div>
-                              <div className="text-[10px] font-black leading-tight mb-2 line-clamp-2 uppercase">{item.subject}</div>
+                              <div className="text-[10px] font-black leading-tight mb-2 line-clamp-2 uppercase">{classToRender.subject}</div>
                               <div className="mt-auto space-y-1">
-                                <div className="text-[8px] font-bold uppercase truncate">{item.room}</div>
+                                <div className="text-[8px] font-bold uppercase truncate">{classToRender.room}</div>
                                 <div className="flex justify-between items-center text-[8px] font-black">
-                                  <span className="opacity-40">{item.section}</span>
-                                  <span className="bg-white/40 px-1.5 py-0.5 rounded border border-current/5">{item.units}U</span>
+                                  <span className="opacity-40">{classToRender.section}</span>
+                                  <span className="bg-white/40 px-1.5 py-0.5 rounded border border-current/5">{classToRender.units}U</span>
                                 </div>
                               </div>
                             </div>
-                          );
-                        })}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
+                          </td>
+                        );
+                      } else {
+                        // Render an empty cell if no class starts here and it's not spanned
+                        return (
+                          <td key={day} className="p-1 border-b border-r border-slate-100 align-top relative">
+                            {/* Empty cell */}
+                          </td>
+                        );
+                      }
+                    })}
+                  </tr>
+                );
+              });
+            })()}
           </tbody>
         </table>
       </div>
