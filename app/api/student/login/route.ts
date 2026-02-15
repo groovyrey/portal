@@ -8,8 +8,10 @@ import fs from 'fs';
 import path from 'path';
 
 export async function POST(req: NextRequest) {
+  let subDebug = "--- Login Diagnostic Started ---\n";
   try {
     const { userId, password } = await req.json();
+    subDebug += `UserId: ${userId}\n`;
 
     if (!userId || !password) {
       return NextResponse.json({ error: 'UserID and Password are required' }, { status: 400 });
@@ -160,7 +162,7 @@ export async function POST(req: NextRequest) {
     let currentYear: any = null;
     let currentSem: any = null;
     const seenProspectus = new Set();
-    let subDebug = "--- Subject List Scraping ---\n";
+    subDebug += "--- Subject List Scraping ---\n";
 
     $sub('table tr').each((_, row) => {
         const text = $sub(row).text().trim();

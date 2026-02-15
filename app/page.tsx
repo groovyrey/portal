@@ -121,7 +121,7 @@ export default function Home() {
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-        <DashboardHeader student={student} onLogout={handleLogout} />
+        <DashboardHeader student={student} onLogout={handleLogout} onRefresh={() => handleLogin(student.id, password)} loading={loading} />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">

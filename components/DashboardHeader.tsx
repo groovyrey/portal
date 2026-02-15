@@ -3,9 +3,11 @@ import { Student } from '../types';
 interface DashboardHeaderProps {
   student: Student;
   onLogout: () => void;
+  onRefresh?: () => void;
+  loading?: boolean;
 }
 
-export default function DashboardHeader({ student, onLogout }: DashboardHeaderProps) {
+export default function DashboardHeader({ student, onLogout, onRefresh, loading }: DashboardHeaderProps) {
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
       <div className="flex flex-col items-center md:items-start">
@@ -23,15 +25,29 @@ export default function DashboardHeader({ student, onLogout }: DashboardHeaderPr
           </span>
         </div>
       </div>
-      <button
-        onClick={onLogout}
-        className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-medium rounded-lg text-sm transition-colors duration-200 flex items-center gap-2"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-        </svg>
-        Sign Out
-      </button>
+      <div className="flex gap-2">
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            disabled={loading}
+            className={`px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-medium rounded-lg text-sm transition-all duration-200 flex items-center gap-2 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {loading ? 'Refreshing...' : 'Refresh Data'}
+          </button>
+        )}
+        <button
+          onClick={onLogout}
+          className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-medium rounded-lg text-sm transition-colors duration-200 flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Sign Out
+        </button>
+      </div>
     </div>
   );
 }
