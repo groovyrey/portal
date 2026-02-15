@@ -141,8 +141,14 @@ export async function POST(req: NextRequest) {
     const $eaf = cheerio.load(eafRes.data);
 
     const subjectListUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=`;
-    const subListRes = await client.get(subjectListUrl, { headers: { 'Referer': baseUrl } });
+    const subListRes = await client.get(subjectListUrl, { headers: { 'Referer': finalInitUrl } });
     const $sub = cheerio.load(subListRes.data);
+    
+    subDebug += `SubjectList Page Title: ${$sub('title').text()}\n`;
+    if (subListRes.data.includes('otbUserID')) {
+        subDebug += `ERROR: Redirected to login page while fetching SubjectList.\n`;
+    }
+    subDebug += `SubjectList Snippet: ${subListRes.data.substring(0, 500).replace(/\s+/g, ' ')}\n`;
     
     // 8. Extract Available Report Card Links
     const gradesUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=Grades&_nm=`;

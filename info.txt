@@ -1,20 +1,5 @@
-Step 1: Visiting https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=20241322&_pc=SY2025-2026-2&_dm=Main&_nm=
-Step 2: Performing POST login
-SUCCESS: Logged in successfully.
-Step 3: Visiting Report Card: https://premium.schoolista.com/LCC/Student/LCC.ReportCardHED.aspx?_sid=20241322&_pc=SY2024-2025-1
-Step 4: Handling acknowledgement/confirmation page
-  Found and checked ocbAcknowledgement checkbox.
-  Found obtnAcknowledgeAndProceed button.
-  Submitting acknowledgement with 5 fields.
-  Successfully moved past acknowledgement page. New Title: Report Card
-Scraping tables... Found 4 tables.
-Table 0: 1 rows
-Table 1: 14 rows
-Table 2: 8 rows
-  Row 0: 3 cells. [Subject] [Sec...]
-  Row 1: 3 cells. [Introduction to Computing] [BSIS1B...]
-  Row 2: 3 cells. [Introduction to Programming 1] [BSIS1B...]
-Table 3: 0 rows
-No subjects found. Page Title: Report Card
-Page Snippet:  <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" > <HTML> <HEAD> <title>Report Card</title> <SCRIPT language="javascript" src="../Styles/Main.js"></SCRIPT> <link rel="stylesheet" type="text/css" href="../Styles/Main.css"> <link rel="stylesheet" type="text/css" href="../Styles/Schedule.css"> <link rel="stylesheet" type="text/css" href="../Styles/FlowChart.css"> <link rel="stylesheet" type="text/css" href="../Styles/serp_main.css"> <link rel="stylesheet" type="text/css" href="../Styles/serp_header.css"> <link rel="stylesheet" type="text/css" href="../Styles/serp_menu.css"> <link rel="stylesheet" type="text/css" href="../Styles/serp_button.css"> <link rel="stylesheet" type="text/css" href="../Styles/serp_container.css"> <style type="text/css"> .assessmentLegend { font-size:16pt; font-weight:bold; text-align:center; } 
+--- Login Diagnostic Started ---
+UserId: 20241322
+--- Subject List Scraping ---
+Total Prospectus Subjects: 0
 
