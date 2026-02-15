@@ -91,31 +91,49 @@ export default function GradesList({ reports, userId, password }: GradesListProp
               <p className="text-sm font-medium">Fetching grades from portal...</p>
             </div>
           ) : grades ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {grades.map((sub, sIdx) => {
-                const isPassed = sub.remarks.toLowerCase().includes('pass') || parseFloat(sub.grade) <= 3.0;
-                return (
-                  <div key={sIdx} className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm hover:border-green-200 transition-all group">
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-[10px] font-black text-slate-400 group-hover:text-green-600 transition-colors uppercase">{sub.code}</span>
-                      <span className={`text-sm font-black px-2 py-0.5 rounded-lg ${
-                        isPassed ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                      }`}>
-                        {sub.grade}
-                      </span>
-                    </div>
-                    <p className="text-xs font-bold text-slate-700 leading-tight mb-3 h-8 line-clamp-2">{sub.description}</p>
-                    <div className="flex items-center gap-1.5 pt-2 border-t border-slate-50">
-                      <div className={`w-1.5 h-1.5 rounded-full ${isPassed ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                      <span className={`text-[10px] font-black uppercase tracking-tighter ${
-                        isPassed ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {sub.remarks}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="overflow-x-auto -mx-6 sm:mx-0">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100">
+                    <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Code</th>
+                    <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Subject</th>
+                    <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Grade</th>
+                    <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {grades.map((sub, sIdx) => {
+                    const isPassed = sub.remarks.toLowerCase().includes('pass') || parseFloat(sub.grade) <= 3.0;
+                    return (
+                      <tr key={sIdx} className="hover:bg-slate-50 transition-colors group">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-[10px] font-black text-slate-500 group-hover:text-blue-600 transition-colors">{sub.code}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="text-xs font-bold text-slate-700 leading-tight">{sub.description}</p>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`text-xs font-black px-2 py-1 rounded-lg ${
+                            isPassed ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                          }`}>
+                            {sub.grade}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                           <div className="flex items-center justify-end gap-1.5">
+                            <div className={`w-1.5 h-1.5 rounded-full ${isPassed ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                            <span className={`text-[10px] font-black uppercase tracking-tighter ${
+                              isPassed ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {sub.remarks}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           ) : (
             <div className="text-center py-12 text-slate-400">

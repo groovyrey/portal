@@ -140,15 +140,26 @@ export async function POST(req: NextRequest) {
     const eafRes = await client.get(eafUrl);
     const $eaf = cheerio.load(eafRes.data);
 
-    const subjectListUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=`;
-    const subListRes = await client.get(subjectListUrl, { headers: { 'Referer': finalInitUrl } });
+    // Dynamic Subject List URL discovery
+    let subjectListUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=`;
+    subDebug += "Searching for SubjectList link in dashboard...\n";
+    $dashboard('a').each((_, el) => {
+        const href = $dashboard(el).attr('href');
+        const text = $dashboard(el).text().toLowerCase();
+        if (href && (href.includes('SubjectList') || text.includes('subject list') || text.includes('prospectus'))) {
+            subjectListUrl = new URL(href, loginRes.config.url || 'https://premium.schoolista.com/LCC/Student/').toString();
+            subDebug += `Found SubjectList Link: ${text} -> ${subjectListUrl}\n`;
+        }
+    });
+
+    const subListRes = await client.get(subjectListUrl, { headers: { 'Referer': loginRes.config.url } });
     const $sub = cheerio.load(subListRes.data);
     
     subDebug += `SubjectList Page Title: ${$sub('title').text()}\n`;
     if (subListRes.data.includes('otbUserID')) {
         subDebug += `ERROR: Redirected to login page while fetching SubjectList.\n`;
     }
-    subDebug += `SubjectList Snippet: ${subListRes.data.substring(0, 500).replace(/\s+/g, ' ')}\n`;
+    subDebug += `SubjectList Snippet: ${subListRes.data.substring(0, 300).replace(/\s+/g, ' ')}\n`;
     
     // 8. Extract Available Report Card Links
     const gradesUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=Grades&_nm=`;
@@ -189,13 +200,17 @@ export async function POST(req: NextRequest) {
         if (cells.length >= 4 && currentSem) {
             const code = $sub(cells[0]).text().trim();
             const desc = $sub(cells[1]).text().trim();
+            
+            // Adjust indices for 8-column vs original structure
+            // Usually 8-column: Code, Desc, Unit, Lec, Lab, PreReq, ...
             const units = $sub(cells[2]).text().trim();
-            const preReq = $sub(cells[3]).text().trim();
-            if (code && desc && units.match(/\d/)) {
+            const preReq = cells.length >= 6 ? $sub(cells[5]).text().trim() : $sub(cells[3]).text().trim();
+
+            if (code && desc && (units.match(/\d/) || code.length > 2)) {
                 const key = `${code}-${desc}`.toLowerCase();
                 if (!seenProspectus.has(key)) {
                     if (currentSem.subjects.length === 0) {
-                        subDebug += `    Sample Subj: ${code} - ${desc.substring(0, 20)}...\n`;
+                        subDebug += `    Sample Subj (${cells.length} cols): ${code} - ${desc.substring(0, 20)}...\n`;
                     }
                     currentSem.subjects.push({ code, description: desc, units, preReq });
                     seenProspectus.add(key);

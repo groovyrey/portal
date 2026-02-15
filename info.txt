@@ -1,5 +1,7 @@
 --- Login Diagnostic Started ---
 UserId: 20241322
+SubjectList Page Title: Student Main
+SubjectList Snippet:  <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" > <HTML> <HEAD> <title>Student Main</title> <link rel="stylesheet" type="text/css" href="../Styles/Main.css" /> <link rel="stylesheet" type="text/css" href="../Styles/Schedule.css" /> <link rel="stylesheet" type="text/css" href="../Styles/FlowChart.css" /> <link rel="stylesheet" type="text/css" href="../Styles/serp_main.css" /> <link rel="stylesheet" type="text/css" href="../Styles/serp_header.css" /> <link r
 --- Subject List Scraping ---
 Total Prospectus Subjects: 0
 
