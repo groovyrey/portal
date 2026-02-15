@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
     const address = addressMatch ? `${addressMatch[1].trim()} San Jose Del Monte, Bulacan` : "";
 
     // 5. Extract Schedule (Subjects)
-    const schedule: any[] = [];
+    let schedule: any[] = [];
     $dashboard('table tr').each((_, row) => {
       const cells = $dashboard(row).find('td');
       if (cells.length >= 5) {
@@ -122,7 +122,16 @@ export async function POST(req: NextRequest) {
         }
       }
     });
-    const finalSchedule = schedule.length > 6 ? schedule.slice(-6) : schedule;
+
+    // De-duplicate schedule
+    const seenSched = new Set();
+    schedule = schedule.filter(s => {
+      const key = `${s.subject}-${s.time}`.toLowerCase();
+      if (seenSched.has(key)) return false;
+      seenSched.add(key);
+      return true;
+    });
+    const finalSchedule = schedule;
 
     // 6. Fetch EAF and Subject List
     const eafUrl = `https://premium.schoolista.com/LCC/Reports/Enrollment/LCC.EAF.aspx?_sid=${userId}&_pc=SY2025-2026-2`;
@@ -150,6 +159,7 @@ export async function POST(req: NextRequest) {
     const prospectus: any[] = [];
     let currentYear: any = null;
     let currentSem: any = null;
+    const seenProspectus = new Set();
 
     $sub('table tr').each((_, row) => {
         const text = $sub(row).text().trim();
@@ -171,7 +181,11 @@ export async function POST(req: NextRequest) {
             const units = $sub(cells[2]).text().trim();
             const preReq = $sub(cells[3]).text().trim();
             if (code && desc && units.match(/\d/)) {
-                currentSem.subjects.push({ code, description: desc, units, preReq });
+                const key = `${code}-${desc}`.toLowerCase();
+                if (!seenProspectus.has(key)) {
+                    currentSem.subjects.push({ code, description: desc, units, preReq });
+                    seenProspectus.add(key);
+                }
             }
         }
     });

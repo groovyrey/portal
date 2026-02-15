@@ -179,11 +179,23 @@ export async function POST(req: NextRequest) {
           }
 
           if (desc.length >= 3 && !desc.includes('Total') && !desc.includes('---')) {
+              // Improve remarks fallback: If remarks are missing, generic "N/A", or "---", 
+              // try to calculate "PASSED" based on the grade.
+              let finalRemarks = remarks;
+              if (!finalRemarks || finalRemarks === "N/A" || finalRemarks === "---") {
+                  const numGrade = parseFloat(grade);
+                  if (!isNaN(numGrade) && numGrade > 0) {
+                      finalRemarks = numGrade <= 3.0 ? "PASSED" : (numGrade >= 75 ? "PASSED" : "FAILED");
+                  } else {
+                      finalRemarks = "N/A";
+                  }
+              }
+
               subjects.push({ 
                   code: code || "SUBJ", 
                   description: desc, 
                   grade: grade || "---", 
-                  remarks: (remarks && remarks !== "---") ? remarks : (parseFloat(grade) <= 3.0 ? "PASSED" : "N/A")
+                  remarks: finalRemarks
               });
           }
         }

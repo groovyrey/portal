@@ -108,24 +108,6 @@ export default function GradesList({ reports, userId, password }: GradesListProp
               <p>Unable to retrieve grades for this semester.</p>
             </div>
           )}
-
-          {debugSnippet && (
-            <div className="mt-8 bg-slate-800 text-green-400 p-4 rounded-xl text-[10px] overflow-auto max-h-40 relative">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-white font-bold uppercase">Report Card Diagnostic</h3>
-                <button 
-                  onClick={() => {
-                    navigator.clipboard.writeText(debugSnippet || '');
-                    alert('Copied to clipboard!');
-                  }}
-                  className="text-[10px] bg-white/10 hover:bg-white/20 text-white px-2 py-1 rounded font-bold transition"
-                >
-                  COPY
-                </button>
-              </div>
-              <div className="whitespace-pre-wrap font-mono">{debugSnippet}</div>
-            </div>
-          )}
         </div>
       )}
     </div>
