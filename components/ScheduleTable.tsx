@@ -43,29 +43,41 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
 
   const getDays = (timeStr: string) => {
     const ts = timeStr.toUpperCase().split(/\d/)[0].trim(); // Get only the prefix (days)
-    const found: string[] = [];
+    const found = new Set<string>();
 
-    if (ts.includes('MWF')) {
-      found.push('Monday', 'Wednesday', 'Friday');
-    } else if (ts.includes('TTH')) {
-      found.push('Tuesday', 'Thursday');
-    } else {
-      if (ts.includes('M')) found.push('Monday');
-      if (ts.includes('W')) found.push('Wednesday');
-      if (ts.includes('F')) found.push('Friday');
-      if (ts.includes('TH')) {
-          found.push('Thursday');
-      } else if (ts.includes('T')) {
-          // If it has T but not TH
-          found.push('Tuesday');
-      }
-      if (ts.includes('S')) {
-          if (ts.includes('SUN')) found.push('Sunday');
-          else found.push('Saturday');
+    // Define known day patterns, ordered by length in the regex to prioritize longer matches
+    // e.g., 'TTH' will be matched before 'T' or 'TH'
+    const dayCodeRegex = /(MWF|TTH|SUN|TH|SU|M|T|W|R|F|S|U)/g;
+    const matches = ts.match(dayCodeRegex);
+
+    if (matches) {
+      for (const match of matches) {
+        if (match === 'MWF') {
+          found.add('Monday');
+          found.add('Wednesday');
+          found.add('Friday');
+        } else if (match === 'TTH') {
+          found.add('Tuesday');
+          found.add('Thursday');
+        } else if (match === 'SUN' || match === 'SU' || match === 'U') {
+          found.add('Sunday');
+        } else if (match === 'TH' || match === 'R') { // 'R' is a common alternative for Thursday
+          found.add('Thursday');
+        } else if (match === 'M') {
+          found.add('Monday');
+        } else if (match === 'T') {
+          found.add('Tuesday');
+        } else if (match === 'W') {
+          found.add('Wednesday');
+        } else if (match === 'F') {
+          found.add('Friday');
+        } else if (match === 'S') {
+          found.add('Saturday');
+        }
       }
     }
     
-    return found.length > 0 ? Array.from(new Set(found)) : null;
+    return found.size > 0 ? Array.from(found) : null;
   };
 
   return (
