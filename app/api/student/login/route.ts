@@ -8,10 +8,9 @@ import fs from 'fs';
 import path from 'path';
 
 export async function POST(req: NextRequest) {
-  let subDebug = "--- Login Diagnostic Started ---\n";
-  try {
     const { userId, password } = await req.json();
-    subDebug += `UserId: ${userId}\n`;
+    let subDebug = "";
+    try {
 
     if (!userId || !password) {
       return NextResponse.json({ error: 'UserID and Password are required' }, { status: 400 });
@@ -74,7 +73,7 @@ export async function POST(req: NextRequest) {
             }
         }
     });
-    subDebug += `Detected Period Code: ${periodCode}\n`;
+
 
     // 4. Check for specific failure patterns
     if (loginRes.data.includes('unexpected error')) {
@@ -156,7 +155,7 @@ export async function POST(req: NextRequest) {
 
     // Dynamic Subject List URL discovery from the dashboard
     let subjectListUrl = "";
-    subDebug += "Searching for SubjectList link in dashboard...\n";
+
     $dashboard('a').each((_, el) => {
         const href = $dashboard(el).attr('href');
         const text = $dashboard(el).text().trim();
@@ -166,17 +165,17 @@ export async function POST(req: NextRequest) {
                 correctedHref = correctedHref.replace('/Gate/', '/Student/');
             }
             const absoluteUrl = new URL(correctedHref, loginRes.request.res.responseUrl || loginRes.config.url || 'https://premium.schoolista.com/LCC/Student/').toString();
-            subDebug += `  MATCH: "${text}" -> ${absoluteUrl}\n`;
+
             if (!subjectListUrl) subjectListUrl = absoluteUrl;
         }
     });
 
     if (!subjectListUrl) {
-        subDebug += "  FALLBACK: No link found, using default URL construction.\n";
+
         subjectListUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=`;
     }
 
-    subDebug += `Final Target URL: ${subjectListUrl}\n`;
+
     const dashboardUrl = loginRes.request.res.responseUrl || baseUrl;
 
     const subListRes = await client.get(subjectListUrl, { 
@@ -184,12 +183,12 @@ export async function POST(req: NextRequest) {
     });
     const $sub = cheerio.load(subListRes.data);
     
-    subDebug += `SubjectList Page Title: ${$sub('title').text()}\n`;
-    subDebug += `SubjectList Response URL: ${subListRes.request.res.responseUrl}\n`;
+
+
     if (subListRes.data.includes('otbUserID')) {
-        subDebug += `ERROR: Redirected to login page while fetching SubjectList.\n`;
+
     }
-    subDebug += `SubjectList Snippet: ${subListRes.data.substring(0, 300).replace(/\s+/g, ' ')}\n`;
+
     
     // 8. Extract Available Report Card Links
     const gradesUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=Grades&_nm=`;
@@ -212,12 +211,12 @@ export async function POST(req: NextRequest) {
     const seenProspectus = new Set();
     let offeredSubjects: any[] = [];
     
-    subDebug += `--- Subject List Scraping --- Found ${$sub('table').length} tables.\n`;
+
 
     const table9 = $sub('table').eq(9);
     if (table9.length > 0) {
         const rows = table9.find('tr');
-        subDebug += `Targeting Table 9: ${rows.length} rows\n`;
+
         
         rows.each((rIdx, row) => {
             const cells = $sub(row).find('td');
@@ -227,7 +226,7 @@ export async function POST(req: NextRequest) {
             if (rIdx < 20) {
                 let rowData: string[] = [];
                 cells.each((_, td) => { rowData.push($sub(td).text().trim()); });
-                subDebug += `  Row ${rIdx}: [${rowData.join('] | [')}]\n`;
+
             }
 
             // Detection for Prospectus Hierarchical structure
@@ -235,13 +234,13 @@ export async function POST(req: NextRequest) {
                 if (currentYear) prospectus.push(currentYear);
                 currentYear = { year: rowText, semesters: [] };
                 currentSem = null;
-                subDebug += `  Matched Year: ${rowText}\n`;
+
                 return;
             }
             if (rowText.match(/\d(?:st|nd|rd|th)\s+Semester/i) && currentYear) {
                 currentSem = { semester: rowText, subjects: [] };
                 currentYear.semesters.push(currentSem);
-                subDebug += `    Matched Sem: ${rowText}\n`;
+
                 return;
             }
 
@@ -269,24 +268,29 @@ export async function POST(req: NextRequest) {
                 }
             }
         });
-    } else {
-        subDebug += "ERROR: Table 9 not found.\n";
     }
+
     if (currentYear) prospectus.push(currentYear);
 
-    subDebug += `Scraping Results: ${offeredSubjects.length} Offered, ${seenProspectus.size} in Prospectus hierarchy.\n`;
+
 
     // 8. Financials & Ledger Scraping
     const accountUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=Account&_nm=`;
     const accRes = await client.get(accountUrl, { headers: { 'Referer': subListRes.config.url || baseUrl } });
-    const $acc = cheerio.load(accRes.data);
     
-    subDebug += `Account Page Title: ${$acc('title').text()}\n`;
+    // User requested to ONLY have the account page raw output for diagnostic
+    subDebug = `--- Account Page Diagnostic ---\nURL: ${accountUrl}\n\nRAW_HTML_START\n${accRes.data}\nRAW_HTML_END`;
+    
+    const $acc = cheerio.load(accRes.data);
     
     let dueAccounts: any[] = [];
     let payments: any[] = [];
     let installments: any[] = [];
     let adjustments: any[] = [];
+    const seenDue = new Set();
+    const seenPayments = new Set();
+    const seenInstallments = new Set();
+    const seenAdjustments = new Set();
     let scrapedTotal = "---";
     let scrapedBalance = "---";
 
@@ -305,7 +309,11 @@ export async function POST(req: NextRequest) {
                     const paid = $acc(cells[3]).text().trim();
                     const due = $acc(cells[4]).text().trim();
                     if (dueDate && description && !dueDate.toLowerCase().includes('total') && !dueDate.toLowerCase().includes('due')) {
-                        dueAccounts.push({ dueDate, description, amount, paid, due });
+                        const key = `${dueDate}-${description}-${amount}`.toLowerCase();
+                        if (!seenDue.has(key)) {
+                            dueAccounts.push({ dueDate, description, amount, paid, due });
+                            seenDue.add(key);
+                        }
                     }
                 }
             });
@@ -320,7 +328,11 @@ export async function POST(req: NextRequest) {
                     const reference = $acc(cells[1]).text().trim();
                     const amount = $acc(cells[2]).text().trim();
                     if (date && reference && !date.toLowerCase().includes('paid')) {
-                        payments.push({ date, reference, amount });
+                        const key = `${date}-${reference}-${amount}`.toLowerCase();
+                        if (!seenPayments.has(key)) {
+                            payments.push({ date, reference, amount });
+                            seenPayments.add(key);
+                        }
                     }
                 }
             });
@@ -339,7 +351,11 @@ export async function POST(req: NextRequest) {
                     const outstanding = $acc(cells[3]).text().trim();
                     
                     if (dueDate && description && !dueDate.toLowerCase().includes('due today') && !dueDate.toLowerCase().includes('net total')) {
-                        installments.push({ dueDate, description, assessed, outstanding });
+                        const key = `${dueDate}-${description}-${assessed}`.toLowerCase();
+                        if (!seenInstallments.has(key)) {
+                            installments.push({ dueDate, description, assessed, outstanding });
+                            seenInstallments.add(key);
+                        }
                     }
                 }
 
@@ -364,14 +380,18 @@ export async function POST(req: NextRequest) {
                     const adjustment = $acc(cells[2]).text().trim();
                     const outstanding = $acc(cells[3]).text().trim();
                     if (dueDate && description && !dueDate.toLowerCase().includes('total')) {
-                        adjustments.push({ dueDate, description, adjustment, outstanding });
+                        const key = `${dueDate}-${description}-${adjustment}`.toLowerCase();
+                        if (!seenAdjustments.has(key)) {
+                            adjustments.push({ dueDate, description, adjustment, outstanding });
+                            seenAdjustments.add(key);
+                        }
                     }
                 }
             });
         }
     });
 
-    subDebug += `Scraped: ${dueAccounts.length} Due, ${payments.length} Payments, ${installments.length} Installments, ${adjustments.length} Adjustments.\n`;
+
 
     // Financials Summary (Fallback to EAF if not scraped from Account page)
     const eafText = $eaf('body').text().replace(/\s+/g, ' ');
