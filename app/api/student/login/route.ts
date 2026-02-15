@@ -147,8 +147,13 @@ export async function POST(req: NextRequest) {
         const href = $dashboard(el).attr('href');
         const text = $dashboard(el).text().toLowerCase();
         if (href && (href.includes('SubjectList') || text.includes('subject list') || text.includes('prospectus'))) {
-            subjectListUrl = new URL(href, loginRes.config.url || 'https://premium.schoolista.com/LCC/Student/').toString();
-            subDebug += `Found SubjectList Link: ${text} -> ${subjectListUrl}\n`;
+            let correctedHref = href;
+            // Fix: If it's pointing to /Gate/, redirect it to /Student/ to maintain session
+            if (correctedHref.includes('/Gate/')) {
+                correctedHref = correctedHref.replace('/Gate/', '/Student/');
+            }
+            subjectListUrl = new URL(correctedHref, loginRes.config.url || 'https://premium.schoolista.com/LCC/Student/').toString();
+            subDebug += `Found and Corrected SubjectList Link: ${text} -> ${subjectListUrl}\n`;
         }
     });
 

@@ -95,7 +95,7 @@ export default function GradesList({ reports, userId, password }: GradesListProp
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-100">
-                    <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Code</th>
+                    <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Section</th>
                     <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Subject</th>
                     <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Grade</th>
                     <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Remarks</th>
