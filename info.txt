@@ -1,7 +1,7 @@
 --- Login Diagnostic Started ---
 UserId: 20241322
 Searching for SubjectList link in dashboard...
-Found SubjectList Link: view subjects offered on 2nd semester, school year 2025-2026 -> https://premium.schoolista.com/LCC/Gate/Main.aspx?_sid=20241322&_pc=SY2025-2026-2&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=
+Found and Corrected SubjectList Link: view subjects offered on 2nd semester, school year 2025-2026 -> https://premium.schoolista.com/LCC/Gate/Main.aspx?_sid=20241322&_pc=SY2025-2026-2&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=
 SubjectList Page Title: Error
 SubjectList Snippet: <!DOCTYPE html> <html> <head> <meta charset="utf-8" /> <title>Error</title> </head> <body> <h2>An unexpected error has occurred.</h2> <p>If you are trying to login: <ol> <li>Please close the browser</li> <li>Try to re-login with your correc
 --- Subject List Scraping ---

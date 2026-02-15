@@ -147,13 +147,14 @@ export async function POST(req: NextRequest) {
         const href = $dashboard(el).attr('href');
         const text = $dashboard(el).text().toLowerCase();
         if (href && (href.includes('SubjectList') || text.includes('subject list') || text.includes('prospectus'))) {
+            let rawHref = href;
             let correctedHref = href;
-            // Fix: If it's pointing to /Gate/, redirect it to /Student/ to maintain session
-            if (correctedHref.includes('/Gate/')) {
-                correctedHref = correctedHref.replace('/Gate/', '/Student/');
+            // Fix: Case-insensitive replacement of /Gate/ with /Student/
+            if (/\/(gate)\//i.test(correctedHref)) {
+                correctedHref = correctedHref.replace(/\/(gate)\//i, '/Student/');
             }
             subjectListUrl = new URL(correctedHref, loginRes.config.url || 'https://premium.schoolista.com/LCC/Student/').toString();
-            subDebug += `Found and Corrected SubjectList Link: ${text} -> ${subjectListUrl}\n`;
+            subDebug += `Found Link: ${text}\n  Raw: ${rawHref}\n  Corrected: ${subjectListUrl}\n`;
         }
     });
 
@@ -184,44 +185,48 @@ export async function POST(req: NextRequest) {
     let currentYear: any = null;
     let currentSem: any = null;
     const seenProspectus = new Set();
-    subDebug += "--- Subject List Scraping ---\n";
+    subDebug += `--- Subject List Scraping --- Found ${$sub('table').length} tables.\n`;
 
-    $sub('table tr').each((_, row) => {
-        const text = $sub(row).text().trim();
-        if (text.match(/Year\s+Level/i)) {
-            subDebug += `Found Year: ${text}\n`;
-            if (currentYear) prospectus.push(currentYear);
-            currentYear = { year: text, semesters: [] };
-            currentSem = null;
-            return;
-        }
-        if (text.match(/\d(?:st|nd|rd|th)\s+Semester/i) && currentYear) {
-            subDebug += `  Found Sem: ${text}\n`;
-            currentSem = { semester: text, subjects: [] };
-            currentYear.semesters.push(currentSem);
-            return;
-        }
-        const cells = $sub(row).find('td');
-        if (cells.length >= 4 && currentSem) {
-            const code = $sub(cells[0]).text().trim();
-            const desc = $sub(cells[1]).text().trim();
-            
-            // Adjust indices for 8-column vs original structure
-            // Usually 8-column: Code, Desc, Unit, Lec, Lab, PreReq, ...
-            const units = $sub(cells[2]).text().trim();
-            const preReq = cells.length >= 6 ? $sub(cells[5]).text().trim() : $sub(cells[3]).text().trim();
+    $sub('table').each((tIdx, table) => {
+        const rows = $sub(table).find('tr');
+        subDebug += `Table ${tIdx}: ${rows.length} rows\n`;
+        
+        rows.each((rIdx, row) => {
+            const text = $sub(row).text().trim();
+            if (text.match(/Year\s+Level/i)) {
+                subDebug += `  Found Year: ${text}\n`;
+                if (currentYear) prospectus.push(currentYear);
+                currentYear = { year: text, semesters: [] };
+                currentSem = null;
+                return;
+            }
+            if (text.match(/\d(?:st|nd|rd|th)\s+Semester/i) && currentYear) {
+                subDebug += `    Found Sem: ${text}\n`;
+                currentSem = { semester: text, subjects: [] };
+                currentYear.semesters.push(currentSem);
+                return;
+            }
+            const cells = $sub(row).find('td');
+            if (cells.length >= 4 && currentSem) {
+                const code = $sub(cells[0]).text().trim();
+                const desc = $sub(cells[1]).text().trim();
+                
+                // Adjust indices for 8-column vs original structure
+                const units = $sub(cells[2]).text().trim();
+                const preReq = cells.length >= 6 ? $sub(cells[5]).text().trim() : $sub(cells[3]).text().trim();
 
-            if (code && desc && (units.match(/\d/) || code.length > 2)) {
-                const key = `${code}-${desc}`.toLowerCase();
-                if (!seenProspectus.has(key)) {
-                    if (currentSem.subjects.length === 0) {
-                        subDebug += `    Sample Subj (${cells.length} cols): ${code} - ${desc.substring(0, 20)}...\n`;
+                if (code && desc && (units.match(/\d/) || code.length > 2)) {
+                    const key = `${code}-${desc}`.toLowerCase();
+                    if (!seenProspectus.has(key)) {
+                        if (currentSem.subjects.length === 0) {
+                            subDebug += `      Sample Subj (${cells.length} cols): ${code} - ${desc.substring(0, 20)}...\n`;
+                        }
+                        currentSem.subjects.push({ code, description: desc, units, preReq });
+                        seenProspectus.add(key);
                     }
-                    currentSem.subjects.push({ code, description: desc, units, preReq });
-                    seenProspectus.add(key);
                 }
             }
-        }
+        });
     });
     if (currentYear) prospectus.push(currentYear);
 
