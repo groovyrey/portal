@@ -42,72 +42,115 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
   };
 
   const getDays = (timeStr: string) => {
-    const ts = timeStr.toUpperCase().split(/\d/)[0].trim(); // Get only the prefix (days)
+    // Extract the first three letters (day abbreviation)
+    const dayAbbr = timeStr.substring(0, 3).toUpperCase();
     const found: string[] = [];
 
-    if (ts.includes('MWF')) {
-      found.push('Monday', 'Wednesday', 'Friday');
-    } else if (ts.includes('TTH')) {
-      found.push('Tuesday', 'Thursday');
-    } else {
-      if (ts.includes('M')) found.push('Monday');
-      if (ts.includes('W')) found.push('Wednesday');
-      if (ts.includes('F')) found.push('Friday');
-      if (ts.includes('TH')) {
-          found.push('Thursday');
-      } else if (ts.includes('T')) {
-          // If it has T but not TH
-          found.push('Tuesday');
-      }
-      if (ts.includes('S')) {
-          if (ts.includes('SUN')) found.push('Sunday');
-          else found.push('Saturday');
-      }
+    switch (dayAbbr) {
+      case 'MON':
+        found.push('Monday');
+        break;
+      case 'TUE':
+        found.push('Tuesday');
+        break;
+      case 'WED':
+        found.push('Wednesday');
+        break;
+      case 'THU':
+        found.push('Thursday');
+        break;
+      case 'FRI':
+        found.push('Friday');
+        break;
+      case 'SAT':
+        found.push('Saturday');
+        break;
+      case 'SUN':
+        found.push('Sunday');
+        break;
     }
     
-    return found.length > 0 ? Array.from(new Set(found)) : null;
+    return found.length > 0 ? found : null;
   };
 
   return (
     <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
       <div className="px-8 py-6 border-b border-slate-50 bg-white flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Class Schedule</h2>
-          <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Simple View</p>
+          <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Class Timetable</h2>
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Full Weekly View</p>
         </div>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse min-w-[1000px]">
+        <table className="w-full border-collapse min-w-[1000px] table-fixed">
           <thead>
             <tr className="bg-slate-50/30">
-              <th className="p-4 border-b border-r border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Subject</th>
-              <th className="p-4 border-b border-r border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Section</th>
-              <th className="p-4 border-b border-r border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Units</th>
-              <th className="p-4 border-b border-r border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Time</th>
-              <th className="p-4 border-b border-r border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Room</th>
+              <th className="p-4 border-b border-r border-slate-100 w-24 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Time</th>
+              {DAYS.map(day => (
+                <th key={day} className="p-4 border-b border-r border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">
+                  {day}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {schedule.map((item, index) => (
-              <tr key={index} className="h-16">
-                <td className="p-4 border-b border-r border-slate-100 text-left">
-                  <div className="text-[10px] font-bold text-slate-700">{item.subject}</div>
-                </td>
-                <td className="p-4 border-b border-r border-slate-100 text-left">
-                  <div className="text-[10px] font-medium text-slate-600">{item.section}</div>
-                </td>
-                <td className="p-4 border-b border-r border-slate-100 text-left">
-                  <div className="text-[10px] font-medium text-slate-600">{item.units}</div>
-                </td>
-                <td className="p-4 border-b border-r border-slate-100 text-left">
-                  <div className="text-[10px] font-medium text-slate-600">{item.time}</div>
-                </td>
-                <td className="p-4 border-b border-r border-slate-100 text-left">
-                  <div className="text-[10px] font-medium text-slate-600">{item.room}</div>
-                </td>
-              </tr>
-            ))}
+            {HOURS.map((hourStr, hIdx) => {
+              const currentHour = 7 + hIdx;
+              return (
+                <tr key={hourStr} className="h-28">
+                  <td className="p-4 border-b border-r border-slate-100 text-center align-middle bg-slate-50/10">
+                    <span className="text-[10px] font-black text-blue-600/70 uppercase tabular-nums">{hourStr}</span>
+                  </td>
+                  {DAYS.map(day => {
+                    // Find classes that belong to this day and fall into this specific hour slot
+                    const activeClasses = schedule.filter(item => {
+                      const days = getDays(item.time);
+                      const range = parseTimeRange(item.time);
+                      if (!days || !range) return false;
+                      
+                      const matchesDay = days.includes(day);
+                      // A class "occupies" this hour slot if it starts at or before this hour, and ends after it.
+                      const occupiesSlot = currentHour >= Math.floor(range.start) && currentHour < Math.ceil(range.end);
+                      
+                      return matchesDay && occupiesSlot;
+                    });
+
+                    return (
+                      <td key={day} className="p-1 border-b border-r border-slate-100 align-top relative">
+                        {activeClasses.map((item, idx) => {
+                          const range = parseTimeRange(item.time);
+                          const isStartHour = range && Math.floor(range.start) === currentHour;
+                          
+                          // To avoid chaos, only render the card on the starting hour
+                          if (!isStartHour) return null;
+
+                          return (
+                            <div 
+                              key={idx} 
+                              className={`rounded-2xl p-4 border shadow-sm transition-all hover:shadow-md cursor-default z-10 relative h-full flex flex-col
+                                ${idx % 2 === 0 ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-indigo-50 border-indigo-100 text-indigo-700'}`}
+                            >
+                              <div className="text-[9px] font-black uppercase tracking-tighter mb-1 opacity-60">
+                                {item.time.split(/\s+/) .slice(1).join(' ')}
+                              </div>
+                              <div className="text-[10px] font-black leading-tight mb-2 line-clamp-2 uppercase">{item.subject}</div>
+                              <div className="mt-auto space-y-1">
+                                <div className="text-[8px] font-bold uppercase truncate">{item.room}</div>
+                                <div className="flex justify-between items-center text-[8px] font-black">
+                                  <span className="opacity-40">{item.section}</span>
+                                  <span className="bg-white/40 px-1.5 py-0.5 rounded border border-current/5">{item.units}U</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
