@@ -160,16 +160,19 @@ export async function POST(req: NextRequest) {
     let currentYear: any = null;
     let currentSem: any = null;
     const seenProspectus = new Set();
+    let subDebug = "--- Subject List Scraping ---\n";
 
     $sub('table tr').each((_, row) => {
         const text = $sub(row).text().trim();
         if (text.match(/Year\s+Level/i)) {
+            subDebug += `Found Year: ${text}\n`;
             if (currentYear) prospectus.push(currentYear);
             currentYear = { year: text, semesters: [] };
             currentSem = null;
             return;
         }
-        if (text.match(/\d(?:st|nd)\s+Semester/i) && currentYear) {
+        if (text.match(/\d(?:st|nd|rd|th)\s+Semester/i) && currentYear) {
+            subDebug += `  Found Sem: ${text}\n`;
             currentSem = { semester: text, subjects: [] };
             currentYear.semesters.push(currentSem);
             return;
@@ -183,6 +186,9 @@ export async function POST(req: NextRequest) {
             if (code && desc && units.match(/\d/)) {
                 const key = `${code}-${desc}`.toLowerCase();
                 if (!seenProspectus.has(key)) {
+                    if (currentSem.subjects.length === 0) {
+                        subDebug += `    Sample Subj: ${code} - ${desc.substring(0, 20)}...\n`;
+                    }
                     currentSem.subjects.push({ code, description: desc, units, preReq });
                     seenProspectus.add(key);
                 }
@@ -190,6 +196,21 @@ export async function POST(req: NextRequest) {
         }
     });
     if (currentYear) prospectus.push(currentYear);
+
+    subDebug += `Total Prospectus Subjects: ${seenProspectus.size}\n`;
+
+    // 7. Identify "Currently Offered" subjects (for the current sem/year)
+    const currentSemText = semMatch ? semMatch[0] : "2nd Semester";
+    const currentYearText = yearMatch ? `${yearMatch[1]}th Year` : "2nd Year";
+    
+    let offeredSubjects: any[] = [];
+    const activeYearObj = prospectus.find(y => y.year.includes(yearMatch ? yearMatch[1] : "2"));
+    if (activeYearObj) {
+        const activeSemObj = activeYearObj.semesters.find((s: any) => s.semester.toLowerCase().includes(currentSemText.toLowerCase().split(' ')[0]));
+        if (activeSemObj) {
+            offeredSubjects = activeSemObj.subjects;
+        }
+    }
 
     // Financials
     const eafText = $eaf('body').text().replace(/\s+/g, ' ');
@@ -215,46 +236,28 @@ export async function POST(req: NextRequest) {
         if (totalBalance === "---") totalBalance = allAmounts[allAmounts.length - 1] || "---";
     }
 
-            if (studentName && studentName.length > 2) {
-
-              return NextResponse.json({
-
-                success: true,
-
-                data: { 
-
-                  name: studentName, 
-
-                  id: userId, 
-
-                  course, 
-
-                  gender, 
-
-                  email, 
-
-                  contact, 
-
-                  address,
-
-                  semester: semMatch ? semMatch[0] : "2nd Semester",
-
-                  yearLevel: yearMatch ? `${yearMatch[1]}th Year` : "2nd Year",
-
-                  schedule: finalSchedule.length > 0 ? finalSchedule : null,
-
-                  prospectus: prospectus.length > 0 ? prospectus : null,
-
-                  availableReports: availableReports.length > 0 ? availableReports : null,
-
-                  financials: { total: totalAssessment, balance: totalBalance }
-
-                }
-
-              });
-
-            }
-
+                        if (studentName && studentName.length > 2) {
+                          return NextResponse.json({
+                            success: true,
+                            debugLog: subDebug,
+                            data: { 
+                              name: studentName, 
+                              id: userId, 
+                              course, 
+                              gender, 
+                              email, 
+                              contact, 
+                              address,
+                              semester: semMatch ? semMatch[0] : "2nd Semester",
+                              yearLevel: yearMatch ? `${yearMatch[1]}th Year` : "2nd Year",
+                              schedule: finalSchedule.length > 0 ? finalSchedule : null,
+                              prospectus: prospectus.length > 0 ? prospectus : null,
+                              offeredSubjects: offeredSubjects.length > 0 ? offeredSubjects : null,
+                              availableReports: availableReports.length > 0 ? availableReports : null,
+                              financials: { total: totalAssessment, balance: totalBalance }
+                            }
+                          });
+                        }
     const title = $dashboard('title').text();
     const snippet = pageText.substring(0, 500).replace(/\s+/g, ' ');
     return NextResponse.json({ 

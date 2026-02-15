@@ -57,6 +57,7 @@ export interface Student {
   schedule?: ScheduleItem[];
   financials?: Financials;
   prospectus?: ProspectusYear[];
+  offeredSubjects?: ProspectusSubject[];
   grades?: SemesterGrade[];
   availableReports?: ReportLink[];
 }
@@ -65,4 +66,5 @@ export interface LoginResponse {
   success: boolean;
   data?: Student;
   error?: string;
+  debugLog?: string;
 }

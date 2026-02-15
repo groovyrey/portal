@@ -28,7 +28,7 @@ async function diagnose() {
     formData.obtnLogin = 'LOGIN';
 
     console.log('2. Logging in...');
-    const loginRes = await client.post(loginPostUrl, qs.stringify(formData), {
+    await client.post(loginPostUrl, qs.stringify(formData), {
         headers: { 
             'Content-Type': 'application/x-www-form-urlencoded',
             'Referer': loginPageUrl
@@ -36,22 +36,50 @@ async function diagnose() {
     });
 
     console.log('3. Fetching Subject List...');
-    // We must use the SAME client to keep the cookies
-    const subjectListRes = await client.get(subjectListUrl, {
-        headers: { 'Referer': loginPageUrl }
+    const res = await client.get(subjectListUrl);
+    const $ = cheerio.load(res.data);
+    
+    console.log('4. Parsing Structure...');
+    let structures = [];
+    let currentYear = null;
+    let currentSem = null;
+
+    $('table tr').each((i, row) => {
+        const text = $(row).text().trim();
+        if (text.match(/Year\s+Level/i)) {
+            currentYear = text;
+            structures.push(`YEAR: ${text}`);
+            return;
+        }
+        if (text.match(/\d(?:st|nd)\s+Semester/i)) {
+            currentSem = text;
+            structures.push(`  SEM: ${text}`);
+            return;
+        }
+        const cells = $(row).find('td');
+        if (cells.length >= 4) {
+            const code = $(cells[0]).text().trim();
+            const desc = $(cells[1]).text().trim();
+            if (code && desc && code.length > 2 && !code.toLowerCase().includes('code')) {
+                // Just log the first subject of each sem to verify
+                if (currentSem) {
+                    structures.push(`    SUBJ: ${code} - ${desc.substring(0, 30)}...`);
+                    currentSem = null; // Only one sample per sem
+                }
+            }
+        }
     });
+
+    console.log('\n--- PORTAL STRUCTURE ---');
+    console.log(structures.join('\n'));
     
-    fs.writeFileSync('portal-app/subject_list_dump.html', subjectListRes.data);
+    const bodyText = $('body').text().replace(/\s+/g, ' ');
+    const yearMatch = bodyText.match(/Year\s+(\d)/i);
+    const semMatch = bodyText.match(/\d(?:st|nd|rd|th)\s+Semester/i);
     
-    const $ = cheerio.load(subjectListRes.data);
-    const title = $('title').text();
-    console.log('Final Page Title:', title);
-    
-    if (subjectListRes.data.includes('Subject') || subjectListRes.data.includes('Code')) {
-        console.log('SUCCESS: Subject list data found in HTML!');
-    } else {
-        console.log('FAILURE: Still seeing the login/error page.');
-    }
+    console.log('\n--- DETECTED STUDENT CONTEXT ---');
+    console.log('Detected Year:', yearMatch ? yearMatch[1] : 'Not Found');
+    console.log('Detected Sem:', semMatch ? semMatch[0] : 'Not Found');
 }
 
 diagnose();
