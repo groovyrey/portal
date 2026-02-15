@@ -43,29 +43,69 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
 
   const getDays = (timeStr: string) => {
     const ts = timeStr.toUpperCase().split(/\d/)[0].trim(); // Get only the prefix (days)
-    const found: string[] = [];
+    const found = new Set<string>();
 
+    const dayCodeMap: { [key: string]: string } = {
+      'M': 'Monday',
+      'T': 'Tuesday',
+      'W': 'Wednesday',
+      'R': 'Thursday', // 'R' is often used for Thursday in schedules
+      'TH': 'Thursday',
+      'F': 'Friday',
+      'S': 'Saturday',
+      'U': 'Sunday', // 'U' is sometimes used for Sunday
+      'SU': 'Sunday',
+      'SUN': 'Sunday',
+    };
+
+    // Prioritize checking for known multi-day codes or longer codes first
+    // This helps avoid 'T' matching for 'TH' or 'TTH'
     if (ts.includes('MWF')) {
-      found.push('Monday', 'Wednesday', 'Friday');
-    } else if (ts.includes('TTH')) {
-      found.push('Tuesday', 'Thursday');
-    } else {
-      if (ts.includes('M')) found.push('Monday');
-      if (ts.includes('W')) found.push('Wednesday');
-      if (ts.includes('F')) found.push('Friday');
-      if (ts.includes('TH')) {
-          found.push('Thursday');
-      } else if (ts.includes('T')) {
-          // If it has T but not TH
-          found.push('Tuesday');
-      }
-      if (ts.includes('S')) {
-          if (ts.includes('SUN')) found.push('Sunday');
-          else found.push('Saturday');
+      found.add('Monday');
+      found.add('Wednesday');
+      found.add('Friday');
+    }
+    if (ts.includes('TTH')) {
+      found.add('Tuesday');
+      found.add('Thursday');
+    }
+    if (ts.includes('SUN')) {
+      found.add('Sunday');
+    }
+
+    // Now check for individual day codes, ensuring they haven't been added by multi-day codes
+    // Or if the time string only contains individual codes (e.g., "MTH")
+    if (ts.includes('M') && !found.has('Monday')) found.add('Monday');
+    if (ts.includes('W') && !found.has('Wednesday')) found.add('Wednesday');
+    if (ts.includes('F') && !found.has('Friday')) found.add('Friday');
+    
+    // Handle 'TH' and 'T' carefully to avoid 'T' being matched for Thursday
+    if (ts.includes('TH') && !found.has('Thursday')) {
+      found.add('Thursday');
+    } else if (ts.includes('T') && !found.has('Tuesday') && !found.has('Thursday')) { 
+      // Only add Tuesday if 'TTH' and 'TH' were not found, and Tuesday isn't already added
+      found.add('Tuesday');
+    }
+
+    // Handle 'R' as an alternative for Thursday
+    if (ts.includes('R') && !found.has('Thursday')) {
+      found.add('Thursday');
+    }
+
+    // Handle 'S' for Saturday, if 'SUN' or 'SU' was not found for Sunday
+    if (ts.includes('S') && !found.has('Saturday') && !found.has('Sunday')) {
+      found.add('Saturday');
+    }
+    // Handle 'U' or 'SU' for Sunday if 'SUN' wasn't matched
+    if (ts.includes('U') && !found.has('Sunday')) {
+      // Check for 'SU' specifically to avoid 'U' from other contexts
+      if (ts.includes('SU')) {
+        found.add('Sunday');
       }
     }
-    
-    return found.length > 0 ? Array.from(new Set(found)) : null;
+
+
+    return found.size > 0 ? Array.from(found) : null;
   };
 
   return (
