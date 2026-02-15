@@ -6,6 +6,8 @@ import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
 import fs from 'fs';
 import path from 'path';
+import { sql } from '@/lib/db';
+import { initDatabase } from '@/lib/db-init';
 
 export async function POST(req: NextRequest) {
     const { userId, password } = await req.json();
@@ -412,6 +414,88 @@ export async function POST(req: NextRequest) {
     if (totalAssessment !== "---" && !totalAssessment.includes('₱')) totalAssessment = '₱' + totalAssessment;
     if (totalBalance !== "---" && !totalBalance.includes('₱')) totalBalance = '₱' + totalBalance;
     if (scrapedDueToday !== "---" && !scrapedDueToday.includes('₱')) scrapedDueToday = '₱' + scrapedDueToday;
+
+    // Save to database
+    try {
+      await initDatabase();
+
+      const yearLevel = yearMatch ? `${yearMatch[1]}th Year` : "2nd Year";
+      const semesterStr = semMatch ? semMatch[0] : "2nd Semester";
+
+      // Upsert Student
+      await sql`
+        INSERT INTO students (id, name, course, gender, address, contact, email, year_level, semester)
+        VALUES (${userId}, ${studentName}, ${course}, ${gender}, ${address}, ${contact}, ${email}, ${yearLevel}, ${semesterStr})
+        ON CONFLICT (id) DO UPDATE SET
+          name = EXCLUDED.name,
+          course = EXCLUDED.course,
+          gender = EXCLUDED.gender,
+          address = EXCLUDED.address,
+          contact = EXCLUDED.contact,
+          email = EXCLUDED.email,
+          year_level = EXCLUDED.year_level,
+          semester = EXCLUDED.semester,
+          updated_at = CURRENT_TIMESTAMP
+      `;
+
+      // Update Financials
+      const financialDetails = {
+        dueAccounts: dueAccounts.length > 0 ? dueAccounts : null,
+        payments: payments.length > 0 ? payments : null,
+        installments: installments.length > 0 ? installments : null,
+        adjustments: adjustments.length > 0 ? adjustments : null
+      };
+
+      await sql`
+        INSERT INTO financials (student_id, total, balance, due_today, details)
+        VALUES (${userId}, ${totalAssessment}, ${totalBalance}, ${scrapedDueToday}, ${JSON.stringify(financialDetails)})
+        ON CONFLICT (student_id) DO UPDATE SET
+          total = EXCLUDED.total,
+          balance = EXCLUDED.balance,
+          due_today = EXCLUDED.due_today,
+          details = EXCLUDED.details,
+          updated_at = CURRENT_TIMESTAMP
+      `;
+
+      // Update Schedules (Delete old and insert new)
+      if (finalSchedule && finalSchedule.length > 0) {
+        await sql`DELETE FROM schedules WHERE student_id = ${userId}`;
+        for (const s of finalSchedule) {
+          await sql`
+            INSERT INTO schedules (student_id, subject, section, units, time, room)
+            VALUES (${userId}, ${s.subject}, ${s.section}, ${s.units}, ${s.time}, ${s.room})
+          `;
+        }
+      }
+
+      // Update Prospectus Subjects (Global cache)
+      if (offeredSubjects && offeredSubjects.length > 0) {
+        for (const sub of offeredSubjects) {
+          await sql`
+            INSERT INTO prospectus_subjects (code, description, units, pre_req)
+            VALUES (${sub.code}, ${sub.description}, ${sub.units}, ${sub.preReq})
+            ON CONFLICT (code) DO UPDATE SET
+              description = EXCLUDED.description,
+              units = EXCLUDED.units,
+              pre_req = EXCLUDED.pre_req,
+              updated_at = CURRENT_TIMESTAMP
+          `;
+        }
+      }
+
+      // Update Student Prospectus
+      if (prospectus && prospectus.length > 0) {
+        await sql`
+          INSERT INTO student_prospectus (student_id, data)
+          VALUES (${userId}, ${JSON.stringify(prospectus)})
+          ON CONFLICT (student_id) DO UPDATE SET
+            data = EXCLUDED.data,
+            updated_at = CURRENT_TIMESTAMP
+        `;
+      }
+    } catch (dbError) {
+      console.error('Database sync error:', dbError);
+    }
 
                         if (studentName && studentName.length > 2) {
                           return NextResponse.json({

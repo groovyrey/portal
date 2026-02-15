@@ -66,10 +66,16 @@ export default function Home() {
       const result: LoginResponse = await response.json();
 
       if (result.success && result.data) {
+        // Set localStorage immediately so the Navbar can see it
+        localStorage.setItem('student_data', JSON.stringify(result.data));
+        localStorage.setItem('student_pass', pass);
+        if (result.debugLog) localStorage.setItem('debug_log', result.debugLog);
+        
         setStudent(result.data);
         setPassword(pass);
         if (result.debugLog) setDebugLog(result.debugLog);
         window.dispatchEvent(new Event('local-storage-update'));
+        window.dispatchEvent(new Event('storage')); // Trigger standard storage event for good measure
       } else {
         setError(result.error || 'Login failed. Please check your credentials.');
       }
@@ -110,7 +116,6 @@ export default function Home() {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            {student.financials && <FinancialSummary financials={student.financials} />}
             {student.schedule && <ScheduleTable schedule={student.schedule} />}
           </div>
           <div className="lg:col-span-1">

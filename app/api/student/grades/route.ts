@@ -4,6 +4,8 @@ import * as cheerio from 'cheerio';
 import qs from 'querystring';
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
+import { sql } from '@/lib/db';
+import { initDatabase } from '@/lib/db-init';
 
 export async function POST(req: NextRequest) {
   let debugLog = "";
@@ -210,6 +212,34 @@ export async function POST(req: NextRequest) {
       seen.add(key);
       return true;
     });
+
+    // Save grades to database
+    try {
+      await initDatabase();
+      
+      // Try to extract report name from href (e.g., _nm=Grades+of+1st+Semester+SY+2024-2025)
+      let reportName = 'Unknown Report';
+      if (href.includes('_nm=')) {
+        const match = href.match(/_nm=([^&]+)/);
+        if (match) {
+          reportName = decodeURIComponent(match[1].replace(/\+/g, ' '));
+        }
+      }
+
+      if (subjects && subjects.length > 0) {
+        // Delete old grades for this report and student to avoid duplicates
+        await sql`DELETE FROM grades WHERE student_id = ${userId} AND report_name = ${reportName}`;
+        
+        for (const s of subjects) {
+          await sql`
+            INSERT INTO grades (student_id, report_name, subject_code, subject_description, grade, remarks)
+            VALUES (${userId}, ${reportName}, ${s.code}, ${s.description}, ${s.grade}, ${s.remarks})
+          `;
+        }
+      }
+    } catch (dbError) {
+      console.error('Database sync error (grades):', dbError);
+    }
 
     if (subjects.length === 0) {
       debugLog += `No subjects found. Page Title: ${$rc('title').text()}\n`;
