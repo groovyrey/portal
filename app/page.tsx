@@ -69,6 +69,7 @@ export default function Home() {
         setStudent(result.data);
         setPassword(pass);
         if (result.debugLog) setDebugLog(result.debugLog);
+        window.dispatchEvent(new Event('local-storage-update'));
       } else {
         setError(result.error || 'Login failed. Please check your credentials.');
       }
@@ -84,6 +85,10 @@ export default function Home() {
     setPassword('');
     setError(undefined);
     setDebugLog(null);
+    localStorage.removeItem('student_data');
+    localStorage.removeItem('student_pass');
+    localStorage.removeItem('debug_log');
+    window.dispatchEvent(new Event('local-storage-update'));
   };
 
   if (!isInitialized) {
@@ -100,60 +105,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-10 backdrop-blur-lg bg-white/80">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-600 rounded-lg p-1.5 text-white">
-                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-                </svg>
-              </div>
-              <span className="font-bold text-xl tracking-tight text-slate-800">Student Portal</span>
-            </div>
-            <div className="flex items-center">
-               <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-md border border-green-100 flex items-center gap-1">
-                 <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                 Connected
-               </span>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-        <DashboardHeader student={student} onLogout={handleLogout} onRefresh={() => handleLogin(student.id, password)} loading={loading} />
+        <DashboardHeader student={student} onLogout={handleLogout} />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             {student.financials && <FinancialSummary financials={student.financials} />}
-            {student.availableReports && <GradesList reports={student.availableReports} userId={student.id} password={password} />}
-            
-            {student.offeredSubjects && (
-              <Link href="/offered-subjects">
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-6 hover:border-blue-200 transition-all group flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-blue-50 p-3 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-800">Offered Subjects</h3>
-                      <p className="text-slate-500 text-xs font-medium uppercase tracking-widest mt-0.5">View all subjects for this semester</p>
-                    </div>
-                  </div>
-                  <div className="bg-slate-50 p-2 rounded-lg text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
-            )}
-
             {student.schedule && <ScheduleTable schedule={student.schedule} />}
-            {student.prospectus && <Prospectus prospectus={student.prospectus} />}
           </div>
           <div className="lg:col-span-1">
             <PersonalInfo student={student} />

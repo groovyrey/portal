@@ -1,24 +1,59 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Student } from '../../types';
+import { Student, LoginResponse } from '../../types';
 import Link from 'next/link';
 
 export default function OfferedSubjectsPage() {
   const [student, setStudent] = useState<Student | null>(null);
+  const [password, setPassword] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const savedStudent = localStorage.getItem('student_data');
+    const savedPassword = localStorage.getItem('student_pass');
     if (savedStudent) {
       try {
         setStudent(JSON.parse(savedStudent));
+        if (savedPassword) setPassword(savedPassword);
       } catch (e) {
         console.error('Failed to parse saved student data');
       }
     }
     setIsInitialized(true);
   }, []);
+
+  const handleRefresh = async () => {
+    if (!student || !password) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/student/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: student.id, password }),
+      });
+
+      const result: LoginResponse = await response.json();
+
+      if (result.success && result.data) {
+        setStudent(result.data);
+        localStorage.setItem('student_data', JSON.stringify(result.data));
+        if (result.debugLog) localStorage.setItem('debug_log', result.debugLog);
+        // Dispatch event so other components (like Navbar) stay in sync
+        window.dispatchEvent(new Event('local-storage-update'));
+      } else {
+        setError(result.error || 'Refresh failed.');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isInitialized) {
     return (
@@ -57,7 +92,17 @@ export default function OfferedSubjectsPage() {
               <span className="font-bold text-lg tracking-tight text-slate-800">Offered Subjects</span>
             </div>
             <div className="flex items-center gap-2">
-               <span className="bg-blue-50 text-blue-600 text-[10px] font-black px-2 py-1 rounded-md border border-blue-100 uppercase tracking-tighter">
+               <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className={`px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold rounded-lg text-[10px] transition-all flex items-center gap-2 uppercase tracking-tighter ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {loading ? 'Refreshing...' : 'Refresh'}
+              </button>
+               <span className="bg-slate-100 text-slate-600 text-[10px] font-black px-2 py-1.5 rounded-md border border-slate-200 uppercase tracking-tighter">
                 {student.offeredSubjects.length} Total
               </span>
             </div>
@@ -66,6 +111,14 @@ export default function OfferedSubjectsPage() {
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-xs font-bold flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {error}
+          </div>
+        )}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="p-6 border-b border-slate-50 bg-slate-50/30">
             <h1 className="text-xl font-black text-slate-800 uppercase tracking-tight">Full Subject Listing</h1>
