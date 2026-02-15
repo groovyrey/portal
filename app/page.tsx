@@ -9,6 +9,7 @@ import ScheduleTable from '../components/ScheduleTable';
 import PersonalInfo from '../components/PersonalInfo';
 import Prospectus from '../components/Prospectus';
 import GradesList from '../components/GradesList';
+import OfferedSubjects from '../components/OfferedSubjects';
 
 export default function Home() {
   const [student, setStudent] = useState<Student | null>(null);
@@ -127,6 +128,7 @@ export default function Home() {
           <div className="lg:col-span-2">
             {student.financials && <FinancialSummary financials={student.financials} />}
             {student.availableReports && <GradesList reports={student.availableReports} userId={student.id} password={password} />}
+            {student.offeredSubjects && <OfferedSubjects subjects={student.offeredSubjects} />}
             {student.schedule && <ScheduleTable schedule={student.schedule} />}
             {student.prospectus && <Prospectus prospectus={student.prospectus} />}
           </div>

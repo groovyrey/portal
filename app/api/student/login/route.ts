@@ -140,28 +140,38 @@ export async function POST(req: NextRequest) {
     const eafRes = await client.get(eafUrl);
     const $eaf = cheerio.load(eafRes.data);
 
-    // Dynamic Subject List URL discovery
-    let subjectListUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=`;
+    // Dynamic Subject List URL discovery from the dashboard
+    let subjectListUrl = "";
     subDebug += "Searching for SubjectList link in dashboard...\n";
     $dashboard('a').each((_, el) => {
         const href = $dashboard(el).attr('href');
-        const text = $dashboard(el).text().toLowerCase();
-        if (href && (href.includes('SubjectList') || text.includes('subject list') || text.includes('prospectus'))) {
-            let rawHref = href;
+        const text = $dashboard(el).text().trim();
+        if (href && (href.toLowerCase().includes('subjectlist') || text.toLowerCase().includes('subject list') || text.toLowerCase().includes('prospectus'))) {
             let correctedHref = href;
-            // Fix: Case-insensitive replacement of /Gate/ with /Student/
-            if (/\/(gate)\//i.test(correctedHref)) {
-                correctedHref = correctedHref.replace(/\/(gate)\//i, '/Student/');
+            if (correctedHref.includes('/Gate/')) {
+                correctedHref = correctedHref.replace('/Gate/', '/Student/');
             }
-            subjectListUrl = new URL(correctedHref, loginRes.config.url || 'https://premium.schoolista.com/LCC/Student/').toString();
-            subDebug += `Found Link: ${text}\n  Raw: ${rawHref}\n  Corrected: ${subjectListUrl}\n`;
+            const absoluteUrl = new URL(correctedHref, loginRes.request.res.responseUrl || loginRes.config.url || 'https://premium.schoolista.com/LCC/Student/').toString();
+            subDebug += `  MATCH: "${text}" -> ${absoluteUrl}\n`;
+            if (!subjectListUrl) subjectListUrl = absoluteUrl;
         }
     });
 
-    const subListRes = await client.get(subjectListUrl, { headers: { 'Referer': loginRes.config.url } });
+    if (!subjectListUrl) {
+        subDebug += "  FALLBACK: No link found, using default URL construction.\n";
+        subjectListUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=`;
+    }
+
+    subDebug += `Final Target URL: ${subjectListUrl}\n`;
+    const dashboardUrl = loginRes.request.res.responseUrl || baseUrl;
+
+    const subListRes = await client.get(subjectListUrl, { 
+        headers: { 'Referer': dashboardUrl } 
+    });
     const $sub = cheerio.load(subListRes.data);
     
     subDebug += `SubjectList Page Title: ${$sub('title').text()}\n`;
+    subDebug += `SubjectList Response URL: ${subListRes.request.res.responseUrl}\n`;
     if (subListRes.data.includes('otbUserID')) {
         subDebug += `ERROR: Redirected to login page while fetching SubjectList.\n`;
     }
@@ -187,47 +197,57 @@ export async function POST(req: NextRequest) {
     const seenProspectus = new Set();
     subDebug += `--- Subject List Scraping --- Found ${$sub('table').length} tables.\n`;
 
-    $sub('table').each((tIdx, table) => {
-        const rows = $sub(table).find('tr');
-        subDebug += `Table ${tIdx}: ${rows.length} rows\n`;
+    // Specifically target Table 9 as identified by the user
+    const table9 = $sub('table').eq(9);
+    if (table9.length > 0) {
+        const rows = table9.find('tr');
+        subDebug += `Targeting Table 9: ${rows.length} rows\n`;
         
         rows.each((rIdx, row) => {
-            const text = $sub(row).text().trim();
-            if (text.match(/Year\s+Level/i)) {
-                subDebug += `  Found Year: ${text}\n`;
+            const cells = $sub(row).find('td');
+            let rowData: string[] = [];
+            cells.each((_, td) => {
+                rowData.push($sub(td).text().trim());
+            });
+            
+            // Log first 20 rows completely raw
+            if (rIdx < 20) {
+                subDebug += `  Row ${rIdx} (${cells.length} cells): [${rowData.join('] | [')}]\n`;
+            }
+
+            const rowText = $sub(row).text().trim();
+            if (rowText.match(/Year\s+Level/i)) {
                 if (currentYear) prospectus.push(currentYear);
-                currentYear = { year: text, semesters: [] };
+                currentYear = { year: rowText, semesters: [] };
                 currentSem = null;
                 return;
             }
-            if (text.match(/\d(?:st|nd|rd|th)\s+Semester/i) && currentYear) {
-                subDebug += `    Found Sem: ${text}\n`;
-                currentSem = { semester: text, subjects: [] };
+            if (rowText.match(/\d(?:st|nd|rd|th)\s+Semester/i) && currentYear) {
+                currentSem = { semester: rowText, subjects: [] };
                 currentYear.semesters.push(currentSem);
                 return;
             }
-            const cells = $sub(row).find('td');
-            if (cells.length >= 4 && currentSem) {
+
+            // Subject rows in an 8-column table
+            if (cells.length >= 8) {
                 const code = $sub(cells[0]).text().trim();
                 const desc = $sub(cells[1]).text().trim();
-                
-                // Adjust indices for 8-column vs original structure
                 const units = $sub(cells[2]).text().trim();
-                const preReq = cells.length >= 6 ? $sub(cells[5]).text().trim() : $sub(cells[3]).text().trim();
-
-                if (code && desc && (units.match(/\d/) || code.length > 2)) {
+                
+                if (code && desc && !code.toLowerCase().includes('code')) {
+                    subDebug += `    Scraped: [${code}] [${desc.substring(0, 20)}...] - CurrentSem Active: ${!!currentSem}\n`;
                     const key = `${code}-${desc}`.toLowerCase();
-                    if (!seenProspectus.has(key)) {
-                        if (currentSem.subjects.length === 0) {
-                            subDebug += `      Sample Subj (${cells.length} cols): ${code} - ${desc.substring(0, 20)}...\n`;
-                        }
-                        currentSem.subjects.push({ code, description: desc, units, preReq });
+                    if (!seenProspectus.has(key) && currentSem) {
+                        currentSem.subjects.push({ code, description: desc, units, preReq: $sub(cells[5]).text().trim() });
                         seenProspectus.add(key);
                     }
                 }
             }
         });
-    });
+    } else {
+        subDebug += "ERROR: Table 9 not found.\n";
+    }
+    
     if (currentYear) prospectus.push(currentYear);
 
     subDebug += `Total Prospectus Subjects: ${seenProspectus.size}\n`;
