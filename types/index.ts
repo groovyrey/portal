@@ -9,6 +9,13 @@ export interface ScheduleItem {
 export interface Financials {
   total: string;
   balance: string;
+  ledger?: {
+    date: string;
+    description: string;
+    debit: string;
+    credit: string;
+    balance: string;
+  }[];
 }
 
 export interface ProspectusSubject {

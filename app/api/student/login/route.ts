@@ -262,6 +262,32 @@ export async function POST(req: NextRequest) {
 
     subDebug += `Scraping Results: ${offeredSubjects.length} Offered, ${seenProspectus.size} in Prospectus hierarchy.\n`;
 
+    // 8. Raw Financial Diagnostic (Discovery Mode)
+    const accountUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=Account&_nm=`;
+    subDebug += `\n--- Account Page Diagnostic ---\nURL: ${accountUrl}\n`;
+    const accRes = await client.get(accountUrl, { headers: { 'Referer': subListRes.config.url || baseUrl } });
+    const $acc = cheerio.load(accRes.data);
+    
+    subDebug += `Account Page Title: ${$acc('title').text()}\n`;
+    subDebug += `Found ${$acc('table').length} tables.\n`;
+
+    $acc('table').each((tIdx, table) => {
+        const rows = $acc(table).find('tr');
+        subDebug += `Table ${tIdx} (${rows.length} rows):\n`;
+        
+        rows.each((rIdx, row) => {
+            // Log first 15 rows of each table raw
+            if (rIdx < 15) {
+                const cells = $acc(row).find('td');
+                let rowData: string[] = [];
+                cells.each((_, td) => {
+                    rowData.push($acc(td).text().trim());
+                });
+                subDebug += `  T${tIdx} R${rIdx} (${cells.length} cells): [${rowData.join('] | [')}]\n`;
+            }
+        });
+    });
+
     // Financials
     const eafText = $eaf('body').text().replace(/\s+/g, ' ');
     const currencyRegex = /\d{1,3}(,\d{3})*(\.\d{2})/g;
