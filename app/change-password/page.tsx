@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Lock, ShieldCheck, AlertCircle, KeyRound, CheckCircle2, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -11,26 +12,27 @@ export default function ChangePasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [debugHtml, setDebugHtml] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(false);
-    setDebugHtml(null);
 
     if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match.");
       setError("New passwords do not match.");
       return;
     }
 
     if (newPassword.length < 4) {
+      toast.error("Password is too short.");
       setError("Password is too short.");
       return;
     }
 
     setLoading(true);
+    const updateToast = toast.loading('Updating password on school portal...');
 
     try {
       const res = await fetch('/api/student/change-password', {
@@ -40,10 +42,10 @@ export default function ChangePasswordPage() {
       });
 
       const data = await res.json();
-      if (data.debugHtml) setDebugHtml(data.debugHtml);
 
       if (data.success) {
         setSuccess(true);
+        toast.success('Password updated successfully!', { id: updateToast });
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
@@ -52,19 +54,15 @@ export default function ChangePasswordPage() {
             router.push('/');
         }, 5000);
       } else {
-        setError(data.error || 'Failed to update password.');
+        const msg = data.error || 'Failed to update password.';
+        setError(msg);
+        toast.error(msg, { id: updateToast });
       }
     } catch (err) {
       setError('A network error occurred. Please try again.');
+      toast.error('Network error. Please try again.', { id: updateToast });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const copyToClipboard = () => {
-    if (debugHtml) {
-      navigator.clipboard.writeText(debugHtml);
-      alert('Raw HTML copied to clipboard!');
     }
   };
 
@@ -174,29 +172,6 @@ export default function ChangePasswordPage() {
             </div>
           </div>
         </div>
-
-        {/* Debug Section */}
-        {debugHtml && (
-          <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 shadow-2xl animate-fade-in">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-                <h3 className="text-white font-black uppercase text-[10px] tracking-widest">Portal API Response (Raw)</h3>
-              </div>
-              <button 
-                onClick={copyToClipboard}
-                className="bg-white/10 hover:bg-white/20 text-white text-[10px] font-black px-3 py-1.5 rounded-lg transition-all border border-white/5 uppercase tracking-tighter"
-              >
-                Copy HTML
-              </button>
-            </div>
-            <textarea 
-              readOnly 
-              value={debugHtml}
-              className="w-full h-48 bg-slate-950 text-green-500 font-mono text-[9px] p-4 rounded-xl border border-slate-800 focus:outline-none resize-none"
-            />
-          </div>
-        )}
       </div>
     </div>
   );

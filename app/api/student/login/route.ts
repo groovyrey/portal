@@ -13,7 +13,6 @@ import { encrypt } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
     const { userId, password } = await req.json();
-    let subDebug = "";
     try {
 
     if (!userId || !password) {
@@ -271,9 +270,6 @@ export async function POST(req: NextRequest) {
     const accountUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=Account&_nm=`;
     const accRes = await client.get(accountUrl, { headers: { 'Referer': subListRes.config.url || baseUrl } });
     
-    // User requested to ONLY have the account page raw output for diagnostic
-    subDebug = `--- Account Page Diagnostic ---\nURL: ${accountUrl}\n\nRAW_HTML_START\n${accRes.data}\nRAW_HTML_END\n\n--- EAF Page Diagnostic ---\nURL: ${eafUrl}\n\nRAW_HTML_START\n${eafRes.data}\nRAW_HTML_END`;
-    
     const $acc = cheerio.load(accRes.data);
     
     let dueAccounts: any[] = [];
@@ -485,7 +481,6 @@ export async function POST(req: NextRequest) {
       }
     } catch (dbError: any) {
       console.error('Database sync error:', dbError);
-      subDebug += `\n\n--- DATABASE ERROR ---\n${dbError.message}\n${dbError.code || ''}\n----------------------`;
       if (dbError.code === 'not-found' || dbError.message?.includes('NOT_FOUND')) {
         console.error('CRITICAL: Firestore database not found. Please ensure Firestore is enabled in the Firebase Console and the Project ID is correct.');
       }
@@ -498,7 +493,6 @@ export async function POST(req: NextRequest) {
 
         const response = NextResponse.json({
             success: true,
-            debugLog: subDebug,
             data: { 
                 name: studentName, 
                 id: userId, 

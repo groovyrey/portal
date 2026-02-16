@@ -5,6 +5,7 @@ import { Student, SubjectGrade } from '../../types';
 import GradesList from '../../components/GradesList';
 import GradeStats from '../../components/GradeStats';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function GradesPage() {
   const [student, setStudent] = useState<Student | null>(null);
@@ -30,6 +31,7 @@ export default function GradesPage() {
   const calculateStats = async () => {
     if (!student || !student.availableReports || isCalculating) return;
     setIsCalculating(true);
+    const statsToast = toast.loading('Gathering academic data across semesters...');
     let gathered: SubjectGrade[] = [];
 
     try {
@@ -49,6 +51,12 @@ export default function GradesPage() {
         }
       });
 
+      if (gathered.length === 0) {
+        toast.error('No grades found in your reports.', { id: statsToast });
+        setIsCalculating(false);
+        return;
+      }
+
       // De-duplicate gathered grades
       const seen = new Set();
       const unique = gathered.filter(g => {
@@ -60,8 +68,10 @@ export default function GradesPage() {
 
       setAllGrades(unique);
       localStorage.setItem('all_grades_cache', JSON.stringify(unique));
+      toast.success('Scholastic stats calculated!', { id: statsToast });
     } catch (err) {
       console.error('Failed to gather grades for stats', err);
+      toast.error('Failed to aggregate data.', { id: statsToast });
     } finally {
       setIsCalculating(false);
     }

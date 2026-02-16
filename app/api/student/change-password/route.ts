@@ -95,15 +95,13 @@ export async function POST(req: NextRequest) {
         if (rawHtml.includes('successfully changed') || rawHtml.includes('Success') || successText) {
             return NextResponse.json({ 
                 success: true, 
-                message: 'Password changed successfully.',
-                debugHtml: rawHtml
+                message: 'Password changed successfully.'
             });
         }
 
         return NextResponse.json({ 
             success: false, 
-            error: errorText || 'Failed to change password. Please verify your current password.',
-            debugHtml: rawHtml
+            error: errorText || 'Failed to change password. Please verify your current password.'
         }, { status: 400 });
 
     } catch (error: any) {

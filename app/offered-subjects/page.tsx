@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import { Student, LoginResponse } from '../../types';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function OfferedSubjectsPage() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -25,10 +25,9 @@ export default function OfferedSubjectsPage() {
   const handleRefresh = async () => {
     if (!student) return;
     setLoading(true);
-    setError(null);
+    const refreshToast = toast.loading('Refreshing subject listing...');
 
     try {
-      // Refresh session/data using HttpOnly cookie (no credentials sent)
       const response = await fetch('/api/student/me');
       const result = await response.json();
 
@@ -36,11 +35,12 @@ export default function OfferedSubjectsPage() {
         setStudent(result.data);
         localStorage.setItem('student_data', JSON.stringify(result.data));
         window.dispatchEvent(new Event('local-storage-update'));
+        toast.success('Subjects updated!', { id: refreshToast });
       } else {
-        setError(result.error || 'Refresh failed. Your session may have expired.');
+        toast.error(result.error || 'Refresh failed.', { id: refreshToast });
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      toast.error('Network error. Please try again.', { id: refreshToast });
     } finally {
       setLoading(false);
     }
@@ -102,14 +102,6 @@ export default function OfferedSubjectsPage() {
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-xs font-bold flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            {error}
-          </div>
-        )}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="p-6 border-b border-slate-50 bg-slate-50/30">
             <h1 className="text-xl font-black text-slate-800 uppercase tracking-tight">Full Subject Listing</h1>

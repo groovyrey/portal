@@ -7,12 +7,12 @@ import DashboardHeader from '../components/DashboardHeader';
 import ScheduleTable from '../components/ScheduleTable';
 import PersonalInfo from '../components/PersonalInfo';
 import AIChat from '../components/AIChat';
+import { toast } from 'sonner';
 
 export default function Home() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
-  const [debugLog, setDebugLog] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Initial session check
@@ -42,6 +42,7 @@ export default function Home() {
             setStudent(null);
             localStorage.removeItem('student_data');
             window.dispatchEvent(new Event('local-storage-update'));
+            toast.error('Session expired. Please log in again.');
           }
         }
       } catch (err) {
@@ -59,18 +60,16 @@ export default function Home() {
     if (isInitialized) {
       if (student) {
         localStorage.setItem('student_data', JSON.stringify(student));
-        if (debugLog) localStorage.setItem('debug_log', debugLog);
       } else {
         localStorage.removeItem('student_data');
-        localStorage.removeItem('debug_log');
       }
     }
-  }, [student, debugLog, isInitialized]);
+  }, [student, isInitialized]);
 
   const handleLogin = async (userId: string, pass: string) => {
     setLoading(true);
     setError(undefined);
-    setDebugLog(null);
+    const loginToast = toast.loading('Connecting to school portal...');
 
     try {
       const response = await fetch('/api/student/login', {
@@ -86,16 +85,19 @@ export default function Home() {
         localStorage.removeItem('student_pass'); 
         
         setStudent(result.data);
-        if (result.debugLog) setDebugLog(result.debugLog);
+        toast.success(`Welcome, ${result.data.name}!`, { id: loginToast });
         
         // Cache data only
         localStorage.setItem('student_data', JSON.stringify(result.data));
         window.dispatchEvent(new Event('local-storage-update'));
       } else {
-        setError(result.error || 'Login failed. Please check your credentials.');
+        const msg = result.error || 'Login failed. Please check your credentials.';
+        setError(msg);
+        toast.error(msg, { id: loginToast });
       }
     } catch (err) {
       setError('Network error. Please try again.');
+      toast.error('Network error. Please try again.', { id: loginToast });
     } finally {
       setLoading(false);
     }
@@ -104,16 +106,15 @@ export default function Home() {
   const handleLogout = async () => {
     try {
         await fetch('/api/student/logout', { method: 'POST' });
+        toast.success('Logged out successfully.');
     } catch (e) {
         console.error('Logout API failed', e);
     }
     
     setStudent(null);
     setError(undefined);
-    setDebugLog(null);
     localStorage.removeItem('student_data');
     localStorage.removeItem('student_pass'); // Ensure this is gone
-    localStorage.removeItem('debug_log');
     window.dispatchEvent(new Event('local-storage-update'));
   };
 
@@ -142,31 +143,6 @@ export default function Home() {
             <PersonalInfo student={student} />
           </div>
         </div>
-
-        {debugLog && (
-          <div className="mt-12 bg-slate-900 rounded-2xl border border-slate-800 p-6 shadow-2xl animate-fade-in">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-                <h3 className="text-white font-black uppercase text-xs tracking-widest">Portal Scraper Diagnostic</h3>
-              </div>
-              <button 
-                onClick={() => {
-                  navigator.clipboard.writeText(debugLog);
-                  alert('Diagnostic log copied to clipboard!');
-                }}
-                className="bg-white/10 hover:bg-white/20 text-white text-[10px] font-black px-3 py-1.5 rounded-lg transition-all border border-white/5 uppercase tracking-tighter"
-              >
-                Copy Log
-              </button>
-            </div>
-            <textarea 
-              readOnly 
-              value={debugLog}
-              className="w-full h-48 bg-slate-950 text-green-500 font-mono text-[10px] p-4 rounded-xl border border-slate-800 focus:outline-none resize-none"
-            />
-          </div>
-        )}
       </main>
 
       <AIChat />

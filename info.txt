@@ -1,139 +1,46 @@
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" >
-<HTML>
-	<HEAD>
-		<title>Change Password</title>
-		<link id="csslinkStylesMain" rel="stylesheet" type="text/css" href="../Styles/Main.css"></link>
-        <link id="csslinkStylesSERP_Main" rel="stylesheet" type="text/css" href="../Styles/serp_main.css"></link>
-        <link id="csslinkStylesSERP_Header" rel="stylesheet" type="text/css" href="../Styles/serp_header.css"></link>
-        <link id="csslinkStylesSERP_Menu" rel="stylesheet" type="text/css" href="../Styles/serp_menu.css"></link>
-        <link id="csslinkStylesSERP_Button" rel="stylesheet" type="text/css" href="../Styles/serp_button.css"></link>
-        <link id="csslinkStylesSERP_Container" rel="stylesheet" type="text/css" href="../Styles/serp_container.css"></link>
-	</HEAD>
-	<body>
-		<form name="ChangePassword" method="post" action="./ChangePassword.aspx" id="ChangePassword">
-<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
-<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
-<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUJNTIxNzM4MTE2ZGRlUBUdV8N5VW745FjZDrNP1Hfjvw47/hlD36vL/UoLqQ==" />
-
-<script type="text/javascript">
-<!--
-var theForm = document.forms[ChangePassword];
-if (!theForm) {
-    theForm = document.ChangePassword;
-}
-function __doPostBack(eventTarget, eventArgument) {
-    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
-        theForm.__EVENTTARGET.value = eventTarget;
-        theForm.__EVENTARGUMENT.value = eventArgument;
-        theForm.submit();
-    }
-}
-// -->
-</script>
+Here is the plain text version (no HTML tags):
 
 
-<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="84D43BA3" />
-<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdAAcYuHYRi92dH1uyhh5EM3hFNgFI7rnTzNnUCLHtrtkzg9zybdGYX7/TUEgSxfca2MPylNqB3z3j/kACC9tiR6KeVXsJ4ODZeCFGWpgNgGwwKObbOlMS6VHoCeSmb1fSzWJmvUgfay61yy7/mAui2/KrEXoAahnBChkqiMzRVIsMR4Fj3hRW/GsD/5A95dasIYA=" />
-			<table class="main_table">
-				<tr>
-					<td>
-						<table id="oHeader" border="0">
-	<tr>
-		<td><table id="top_container" border="0">
-			<tr>
-				<td id="logo"></td><td><table id="enrollment_student_info" border="0">
-					<tr>
-						<td align="left" valign="middle"><span class="enrollment_student_info_cell_name"></span></td>
-					</tr><tr>
-						<td align="left" valign="middle"><span class="enrollment_student_info_cell_sy"></span></td>
-					</tr><tr>
-						<td align="left" valign="middle"><span class="enrollment_student_info_cell_course"></span></td>
-					</tr>
-				</table></td><td class="enrollment_top_menu" valign="top"><a class="nav_button_inactive" href="Navigate.aspx?_am=GoToMain" target="_self">Main</a><a class="nav_button_inactive" href="Navigate.aspx?_am=Logout" target="_self">Logout</a></td>
-			</tr>
-		</table></td>
-	</tr><tr>
-		<td><table id="bottom_container" border="0">
-			<tr>
-				<td><table id="student_nav_container" border="0">
-					<tr align="center">
-						<td class="enrollment_nav_cell" align="center" valign="middle"></td>
-					</tr>
-				</table></td>
-			</tr>
-		</table></td>
-	</tr>
-</table>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						
-					</td>
-				</tr>
-				<tr>
-					<td class="main_table_detail_content">
-						<table id="otbMain" width="100%">
-							<tr>
-								<td width="100%" colspan="4" align="left">
-									<a id="olbMain" href="javascript:__doPostBack(&#39;olbMain&#39;,&#39;&#39;)">Back to Main</a>
-									<span style="PADDING-LEFT: 3px"></span>
-									<a id="olbLogout" href="javascript:__doPostBack(&#39;olbLogout&#39;,&#39;&#39;)">Logout</a>
-								</td>
-							</tr>
-							<tr>
-								<td width="100%" colspan="4">
-<div>
-<span style="font-weight:bold; margin:0px; padding:0px; text-decoration:underline;">It is recommended that you change your password</span>
-<ol style="margin-top:0px; margin-bottom:0px;">
-<li>Change your password regularly</li>
-<li>Use a combination of letters and numbers</li>
-<li>Use a combination of upper and lower case</li>
-<li>Do not reuse your passwords in different websites/accounts</li>
-<li>Do not divulge your password</li>
-</ol>
-</div>
-								</td>
-							</tr>
-							<tr>
-								<td width="100%" colspan="4">
-									<table id="otbPasswordChangeTable" border="0">
-	<tr>
-		<td align="center" class="HeaderTitle" colspan="4" rowspan="1">Change Password</td>
-	</tr><tr>
-		<td></td><td>Current Password</td><td><input name="otbPasswordChangeTable_1" type="password" id="otbPasswordChangeTable_1" /></td><td></td>
-	</tr><tr>
-		<td></td><td align="center" colspan="2">Enter New Password:</td><td></td>
-	</tr><tr>
-		<td></td><td>New Password</td><td><input name="otbPasswordChangeTable_2" type="password" id="otbPasswordChangeTable_2" /></td><td></td>
-	</tr><tr>
-		<td></td><td>Confirm New Password</td><td><input name="otbPasswordChangeTable_3" type="password" id="otbPasswordChangeTable_3" /></td><td></td>
-	</tr><tr>
-		<td></td><td align="center" colspan="2"><input type="submit" name="obtnSaveNewPasword" value="Save new password" id="obtnSaveNewPasword" /></td><td></td>
-	</tr><tr>
-		<td align="right" class="FooterText" colspan="4" rowspan="1"></td>
-	</tr>
-</table>
-								</td>
-							</tr>
-							<tr>
-								<td width="100%" colspan="4">
-								</td>
-							</tr>
-						</table>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<div id="footer">
-<a class="links" href="Menu.aspx">User: 20241322  [reymartcenteno03@gmail.com]</a></br>
-© 2022 <a class="links" href="http://www.ledgea.com">Ledgea Systems, Inc.</a> All rights reserved.</div>
+---
 
-					</td>
-				</tr>
-			</table>
-		</form>
-	</body>
-</HTML>
+Error
 
+An unexpected error has occurred.
+
+If you are trying to login:
+
+1. Please close the browser
+
+
+2. Try to re-login with your correct credentials
+
+
+
+NOTE: Attempting incorrect credentials repeatedly will block your browser, so please make sure you have the correct credentials.
+
+If the problem persists, please contact the school's system administrator with the following info:
+
+Your user id
+
+Your name
+
+Information on what you were doing that possibly led to this error page
+
+
+Thank you.
+
+
+---
+
+If you want, I can also convert it into:
+
+one single line
+
+JSON string
+
+JavaScript string
+
+formatted for logging
+
+
+Just say what format you need.
