@@ -107,6 +107,15 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
                 'Sign In'
               )}
             </button>
+
+            <div className="flex gap-2 items-start p-3 bg-blue-50/50 rounded-xl border border-blue-100/50">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-[10px] text-blue-700 font-medium leading-relaxed">
+                <span className="font-bold">Note:</span> Your first login may take up to a minute. We are securely synchronizing your real-time academic records, schedule, and financial status directly from the school's official portal.
+              </p>
+            </div>
           </form>
 
           <div className="mt-10 pt-6 border-t border-slate-100">

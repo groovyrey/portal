@@ -46,6 +46,7 @@ export default function Navbar() {
 
   const authLinks = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
     { name: 'Offered Subjects', href: '/offered-subjects', icon: BookOpen },
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
