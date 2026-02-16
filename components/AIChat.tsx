@@ -55,12 +55,12 @@ export default function AIChat() {
 
       if (!response.ok) {
         let errorMessage = 'An error occurred';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || response.statusText;
-        } catch (jsonErr) {
-          // Fallback if response is not JSON
-          errorMessage = await response.text() || response.statusText;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            errorMessage = errorData.error || response.statusText;
+        } else {
+            errorMessage = await response.text() || response.statusText;
         }
         throw new Error(errorMessage);
       }

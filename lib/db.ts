@@ -16,13 +16,6 @@ let db: any;
 try {
   const dbId = process.env.FIREBASE_DATABASE_ID || '(default)';
   
-  console.log('--- Firebase Config Debug ---');
-  console.log('Project ID:', firebaseConfig.projectId);
-  console.log('Auth Domain:', firebaseConfig.authDomain);
-  console.log('Database ID:', dbId);
-  console.log('API Key Present:', !!firebaseConfig.apiKey && firebaseConfig.apiKey !== 'undefined');
-  console.log('---------------------------');
-  
   if (!firebaseConfig.apiKey || firebaseConfig.apiKey === 'undefined') {
     console.warn('CRITICAL: Firebase API Key is missing. Check your .env.local file.');
   }
@@ -31,7 +24,6 @@ try {
   
   // getFirestore(app, databaseId?) - databaseId must be a string if provided
   db = dbId === '(default)' ? getFirestore(app) : getFirestore(app, dbId);
-  console.log('Firestore initialization command sent.');
 } catch (error) {
   console.error('Failed to initialize Firebase:', error);
 }
