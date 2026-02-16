@@ -11,6 +11,9 @@ import {
   Loader2,
   Sparkles
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -110,12 +113,31 @@ export default function AIChat() {
               )}
               {messages.map((m, idx) => (
                 <div key={idx} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-3 rounded-xl text-sm font-medium ${
+                  <div className={`max-w-[85%] p-3 rounded-xl text-sm ${
                     m.role === 'user' 
-                      ? 'bg-blue-600 text-white rounded-tr-none' 
-                      : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'
+                      ? 'bg-blue-600 text-white rounded-tr-none font-medium' 
+                      : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none prose prose-slate prose-sm max-w-none'
                   }`}>
-                    {m.content}
+                    {m.role === 'user' ? (
+                      m.content
+                    ) : (
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkGfm]} 
+                        rehypePlugins={[rehypeHighlight]}
+                        components={{
+                          table: ({node, ...props}) => <div className="overflow-x-auto my-2"><table className="border-collapse border border-slate-200 w-full" {...props} /></div>,
+                          th: ({node, ...props}) => <th className="border border-slate-200 px-2 py-1 bg-slate-50 font-bold" {...props} />,
+                          td: ({node, ...props}) => <td className="border border-slate-200 px-2 py-1" {...props} />,
+                          code: ({node, ...props}) => <code className="bg-slate-100 rounded px-1 py-0.5 font-mono text-xs" {...props} />,
+                          pre: ({node, ...props}) => <pre className="bg-slate-100 rounded-lg p-3 my-2 overflow-x-auto" {...props} />,
+                          ul: ({node, ...props}) => <ul className="list-disc ml-4 my-2" {...props} />,
+                          ol: ({node, ...props}) => <ol className="list-decimal ml-4 my-2" {...props} />,
+                          a: ({node, ...props}) => <a className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                        }}
+                      >
+                        {m.content}
+                      </ReactMarkdown>
+                    )}
                   </div>
                 </div>
               ))}

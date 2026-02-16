@@ -163,6 +163,14 @@ export async function POST(req: NextRequest) {
     const addressMatch = pageText.match(/(?:Male|Female)\s+(.*?)\s+(?:San Jose|Bulacan|Philippines)/i);
     const address = addressMatch ? `${addressMatch[1].trim()} San Jose Del Monte, Bulacan` : "";
 
+    const formatYearLevel = (year: string) => {
+      const n = parseInt(year);
+      if (isNaN(n)) return year;
+      const s = ["th", "st", "nd", "rd"],
+            v = n % 100;
+      return n + (s[(v - 20) % 10] || s[v] || s[0]) + " Year";
+    };
+
     // 5. Extract Schedule (Subjects)
     let schedule: any[] = [];
     $dashboard('table tr').each((_, row) => {
@@ -409,7 +417,7 @@ export async function POST(req: NextRequest) {
       }
       await initDatabase();
 
-      const yearLevel = yearMatch ? `${yearMatch[1]}th Year` : "2nd Year";
+      const yearLevel = yearMatch ? formatYearLevel(yearMatch[1]) : "2nd Year";
       const semesterStr = semMatch ? semMatch[0] : "2nd Semester";
 
       // Upsert Student
@@ -489,7 +497,7 @@ export async function POST(req: NextRequest) {
                 contact, 
                 address,
                 semester: semMatch ? semMatch[0] : "2nd Semester",
-                yearLevel: yearMatch ? `${yearMatch[1]}th Year` : "2nd Year",
+                yearLevel: yearMatch ? formatYearLevel(yearMatch[1]) : "2nd Year",
                 schedule: finalSchedule.length > 0 ? finalSchedule : null,
                 offeredSubjects: offeredSubjects.length > 0 ? offeredSubjects : null,
                 availableReports: availableReports.length > 0 ? availableReports : null,

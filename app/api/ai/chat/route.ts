@@ -65,14 +65,18 @@ export async function POST(req: NextRequest) {
         });
       }
     });
-    const offeredSubjects = prospectusSnap.docs.map(d => ({ code: d.id, ...d.data() }));
+    const offeredSubjects = prospectusSnap.docs.map(d => ({ code: d.id, ...d.data() })) as any[];
 
     const systemPrompt = `
 You are "Portal AI", a professional Student Assistant for La Concepcion College (LCC).
 Today is ${new Date().toLocaleDateString()}.
 
 STUDENT: ${student.name} (${student.course}, Year ${student.year_level})
-SCHEDULE: ${scheduleItems.map((s: any) => `${s.subject}: ${s.time} (${s.room})`).join(', ') || 'None'}
+SCHEDULE: ${scheduleItems.map((s: any) => {
+  const fullSubject = offeredSubjects.find((o: any) => o.code === s.subject);
+  const title = fullSubject ? `${s.subject} - ${fullSubject.description}` : s.subject;
+  return `${title}: ${s.time} (${s.room})`;
+}).join(', ') || 'None'}
 FINANCIALS: ${financials ? `Balance: ₱${financials.balance}, Total: ₱${financials.total}, Due: ₱${financials.due_today}` : 'No data'}
 GRADES: ${allGrades.map(g => `${g.description}: ${g.grade} (${g.remarks})`).slice(0, 10).join(', ')}...
 OFFERED: ${offeredSubjects.map((s: any) => `${s.code}: ${s.description}`).slice(0, 10).join(', ')}...
