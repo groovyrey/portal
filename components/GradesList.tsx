@@ -44,14 +44,14 @@ export default function GradesList({ reports }: GradesListProps) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-8">
+      <div className="bg-white rounded-2xl border border-slate-200 p-8">
         <div className="flex items-center gap-4 mb-8">
-          <div className="h-12 w-12 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center shadow-inner">
-            <BookOpenCheck className="h-6 w-6" />
+          <div className="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <BookOpenCheck className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Academic Records</h3>
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Report Card Selection</p>
+            <h3 className="text-xl font-bold text-slate-900">Academic Records</h3>
+            <p className="text-slate-500 text-xs font-medium mt-1">Select a semester to view your grades</p>
           </div>
         </div>
 
@@ -62,19 +62,19 @@ export default function GradesList({ reports }: GradesListProps) {
               <button
                 key={idx}
                 onClick={() => fetchGrades(report.href, report.text)}
-                className={`group flex items-center justify-between p-4 rounded-2xl text-xs font-black transition-all border outline-none ${
+                className={`flex items-center justify-between p-4 rounded-xl text-xs font-bold transition-all border outline-none ${
                   isActive
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-200 scale-[1.02]'
-                    : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-100 hover:border-slate-200'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                    : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl transition-colors ${isActive ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-blue-600 group-hover:shadow-sm'}`}>
+                  <div className={`p-2 rounded-lg transition-colors ${isActive ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-400'}`}>
                     <FileText className="h-4 w-4" />
                   </div>
-                  <span className="uppercase tracking-widest">{report.text.replace('Grades of ', '')}</span>
+                  <span className="uppercase tracking-wider">{report.text.replace('Grades of ', '')}</span>
                 </div>
-                <ChevronRight className={`h-4 w-4 transition-all ${isActive ? 'translate-x-1 opacity-100' : 'opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0'}`} />
+                <ChevronRight className={`h-4 w-4 transition-all ${isActive ? 'translate-x-1 opacity-100' : 'opacity-0'}`} />
               </button>
             );
           })}
@@ -82,64 +82,61 @@ export default function GradesList({ reports }: GradesListProps) {
       </div>
 
       {selectedSem && (
-        <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+          <div className="px-8 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">{selectedSem}</h4>
-              <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] mt-1">Detailed Subject Breakdown</p>
+              <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider">{selectedSem}</h4>
             </div>
-            {loading && <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />}
+            {loading && <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />}
           </div>
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-24 text-slate-400">
-              <div className="relative mb-4">
-                <div className="h-12 w-12 rounded-full border-4 border-slate-100 border-t-blue-600 animate-spin"></div>
-              </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em]">Synchronizing Grades...</p>
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+              <div className="animate-spin h-8 w-8 border-2 border-slate-200 border-t-blue-600 rounded-full mb-4"></div>
+              <p className="text-[10px] font-bold uppercase tracking-widest">Loading Grades...</p>
             </div>
           ) : grades ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/50">
-                    <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-100/50">Code</th>
-                    <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Subject Description</th>
-                    <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center border-x border-slate-100/50">Grade</th>
-                    <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Status</th>
+                    <th className="px-8 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-r border-slate-100">Section</th>
+                    <th className="px-8 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subject</th>
+                    <th className="px-8 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center border-x border-slate-100">Grade</th>
+                    <th className="px-8 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-slate-100">
                   {grades.map((sub, sIdx) => {
                     const isPassed = sub.remarks.toLowerCase().includes('pass') || parseFloat(sub.grade) <= 3.0;
                     return (
-                      <tr key={sIdx} className="hover:bg-slate-50/50 transition-colors group">
-                        <td className="px-8 py-5 whitespace-nowrap border-r border-slate-100/50">
-                          <span className="text-[10px] font-black text-slate-400 group-hover:text-blue-600 transition-colors font-mono">{sub.code}</span>
+                      <tr key={sIdx} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-8 py-4 whitespace-nowrap border-r border-slate-100">
+                          <span className="text-[10px] font-bold text-slate-500 font-mono">{sub.code}</span>
                         </td>
-                        <td className="px-8 py-5">
-                          <p className="text-[11px] font-bold text-slate-700 uppercase tracking-tight">{sub.description}</p>
+                        <td className="px-8 py-4">
+                          <p className="text-xs font-semibold text-slate-700 uppercase leading-tight">{sub.description}</p>
                         </td>
-                        <td className="px-8 py-5 text-center border-x border-slate-100/50">
-                          <span className={`text-xs font-black px-3 py-1.5 rounded-xl transition-all ${
+                        <td className="px-8 py-4 text-center border-x border-slate-100">
+                          <span className={`text-xs font-bold px-2 py-1 rounded-md ${
                             isPassed 
-                              ? 'bg-emerald-50 text-emerald-700 group-hover:bg-emerald-100' 
-                              : 'bg-rose-50 text-rose-700 group-hover:bg-rose-100'
+                              ? 'bg-emerald-50 text-emerald-700' 
+                              : 'bg-rose-50 text-rose-700'
                           }`}>
                             {sub.grade}
                           </span>
                         </td>
-                        <td className="px-8 py-5 text-right">
+                        <td className="px-8 py-4 text-right">
                            <div className="flex items-center justify-end gap-2">
-                            <span className={`text-[9px] font-black uppercase tracking-widest ${
+                            <span className={`text-[9px] font-bold uppercase tracking-wider ${
                               isPassed ? 'text-emerald-600' : 'text-rose-600'
                             }`}>
                               {sub.remarks}
                             </span>
                             {isPassed ? (
-                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                              <CheckCircle2 className="h-3 w-3 text-emerald-500" />
                             ) : (
-                              <XCircle className="h-3.5 w-3.5 text-rose-500" />
+                              <XCircle className="h-3 w-3 text-rose-500" />
                             )}
                           </div>
                         </td>
@@ -150,11 +147,9 @@ export default function GradesList({ reports }: GradesListProps) {
               </table>
             </div>
           ) : (
-            <div className="text-center py-20 text-slate-400">
-              <div className="bg-slate-50 h-16 w-16 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                <FileText className="h-8 w-8 text-slate-200" />
-              </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em]">No records found for this period</p>
+            <div className="text-center py-16 text-slate-400">
+              <FileText className="h-8 w-8 mx-auto mb-2 opacity-20" />
+              <p className="text-[10px] font-bold uppercase tracking-widest">No records found</p>
             </div>
           )}
         </div>

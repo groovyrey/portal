@@ -1,4 +1,5 @@
 import { Financials } from '../types';
+import { Wallet, Clock, AlertCircle } from 'lucide-react';
 
 interface FinancialSummaryProps {
   financials: Financials;
@@ -6,52 +7,30 @@ interface FinancialSummaryProps {
 
 export default function FinancialSummary({ financials }: FinancialSummaryProps) {
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8 transition-transform hover:shadow-md group">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="text-center md:text-left flex-1 w-full">
-          <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
-            <div className="bg-blue-50 p-1.5 rounded-lg text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <h3 className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Total Assessment</h3>
+    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2 mb-2">
+            <Wallet className="h-4 w-4 text-blue-600" />
+            <h3 className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Total Assessment</h3>
           </div>
-          <p className="text-2xl font-black text-slate-800 tracking-tight">{financials.total || '---'}</p>
+          <p className="text-2xl font-bold text-slate-900 tracking-tight">{financials.total || '---'}</p>
         </div>
         
-        <div className="hidden md:block h-12 w-px bg-slate-100"></div>
-        <div className="md:hidden w-full h-px bg-slate-100"></div>
-
-        {financials.dueToday && financials.dueToday !== '---' && (
-          <>
-            <div className="text-center flex-1 w-full">
-              <div className="flex items-center gap-2 justify-center mb-2">
-                <div className="bg-orange-50 p-1.5 rounded-lg text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <h3 className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Due as of Today</h3>
-              </div>
-              <p className="text-2xl font-black text-orange-600 tracking-tight">{financials.dueToday}</p>
-            </div>
-            <div className="hidden md:block h-12 w-px bg-slate-100"></div>
-            <div className="md:hidden w-full h-px bg-slate-100"></div>
-          </>
-        )}
-
-        <div className="text-center md:text-right flex-1 w-full">
-          <div className="flex items-center gap-2 justify-center md:justify-end mb-2">
-            <h3 className="text-slate-400 font-bold uppercase text-[10px] tracking-widest order-2 md:order-1">Outstanding Balance</h3>
-            <div className="bg-red-50 p-1.5 rounded-lg text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors order-1 md:order-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
+        <div className="flex flex-col border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="h-4 w-4 text-orange-600" />
+            <h3 className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Due Today</h3>
           </div>
-          <p className="text-2xl font-black text-red-600 tracking-tight">{financials.balance || '---'}</p>
+          <p className="text-2xl font-bold text-orange-600 tracking-tight">{financials.dueToday || '---'}</p>
+        </div>
+
+        <div className="flex flex-col border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-6">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <h3 className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Balance</h3>
+          </div>
+          <p className="text-2xl font-bold text-red-600 tracking-tight">{financials.balance || '---'}</p>
         </div>
       </div>
     </div>

@@ -40,30 +40,30 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
   return (
     <div className="space-y-6 mb-8">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center group hover:border-blue-200 transition-all">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">General Weighted Avg</span>
-          <p className="text-3xl font-black text-blue-600 tracking-tight">{gwa}</p>
-          <div className="mt-2 px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-bold rounded-full uppercase">Academic Standing</div>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">GWA</span>
+          <p className="text-3xl font-bold text-blue-600 tracking-tight">{gwa}</p>
+          <div className="mt-2 px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-bold rounded-md uppercase">Academic Standing</div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center group hover:border-green-200 transition-all">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pass Rate</span>
-          <p className="text-3xl font-black text-green-600 tracking-tight">{passRate}%</p>
-          <div className="mt-2 px-2 py-0.5 bg-green-50 text-green-600 text-[9px] font-bold rounded-full uppercase">
-            {totalPassed} Passed / {allGrades.length} Total
+        <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pass Rate</span>
+          <p className="text-3xl font-bold text-green-600 tracking-tight">{passRate}%</p>
+          <div className="mt-2 px-2 py-0.5 bg-green-50 text-green-600 text-[9px] font-bold rounded-md uppercase">
+            {totalPassed} / {allGrades.length} Subjects
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center group hover:border-orange-200 transition-all">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Completion</span>
-          <p className="text-3xl font-black text-orange-600 tracking-tight">{allGrades.length}</p>
-          <div className="mt-2 px-2 py-0.5 bg-orange-50 text-orange-600 text-[9px] font-bold rounded-full uppercase">Total Subjects Graded</div>
+        <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Graded</span>
+          <p className="text-3xl font-bold text-slate-900 tracking-tight">{allGrades.length}</p>
+          <div className="mt-2 px-2 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-bold rounded-md uppercase">Scholastic Records</div>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
             <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
           </svg>
           Grade Distribution
@@ -75,21 +75,21 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
                 dataKey="grade" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
+                tick={{ fontSize: 10, fontWeight: 600, fill: '#64748b' }}
               />
               <YAxis hide />
               <Tooltip 
-                cursor={{ fill: '#f8fafc' }}
+                cursor={{ fill: '#f1f5f9' }}
                 contentStyle={{ 
-                  borderRadius: '12px', 
-                  border: 'none', 
-                  boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                  borderRadius: '8px', 
+                  border: '1px solid #e2e8f0', 
+                  boxShadow: 'none',
                   fontSize: '10px',
-                  fontWeight: 700,
+                  fontWeight: 600,
                   textTransform: 'uppercase'
                 }}
               />
-              <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={30}>
+              <Bar dataKey="count" radius={[2, 2, 0, 0]} barSize={24}>
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}

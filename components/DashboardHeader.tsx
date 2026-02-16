@@ -13,70 +13,64 @@ export default function DashboardHeader({ student, onLogout }: DashboardHeaderPr
   return (
     <div className="mb-8">
       {/* Top Bar */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white/50 backdrop-blur-sm rounded-2xl p-4 mb-6 border border-white/20 shadow-sm">
+      <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-slate-900 flex items-center justify-center text-white">
+          <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center text-white">
             <LayoutDashboard className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-sm font-black text-slate-900 uppercase tracking-tighter">Student Portal</h1>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">LCC Academic Management</p>
+            <h1 className="text-lg font-bold text-slate-900">Portal</h1>
+            <p className="text-xs text-slate-500 font-medium">Academic Management</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-           <button
-            onClick={onLogout}
-            className="px-5 py-2.5 bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 font-bold rounded-xl text-xs transition-all duration-200 flex items-center gap-2 border border-slate-100 hover:border-red-100 shadow-sm active:scale-95"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Sign Out
-          </button>
-        </div>
+        <button
+          onClick={onLogout}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-slate-200"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </button>
       </div>
 
-      {/* Profile Info Header */}
+      {/* Profile Summary */}
       <motion.div 
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden bg-slate-900 rounded-[2.5rem] p-8 md:p-10 shadow-2xl shadow-slate-200"
+        className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8"
       >
-        {/* Background Accents */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 blur-[100px] -mr-32 -mt-32"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-600/10 blur-[100px] -ml-32 -mb-32"></div>
-        
-        <div className="relative flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
-          <div className="flex flex-col items-center md:items-start">
-            <div className="flex items-center gap-2 mb-4 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/10">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
-              <span className="text-[10px] font-bold text-white uppercase tracking-widest">Active Enrollment</span>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="h-2 w-2 rounded-full bg-green-500"></span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Enrollment</span>
             </div>
             
-            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight text-center md:text-left leading-tight">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
               {student.name}
             </h2>
             
-            <div className="flex items-center gap-2 mt-3 text-slate-400">
-              <GraduationCap className="h-4 w-4" />
-              <p className="font-bold text-sm tracking-wide">{student.course}</p>
+            <div className="flex items-center gap-2 mt-2 text-slate-500">
+              <GraduationCap className="h-4 w-4 text-blue-600" />
+              <p className="text-sm font-medium">{student.course}</p>
             </div>
           </div>
 
-          <div className="flex gap-3 flex-wrap justify-center md:justify-end">
-            <div className="px-5 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl flex flex-col items-center md:items-start min-w-[100px]">
-              <div className="flex items-center gap-2 mb-1">
-                <Calendar className="h-3 w-3 text-blue-400" />
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Year Level</span>
+          <div className="flex gap-4">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Year Level</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg">
+                <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                <span className="text-sm font-semibold text-slate-700">{student.yearLevel}</span>
               </div>
-              <span className="text-xs font-black text-white uppercase">{student.yearLevel}</span>
             </div>
 
-            <div className="px-5 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl flex flex-col items-center md:items-start min-w-[100px]">
-              <div className="flex items-center gap-2 mb-1">
-                <UserCheck className="h-3 w-3 text-indigo-400" />
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Semester</span>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Semester</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg">
+                <UserCheck className="h-3.5 w-3.5 text-slate-400" />
+                <span className="text-sm font-semibold text-slate-700">{student.semester}</span>
               </div>
-              <span className="text-xs font-black text-white uppercase">{student.semester}</span>
             </div>
           </div>
         </div>

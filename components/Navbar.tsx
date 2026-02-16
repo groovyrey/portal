@@ -49,6 +49,8 @@ export default function Navbar() {
   const authLinks = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Profile', href: '/profile', icon: UserIcon },
+    { name: 'Accounts', href: '/accounts', icon: WalletCards },
+    { name: 'Subjects', href: '/offered-subjects', icon: BookOpen },
     { name: 'Community', href: '/community', icon: MessageSquare },
     { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
@@ -81,13 +83,13 @@ export default function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       isActive(link.href)
-                        ? 'bg-blue-50 text-blue-600 shadow-sm'
-                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
-                    <Icon className="h-3.5 w-3.5" />
+                    <Icon className="h-4 w-4" />
                     {link.name}
                   </Link>
                 );
@@ -121,22 +123,22 @@ export default function Navbar() {
         
         {/* Drawer */}
         <div 
-          className={`absolute right-0 top-0 bottom-0 w-72 bg-white shadow-2xl transition-transform duration-300 transform ${
+          className={`absolute right-0 top-0 bottom-0 w-72 bg-white shadow-xl transition-transform duration-300 transform ${
             isOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
           <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between p-6 border-b border-slate-50">
-              <span className="font-black text-xs uppercase tracking-widest text-slate-400">Navigation</span>
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <span className="font-bold text-sm text-slate-900">Navigation</span>
               <button 
                 onClick={() => setIsOpen(false)}
-                className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-slate-600 transition-colors"
+                className="p-2 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
             
-            <div className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <div className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 return (
@@ -144,10 +146,10 @@ export default function Navbar() {
                     key={link.name}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-4 px-4 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all ${
+                    className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                       isActive(link.href)
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-[1.02]'
-                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -157,8 +159,8 @@ export default function Navbar() {
               })}
             </div>
 
-            <div className="p-6 border-t border-slate-50 text-center">
-              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Student Portal App v1.1</p>
+            <div className="p-6 border-t border-slate-100 text-center">
+              <p className="text-[10px] font-medium text-slate-400">Student Portal App v1.1</p>
             </div>
           </div>
         </div>
