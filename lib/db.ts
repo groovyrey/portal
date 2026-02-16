@@ -29,9 +29,8 @@ try {
   
   const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
   
-  // If the user says the name is 'default' (without parentheses), they might have a custom named DB
-  // Standard is '(default)', but Enterprise projects can have others.
-  db = getFirestore(app, dbId === '(default)' ? undefined : dbId);
+  // getFirestore(app, databaseId?) - databaseId must be a string if provided
+  db = dbId === '(default)' ? getFirestore(app) : getFirestore(app, dbId);
   console.log('Firestore initialization command sent.');
 } catch (error) {
   console.error('Failed to initialize Firebase:', error);
