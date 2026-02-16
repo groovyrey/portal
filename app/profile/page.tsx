@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Student } from '@/types';
 import { 
   User, 
@@ -20,7 +20,7 @@ import { useSearchParams } from 'next/navigation';
 import { db } from '@/lib/db';
 import { doc, getDoc } from 'firebase/firestore';
 
-export default function ProfilePage() {
+function ProfileContent() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPublicView, setIsPublicView] = useState(false);
@@ -209,6 +209,18 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   );
 }
 
