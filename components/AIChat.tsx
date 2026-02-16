@@ -54,11 +54,18 @@ export default function AIChat() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || response.statusText);
+        let errorMessage = 'An error occurred';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || response.statusText;
+        } catch (jsonErr) {
+          // Fallback if response is not JSON
+          errorMessage = await response.text() || response.statusText;
+        }
+        throw new Error(errorMessage);
       }
       
-      if (!response.body) throw new Error("No response body");
+      if (!response.body) throw new Error("No response body from AI");
 
       // Initialize an empty assistant message
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
@@ -72,17 +79,20 @@ export default function AIChat() {
         done = doneReading;
         const chunkValue = decoder.decode(value, { stream: !done });
         
-        setMessages(prev => {
-          const newMessages = [...prev];
-          const lastMsg = newMessages[newMessages.length - 1];
-          if (lastMsg.role === 'assistant') {
-            lastMsg.content += chunkValue;
-          }
-          return newMessages;
-        });
+        if (chunkValue) {
+          setMessages(prev => {
+            const newMessages = [...prev];
+            const lastMsg = newMessages[newMessages.length - 1];
+            if (lastMsg.role === 'assistant') {
+              lastMsg.content += chunkValue;
+            }
+            return newMessages;
+          });
+        }
       }
 
     } catch (err: any) {
+      console.error('Chat error:', err);
       setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error: " + (err.message || "Unknown error") }]);
     } finally {
       setLoading(false);
