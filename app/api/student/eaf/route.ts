@@ -81,9 +81,21 @@ export async function GET(req: NextRequest) {
             headers: { 'Referer': loginRes.request.res.responseUrl || finalInitUrl }
         });
 
+        let eafHtml = eafRes.data;
+
+        // Fix Relative URLs for CSS, JS, and Images to preserve official layout
+        const portalBase = 'https://premium.schoolista.com/LCC/Reports/Enrollment/';
+        const portalRoot = 'https://premium.schoolista.com';
+
+        // Replace relative paths starting with ../.. or / with absolute portal URLs
+        eafHtml = eafHtml.replace(/href="\.\.\/\.\.\//g, `href="${portalRoot}/`);
+        eafHtml = eafHtml.replace(/src="\.\.\/\.\.\//g, `src="${portalRoot}/`);
+        eafHtml = eafHtml.replace(/href="\//g, `href="${portalRoot}/`);
+        eafHtml = eafHtml.replace(/src="\//g, `src="${portalRoot}/`);
+
         return NextResponse.json({ 
             success: true, 
-            html: eafRes.data,
+            html: eafHtml,
             url: eafUrl
         });
 

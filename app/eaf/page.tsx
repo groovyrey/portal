@@ -17,7 +17,15 @@ export default function EAFPage() {
       const data = await res.json();
 
       if (data.success) {
-        setRawHtml(data.html);
+        // Inject a small script to the HTML to help with layout if needed
+        const injectedHtml = data.html.replace('</HEAD>', `
+          <style>
+            body { background-color: white !important; padding: 20px !important; }
+            * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+          </style>
+          </HEAD>
+        `);
+        setRawHtml(injectedHtml);
         setEafUrl(data.url);
         toast.success('EAF Scraped successfully!', { id: eafToast });
       } else {
