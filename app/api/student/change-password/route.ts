@@ -90,9 +90,24 @@ export async function POST(req: NextRequest) {
         const rawHtml = resultRes.data;
         const $result = cheerio.load(rawHtml);
         const errorText = $result('#lblError, #lblMessage, .text-danger').text().trim();
-        const successText = $result('.text-success, #lblSuccess').text().trim();
+        const successText = $result('.text-success, #lblSuccess, #lblMessage').text().trim();
+        const finalUrl = resultRes.request.res.responseUrl || "";
 
-        if (rawHtml.includes('successfully changed') || rawHtml.includes('Success') || successText) {
+        // Success Indicators:
+        // 1. Explicit success text in HTML
+        // 2. Redirected to login page (common after password change)
+        // 3. Redirected to main/dashboard
+        // 4. The change password form is no longer present
+        const hasSuccessText = 
+            rawHtml.toLowerCase().includes('successfully changed') || 
+            rawHtml.toLowerCase().includes('password changed') || 
+            rawHtml.includes('Success') || 
+            (successText && !errorText);
+
+        const redirectedToLogin = finalUrl.toLowerCase().includes('login.aspx') || rawHtml.includes('otbUserID');
+        const formIsGone = $result('#otbPasswordChangeTable_1').length === 0;
+
+        if (hasSuccessText || (redirectedToLogin && formIsGone)) {
             return NextResponse.json({ 
                 success: true, 
                 message: 'Password changed successfully.'
