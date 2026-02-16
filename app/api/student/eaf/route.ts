@@ -83,15 +83,9 @@ export async function GET(req: NextRequest) {
 
         let eafHtml = eafRes.data;
 
-        // Fix Relative URLs for CSS, JS, and Images to preserve official layout
+        // Inject <base> tag to automatically fix all relative URLs (CSS, JS, Images)
         const portalBase = 'https://premium.schoolista.com/LCC/Reports/Enrollment/';
-        const portalRoot = 'https://premium.schoolista.com';
-
-        // Replace relative paths starting with ../.. or / with absolute portal URLs
-        eafHtml = eafHtml.replace(/href="\.\.\/\.\.\//g, `href="${portalRoot}/`);
-        eafHtml = eafHtml.replace(/src="\.\.\/\.\.\//g, `src="${portalRoot}/`);
-        eafHtml = eafHtml.replace(/href="\//g, `href="${portalRoot}/`);
-        eafHtml = eafHtml.replace(/src="\//g, `src="${portalRoot}/`);
+        eafHtml = eafHtml.replace('<HEAD>', `<HEAD><base href="${portalBase}">`);
 
         return NextResponse.json({ 
             success: true, 

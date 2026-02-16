@@ -101,8 +101,8 @@ export default function EAFPage() {
               <iframe
                 srcDoc={rawHtml}
                 title="Official Certificate of Matriculation"
-                className="w-full h-[1000px] border-none"
-                sandbox="allow-same-origin allow-scripts"
+                className="w-full h-[1100px] border-none"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-modals"
               />
             </div>
 

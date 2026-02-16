@@ -64,6 +64,15 @@ export interface ReportLink {
   href: string;
 }
 
+export interface CommunityPost {
+  id: string;
+  userId: string;
+  userName: string;
+  content: string;
+  createdAt: any;
+  likes?: string[];
+}
+
 export interface Student {
   name: string;
   id: string;

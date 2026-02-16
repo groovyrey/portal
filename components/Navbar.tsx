@@ -12,7 +12,9 @@ import {
   ShieldAlert, 
   Menu, 
   X,
-  Lock
+  Lock,
+  MessageSquare,
+  User as UserIcon
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -46,10 +48,10 @@ export default function Navbar() {
 
   const authLinks = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Profile', href: '/profile', icon: UserIcon },
+    { name: 'Community', href: '/community', icon: MessageSquare },
     { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
-    { name: 'Offered Subjects', href: '/offered-subjects', icon: BookOpen },
-    { name: 'Accounts', href: '/accounts', icon: WalletCards },
     { name: 'Security', href: '/change-password', icon: Lock },
   ];
 
