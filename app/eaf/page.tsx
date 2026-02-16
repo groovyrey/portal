@@ -48,9 +48,9 @@ export default function EAFPage() {
               <div className="bg-blue-600 p-2 rounded-xl text-white">
                 <FileText className="h-6 w-6" />
               </div>
-              Certificate of Enrollment (EAF)
+              Certificate of Matriculation (COM)
             </h1>
-            <p className="text-slate-500 text-sm font-medium mt-1">Official Enrollment Assessment Form data.</p>
+            <p className="text-slate-500 text-sm font-medium mt-1">Official Enrollment Assessment Form (EAF) View.</p>
           </div>
           
           <div className="flex gap-2 w-full md:w-auto">
@@ -63,12 +63,12 @@ export default function EAFPage() {
               Refresh
             </button>
             <button
-              onClick={copyToClipboard}
+              onClick={() => window.print()}
               disabled={loading || !rawHtml}
               className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-50"
             >
-              <Copy className="h-4 w-4" />
-              Copy Raw HTML
+              <Download className="h-4 w-4" />
+              Print / Save PDF
             </button>
           </div>
         </div>
@@ -77,48 +77,30 @@ export default function EAFPage() {
           <div className="bg-white rounded-[2.5rem] border border-slate-100 p-20 flex flex-col items-center justify-center text-center shadow-xl shadow-slate-200/50">
             <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-4" />
             <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Syncing with Portal</h3>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-2">This may take a few moments...</p>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-2">Fetching your official document...</p>
           </div>
         ) : (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Source Info */}
-            <div className="bg-slate-900 rounded-3xl p-6 border border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Source URL:</span>
-                    <code className="text-blue-400 text-[10px] font-mono truncate max-w-md">{eafUrl}</code>
-                </div>
-                <a 
-                    href={eafUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-slate-400 hover:text-white transition-colors"
-                >
-                    <ExternalLink className="h-4 w-4" />
-                </a>
+            {/* Warning / Instruction */}
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-2xl">
+                <p className="text-[10px] text-blue-700 font-bold uppercase tracking-tight">
+                    This is an exact, unmodified render of your official Certificate of Matriculation from the school's server.
+                </p>
             </div>
 
-            {/* Raw Content Container */}
-            <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
-              <div className="p-1 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center px-6 py-4">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Raw HTML Output</span>
-                <div className="flex gap-1">
-                    <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-                    <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-                    <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-                </div>
-              </div>
-              <textarea
-                readOnly
-                value={rawHtml}
-                className="w-full h-[600px] p-8 font-mono text-[10px] text-slate-600 focus:outline-none bg-white resize-none"
-                placeholder="No data fetched yet."
+            {/* Document Viewer */}
+            <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden min-h-[800px] relative">
+              <iframe
+                srcDoc={rawHtml}
+                title="Official Certificate of Matriculation"
+                className="w-full h-[1000px] border-none"
+                sandbox="allow-same-origin allow-scripts"
               />
             </div>
 
-            <div className="text-center">
+            <div className="text-center pb-12">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    The above output is the exact raw HTML received from the Schoolista server.
+                    La Concepcion College, Inc. Official Document
                 </p>
             </div>
           </div>
