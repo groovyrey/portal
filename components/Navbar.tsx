@@ -11,7 +11,8 @@ import {
   FileText, 
   ShieldAlert, 
   Menu, 
-  X 
+  X,
+  Lock
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -48,6 +49,7 @@ export default function Navbar() {
     { name: 'Grades', href: '/grades', icon: GraduationCap },
     { name: 'Offered Subjects', href: '/offered-subjects', icon: BookOpen },
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
+    { name: 'Security', href: '/change-password', icon: Lock },
   ];
 
   const navLinks = isLoggedIn ? [...authLinks, ...publicLinks] : publicLinks;
