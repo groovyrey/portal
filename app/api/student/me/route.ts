@@ -16,65 +16,75 @@ export async function GET(req: NextRequest) {
       const decrypted = decrypt(sessionCookie.value);
       const sessionData = JSON.parse(decrypted);
       userId = sessionData.userId;
-    } catch (e) {
+      if (!userId) throw new Error("No UserID in session data");
+    } catch (e: any) {
+      console.error('Session decryption failed:', e.message);
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
     await initDatabase();
 
     if (!db) {
+      console.error('Database not initialized in /api/student/me');
       return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
     }
 
     // Fetch Student
-    const studentDoc = await getDoc(doc(db, 'students', userId));
-    if (!studentDoc.exists()) {
-      return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+    try {
+        const studentDoc = await getDoc(doc(db, 'students', userId));
+        if (!studentDoc.exists()) {
+          console.warn(`Student document for ${userId} not found in Firestore`);
+          return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+        }
+        const student = studentDoc.data()!;
+
+        // Fetch Schedule
+        const scheduleDoc = await getDoc(doc(db, 'schedules', userId));
+        const schedule = scheduleDoc.exists() ? scheduleDoc.data().items : [];
+
+        // Fetch Financials
+        const financialsDoc = await getDoc(doc(db, 'financials', userId));
+        let financials = null;
+        if (financialsDoc.exists()) {
+          const f = financialsDoc.data();
+          financials = {
+            total: f.total,
+            balance: f.balance,
+            dueToday: f.due_today,
+            ...f.details
+          };
+        }
+
+        // Fetch Prospectus
+        const prospectusSnap = await getDocs(collection(db, 'prospectus_subjects'));
+        const offeredSubjects = prospectusSnap.docs.map(d => ({
+            code: d.id,
+            ...d.data()
+        } as any));
+
+        // Reconstruct Student Object
+        const studentData = {
+          id: userId,
+          name: student.name,
+          course: student.course,
+          gender: student.gender,
+          address: student.address,
+          contact: student.contact,
+          email: student.email,
+          yearLevel: student.year_level,
+          semester: student.semester,
+          schedule: schedule.length > 0 ? schedule : null,
+          financials: financials,
+          offeredSubjects: offeredSubjects.length > 0 ? offeredSubjects : null,
+          availableReports: student.available_reports 
+        };
+
+        return NextResponse.json({ success: true, data: studentData });
+
+    } catch (fetchError: any) {
+        console.error('Firestore fetch error in /api/student/me:', fetchError.message);
+        return NextResponse.json({ error: 'Database fetch failed: ' + fetchError.message }, { status: 500 });
     }
-    const student = studentDoc.data();
-
-    // Fetch Schedule
-    const scheduleDoc = await getDoc(doc(db, 'schedules', userId));
-    const schedule = scheduleDoc.exists() ? scheduleDoc.data().items : [];
-
-    // Fetch Financials
-    const financialsDoc = await getDoc(doc(db, 'financials', userId));
-    let financials = null;
-    if (financialsDoc.exists()) {
-      const f = financialsDoc.data();
-      financials = {
-        total: f.total,
-        balance: f.balance,
-        dueToday: f.due_today,
-        ...f.details
-      };
-    }
-
-    // Fetch Prospectus
-    const prospectusSnap = await getDocs(collection(db, 'prospectus_subjects'));
-    const offeredSubjects = prospectusSnap.docs.map(d => ({
-        code: d.id,
-        ...d.data()
-    } as any));
-
-    // Reconstruct Student Object
-    const studentData = {
-      id: userId,
-      name: student.name,
-      course: student.course,
-      gender: student.gender,
-      address: student.address,
-      contact: student.contact,
-      email: student.email,
-      yearLevel: student.year_level,
-      semester: student.semester,
-      schedule: schedule.length > 0 ? schedule : null,
-      financials: financials,
-      offeredSubjects: offeredSubjects.length > 0 ? offeredSubjects : null,
-      availableReports: student.available_reports 
-    };
-
-    return NextResponse.json({ success: true, data: studentData });
 
   } catch (error: any) {
     console.error('Session restore error:', error);

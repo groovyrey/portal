@@ -485,6 +485,7 @@ export async function POST(req: NextRequest) {
       }
     } catch (dbError: any) {
       console.error('Database sync error:', dbError);
+      subDebug += `\n\n--- DATABASE ERROR ---\n${dbError.message}\n${dbError.code || ''}\n----------------------`;
       if (dbError.code === 'not-found' || dbError.message?.includes('NOT_FOUND')) {
         console.error('CRITICAL: Firestore database not found. Please ensure Firestore is enabled in the Firebase Console and the Project ID is correct.');
       }
@@ -525,10 +526,13 @@ export async function POST(req: NextRequest) {
         });
 
         // Set secure HttpOnly cookie
+        // Use a more robust check for 'secure' to allow local testing
+        const isProd = process.env.NODE_ENV === 'production';
+        
         response.cookies.set('session_token', encryptedSession, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: isProd && !req.nextUrl.hostname.includes('localhost'),
+            sameSite: 'lax', // Use 'lax' for better compatibility with redirections if any
             maxAge: 60 * 60 * 24 * 7, // 1 week
             path: '/',
         });
