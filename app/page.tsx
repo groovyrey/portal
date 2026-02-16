@@ -6,6 +6,7 @@ import LoginForm from '../components/LoginForm';
 import DashboardHeader from '../components/DashboardHeader';
 import ScheduleTable from '../components/ScheduleTable';
 import PersonalInfo from '../components/PersonalInfo';
+import AIChat from '../components/AIChat';
 
 export default function Home() {
   const [student, setStudent] = useState<Student | null>(null);
@@ -167,6 +168,8 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      <AIChat />
 
       <footer className="text-center py-8 text-slate-400 text-sm">
         <p>&copy; {new Date().getFullYear()} Student Portal App. All rights reserved.</p>
