@@ -1,9 +1,9 @@
 const firebaseConfig = {
-  apiKey: "AIzaSyAjUqyMp9r7HrR4ODKrgH9b-4iNVSb_1_o",
-  authDomain: "portaldb-9bf2e.firebaseapp.com",
-  projectId: "portaldb-9bf2e",
-  storageBucket: "portaldb-9bf2e.firebasestorage.app",
-  messagingSenderId: "679368878415",
-  appId: "1:679368878415:web:fe0934207e595e20d2fd3a",
-  measurementId: "G-V19K7V2NNG"
+  apiKey: "AIzaSyBxnFfdmFgdFGuZkLLAaWJmfFeu5-FUfwI",
+  authDomain: "lccportal.firebaseapp.com",
+  projectId: "lccportal",
+  storageBucket: "lccportal.firebasestorage.app",
+  messagingSenderId: "92195805668",
+  appId: "1:92195805668:web:46fda0488aa5d465448ff1",
+  measurementId: "G-Y3ZK1R4FN6"
 };
