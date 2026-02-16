@@ -22,6 +22,10 @@ export async function GET(req: NextRequest) {
 
     await initDatabase();
 
+    if (!db) {
+      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+    }
+
     // Fetch Student
     const studentDoc = await getDoc(doc(db, 'students', userId));
     if (!studentDoc.exists()) {

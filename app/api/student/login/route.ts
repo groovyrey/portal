@@ -421,6 +421,9 @@ export async function POST(req: NextRequest) {
 
     // Save to database
     try {
+      if (!db) {
+        throw new Error('Firestore database is not initialized. Check your environment variables.');
+      }
       await initDatabase();
 
       const yearLevel = yearMatch ? `${yearMatch[1]}th Year` : "2nd Year";
@@ -480,8 +483,11 @@ export async function POST(req: NextRequest) {
           }, { merge: true });
         }
       }
-    } catch (dbError) {
+    } catch (dbError: any) {
       console.error('Database sync error:', dbError);
+      if (dbError.code === 'not-found' || dbError.message?.includes('NOT_FOUND')) {
+        console.error('CRITICAL: Firestore database not found. Please ensure Firestore is enabled in the Firebase Console and the Project ID is correct.');
+      }
     }
 
     if (studentName && studentName.length > 2) {

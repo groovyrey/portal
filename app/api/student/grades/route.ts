@@ -236,6 +236,10 @@ export async function POST(req: NextRequest) {
     try {
       await initDatabase();
       
+      if (!db) {
+        throw new Error('Database not initialized');
+      }
+
       // Try to extract report name from href (e.g., _nm=Grades+of+1st+Semester+SY+2024-2025)
       let reportName = 'Unknown Report';
       if (href.includes('_nm=')) {

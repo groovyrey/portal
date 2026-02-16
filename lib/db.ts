@@ -14,12 +14,25 @@ const firebaseConfig = {
 // Initialize Firebase with safety check
 let db: any;
 try {
+  const dbId = process.env.FIREBASE_DATABASE_ID || '(default)';
+  
+  console.log('--- Firebase Config Debug ---');
+  console.log('Project ID:', firebaseConfig.projectId);
+  console.log('Auth Domain:', firebaseConfig.authDomain);
+  console.log('Database ID:', dbId);
+  console.log('API Key Present:', !!firebaseConfig.apiKey && firebaseConfig.apiKey !== 'undefined');
+  console.log('---------------------------');
+  
   if (!firebaseConfig.apiKey || firebaseConfig.apiKey === 'undefined') {
-    console.warn('Firebase API Key is missing. Database features will be disabled.');
-    // Provide a dummy/mock db or just let it be handled later
+    console.warn('CRITICAL: Firebase API Key is missing. Check your .env.local file.');
   }
+  
   const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-  db = getFirestore(app);
+  
+  // If the user says the name is 'default' (without parentheses), they might have a custom named DB
+  // Standard is '(default)', but Enterprise projects can have others.
+  db = getFirestore(app, dbId === '(default)' ? undefined : dbId);
+  console.log('Firestore initialization command sent.');
 } catch (error) {
   console.error('Failed to initialize Firebase:', error);
 }
