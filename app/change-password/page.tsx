@@ -45,14 +45,20 @@ export default function ChangePasswordPage() {
 
       if (data.success) {
         setSuccess(true);
-        toast.success('Password updated successfully!', { id: updateToast });
+        toast.success('Password updated successfully! Please log in again.', { id: updateToast });
+        
+        // Clear local cache
+        localStorage.removeItem('student_data');
+        window.dispatchEvent(new Event('local-storage-update'));
+
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
-        // Optional: logout or redirect after success
+        
+        // Redirect to login (root) after a delay
         setTimeout(() => {
             router.push('/');
-        }, 5000);
+        }, 4000);
       } else {
         const msg = data.error || 'Failed to update password.';
         setError(msg);

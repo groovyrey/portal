@@ -108,10 +108,21 @@ export async function POST(req: NextRequest) {
         const formIsGone = $result('#otbPasswordChangeTable_1').length === 0;
 
         if (hasSuccessText || (redirectedToLogin && formIsGone)) {
-            return NextResponse.json({ 
+            const response = NextResponse.json({ 
                 success: true, 
-                message: 'Password changed successfully.'
+                message: 'Password changed successfully. Please log in again.'
             });
+
+            // Clear session cookie to force re-login
+            response.cookies.set('session_token', '', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 0,
+                path: '/',
+            });
+
+            return response;
         }
 
         return NextResponse.json({ 
