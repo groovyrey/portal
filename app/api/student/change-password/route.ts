@@ -105,9 +105,10 @@ export async function POST(req: NextRequest) {
             (successText && !errorText);
 
         const redirectedToLogin = finalUrl.toLowerCase().includes('login.aspx') || rawHtml.includes('otbUserID');
+        const redirectedToMain = finalUrl.toLowerCase().includes('main.aspx') || rawHtml.includes('otbMainTable') || rawHtml.includes('id="otbMain"');
         const formIsGone = $result('#otbPasswordChangeTable_1').length === 0;
 
-        if (hasSuccessText || (redirectedToLogin && formIsGone)) {
+        if (hasSuccessText || (redirectedToLogin && formIsGone) || (redirectedToMain && formIsGone)) {
             const response = NextResponse.json({ 
                 success: true, 
                 message: 'Password changed successfully. Please log in again.'

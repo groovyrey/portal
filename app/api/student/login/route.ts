@@ -137,9 +137,15 @@ export async function POST(req: NextRequest) {
       if (welcomeMatch) studentName = welcomeMatch[1].trim();
     }
 
-    // Sanitize name: remove extra titles if found
+    // Sanitize name: remove extra titles and the Student ID itself if it leaked into the name
     if (studentName) {
-        studentName = studentName.replace(/^(Welcome|Student|User):\s*/i, '').trim();
+        studentName = studentName
+            .replace(/^(Welcome|Student|User):\s*/i, '')
+            .replace(new RegExp(userId, 'g'), '') // Remove ID if present
+            .replace(/\s*[-|()]\s*$/, '') // Remove trailing separators
+            .replace(/^\s*[-|()]\s*/, '') // Remove leading separators
+            .replace(/\s+/g, ' ') // Cleanup spaces
+            .trim();
     }
 
     const courseMatch = pageText.match(/Bachelor of [^ ]+ in [^ ]+ [^ ]+/i) || 
@@ -183,53 +189,39 @@ export async function POST(req: NextRequest) {
     });
     const finalSchedule = schedule;
 
-    // 6. Fetch EAF and Subject List
+    const dashboardUrl = loginRes.request.res.responseUrl || baseUrl;
+
+    // 6. Fetch Multiple Pages in Parallel for Speed
     const eafUrl = `https://premium.schoolista.com/LCC/Reports/Enrollment/LCC.EAF.aspx?_sid=${userId}&_pc=${periodCode}`;
-    const eafRes = await client.get(eafUrl);
-    const $eaf = cheerio.load(eafRes.data);
-
-    // Dynamic Subject List URL discovery from the dashboard
-    let subjectListUrl = "";
-
+    const gradesUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=Grades&_nm=`;
+    const accountUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=Account&_nm=`;
+    
+    // Dynamic Subject List URL discovery
+    let subjectListUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=`;
     $dashboard('a').each((_, el) => {
         const href = $dashboard(el).attr('href');
         const text = $dashboard(el).text().trim();
-        if (href && (href.toLowerCase().includes('subjectlist') || text.toLowerCase().includes('subject list') || text.toLowerCase().includes('prospectus'))) {
-            let correctedHref = href;
-            if (correctedHref.includes('/Gate/')) {
-                correctedHref = correctedHref.replace('/Gate/', '/Student/');
-            }
-            const absoluteUrl = new URL(correctedHref, loginRes.request.res.responseUrl || loginRes.config.url || 'https://premium.schoolista.com/LCC/Student/').toString();
-
-            if (!subjectListUrl) subjectListUrl = absoluteUrl;
+        if (href && (href.toLowerCase().includes('subjectlist') || text.toLowerCase().includes('subject list'))) {
+            let correctedHref = href.replace('/Gate/', '/Student/');
+            subjectListUrl = new URL(correctedHref, dashboardUrl).toString();
+            return false;
         }
     });
 
-    if (!subjectListUrl) {
+    // PARALLEL FETCH
+    const [eafRes, subListRes, gradesRes, accRes] = await Promise.all([
+        client.get(eafUrl),
+        client.get(subjectListUrl, { headers: { 'Referer': dashboardUrl } }),
+        client.get(gradesUrl, { headers: { 'Referer': dashboardUrl } }),
+        client.get(accountUrl, { headers: { 'Referer': dashboardUrl } })
+    ]);
 
-        subjectListUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=`;
-    }
-
-
-    const dashboardUrl = loginRes.request.res.responseUrl || baseUrl;
-
-    const subListRes = await client.get(subjectListUrl, { 
-        headers: { 'Referer': dashboardUrl } 
-    });
+    const $eaf = cheerio.load(eafRes.data);
     const $sub = cheerio.load(subListRes.data);
-    
-
-
-    if (subListRes.data.includes('otbUserID')) {
-
-    }
-
-    
-    // 8. Extract Available Report Card Links
-    const gradesUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=Grades&_nm=`;
-    const gradesRes = await client.get(gradesUrl, { headers: { 'Referer': baseUrl } });
     const $grades = cheerio.load(gradesRes.data);
+    const $acc = cheerio.load(accRes.data);
     
+    // 7. Extract Available Report Card Links
     const availableReports: any[] = [];
     $grades('a').each((_, el) => {
         const text = $grades(el).text().trim();
@@ -266,12 +258,7 @@ export async function POST(req: NextRequest) {
         });
     }
 
-    // 8. Financials & Ledger Scraping
-    const accountUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=Account&_nm=`;
-    const accRes = await client.get(accountUrl, { headers: { 'Referer': subListRes.config.url || baseUrl } });
-    
-    const $acc = cheerio.load(accRes.data);
-    
+    // 8. Financial Data Scraping (from parallel-fetched $acc)
     let dueAccounts: any[] = [];
     let payments: any[] = [];
     let installments: any[] = [];
