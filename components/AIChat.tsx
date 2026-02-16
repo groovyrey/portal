@@ -65,31 +65,8 @@ export default function AIChat() {
         throw new Error(errorMessage);
       }
       
-      if (!response.body) throw new Error("No response body from AI");
-
-      // Initialize an empty assistant message
-      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
-      
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        const chunkValue = decoder.decode(value, { stream: !done });
-        
-        if (chunkValue) {
-          setMessages(prev => {
-            const newMessages = [...prev];
-            const lastMsg = newMessages[newMessages.length - 1];
-            if (lastMsg.role === 'assistant') {
-              lastMsg.content += chunkValue;
-            }
-            return newMessages;
-          });
-        }
-      }
+      const data = await response.json();
+      setMessages(prev => [...prev, { role: 'assistant', content: data.content || "No response from AI." }]);
 
     } catch (err: any) {
       console.error('Chat error:', err);
