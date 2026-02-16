@@ -53,14 +53,37 @@ export default function AIChat() {
         }),
       });
 
-      const data = await response.json();
-      if (data.success) {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
-      } else {
-        setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error: " + (data.error || "Unknown error") }]);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || response.statusText);
       }
-    } catch (err) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Failed to connect to the assistant. Please check your connection." }]);
+      
+      if (!response.body) throw new Error("No response body");
+
+      // Initialize an empty assistant message
+      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+      
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunkValue = decoder.decode(value, { stream: !done });
+        
+        setMessages(prev => {
+          const newMessages = [...prev];
+          const lastMsg = newMessages[newMessages.length - 1];
+          if (lastMsg.role === 'assistant') {
+            lastMsg.content += chunkValue;
+          }
+          return newMessages;
+        });
+      }
+
+    } catch (err: any) {
+      setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error: " + (err.message || "Unknown error") }]);
     } finally {
       setLoading(false);
     }
