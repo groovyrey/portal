@@ -106,7 +106,7 @@ GUIDELINES:
     // 4. Call Hugging Face Inference with Streaming
     try {
       const stream = hf.chatCompletionStream({
-        model: "HuggingFaceH4/zephyr-7b-beta",
+        model: "mistralai/Mistral-7B-Instruct-v0.2",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages
