@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { HfInference } from '@huggingface/inference';
-import { sql } from '@/lib/db';
+import { db } from '@/lib/db';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 
@@ -31,17 +32,34 @@ export async function POST(req: NextRequest) {
 
     await initDatabase();
 
-    // 2. Fetch all relevant student data for context
-    const studentRes = await sql`SELECT * FROM students WHERE id = ${userId}`;
-    const scheduleRes = await sql`SELECT * FROM schedules WHERE student_id = ${userId}`;
-    const financialsRes = await sql`SELECT * FROM financials WHERE student_id = ${userId}`;
-    const gradesRes = await sql`SELECT * FROM grades WHERE student_id = ${userId}`;
-
-    if (studentRes.length === 0) {
+    // 2. Fetch all relevant student data for context from Firestore
+    const studentDoc = await getDoc(doc(db, 'students', userId));
+    if (!studentDoc.exists()) {
       return NextResponse.json({ error: 'Student data not found for context.' }, { status: 404 });
     }
+    const student = studentDoc.data();
 
-    const student = studentRes[0];
+    const scheduleDoc = await getDoc(doc(db, 'schedules', userId));
+    const scheduleItems = scheduleDoc.exists() ? scheduleDoc.data().items : [];
+
+    const financialsDoc = await getDoc(doc(db, 'financials', userId));
+    const financials = financialsDoc.exists() ? financialsDoc.data() : null;
+
+    const gradesQuery = query(collection(db, 'grades'), where('student_id', '==', userId));
+    const gradesSnap = await getDocs(gradesQuery);
+    const allGrades: any[] = [];
+    gradesSnap.forEach(doc => {
+        const data = doc.data();
+        if (data.items) {
+            data.items.forEach((item: any) => {
+                allGrades.push({
+                    report_name: data.report_name,
+                    ...item
+                });
+            });
+        }
+    });
+
     const context = {
       profile: {
         name: student.name,
@@ -49,14 +67,14 @@ export async function POST(req: NextRequest) {
         year: student.year_level,
         semester: student.semester
       },
-      schedule: scheduleRes.map(s => `${s.subject}: ${s.time} (${s.room})`),
-      financials: financialsRes.length > 0 ? {
-        total: financialsRes[0].total,
-        balance: financialsRes[0].balance,
-        dueToday: financialsRes[0].due_today,
-        details: financialsRes[0].details
+      schedule: scheduleItems.map((s: any) => `${s.subject}: ${s.time} (${s.room})`),
+      financials: financials ? {
+        total: financials.total,
+        balance: financials.balance,
+        dueToday: financials.due_today,
+        details: financials.details
       } : "No financial data",
-      grades: gradesRes.map(g => `${g.report_name} - ${g.subject_description}: ${g.grade} (${g.remarks})`)
+      grades: allGrades.map(g => `${g.report_name} - ${g.description}: ${g.grade} (${g.remarks})`)
     };
 
     // 3. Construct System Prompt

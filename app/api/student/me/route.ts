@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { db } from '@/lib/db';
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 
@@ -22,43 +23,39 @@ export async function GET(req: NextRequest) {
     await initDatabase();
 
     // Fetch Student
-    const students = await sql`SELECT * FROM students WHERE id = ${userId}`;
-    if (students.length === 0) {
+    const studentDoc = await getDoc(doc(db, 'students', userId));
+    if (!studentDoc.exists()) {
       return NextResponse.json({ error: 'Student not found' }, { status: 404 });
     }
-    const student = students[0];
+    const student = studentDoc.data();
 
     // Fetch Schedule
-    const schedule = await sql`SELECT subject, section, units, time, room FROM schedules WHERE student_id = ${userId}`;
+    const scheduleDoc = await getDoc(doc(db, 'schedules', userId));
+    const schedule = scheduleDoc.exists() ? scheduleDoc.data().items : [];
 
     // Fetch Financials
-    const financialsRes = await sql`SELECT total, balance, due_today, details FROM financials WHERE student_id = ${userId}`;
+    const financialsDoc = await getDoc(doc(db, 'financials', userId));
     let financials = null;
-    if (financialsRes.length > 0) {
-      const f = financialsRes[0];
+    if (financialsDoc.exists()) {
+      const f = financialsDoc.data();
       financials = {
         total: f.total,
         balance: f.balance,
         dueToday: f.due_today,
-        ...f.details // details is stored as JSONB
+        ...f.details
       };
     }
 
-    // Fetch Prospectus (All subjects for now, or filter if we had a student_prospectus link)
-    // The scraping logic puts *all* subjects into prospectus_subjects.
-    // The current frontend structure expects `offeredSubjects` on the student object.
-    // Let's fetch all offered subjects as that's what the scraping did.
-    const offeredSubjectsRes = await sql`SELECT code, description, units, pre_req FROM prospectus_subjects`;
-    const offeredSubjects = offeredSubjectsRes.map(s => ({
-        code: s.code,
-        description: s.description,
-        units: s.units,
-        preReq: s.pre_req
-    }));
+    // Fetch Prospectus
+    const prospectusSnap = await getDocs(collection(db, 'prospectus_subjects'));
+    const offeredSubjects = prospectusSnap.docs.map(d => ({
+        code: d.id,
+        ...d.data()
+    } as any));
 
     // Reconstruct Student Object
     const studentData = {
-      id: student.id,
+      id: userId,
       name: student.name,
       course: student.course,
       gender: student.gender,

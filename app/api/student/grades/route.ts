@@ -4,7 +4,8 @@ import * as cheerio from 'cheerio';
 import qs from 'querystring';
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
-import { sql } from '@/lib/db';
+import { db } from '@/lib/db';
+import { doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 
@@ -245,15 +246,19 @@ export async function POST(req: NextRequest) {
       }
 
       if (subjects && subjects.length > 0) {
-        // Delete old grades for this report and student to avoid duplicates
-        await sql`DELETE FROM grades WHERE student_id = ${userId} AND report_name = ${reportName}`;
+        // In Firestore, we'll store grades for a specific report in a document
+        // Path: students/{userId}/grades/{reportName}
+        // But since we want to query across all grades for AI context easily, 
+        // let's use a flatter structure: grades/{userId}_{reportName}
+        const gradeDocId = `${userId}_${reportName.replace(/\//g, '_')}`;
+        const gradeRef = doc(db, 'grades', gradeDocId);
         
-        for (const s of subjects) {
-          await sql`
-            INSERT INTO grades (student_id, report_name, subject_code, subject_description, grade, remarks)
-            VALUES (${userId}, ${reportName}, ${s.code}, ${s.description}, ${s.grade}, ${s.remarks})
-          `;
-        }
+        await setDoc(gradeRef, {
+          student_id: userId,
+          report_name: reportName,
+          items: subjects,
+          updated_at: serverTimestamp()
+        });
       }
     } catch (dbError) {
       console.error('Database sync error (grades):', dbError);

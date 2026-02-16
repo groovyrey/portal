@@ -6,7 +6,8 @@ import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
 import fs from 'fs';
 import path from 'path';
-import { sql } from '@/lib/db';
+import { db } from '@/lib/db';
+import { doc, setDoc, serverTimestamp, collection, writeBatch } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { encrypt } from '@/lib/auth';
 
@@ -396,21 +397,19 @@ export async function POST(req: NextRequest) {
       const semesterStr = semMatch ? semMatch[0] : "2nd Semester";
 
       // Upsert Student
-      await sql`
-        INSERT INTO students (id, name, course, gender, address, contact, email, year_level, semester, available_reports)
-        VALUES (${userId}, ${studentName}, ${course}, ${gender}, ${address}, ${contact}, ${email}, ${yearLevel}, ${semesterStr}, ${JSON.stringify(availableReports)})
-        ON CONFLICT (id) DO UPDATE SET
-          name = EXCLUDED.name,
-          course = EXCLUDED.course,
-          gender = EXCLUDED.gender,
-          address = EXCLUDED.address,
-          contact = EXCLUDED.contact,
-          email = EXCLUDED.email,
-          year_level = EXCLUDED.year_level,
-          semester = EXCLUDED.semester,
-          available_reports = EXCLUDED.available_reports,
-          updated_at = CURRENT_TIMESTAMP
-      `;
+      const studentRef = doc(db, 'students', userId);
+      await setDoc(studentRef, {
+        name: studentName,
+        course: course,
+        gender: gender,
+        address: address,
+        contact: contact,
+        email: email,
+        year_level: yearLevel,
+        semester: semesterStr,
+        available_reports: availableReports,
+        updated_at: serverTimestamp()
+      }, { merge: true });
 
       // Update Financials
       const financialDetails = {
@@ -421,40 +420,34 @@ export async function POST(req: NextRequest) {
         assessment: eafAssessment.length > 0 ? eafAssessment : null
       };
 
-      await sql`
-        INSERT INTO financials (student_id, total, balance, due_today, details)
-        VALUES (${userId}, ${totalAssessment}, ${totalBalance}, ${scrapedDueToday}, ${JSON.stringify(financialDetails)})
-        ON CONFLICT (student_id) DO UPDATE SET
-          total = EXCLUDED.total,
-          balance = EXCLUDED.balance,
-          due_today = EXCLUDED.due_today,
-          details = EXCLUDED.details,
-          updated_at = CURRENT_TIMESTAMP
-      `;
+      const financialRef = doc(db, 'financials', userId);
+      await setDoc(financialRef, {
+        total: totalAssessment,
+        balance: totalBalance,
+        due_today: scrapedDueToday,
+        details: financialDetails,
+        updated_at: serverTimestamp()
+      }, { merge: true });
 
-      // Update Schedules (Delete old and insert new)
+      // Update Schedules (Store as an array in a document)
       if (finalSchedule && finalSchedule.length > 0) {
-        await sql`DELETE FROM schedules WHERE student_id = ${userId}`;
-        for (const s of finalSchedule) {
-          await sql`
-            INSERT INTO schedules (student_id, subject, section, units, time, room)
-            VALUES (${userId}, ${s.subject}, ${s.section}, ${s.units}, ${s.time}, ${s.room})
-          `;
-        }
+        const schedulesRef = doc(db, 'schedules', userId);
+        await setDoc(schedulesRef, {
+          items: finalSchedule,
+          updated_at: serverTimestamp()
+        });
       }
 
       // Update Prospectus Subjects (Global cache)
       if (offeredSubjects && offeredSubjects.length > 0) {
         for (const sub of offeredSubjects) {
-          await sql`
-            INSERT INTO prospectus_subjects (code, description, units, pre_req)
-            VALUES (${sub.code}, ${sub.description}, ${sub.units}, ${sub.preReq})
-            ON CONFLICT (code) DO UPDATE SET
-              description = EXCLUDED.description,
-              units = EXCLUDED.units,
-              pre_req = EXCLUDED.pre_req,
-              updated_at = CURRENT_TIMESTAMP
-          `;
+          const subRef = doc(db, 'prospectus_subjects', sub.code);
+          await setDoc(subRef, {
+            description: sub.description,
+            units: sub.units,
+            pre_req: sub.preReq,
+            updated_at: serverTimestamp()
+          }, { merge: true });
         }
       }
     } catch (dbError) {
