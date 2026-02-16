@@ -58,7 +58,7 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
               <th className="w-16 py-3 bg-slate-50/50 border-b border-slate-100"></th>
               {DAYS.map(day => (
                 <th key={day} className="py-3 px-2 bg-slate-50/50 border-b border-slate-100">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{day}</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">{day}</span>
                 </th>
               ))}
             </tr>
@@ -70,9 +70,9 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
                 const currentHour = 7 + hIdx;
 
                 return (
-                  <tr key={hourStr}>
-                    <td className="py-3 border-b border-slate-50 text-center">
-                      <span className="text-[9px] font-bold text-slate-300 tabular-nums">{hourStr.split(' ')[0]}</span>
+                  <tr key={hourStr} className="h-16">
+                    <td className="py-4 border-b border-slate-50 text-center bg-slate-50/30">
+                      <span className="text-[11px] font-bold text-slate-400 tabular-nums">{hourStr.split(' ')[0]}</span>
                     </td>
                     {DAYS.map((day, dayIdx) => {
                       if (cellSpans[dayIdx] > 0) {
@@ -95,18 +95,20 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
                           <td
                             key={day}
                             rowSpan={duration}
-                            className="p-1 border-b border-slate-50 align-top"
+                            className="p-1 border-b border-slate-50 align-top h-px"
                           >
-                            <div className="h-full rounded-xl p-2.5 bg-slate-900 text-white flex flex-col transition-all hover:ring-2 hover:ring-blue-500 cursor-default">
-                              <div className="text-[8px] font-medium opacity-60 mb-0.5 truncate">
+                            <div className="h-full rounded-xl p-3 bg-slate-900 text-white flex flex-col transition-all hover:ring-2 hover:ring-blue-500 cursor-default shadow-sm shadow-slate-200">
+                              <div className="text-[10px] font-medium opacity-60 mb-1 truncate">
                                 {classToRender.time.split(/\s+/).slice(1).join(' ')}
                               </div>
-                              <div className="text-[10px] font-bold leading-tight line-clamp-2 mb-1">
+                              <div className="text-[13px] font-black leading-tight line-clamp-4 mb-2 uppercase tracking-tight">
                                 {classToRender.subject}
                               </div>
-                              <div className="mt-auto flex justify-between items-center opacity-60 text-[8px] font-bold">
-                                <span>{classToRender.room}</span>
-                                <span>{classToRender.units}U</span>
+                              <div className="mt-auto flex flex-col gap-1 opacity-80 text-[10px] font-bold border-t border-white/10 pt-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="truncate mr-1">📍 {classToRender.room}</span>
+                                    <span className="shrink-0">{classToRender.units} Units</span>
+                                </div>
                               </div>
                             </div>
                           </td>

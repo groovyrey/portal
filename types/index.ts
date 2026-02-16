@@ -71,6 +71,16 @@ export interface CommunityPost {
   content: string;
   createdAt: any;
   likes?: string[];
+  commentCount?: number;
+}
+
+export interface CommunityComment {
+  id: string;
+  postId: string;
+  userId: string;
+  userName: string;
+  content: string;
+  createdAt: any;
 }
 
 export interface Student {
