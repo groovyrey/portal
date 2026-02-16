@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       }
     }));
 
-    const baseUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=Main&_nm=`;
+    const baseUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}`;
     
     // 1. Initial visit to get tokens and Session ID
     const initRes = await client.get(baseUrl);
@@ -52,7 +52,10 @@ export async function POST(req: NextRequest) {
     formData.obtnLogin = 'LOGIN';
 
     // 2. Perform POST to the login page
-    const loginAction = $init('#Login').attr('action') || './LCC.Login.aspx';
+    let loginForm = $init('#Login');
+    if (loginForm.length === 0) loginForm = $init('form').first();
+    
+    const loginAction = loginForm.attr('action') || './LCC.Login.aspx';
     const loginUrl = new URL(loginAction, finalInitUrl).toString();
 
     const loginRes = await client.post(loginUrl, qs.stringify(formData), {
@@ -64,6 +67,7 @@ export async function POST(req: NextRequest) {
     });
 
     const $dashboard = cheerio.load(loginRes.data);
+    const dashboardTitle = $dashboard('title').text().trim();
     
     // 3. Extract Period Code (_pc) from dashboard links
     let periodCode = "SY2025-2026-2"; // Fallback
@@ -89,8 +93,19 @@ export async function POST(req: NextRequest) {
       }, { status: 401 });
     }
 
-    if (loginRes.data.includes('USER ID') && loginRes.data.includes('PASSWORD')) {
-      return NextResponse.json({ success: false, error: 'Invalid Student ID or Password.' }, { status: 401 });
+    // Improved failure check: If we are still on a page with a login button, login failed.
+    const hasLoginButton = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
+    if (hasLoginButton || (loginRes.data.includes('USER ID') && loginRes.data.includes('PASSWORD') && !dashboardTitle.toLowerCase().includes('dashboard') && !dashboardTitle.toLowerCase().includes('main'))) {
+      const portalError = 
+        $dashboard('#lblError').text().trim() || 
+        $dashboard('#lblMessage').text().trim() || 
+        $dashboard('.error-message').text().trim() ||
+        $dashboard('.text-danger').text().trim();
+      
+      return NextResponse.json({ 
+        success: false, 
+        error: portalError || 'Invalid Student ID or Password.' 
+      }, { status: 401 });
     }
 
     // 4. Extract Student Name - Aggressive Search
@@ -98,19 +113,34 @@ export async function POST(req: NextRequest) {
       $dashboard('#lblStudentName').text().trim() || 
       $dashboard('#lblFullName').text().trim() ||
       $dashboard('#lblName').text().trim() ||
+      $dashboard('#lblStudent').text().trim() ||
+      $dashboard('#lblUser').text().trim() ||
       $dashboard('.student-name').text().trim() ||
+      $dashboard('.welcome-text').text().trim() ||
       $dashboard('.enrollment_student_info_cell_name').text().trim();
 
     const pageText = $dashboard('body').text().replace(/\s+/g, ' ');
 
     if (!studentName || studentName.length < 3) {
-      const nameIdMatch = pageText.match(new RegExp(`([^-\\n]+)\\s+-\\s+${userId}`, 'i'));
+      // Try finding: Name - ID
+      const nameIdMatch = pageText.match(new RegExp(`([^-\\n\\|]+)\\s+[-|]\\s+${userId}`, 'i'));
       if (nameIdMatch) studentName = nameIdMatch[1].trim();
+    }
+
+    if (!studentName || studentName.length < 3) {
+      // Try finding: ID - Name
+      const idNameMatch = pageText.match(new RegExp(`${userId}\\s+[-|]\\s+([^-\\n\\|]+)`, 'i'));
+      if (idNameMatch) studentName = idNameMatch[1].trim();
     }
 
     if (!studentName || studentName.length < 3) {
       const welcomeMatch = pageText.match(/Welcome,?\s+([^!<\n\-]+)/i);
       if (welcomeMatch) studentName = welcomeMatch[1].trim();
+    }
+
+    // Sanitize name: remove extra titles if found
+    if (studentName) {
+        studentName = studentName.replace(/^(Welcome|Student|User):\s*/i, '').trim();
     }
 
     const courseMatch = pageText.match(/Bachelor of [^ ]+ in [^ ]+ [^ ]+/i) || 
@@ -499,11 +529,12 @@ export async function POST(req: NextRequest) {
 
         return response;
     }
-    const title = $dashboard('title').text();
-    const snippet = pageText.substring(0, 500).replace(/\s+/g, ' ');
+
+    const title = $dashboard('title').text() || "No Title";
+    const snippet = pageText.substring(0, 1000).replace(/\s+/g, ' ');
     return NextResponse.json({ 
       success: false, 
-      error: `Successfully logged in to "${title}", but could not find name. Page snippet: ${snippet}` 
+      error: `Logged in to "${title}", but could not find student info. Page snippet: ${snippet}` 
     }, { status: 500 });
 
   } catch (error: any) {

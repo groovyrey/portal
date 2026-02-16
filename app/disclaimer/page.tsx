@@ -96,7 +96,7 @@ const DisclaimerPage: React.FC = () => {
                   Server Caching
                 </h3>
                 <p className="text-slate-600 text-sm leading-relaxed">
-                  Non-sensitive data is temporarily cached on a secure <a href="https://neon.tech/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">NeonDB</a> to provide a fast and reliable user experience.
+                  Non-sensitive data is temporarily cached on a secure <a href="https://firebase.google.com/products/firestore" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">Firebase Firestore</a> to provide a fast and reliable user experience.
                 </p>
               </div>
             </div>

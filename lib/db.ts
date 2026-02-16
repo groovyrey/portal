@@ -11,6 +11,17 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+// Initialize Firebase with safety check
+let db: any;
+try {
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey === 'undefined') {
+    console.warn('Firebase API Key is missing. Database features will be disabled.');
+    // Provide a dummy/mock db or just let it be handled later
+  }
+  const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  db = getFirestore(app);
+} catch (error) {
+  console.error('Failed to initialize Firebase:', error);
+}
+
+export { db };

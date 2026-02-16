@@ -1,8 +1,9 @@
 import crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-cbc';
-// Get key from environment, or generate a random one if missing (fallback for development/local testing)
-const SECRET_KEY = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+// Use a stable fallback for development. In production, SESSION_SECRET must be set.
+const FALLBACK_SECRET = '4a2c918e7b1f3d5c6e8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e';
+const SECRET_KEY = process.env.SESSION_SECRET || FALLBACK_SECRET;
 const KEY = Buffer.from(SECRET_KEY, 'hex');
 
 export function encrypt(text: string): string {
