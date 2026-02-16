@@ -70,11 +70,11 @@ export async function POST(req: NextRequest) {
             if (name) formData[name] = $page(el).val() || '';
         });
 
-        // Schoolista common field names for password change
-        formData.otbOldPassword = currentPassword;
-        formData.otbNewPassword = newPassword;
-        formData.otbConfirmPassword = newPassword;
-        formData.obtnSave = 'SAVE';
+        // Actual field names from the school portal HTML
+        formData.otbPasswordChangeTable_1 = currentPassword;
+        formData.otbPasswordChangeTable_2 = newPassword;
+        formData.otbPasswordChangeTable_3 = newPassword;
+        formData.obtnSaveNewPasword = 'Save new password';
 
         // 5. Submit the change
         const action = $page('form').first().attr('action') || 'ChangePassword.aspx';
