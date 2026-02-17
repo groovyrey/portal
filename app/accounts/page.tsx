@@ -46,11 +46,6 @@ export default function AccountsPage() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-900">Student Accounts</h1>
-          <p className="text-slate-500 text-sm font-medium mt-1">Comprehensive overview of fees, payments, and balances.</p>
-        </div>
-
         <FinancialSummary financials={financials} />
 
         <div className="grid grid-cols-1 gap-6 mt-10">

@@ -99,6 +99,11 @@ export interface Student {
   offeredSubjects?: ProspectusSubject[];
   grades?: SemesterGrade[];
   availableReports?: ReportLink[];
+  settings?: {
+    notifications: boolean;
+    isPublic: boolean;
+    showAcademicInfo: boolean;
+  };
 }
 
 export interface LoginResponse {

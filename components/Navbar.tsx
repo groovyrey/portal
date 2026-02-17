@@ -16,7 +16,8 @@ import {
   MessageSquare,
   User as UserIcon,
   ChevronDown,
-  Building2
+  Building2,
+  Settings
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -53,11 +54,7 @@ export default function Navbar() {
     return () => window.removeEventListener('click', handleClickOutside);
   }, [isMoreOpen]);
 
-  const publicLinks = [
-    { name: 'School', href: '/school', icon: Building2 },
-    { name: 'Docs', href: '/docs', icon: FileText },
-    { name: 'Disclaimer', href: '/disclaimer', icon: ShieldAlert },
-  ];
+  const publicLinks: any[] = [];
 
   const authLinks = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -67,7 +64,7 @@ export default function Navbar() {
     { name: 'Community', href: '/community', icon: MessageSquare },
     { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
-    { name: 'Security', href: '/change-password', icon: Lock },
+    { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
   // For desktop view: show a few primary links and the rest in "More"
@@ -76,17 +73,16 @@ export default function Navbar() {
     { name: 'Grades', href: '/grades', icon: GraduationCap },
     { name: 'Community', href: '/community', icon: MessageSquare },
     { name: 'Profile', href: '/profile', icon: UserIcon },
-  ] : publicLinks;
+  ] : [];
 
   const desktopMore = isLoggedIn ? [
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
     { name: 'Subjects', href: '/offered-subjects', icon: BookOpen },
     { name: 'EAF', href: '/eaf', icon: FileText },
-    { name: 'Security', href: '/change-password', icon: Lock },
-    ...publicLinks
+    { name: 'Settings', href: '/settings', icon: Settings },
   ] : [];
 
-  const navLinks = isLoggedIn ? [...authLinks, ...publicLinks] : publicLinks;
+  const navLinks = isLoggedIn ? authLinks : [];
 
   const isActive = (path: string) => pathname === path;
 
@@ -100,7 +96,7 @@ export default function Navbar() {
                 <div className="bg-blue-600 rounded-lg p-1.5 text-white shadow-lg shadow-blue-200">
                   <GraduationCap className="h-5 w-5" />
                 </div>
-                <span className="font-bold text-xl tracking-tight text-slate-800">Student Portal</span>
+                <span className="font-bold text-xl tracking-tight text-slate-800">LCC Hub</span>
               </Link>
             </div>
 
@@ -230,7 +226,7 @@ export default function Navbar() {
             </div>
 
             <div className="p-6 border-t border-slate-100 text-center">
-              <p className="text-[10px] font-medium text-slate-400">Student Portal App v1.1</p>
+              <p className="text-[10px] font-medium text-slate-400">LCC Hub v1.1</p>
             </div>
           </div>
         </div>

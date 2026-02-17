@@ -146,10 +146,6 @@ export default function Home() {
       </main>
 
       <AIChat />
-
-      <footer className="text-center py-8 text-slate-400 text-sm">
-        <p>&copy; {new Date().getFullYear()} Student Portal App. All rights reserved.</p>
-      </footer>
     </div>
   );
 }

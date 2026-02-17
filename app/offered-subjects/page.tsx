@@ -71,37 +71,23 @@ export default function OfferedSubjectsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-10 backdrop-blur-lg bg-white/80">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-3">
-              <Link href="/" className="bg-slate-100 hover:bg-slate-200 p-2 rounded-lg text-slate-600 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-                </svg>
-              </Link>
-              <span className="font-bold text-lg tracking-tight text-slate-900">Offered Subjects</span>
-            </div>
-            <div className="flex items-center gap-2">
-               <button
-                onClick={handleRefresh}
-                disabled={loading}
-                className={`px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold rounded-lg text-[10px] transition-colors flex items-center gap-2 uppercase tracking-wider ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                {loading ? 'Refreshing...' : 'Refresh'}
-              </button>
-               <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1.5 rounded-lg border border-slate-200 uppercase tracking-wider">
-                {student.offeredSubjects.length} Total
-              </span>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+        <div className="flex justify-end gap-2 mb-8">
+           <button
+            onClick={handleRefresh}
+            disabled={loading}
+            className={`px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold rounded-lg text-[10px] transition-colors flex items-center gap-2 uppercase tracking-wider ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {loading ? 'Refreshing...' : 'Refresh'}
+          </button>
+           <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1.5 rounded-lg border border-slate-200 uppercase tracking-wider">
+            {student.offeredSubjects.length} Total
+          </span>
+        </div>
+
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50">
             <h1 className="text-lg font-bold text-slate-900">Full Subject Listing</h1>

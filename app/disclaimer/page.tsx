@@ -15,7 +15,7 @@ const DisclaimerPage: React.FC = () => {
             Legal Disclaimer <span className="text-slate-400">&</span> Terms of Use
           </h1>
           <p className="text-lg text-slate-500 max-w-2xl leading-relaxed">
-            Please read this information carefully. By accessing the Student Portal App, you agree to the practices and terms outlined in this official notice.
+            Please read this information carefully. By accessing LCC Hub, you agree to the practices and terms outlined in this official notice.
           </p>
           <div className="mt-8 flex items-center gap-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
             <span>Last Updated: February 16, 2026</span>
@@ -115,7 +115,7 @@ const DisclaimerPage: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-slate-400">
             <div className="flex items-center gap-2">
               <div className="h-6 w-6 rounded bg-slate-200" />
-              <span className="text-xs font-bold uppercase tracking-widest">Student Portal Official Notice</span>
+              <span className="text-xs font-bold uppercase tracking-widest">LCC Hub Official Notice</span>
             </div>
             <p className="text-[10px] font-medium text-center md:text-right uppercase tracking-tighter">
               &copy; {new Date().getFullYear()} — Built for Students by Students. All Rights Reserved.

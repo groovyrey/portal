@@ -9,11 +9,11 @@ import {
   MapPin, 
   Calendar, 
   GraduationCap, 
-  QrCode, 
   ShieldCheck,
   ArrowLeft,
   IdCard,
-  Loader2
+  Loader2,
+  Lock
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -31,13 +31,18 @@ function ProfileContent() {
     const fetchProfile = async () => {
       setLoading(true);
       
-      // If an ID is in the URL, we are viewing someone else
-      if (profileId) {
-        setIsPublicView(true);
+      const saved = localStorage.getItem('student_data');
+      const currentUser = saved ? JSON.parse(saved) : null;
+      const currentUserId = currentUser?.id;
+
+      // Determine if we are viewing someone else's profile
+      const viewingOthers = !!(profileId && profileId !== currentUserId);
+      setIsPublicView(viewingOthers);
+
+      if (viewingOthers) {
         try {
-          const docRef = doc(db, 'students', profileId);
+          const docRef = doc(db, 'students', profileId!);
           const docSnap = await getDoc(docRef);
-          
           if (docSnap.exists()) {
             const data = docSnap.data();
             setStudent({
@@ -49,156 +54,159 @@ function ProfileContent() {
               gender: data.gender,
               email: data.email,
               contact: data.contact,
-              address: data.address
+              address: data.address,
+              settings: data.settings || {
+                notifications: true,
+                isPublic: true,
+                showAcademicInfo: true
+              }
             } as any);
           }
         } catch (err) {
           console.error('Failed to fetch public profile', err);
         }
       } else {
-        // Own profile from local storage
-        const saved = localStorage.getItem('student_data');
-        if (saved) setStudent(JSON.parse(saved));
-        setIsPublicView(false);
+        // Viewing own profile
+        if (currentUser) {
+          setStudent(currentUser);
+        } else {
+          // If no local data, try to fetch from /me
+          try {
+            const res = await fetch('/api/student/me');
+            const result = await res.json();
+            if (result.success) setStudent(result.data);
+          } catch (e) {
+            console.error('Failed to fetch own profile', e);
+          }
+        }
       }
       setLoading(false);
     };
-
     fetchProfile();
   }, [profileId]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-[80vh] flex items-center justify-center">
+      <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+    </div>
+  );
 
-  if (!student) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 text-center p-8">
-        <IdCard className="h-12 w-12 text-slate-200 mb-4" />
-        <h2 className="text-xl font-bold text-slate-900">Profile Not Found</h2>
-        <p className="text-slate-500 text-sm mt-1 mb-8">The requested student profile could not be loaded.</p>
-        <Link href="/" className="bg-blue-600 text-white font-bold text-sm px-6 py-2.5 rounded-lg transition-colors">Return Home</Link>
+  if (!student) return (
+    <div className="min-h-[80vh] flex flex-col items-center justify-center p-8 text-center">
+      <IdCard className="h-12 w-12 text-slate-200 mb-4" />
+      <h2 className="text-xl font-bold text-slate-900">Profile Not Found</h2>
+      <Link href="/" className="mt-4 text-blue-600 font-semibold">Return Home</Link>
+    </div>
+  );
+
+  if (isPublicView && student.settings && !student.settings.isPublic) return (
+    <div className="max-w-3xl mx-auto py-10 px-4">
+      <Link href="/community" className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors text-sm font-medium mb-8">
+        <ArrowLeft className="h-4 w-4" />
+        Back to Community
+      </Link>
+      <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
+        <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
+          <Lock className="h-8 w-8 text-slate-300" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">This Profile is Private</h2>
+        <p className="text-slate-500 max-w-sm mx-auto">
+          The student has chosen to keep their profile information private.
+        </p>
       </div>
-    );
-  }
+    </div>
+  );
+
+  const showAcademic = !isPublicView || (student.settings?.showAcademicInfo ?? true);
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
-          <Link href={isPublicView ? "/community" : "/"} className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors font-semibold text-xs uppercase tracking-wider">
-            <ArrowLeft className="h-4 w-4" />
-            Back to {isPublicView ? "Community" : "Dashboard"}
-          </Link>
-          <div className="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-600 rounded-full border border-green-100">
-            <ShieldCheck className="h-3 w-3" />
-            <span className="text-[10px] font-bold uppercase tracking-wider">
-                {isPublicView ? "Public" : "Verified"}
-            </span>
+    <div className="max-w-3xl mx-auto py-10 px-4">
+      <div className="flex items-center justify-between mb-8">
+        <Link href={isPublicView ? "/community" : "/"} className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors text-sm font-medium">
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Link>
+        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${isPublicView ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-green-50 text-green-600 border-green-100'}`}>
+          <ShieldCheck className="h-3 w-3" />
+          {isPublicView ? "Public View" : "Verified Account"}
+        </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+        {/* Profile Header */}
+        <div className="p-8 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+            <div className="w-24 h-24 rounded-2xl bg-white border border-slate-200 p-1 shrink-0 shadow-sm">
+              <img 
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=f8fafc&color=334155&size=256&font-size=0.33&bold=true`}
+                alt={student.name}
+                className="w-full h-full rounded-xl object-cover"
+              />
+            </div>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-slate-900 leading-tight mb-1">{student.name}</h1>
+              <p className="text-slate-500 font-mono text-sm mb-3">{student.id}</p>
+              {showAcademic && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold uppercase tracking-wider border border-blue-100">
+                  <GraduationCap className="h-3.5 w-3.5" />
+                  {student.course}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Digital ID Card */}
-          <div className="lg:col-span-2">
-            <div className="sticky top-24">
-              <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm relative overflow-hidden flex flex-col items-center text-center">
-                {/* Branding */}
-                <div className="w-full flex justify-between items-start mb-10">
-                  <div className="text-left">
-                    <h2 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Student Identity</h2>
-                    <h2 className="text-xs font-bold text-slate-900 leading-none">Portal Card</h2>
-                  </div>
-                  <IdCard className="h-5 w-5 text-slate-300" />
-                </div>
-
-                {/* Profile Photo */}
-                <div className="mb-6">
-                  <div className="w-32 h-32 rounded-2xl bg-slate-50 border border-slate-100 p-1">
-                    <div className="w-full h-full rounded-xl bg-white flex items-center justify-center overflow-hidden">
-                      <img 
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=f1f5f9&color=1e293b&size=256&font-size=0.33&bold=true`}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Name & ID */}
-                <div className="space-y-1 mb-8">
-                  <h3 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">{student.name}</h3>
-                  <p className="text-slate-500 text-xs font-mono font-semibold tracking-wider">{student.id}</p>
-                </div>
-
-                {/* Course */}
-                <div className="w-full bg-slate-50 rounded-xl p-4 border border-slate-100 mb-8">
-                  <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Enrolled Program</span>
-                  <p className="text-xs font-semibold text-slate-700 leading-tight uppercase">{student.course}</p>
-                </div>
-
-                {/* QR Code */}
-                <div className="mt-auto bg-white p-3 rounded-xl border border-slate-100">
-                  <QrCode className="h-12 w-12 text-slate-900" />
-                </div>
-                <p className="mt-3 text-[8px] font-bold uppercase tracking-widest text-slate-400">Digital Verification</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Detailed Info */}
-          <div className="lg:col-span-3 space-y-6">
-            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
-                Academic Background
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <InfoItem icon={<User className="text-slate-400" />} label="Year Level" value={student.yearLevel} />
-                <InfoItem icon={<Calendar className="text-slate-400" />} label="Current Semester" value={student.semester} />
-                <InfoItem icon={<GraduationCap className="text-slate-400" />} label="Program" value={student.course} />
-                <InfoItem icon={<IdCard className="text-slate-400" />} label="Student Number" value={student.id} />
-              </div>
-            </div>
-
+        {/* Info Grid */}
+        <div className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+            {showAcademic && (
+              <>
+                <InfoItem icon={<User />} label="Year Level" value={student.yearLevel} />
+                <InfoItem icon={<Calendar />} label="Semester" value={student.semester} />
+              </>
+            )}
+            <InfoItem icon={<User />} label="Gender" value={student.gender} />
+            
             {!isPublicView && (
               <>
-                <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                    Contact Information
-                  </h3>
-                  
-                  <div className="space-y-8">
-                    <InfoItem icon={<Mail className="text-slate-400" />} label="Registered Email" value={student.email} />
-                    <InfoItem icon={<Phone className="text-slate-400" />} label="Mobile Number" value={student.contact} />
-                    <InfoItem icon={<MapPin className="text-slate-400" />} label="Permanent Address" value={student.address} />
-                  </div>
-                </div>
-
-                <div className="bg-slate-900 rounded-2xl p-6 text-white flex items-center justify-between overflow-hidden relative">
-                    <div className="flex items-center gap-4 relative z-10">
-                        <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center">
-                            <ShieldCheck className="h-5 w-5" />
-                        </div>
-                        <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wider">Privacy Protected</h4>
-                            <p className="text-[10px] text-slate-400 font-medium">This data is encrypted and only visible to you.</p>
-                        </div>
-                    </div>
-                    <Link href="/change-password" title="Settings" className="relative z-10 p-2.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
-                        <LockIcon size={16} />
-                    </Link>
-                </div>
+                <InfoItem icon={<Mail />} label="Email Address" value={student.email} />
+                <InfoItem icon={<Phone />} label="Contact Number" value={student.contact} />
+                <InfoItem icon={<MapPin />} label="Mailing Address" value={student.address} className="md:col-span-2" />
               </>
             )}
           </div>
+
+          {!isPublicView && (
+            <div className="mt-12 p-4 bg-slate-900 rounded-xl text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-600 rounded-lg">
+                  <ShieldCheck className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold">Privacy Control</p>
+                  <p className="text-[10px] text-slate-400">Personal details are only visible to you.</p>
+                </div>
+              </div>
+              <Link href="/settings" title="Settings" className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                <Lock className="h-4 w-4" />
+              </Link>
+            </div>
+          )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoItem({ icon, label, value, className = "" }: { icon: React.ReactNode, label: string, value?: string, className?: string }) {
+  return (
+    <div className={`flex items-start gap-4 ${className}`}>
+      <div className="h-9 w-9 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 text-slate-400">
+        {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 18 }) : icon}
+      </div>
+      <div>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
+        <p className="text-sm font-semibold text-slate-700">{value || 'Not Specified'}</p>
       </div>
     </div>
   );
@@ -214,37 +222,4 @@ export default function ProfilePage() {
       <ProfileContent />
     </Suspense>
   );
-}
-
-function InfoItem({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string }) {
-  return (
-    <div className="flex items-start gap-4">
-      <div className="h-10 w-10 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
-        {icon}
-      </div>
-      <div>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{label}</p>
-        <p className="text-sm font-semibold text-slate-700">{value || 'Not Provided'}</p>
-      </div>
-    </div>
-  );
-}
-
-function LockIcon({ size }: { size: number }) {
-    return (
-        <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width={size} 
-            height={size} 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-        >
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-        </svg>
-    )
 }

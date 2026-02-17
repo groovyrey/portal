@@ -1,15 +1,21 @@
 import React from 'react';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 const DocsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#fafafa] text-slate-900">
-      <div className="max-w-4xl mx-auto px-6 py-20">
+      <div className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+        <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-800 transition-colors text-sm font-bold mb-12 group">
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          Back to Dashboard
+        </Link>
         <header className="mb-20">
           <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-500">
             Documentation
           </h1>
           <p className="text-xl text-slate-500 max-w-2xl leading-relaxed">
-            A comprehensive guide to the unofficial Student Portal—designed for speed, security, and a better academic experience.
+            A comprehensive guide to the unofficial LCC Hub—designed for speed, security, and a better academic experience.
           </p>
         </header>
 
@@ -166,7 +172,7 @@ const DocsPage: React.FC = () => {
 
         <footer className="mt-32 pt-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-slate-400 text-sm font-medium">
-            &copy; {new Date().getFullYear()} Student Portal — Unofficial Documentation
+            &copy; {new Date().getFullYear()} LCC Hub — Unofficial Documentation
           </p>
           <div className="flex gap-6">
             <a href="/disclaimer" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">Disclaimer</a>

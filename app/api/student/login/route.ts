@@ -7,7 +7,7 @@ import { CookieJar } from 'tough-cookie';
 import fs from 'fs';
 import path from 'path';
 import { db } from '@/lib/db';
-import { doc, setDoc, serverTimestamp, collection, writeBatch } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, collection, writeBatch } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { encrypt } from '@/lib/auth';
 
@@ -411,6 +411,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Save to database
+    let existingSettings = null;
     try {
       if (!db) {
         throw new Error('Firestore database is not initialized. Check your environment variables.');
@@ -422,6 +423,9 @@ export async function POST(req: NextRequest) {
 
       // Upsert Student
       const studentRef = doc(db, 'students', userId);
+      const existingStudentDoc = await getDoc(studentRef);
+      existingSettings = existingStudentDoc.exists() ? existingStudentDoc.data().settings : null;
+
       await setDoc(studentRef, {
         name: studentName,
         course: course,
@@ -501,6 +505,11 @@ export async function POST(req: NextRequest) {
                 schedule: finalSchedule.length > 0 ? finalSchedule : null,
                 offeredSubjects: offeredSubjects.length > 0 ? offeredSubjects : null,
                 availableReports: availableReports.length > 0 ? availableReports : null,
+                settings: existingSettings || {
+                    notifications: true,
+                    isPublic: true,
+                    showAcademicInfo: true
+                },
                 financials: { 
                     total: totalAssessment, 
                     balance: totalBalance,

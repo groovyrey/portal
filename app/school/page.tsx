@@ -9,7 +9,8 @@ import {
   Building2, 
   GraduationCap, 
   Calendar,
-  ChevronRight
+  ChevronRight,
+  ArrowLeft
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -29,8 +30,12 @@ const SchoolInfoPage = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Hero Section */}
-      <div className="bg-blue-600 pt-24 pb-16 px-6">
+      <div className="bg-blue-600 pt-16 pb-16 px-6">
         <div className="max-w-5xl mx-auto">
+          <Link href="/" className="inline-flex items-center gap-2 text-blue-100 hover:text-white transition-colors text-sm font-bold mb-8 group">
+            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+            Back to Dashboard
+          </Link>
           <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
             <div className="h-24 w-24 bg-white rounded-3xl shadow-xl flex items-center justify-center p-4">
               <GraduationCap className="h-12 w-12 text-blue-600" />

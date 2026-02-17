@@ -76,7 +76,12 @@ export async function GET(req: NextRequest) {
           schedule: schedule.length > 0 ? schedule : null,
           financials: financials,
           offeredSubjects: offeredSubjects.length > 0 ? offeredSubjects : null,
-          availableReports: student.available_reports 
+          availableReports: student.available_reports,
+          settings: student.settings || {
+            notifications: true,
+            isPublic: true,
+            showAcademicInfo: true
+          }
         };
 
         return NextResponse.json({ success: true, data: studentData });

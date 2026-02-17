@@ -100,11 +100,7 @@ export default function GradesPage() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Academic Reports</h1>
-            <p className="text-slate-500 text-sm font-medium mt-1">Detailed breakdown of your scholastic performance.</p>
-          </div>
+        <div className="flex justify-end mb-8">
           <button 
             onClick={calculateStats}
             disabled={isCalculating}
