@@ -1,13 +1,12 @@
 'use client'; // This component will use client-side features
 
-import React, { useState, useEffect, useRef } from 'react';
-import { pipeline, env } from '@huggingface/transformers';
+// import { pipeline, env } from '@huggingface/transformers'; // Removed direct import
 
 // Configure Transformers.js environment for browser usage
 // This tells Transformers.js where to store models (e.g., IndexedDB in the browser)
 // and can optionally configure WebGPU for faster inference.
-env.allowLocalModels = false; // Generally, don't allow local disk access in browser
-// env.useWebGPU = true; // Optional: uncomment to try to use WebGPU if available for faster inference
+// env.allowLocalModels = false; // Moved inside dynamic import block
+// env.useWebGPU = true; // Moved inside dynamic import block
 
 // Define the type for the sentiment analysis result
 interface SentimentResult {
@@ -30,9 +29,17 @@ export default function TransformersTestPage() {
       try {
         setLoading(true);
         setError(null);
+        
+        // Dynamically import the Transformers.js library
+        const { pipeline: loadedPipeline, env: loadedEnv } = await import('@huggingface/transformers');
+
+        // Configure Transformers.js environment after dynamic import
+        loadedEnv.allowLocalModels = false;
+        // loadedEnv.useWebGPU = true; // Optional: uncomment to try to use WebGPU if available for faster inference
+
         // This will download the model the first time it's run.
         // Using 'Xenova/distilbert-base-uncased-finetuned-sst-2-english' as it's a common and relatively small model for sentiment analysis.
-        const newClassifier = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english');
+        const newClassifier = await loadedPipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english');
         classifierRef.current = newClassifier;
       } catch (err: any) {
         console.error('Failed to load Transformers.js pipeline:', err);
