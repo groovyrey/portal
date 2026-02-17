@@ -54,6 +54,8 @@ export async function GET(req: NextRequest) {
     const posts = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
+      isUnreviewed: doc.data().isUnreviewed || false,
+      topic: doc.data().topic || 'General',
       // Convert Firestore timestamp to ISO string for frontend
       createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
     }));
@@ -67,7 +69,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { content, userName, poll } = await req.json();
+    const { content, userName, poll, isUnreviewed, topic } = await req.json();
     if (!content && !poll) return NextResponse.json({ error: 'Content or Poll required' }, { status: 400 });
 
     const sessionCookie = req.cookies.get('session_token');
@@ -85,6 +87,8 @@ export async function POST(req: NextRequest) {
       userName: userName || 'Anonymous Student',
       content: content || '',
       createdAt: serverTimestamp(),
+      isUnreviewed: isUnreviewed || false,
+      topic: topic || 'General'
     };
 
     if (poll && poll.question && poll.options) {

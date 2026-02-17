@@ -8,6 +8,10 @@ import { Send, User, MessageSquare, Loader2, PenLine, Eye, MoreVertical, Trash2,
 import { CommunityPost, Student, CommunityComment } from '@/types';
 import Link from 'next/link';
 import Drawer from '@/components/Drawer';
+import PostReviewModal from '@/components/PostReviewModal';
+import PostReviewResultModal from '@/components/PostReviewResultModal';
+import CommunityGuidelinesDrawer from '@/components/CommunityGuidelinesDrawer';
+import { Info, ExternalLink } from 'lucide-react';
 
 export default function CommunityPage() {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -18,7 +22,25 @@ export default function CommunityPage() {
   const [pollOptions, setPollOptions] = useState(['', '']);
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [showGuidelines, setShowGuidelines] = useState(false);
+  const [reviewResult, setReviewResult] = useState<any>(null);
+  const [reviewError, setReviewError] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState('All');
   const [student, setStudent] = useState<Student | null>(null);
+
+  const topics = ['All', 'Academics', 'Campus Life', 'Career', 'Well-being', 'General'];
+
+  const getTopicStyle = (topic: string) => {
+    switch (topic) {
+      case 'Academics': return 'bg-blue-50 text-blue-600 border-blue-100';
+      case 'Campus Life': return 'bg-purple-50 text-purple-600 border-purple-100';
+      case 'Career': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+      case 'Well-being': return 'bg-rose-50 text-rose-600 border-rose-100';
+      default: return 'bg-slate-50 text-slate-600 border-slate-100';
+    }
+  };
   const [view, setView] = useState<'edit' | 'preview'>('edit');
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [reactors, setReactors] = useState<{id: string, name: string}[] | null>(null);
@@ -231,13 +253,57 @@ export default function CommunityPage() {
     if ((!content.trim() && !pollQuestion.trim()) || posting) return;
 
     setPosting(true);
+    setShowReviewModal(true);
+    setReviewError(false);
+    setReviewResult(null);
+
+    let isUnreviewed = false;
+    let result = null;
+
     try {
+      // 1. AI Moderation Check
+      const reviewRes = await fetch('/api/ai/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          content, 
+          userName: student?.name || 'Anonymous',
+          poll: showPollEditor && pollQuestion.trim() ? {
+            question: pollQuestion,
+            options: pollOptions.filter(opt => opt.trim() !== '')
+          } : null
+        }),
+      });
+
+      if (!reviewRes.ok) {
+        throw new Error('AI Review service unavailable');
+      }
+
+      result = await reviewRes.json();
+      setReviewResult(result);
+
+      if (result.decision === 'REJECTED') {
+        setShowReviewModal(false);
+        setShowResultModal(true);
+        setPosting(false);
+        return;
+      }
+    } catch (err) {
+      console.error('AI Review Error:', err);
+      isUnreviewed = true;
+      setReviewError(true);
+    }
+
+    try {
+      // 2. Proceed with posting
       const res = await fetch('/api/community', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           content, 
           userName: student?.name || 'Anonymous',
+          isUnreviewed,
+          topic: result?.topic || 'General',
           poll: showPollEditor && pollQuestion.trim() ? {
             question: pollQuestion,
             options: pollOptions.filter(opt => opt.trim() !== '')
@@ -252,12 +318,15 @@ export default function CommunityPage() {
         setPollOptions(['', '']);
         setShowPollEditor(false);
         setView('edit');
-        toast.success('Post shared!');
+        setShowReviewModal(false);
+        setShowResultModal(true); // Show success or error modal
         fetchPosts();
       } else {
+        setShowReviewModal(false);
         toast.error(data.error || 'Failed to post');
       }
     } catch (err) {
+      setShowReviewModal(false);
       toast.error('Network error');
     } finally {
       setPosting(false);
@@ -306,6 +375,10 @@ export default function CommunityPage() {
     }
   };
 
+  const filteredPosts = selectedTopic === 'All' 
+    ? posts 
+    : posts.filter(p => (p as any).topic === selectedTopic);
+
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto space-y-8">
@@ -317,6 +390,13 @@ export default function CommunityPage() {
             </h1>
             <p className="text-slate-500 text-sm font-medium mt-1">Connect and share with fellow students.</p>
           </div>
+          <button
+            onClick={() => setShowGuidelines(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-wider text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:shadow-sm transition-all"
+          >
+            <Info className="h-4 w-4" />
+            Guidelines
+          </button>
         </header>
 
         {/* Create Post */}
@@ -339,7 +419,15 @@ export default function CommunityPage() {
                   Preview
                 </button>
               </div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Markdown Supported</span>
+              <a 
+                href="https://www.markdownguide.org/basic-syntax/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all cursor-help group"
+              >
+                <ExternalLink className="h-3 w-3 transition-transform group-hover:scale-110" />
+                Markdown Supported
+              </a>
             </div>
 
             {view === 'edit' ? (
@@ -441,20 +529,37 @@ export default function CommunityPage() {
           </form>
         </div>
 
+        {/* Topic Filter */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
+          {topics.map((topic) => (
+            <button
+              key={topic}
+              onClick={() => setSelectedTopic(topic)}
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap border transition-all ${
+                selectedTopic === topic
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20'
+                  : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              {topic}
+            </button>
+          ))}
+        </div>
+
         {/* Feed */}
         <div className="space-y-4">
           {loading ? (
             <div className="flex justify-center py-20">
               <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
             </div>
-          ) : posts.length === 0 ? (
+          ) : filteredPosts.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 text-slate-400">
               <MessageSquare className="h-10 w-10 mx-auto mb-3 opacity-20" />
-              <p className="font-semibold text-xs uppercase tracking-wider">No posts yet</p>
+              <p className="font-semibold text-xs uppercase tracking-wider">No posts in this topic</p>
             </div>
           ) : (
             <>
-              {posts.slice(0, postsToShow).map((post) => (
+              {filteredPosts.slice(0, postsToShow).map((post) => (
                 <div 
                   key={post.id} 
                   onClick={() => openPostModal(post)}
@@ -473,9 +578,19 @@ export default function CommunityPage() {
                         >
                             <h4 className="text-sm font-bold text-slate-900 hover:text-blue-600 transition-colors">{post.userName}</h4>
                         </Link>
-                        <p className="text-[10px] font-medium text-slate-500 uppercase tracking-tight">
-                          {new Date(post.createdAt).toLocaleDateString()}
-                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-tight">
+                            {new Date(post.createdAt).toLocaleDateString()}
+                          </p>
+                          <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-tighter ${getTopicStyle((post as any).topic)}`}>
+                            {(post as any).topic}
+                          </span>
+                          {(post as any).isUnreviewed && (
+                            <span className="bg-amber-50 text-amber-600 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-100 uppercase tracking-tighter">
+                              Pending AI Review
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -600,7 +715,7 @@ export default function CommunityPage() {
                 </div>
               ))}
 
-              {posts.length > postsToShow && (
+              {filteredPosts.length > postsToShow && (
                 <button
                   onClick={() => setPostsToShow(prev => prev + 5)}
                   className="w-full py-4 bg-white border border-slate-200 rounded-2xl text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm active:scale-[0.98]"
@@ -908,6 +1023,18 @@ export default function CommunityPage() {
           </div>
         </div>
       )}
+
+      <PostReviewModal isOpen={showReviewModal} />
+      <PostReviewResultModal 
+        isOpen={showResultModal} 
+        onClose={() => setShowResultModal(false)}
+        result={reviewResult}
+        isError={reviewError}
+      />
+      <CommunityGuidelinesDrawer 
+        isOpen={showGuidelines} 
+        onClose={() => setShowGuidelines(false)} 
+      />
     </div>
   );
 }

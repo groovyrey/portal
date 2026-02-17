@@ -34,7 +34,7 @@ export default function AboutPage() {
               A modern, community-driven interface designed to streamline student life at La Concepcion College.
             </p>
             <div className="mt-8 flex items-center justify-center md:justify-start gap-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              <span>Version 1.2.0</span>
+              <span>Version 1.3.0</span>
               <span className="w-1 h-1 rounded-full bg-slate-300" />
               <span>Open Beta</span>
             </div>
@@ -85,14 +85,14 @@ export default function AboutPage() {
           {/* Features Grid */}
           <div>
             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-8 text-center">Core Capabilities</h3>
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="flex gap-4 p-6 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 transition-colors shadow-sm">
                 <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
                   <Zap className="h-5 w-5" />
                 </div>
                 <div>
                   <h4 className="font-bold text-slate-900 mb-1">Instant Access</h4>
-                  <p className="text-sm text-slate-500 leading-relaxed">No more navigating through multiple legacy menus. View your schedule, grades, and financials in one click.</p>
+                  <p className="text-sm text-slate-500 leading-relaxed">View your schedule, grades, and financials in one click without legacy menus.</p>
                 </div>
               </div>
               <div className="flex gap-4 p-6 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 transition-colors shadow-sm">
@@ -101,16 +101,7 @@ export default function AboutPage() {
                 </div>
                 <div>
                   <h4 className="font-bold text-slate-900 mb-1">Portal AI</h4>
-                  <p className="text-sm text-slate-500 leading-relaxed">An intelligent assistant that knows your academic context and can help answer portal-related questions.</p>
-                </div>
-              </div>
-              <div className="flex gap-4 p-6 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 transition-colors shadow-sm">
-                <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
-                  <Code2 className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 mb-1">Modern Stack</h4>
-                  <p className="text-sm text-slate-500 leading-relaxed">Built with Next.js 15, Tailwind CSS, and Firebase for a smooth, app-like experience on any device.</p>
+                  <p className="text-sm text-slate-500 leading-relaxed">Your personal academic assistant that helps answer questions about your school data.</p>
                 </div>
               </div>
               <div className="flex gap-4 p-6 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 transition-colors shadow-sm">
@@ -118,8 +109,35 @@ export default function AboutPage() {
                   <ShieldCheck className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 mb-1">Privacy Focused</h4>
-                  <p className="text-sm text-slate-500 leading-relaxed">Your data is fetched securely and encrypted during transit. We never store your school password.</p>
+                  <h4 className="font-bold text-slate-900 mb-1">Aegis</h4>
+                  <p className="text-sm text-slate-500 leading-relaxed">Advanced moderation that ensures community safety and professional student conduct.</p>
+                </div>
+              </div>
+              <div className="flex gap-4 p-6 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 transition-colors shadow-sm">
+                <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 mb-1">Topic-Based Feed</h4>
+                  <p className="text-sm text-slate-500 leading-relaxed">Organized discussions across Academics, Career, Well-being, and Campus Life.</p>
+                </div>
+              </div>
+              <div className="flex gap-4 p-6 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 transition-colors shadow-sm">
+                <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                  <Code2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 mb-1">Modern Stack</h4>
+                  <p className="text-sm text-slate-500 leading-relaxed">Built with Next.js 15 and Tailwind CSS for a high-performance, app-like experience.</p>
+                </div>
+              </div>
+              <div className="flex gap-4 p-6 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 transition-colors shadow-sm">
+                <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600 shrink-0">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 mb-1">Secure & Private</h4>
+                  <p className="text-sm text-slate-500 leading-relaxed">Encrypted data transit and secure session management keep your records safe.</p>
                 </div>
               </div>
             </div>
