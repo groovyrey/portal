@@ -7,7 +7,6 @@ import {
   Send, 
   X, 
   Bot, 
-  User, 
   Loader2,
   Sparkles
 } from 'lucide-react';
@@ -15,16 +14,19 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 
-interface Message {
+type Message = {
+  id: string;
   role: 'user' | 'assistant';
   content: string;
-}
+};
 
 export default function AIChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -32,45 +34,91 @@ export default function AIChat() {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (isOpen) {
+      scrollToBottom();
+    }
+  }, [messages, isOpen, isLoading]);
 
-  const handleSend = async (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: input,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
     setInput('');
-    setLoading(true);
+    setIsLoading(true);
+    setError(null);
+
+    const assistantMessageId = (Date.now() + 1).toString();
+    const newAssistantMessage: Message = {
+      id: assistantMessageId,
+      role: 'assistant',
+      content: '',
+    };
+
+    setMessages((prev) => [...prev, newAssistantMessage]);
 
     try {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           messages: [...messages, userMessage].map(m => ({
             role: m.role,
-            content: m.content
-          }))
+            content: m.content,
+          })),
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to get a response from the AI.');
+        throw new Error(await response.text() || 'Failed to get a response');
       }
-      
-      setMessages(prev => [...prev, { role: 'assistant', content: data.content || "No response." }]);
 
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No reader available');
+
+      const decoder = new TextEncoder().encode('').length === 0 ? new TextDecoder() : null; // Basic check
+      // Use standard TextDecoder
+      const textDecoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = textDecoder.decode(value, { stream: true });
+        
+        setMessages((prev) => 
+          prev.map((msg) => 
+            msg.id === assistantMessageId 
+              ? { ...msg, content: msg.content + chunk }
+              : msg
+          )
+        );
+      }
     } catch (err: any) {
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: `⚠️ ${err.message}. Please check your connection or try again later.` 
-      }]);
+      console.error('Chat error:', err);
+      setError(err.message || 'Something went wrong');
+      // Remove the empty assistant message if it's still empty and there was an error
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last && last.id === assistantMessageId && !last.content) {
+          return prev.slice(0, -1);
+        }
+        return prev;
+      });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -111,8 +159,8 @@ export default function AIChat() {
                   <p className="text-xs font-medium text-slate-500">How can I help you today?</p>
                 </div>
               )}
-              {messages.map((m, idx) => (
-                <div key={idx} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              {messages.map((m) => (
+                <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[85%] p-3 rounded-xl text-sm ${
                     m.role === 'user' 
                       ? 'bg-blue-600 text-white rounded-tr-none font-medium' 
@@ -141,10 +189,17 @@ export default function AIChat() {
                   </div>
                 </div>
               ))}
-              {isLoading && (
+              {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
                 <div className="flex justify-start">
                   <div className="bg-white border border-slate-200 p-3 rounded-xl rounded-tl-none">
                     <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+                  </div>
+                </div>
+              )}
+              {error && (
+                <div className="flex justify-start">
+                  <div className="bg-red-50 border border-red-200 p-3 rounded-xl rounded-tl-none text-red-600 text-xs font-medium">
+                    ⚠️ {error}. Please try again.
                   </div>
                 </div>
               )}
@@ -152,18 +207,18 @@ export default function AIChat() {
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSend} className="p-4 bg-white border-t border-slate-100">
+            <form onSubmit={handleSubmit} className="p-4 bg-white border-t border-slate-100">
               <div className="flex gap-2">
                 <input 
                   type="text" 
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={handleInputChange}
                   placeholder="Type a message..."
                   className="flex-1 bg-slate-50 text-sm font-medium px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-600 transition-colors"
                 />
                 <button 
                   type="submit"
-                  disabled={!input.trim() || isLoading}
+                  disabled={!input?.trim() || isLoading}
                   className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />

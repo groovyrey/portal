@@ -1,28 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { InferenceClient } from '@huggingface/inference';
+import { NextRequest } from 'next/server';
+import OpenAI from 'openai';
 import { db } from '@/lib/db';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 
+export const maxDuration = 30;
+
+// Initialize OpenAI client with xAI configuration
+const xaiClient = new OpenAI({
+  apiKey: process.env.XAI_API_KEY || '',
+  baseURL: 'https://api.x.ai/v1',
+});
+
 export async function POST(req: NextRequest) {
   try {
     const { messages } = await req.json();
     
-    // Fetch HF Token and set AI Model
-    const hfToken = process.env.HUGGINGFACE_API_KEY;
-    const aiModel = "moonshotai/Kimi-K2.5";
-
-    if (!hfToken) {
-      return NextResponse.json({ error: 'Hugging Face token is not set.' }, { status: 500 });
-    }
-
-    const hf = new InferenceClient(hfToken);
-
     // 1. Authenticate
     const sessionCookie = req.cookies.get('session_token');
     if (!sessionCookie?.value) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return new Response('Authentication required', { status: 401 });
     }
 
     let userId = "";
@@ -31,19 +29,19 @@ export async function POST(req: NextRequest) {
       const sessionData = JSON.parse(decrypted);
       userId = sessionData.userId;
     } catch (e) {
-      return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
+      return new Response('Invalid or expired session', { status: 401 });
     }
 
     await initDatabase();
 
     if (!db) {
-      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+      return new Response('Database connection failed', { status: 500 });
     }
 
     // 2. Gather Context
     const studentDoc = await getDoc(doc(db, 'students', userId));
     if (!studentDoc.exists()) {
-      return NextResponse.json({ error: 'Student profile not found.' }, { status: 404 });
+      return new Response('Student profile not found.', { status: 404 });
     }
     const student = studentDoc.data();
 
@@ -86,29 +84,46 @@ INSTRUCTIONS:
 - Answer only using provided student data.
 `.trim();
 
-    // 3. Prepare Messages (Standardizing for AI)
-    const messagesForAI = messages.map(({ role, content }: { role: string; content: string }) => ({
-      role: role === 'model' ? 'assistant' : role,
-      content
-    }));
-
-    // 4. Inference Call
-    const response = await hf.chatCompletion({
-      model: aiModel,
+    // 3. Inference Call with actual xAI API via OpenAI SDK
+    const response = await xaiClient.chat.completions.create({
+      model: 'grok-3',
       messages: [
-        { role: "system", content: systemPrompt },
-        ...messagesForAI
+        { role: 'system', content: systemPrompt },
+        ...messages.map((m: any) => ({
+          role: m.role === 'assistant' ? 'assistant' : 'user',
+          content: m.content,
+        })),
       ],
-      max_tokens: 800,
-      temperature: 0.7,
+      stream: true,
     });
 
-    return NextResponse.json({ 
-      content: response.choices[0].message.content 
+    // 4. Create a ReadableStream to stream the response back to the client
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        try {
+          for await (const chunk of response) {
+            const content = chunk.choices[0]?.delta?.content || "";
+            if (content) {
+              controller.enqueue(encoder.encode(content));
+            }
+          }
+        } catch (err) {
+          controller.error(err);
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+      },
     });
 
   } catch (error: any) {
     console.error('Chat API Error:', error);
-    return NextResponse.json({ error: 'Failed to process request: ' + error.message }, { status: 500 });
+    return new Response('Failed to process request: ' + error.message, { status: 500 });
   }
 }
