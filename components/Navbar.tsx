@@ -17,7 +17,8 @@ import {
   User as UserIcon,
   ChevronDown,
   Building2,
-  Settings
+  Settings,
+  Info
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -54,7 +55,10 @@ export default function Navbar() {
     return () => window.removeEventListener('click', handleClickOutside);
   }, [isMoreOpen]);
 
-  const publicLinks: any[] = [];
+  const publicLinks = [
+    { name: 'About', href: '/about', icon: Info },
+    { name: 'Disclaimer', href: '/disclaimer', icon: ShieldAlert },
+  ];
 
   const authLinks = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -65,6 +69,7 @@ export default function Navbar() {
     { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
     { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'About', href: '/about', icon: Info },
   ];
 
   // For desktop view: show a few primary links and the rest in "More"
@@ -80,6 +85,7 @@ export default function Navbar() {
     { name: 'Subjects', href: '/offered-subjects', icon: BookOpen },
     { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'About', href: '/about', icon: Info },
   ] : [];
 
   const navLinks = isLoggedIn ? authLinks : [];
@@ -102,7 +108,7 @@ export default function Navbar() {
 
             {/* Desktop Menu */}
             <div className="hidden lg:flex items-center space-x-1">
-              {desktopPrimary.map((link) => {
+              {(isLoggedIn ? desktopPrimary : publicLinks).map((link) => {
                 const Icon = link.icon;
                 return (
                   <Link
@@ -205,7 +211,7 @@ export default function Navbar() {
             </div>
             
             <div className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-              {navLinks.map((link) => {
+              {(isLoggedIn ? navLinks : publicLinks).map((link) => {
                 const Icon = link.icon;
                 return (
                   <Link

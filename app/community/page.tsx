@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
-import { Send, User, MessageSquare, Loader2, PenLine, Eye, MoreVertical, Trash2, Heart, X } from 'lucide-react';
+import { Send, User, MessageSquare, Loader2, PenLine, Eye, MoreVertical, Trash2, Heart, X, Plus, BarChart2 } from 'lucide-react';
 import { CommunityPost, Student, CommunityComment } from '@/types';
 import Link from 'next/link';
 import Drawer from '@/components/Drawer';
@@ -13,6 +13,9 @@ export default function CommunityPage() {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [postsToShow, setPostsToShow] = useState(5);
   const [content, setContent] = useState('');
+  const [showPollEditor, setShowPollEditor] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState(['', '']);
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [student, setStudent] = useState<Student | null>(null);
@@ -225,7 +228,7 @@ export default function CommunityPage() {
 
   const handlePost = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() || posting) return;
+    if ((!content.trim() && !pollQuestion.trim()) || posting) return;
 
     setPosting(true);
     try {
@@ -234,13 +237,20 @@ export default function CommunityPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           content, 
-          userName: student?.name || 'Anonymous' 
+          userName: student?.name || 'Anonymous',
+          poll: showPollEditor && pollQuestion.trim() ? {
+            question: pollQuestion,
+            options: pollOptions.filter(opt => opt.trim() !== '')
+          } : null
         }),
       });
 
       const data = await res.json();
       if (data.success) {
         setContent('');
+        setPollQuestion('');
+        setPollOptions(['', '']);
+        setShowPollEditor(false);
         setView('edit');
         toast.success('Post shared!');
         fetchPosts();
@@ -251,6 +261,48 @@ export default function CommunityPage() {
       toast.error('Network error');
     } finally {
       setPosting(false);
+    }
+  };
+
+  const handleVote = async (postId: string, optionIndex: number) => {
+    if (!student) return;
+
+    const updatePost = (p: CommunityPost) => {
+        if (p.id === postId && p.poll) {
+            const hasVoted = p.poll.options.some(opt => opt.votes.includes(student.id));
+            if (hasVoted) return p;
+
+            const newOptions = [...p.poll.options];
+            newOptions[optionIndex] = {
+              ...newOptions[optionIndex],
+              votes: [...newOptions[optionIndex].votes, student.id]
+            };
+            return { ...p, poll: { ...p.poll, options: newOptions } };
+        }
+        return p;
+    };
+
+    // Optimistic Update
+    setPosts(prev => prev.map(updatePost));
+    if (selectedPost?.id === postId) {
+        setSelectedPost(prev => prev ? updatePost(prev) : null);
+    }
+
+    try {
+      const res = await fetch('/api/community', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            postId, 
+            action: 'vote',
+            optionIndex
+        }),
+      });
+
+      if (!res.ok) throw new Error();
+    } catch (err) {
+      fetchPosts();
+      toast.error('Failed to cast vote');
     }
   };
 
@@ -307,17 +359,80 @@ export default function CommunityPage() {
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center gap-2 text-slate-500">
-                <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
-                  <User className="h-4 w-4" />
+            {showPollEditor && (
+              <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">Create Poll</span>
+                  <button type="button" onClick={() => setShowPollEditor(false)} className="text-slate-400 hover:text-slate-600">
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
-                <span className="text-xs font-semibold">{student?.name || 'Anonymous'}</span>
+                <input
+                  type="text"
+                  value={pollQuestion}
+                  onChange={(e) => setPollQuestion(e.target.value)}
+                  placeholder="Poll Question"
+                  className="w-full bg-white border border-blue-100 rounded-lg px-4 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10"
+                />
+                <div className="space-y-2">
+                  {pollOptions.map((opt, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={opt}
+                        onChange={(e) => {
+                          const newOpts = [...pollOptions];
+                          newOpts[idx] = e.target.value;
+                          setPollOptions(newOpts);
+                        }}
+                        placeholder={`Option ${idx + 1}`}
+                        className="flex-1 bg-white border border-blue-100 rounded-lg px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10"
+                      />
+                      {pollOptions.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => setPollOptions(pollOptions.filter((_, i) => i !== idx))}
+                          className="p-2 text-slate-400 hover:text-red-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {pollOptions.length < 5 && (
+                    <button
+                      type="button"
+                      onClick={() => setPollOptions([...pollOptions, ''])}
+                      className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline pt-1"
+                    >
+                      <Plus className="h-3 w-3" /> Add Option
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-slate-500">
+                  <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
+                    <User className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-semibold">{student?.name || 'Anonymous'}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPollEditor(!showPollEditor)}
+                  className={`p-2 rounded-lg transition-colors ${showPollEditor ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+                  title="Add Poll"
+                >
+                  <BarChart2 className="h-5 w-5" />
+                </button>
               </div>
               <button
                 type="submit"
-                disabled={!content.trim() || posting}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white font-bold text-xs uppercase tracking-wider px-6 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                disabled={(!content.trim() && !pollQuestion.trim()) || posting}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white font-bold text-xs uppercase tracking-wider px-6 py-2.5 rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-blue-600/20"
               >
                 {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 Share
@@ -397,6 +512,59 @@ export default function CommunityPage() {
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
                   </div>
 
+                  {post.poll && (
+                    <div className="mb-6 p-4 bg-slate-50/50 rounded-2xl border border-slate-100/50 space-y-3" onClick={(e) => e.stopPropagation()}>
+                      <h5 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Community Poll</h5>
+                      <h4 className="text-sm font-bold text-slate-900 mb-4">{post.poll.question}</h4>
+                      <div className="space-y-2">
+                        {post.poll.options.map((option, idx) => {
+                          const totalVotes = post.poll?.options.reduce((acc, curr) => acc + curr.votes.length, 0) || 0;
+                          const percentage = totalVotes > 0 ? Math.round((option.votes.length / totalVotes) * 100) : 0;
+                          const hasVoted = post.poll?.options.some(opt => opt.votes.includes(student?.id || ''));
+                          const isSelected = option.votes.includes(student?.id || '');
+
+                          return (
+                            <button
+                              key={idx}
+                              disabled={hasVoted}
+                              onClick={() => handleVote(post.id, idx)}
+                              className={`w-full relative h-10 rounded-xl overflow-hidden border transition-all ${
+                                hasVoted 
+                                  ? isSelected ? 'border-blue-200 bg-blue-50/50' : 'border-slate-100 bg-white/50'
+                                  : 'border-slate-200 bg-white hover:border-blue-600/30'
+                              }`}
+                            >
+                              {hasVoted && (
+                                <div 
+                                  className={`absolute inset-y-0 left-0 transition-all duration-1000 ${isSelected ? 'bg-blue-600/10' : 'bg-slate-100/50'}`}
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              )}
+                              <div className="absolute inset-0 px-4 flex items-center justify-between">
+                                <span className={`text-xs font-bold ${isSelected ? 'text-blue-700' : 'text-slate-700'}`}>
+                                  {option.text}
+                                </span>
+                                {hasVoted && (
+                                  <span className="text-[10px] font-black text-slate-400">
+                                    {percentage}%
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="flex items-center justify-between pt-1">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          {post.poll.options.reduce((acc, curr) => acc + curr.votes.length, 0)} Total Votes
+                        </p>
+                        {post.poll.options.some(opt => opt.votes.includes(student?.id || '')) && (
+                          <span className="text-[9px] font-bold text-blue-500 uppercase">Voted</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-4 pt-4 border-t border-slate-50">
                       <div 
                           className={`flex items-center gap-2 px-3 py-1.5 rounded-lg
@@ -459,6 +627,59 @@ export default function CommunityPage() {
             <div className="prose prose-slate max-w-none prose-sm font-medium text-slate-700 leading-relaxed">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedPost.content}</ReactMarkdown>
             </div>
+
+            {selectedPost.poll && (
+              <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100/50 space-y-3">
+                <h5 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Community Poll</h5>
+                <h4 className="text-sm font-bold text-slate-900 mb-4">{selectedPost.poll.question}</h4>
+                <div className="space-y-2">
+                  {selectedPost.poll.options.map((option, idx) => {
+                    const totalVotes = selectedPost.poll?.options.reduce((acc, curr) => acc + curr.votes.length, 0) || 0;
+                    const percentage = totalVotes > 0 ? Math.round((option.votes.length / totalVotes) * 100) : 0;
+                    const hasVoted = selectedPost.poll?.options.some(opt => opt.votes.includes(student?.id || ''));
+                    const isSelected = option.votes.includes(student?.id || '');
+
+                    return (
+                      <button
+                        key={idx}
+                        disabled={hasVoted}
+                        onClick={() => handleVote(selectedPost.id, idx)}
+                        className={`w-full relative h-10 rounded-xl overflow-hidden border transition-all ${
+                          hasVoted 
+                            ? isSelected ? 'border-blue-200 bg-blue-50/50' : 'border-slate-100 bg-white/50'
+                            : 'border-slate-200 bg-white hover:border-blue-600/30'
+                        }`}
+                      >
+                        {hasVoted && (
+                          <div 
+                            className={`absolute inset-y-0 left-0 transition-all duration-1000 ${isSelected ? 'bg-blue-600/10' : 'bg-slate-100/50'}`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        )}
+                        <div className="absolute inset-0 px-4 flex items-center justify-between">
+                          <span className={`text-xs font-bold ${isSelected ? 'text-blue-700' : 'text-slate-700'}`}>
+                            {option.text}
+                          </span>
+                          {hasVoted && (
+                            <span className="text-[10px] font-black text-slate-400">
+                              {percentage}%
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                    {selectedPost.poll.options.reduce((acc, curr) => acc + curr.votes.length, 0)} Total Votes
+                  </p>
+                  {selectedPost.poll.options.some(opt => opt.votes.includes(student?.id || '')) && (
+                    <span className="text-[9px] font-bold text-blue-500 uppercase">Voted</span>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center gap-4 py-4 border-y border-slate-50">
                 <div 

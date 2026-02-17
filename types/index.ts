@@ -72,6 +72,14 @@ export interface CommunityPost {
   createdAt: any;
   likes?: string[];
   commentCount?: number;
+  poll?: {
+    question: string;
+    options: {
+      text: string;
+      votes: string[]; // array of userIds
+    }[];
+    expiresAt?: any;
+  };
 }
 
 export interface CommunityComment {
