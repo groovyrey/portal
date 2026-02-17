@@ -8,12 +8,16 @@ import ScheduleTable from '../components/ScheduleTable';
 import PersonalInfo from '../components/PersonalInfo';
 import AIChat from '../components/AIChat';
 import { toast } from 'sonner';
+import Skeleton from '../components/Skeleton';
+import LoginProgressModal from '../components/LoginProgressModal';
 
 export default function Home() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // ... rest of state and effects ...
 
   // Initial session check
   useEffect(() => {
@@ -69,7 +73,6 @@ export default function Home() {
   const handleLogin = async (userId: string, pass: string) => {
     setLoading(true);
     setError(undefined);
-    const loginToast = toast.loading('Connecting to school portal...');
 
     try {
       const response = await fetch('/api/student/login', {
@@ -85,7 +88,7 @@ export default function Home() {
         localStorage.removeItem('student_pass'); 
         
         setStudent(result.data);
-        toast.success(`Welcome, ${result.data.name}!`, { id: loginToast });
+        toast.success(`Welcome, ${result.data.name}!`);
         
         // Cache data only
         localStorage.setItem('student_data', JSON.stringify(result.data));
@@ -93,11 +96,11 @@ export default function Home() {
       } else {
         const msg = result.error || 'Login failed. Please check your credentials.';
         setError(msg);
-        toast.error(msg, { id: loginToast });
+        toast.error(msg);
       }
     } catch (err) {
       setError('Network error. Please try again.');
-      toast.error('Network error. Please try again.', { id: loginToast });
+      toast.error('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -120,14 +123,35 @@ export default function Home() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-slate-50 p-8">
+        <div className="max-w-5xl mx-auto space-y-8">
+          <div className="flex justify-between items-center">
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <Skeleton className="h-10 w-10 circular" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <Skeleton className="h-[400px] w-full" />
+            </div>
+            <div className="lg:col-span-1">
+              <Skeleton className="h-[400px] w-full" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!student) {
-    return <LoginForm onLogin={handleLogin} loading={loading} error={error} />;
+    return (
+      <>
+        <LoginForm onLogin={handleLogin} loading={loading} error={error} />
+        <LoginProgressModal isOpen={loading} />
+      </>
+    );
   }
 
   return (

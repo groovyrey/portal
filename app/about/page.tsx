@@ -14,27 +14,36 @@ import {
   GraduationCap
 } from 'lucide-react';
 import Link from 'next/link';
+import LottieAnimation from '@/components/LottieAnimation';
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100">
       <div className="max-w-4xl mx-auto px-6 py-16 md:py-24">
         {/* Header Section */}
-        <header className="mb-16 text-center md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white text-blue-700 text-[10px] font-bold uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-6">
-            <Sparkles className="h-3 w-3" />
-            Project Spotlight
+        <header className="mb-16 flex flex-col md:flex-row items-center gap-12 text-center md:text-left">
+          <div className="flex-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white text-blue-700 text-[10px] font-bold uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-6">
+              <Sparkles className="h-3 w-3" />
+              Project Spotlight
+            </div>
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-6">
+              LCC Hub <span className="text-blue-600">.</span>
+            </h1>
+            <p className="text-xl text-slate-500 max-w-2xl leading-relaxed">
+              A modern, community-driven interface designed to streamline student life at La Concepcion College.
+            </p>
+            <div className="mt-8 flex items-center justify-center md:justify-start gap-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span>Version 1.2.0</span>
+              <span className="w-1 h-1 rounded-full bg-slate-300" />
+              <span>Open Beta</span>
+            </div>
           </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-6">
-            LCC Hub <span className="text-blue-600">.</span>
-          </h1>
-          <p className="text-xl text-slate-500 max-w-2xl leading-relaxed">
-            A modern, community-driven interface designed to streamline student life at La Concepcion College.
-          </p>
-          <div className="mt-8 flex items-center gap-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            <span>Version 1.2.0</span>
-            <span className="w-1 h-1 rounded-full bg-slate-300" />
-            <span>Open Beta</span>
+          <div className="w-full md:w-1/3 max-w-xs">
+            <LottieAnimation 
+              animationPath="/animations/creative-team.json"
+              className="w-full h-full"
+            />
           </div>
         </header>
 

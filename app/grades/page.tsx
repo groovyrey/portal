@@ -6,6 +6,8 @@ import GradesList from '../../components/GradesList';
 import GradeStats from '../../components/GradeStats';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import LottieAnimation from '@/components/LottieAnimation';
+import Skeleton from '@/components/Skeleton';
 
 export default function GradesPage() {
   const [student, setStudent] = useState<Student | null>(null);
@@ -79,8 +81,25 @@ export default function GradesPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-slate-50 p-8">
+        <div className="max-w-5xl mx-auto space-y-8">
+          <div className="flex justify-end">
+            <Skeleton className="h-10 w-48" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+          <div className="space-y-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -88,6 +107,10 @@ export default function GradesPage() {
   if (!student || !student.availableReports) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 text-center">
+        <LottieAnimation 
+          animationPath="/animations/error-404.json"
+          className="w-48 h-48 mb-4"
+        />
         <h2 className="text-xl font-bold text-slate-900 mb-2">No reports available</h2>
         <p className="text-slate-500 mb-6 text-sm font-medium">Please log in or refresh your data from the dashboard first.</p>
         <Link href="/" className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg transition-colors text-sm">

@@ -2,7 +2,6 @@
 
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface DrawerProps {
   isOpen: boolean;
@@ -28,28 +27,21 @@ export default function Drawer({ isOpen, onClose, title, children, side = 'right
   const isBottom = side === 'bottom';
 
   return (
-    <AnimatePresence>
+    <>
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[150]"
+            className="fixed inset-0 bg-slate-900/40 z-[150]"
           />
           
           {/* Drawer Panel */}
-          <motion.div
-            initial={isBottom ? { y: '100%' } : { x: '100%' }}
-            animate={isBottom ? { y: 0 } : { x: 0 }}
-            exit={isBottom ? { y: '100%' } : { x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className={`fixed bg-white shadow-2xl z-[160] flex flex-col ${
+          <div
+            className={`fixed bg-white shadow-2xl z-[160] flex flex-col transition-transform duration-200 ${
               isBottom 
-                ? 'inset-x-0 bottom-0 max-h-[90vh] rounded-t-3xl' 
-                : 'right-0 top-0 bottom-0 w-full max-w-md'
+                ? 'inset-x-0 bottom-0 max-h-[90vh] rounded-t-3xl translate-y-0' 
+                : 'right-0 top-0 bottom-0 w-full max-w-md translate-x-0'
             }`}
           >
             {isBottom && (
@@ -70,9 +62,9 @@ export default function Drawer({ isOpen, onClose, title, children, side = 'right
                 {children}
               </div>
             </div>
-          </motion.div>
+          </div>
         </>
       )}
-    </AnimatePresence>
+    </>
   );
 }

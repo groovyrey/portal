@@ -566,19 +566,29 @@ export default function CommunityPage() {
                   )}
 
                   <div className="flex items-center gap-4 pt-4 border-t border-slate-50">
-                      <div 
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg
+                      <button 
+                          onClick={(e) => {
+                              e.stopPropagation();
+                              handleLike(post.id, (post.likes || []).includes(student?.id || ''));
+                          }}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors
                               ${(post.likes || []).includes(student?.id || '') 
                                   ? 'bg-red-50 text-red-600' 
-                                  : 'bg-slate-50 text-slate-500'}`}
+                                  : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                       >
                           <Heart 
                               className={`h-3.5 w-3.5 ${ (post.likes || []).includes(student?.id || '') ? 'fill-current' : ''}`} 
                           />
-                          <span className="text-[10px] font-bold uppercase tracking-wider">
+                          <span 
+                              onClick={(e) => {
+                                  e.stopPropagation();
+                                  if ((post.likes || []).length > 0) fetchReactors(post.id);
+                              }}
+                              className="text-[10px] font-bold uppercase tracking-wider hover:underline"
+                          >
                               {(post.likes || []).length}
                           </span>
-                      </div>
+                      </button>
 
                       <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-500">
                           <MessageSquare className="h-3.5 w-3.5" />
