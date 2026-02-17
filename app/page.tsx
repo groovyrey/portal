@@ -6,7 +6,6 @@ import LoginForm from '../components/LoginForm';
 import DashboardHeader from '../components/DashboardHeader';
 import ScheduleTable from '../components/ScheduleTable';
 import PersonalInfo from '../components/PersonalInfo';
-import AIChat from '../components/AIChat';
 import { toast } from 'sonner';
 import Skeleton from '../components/Skeleton';
 import LoginProgressModal from '../components/LoginProgressModal';
@@ -168,8 +167,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-
-      <AIChat />
     </div>
   );
 }

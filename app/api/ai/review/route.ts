@@ -1,21 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { InferenceClient } from '@huggingface/inference';
+import OpenAI from 'openai';
 import { decrypt } from '@/lib/auth';
+
+// Initialize OpenAI client with xAI configuration
+const xaiClient = new OpenAI({
+  apiKey: process.env.XAI_API_KEY || '',
+  baseURL: 'https://api.x.ai/v1',
+});
 
 export async function POST(req: NextRequest) {
   try {
     const { content, userName, poll } = await req.json();
     
-    // Use a different token for moderation as requested
-    const hfToken = process.env.HUGGINGFACE_MODERATION_TOKEN || process.env.HUGGINGFACE_API_KEY;
-    const aiModel = "moonshotai/Kimi-K2.5"; // High-quality reasoning model
-
-    if (!hfToken) {
-      return NextResponse.json({ error: 'Moderation API token is not set.' }, { status: 500 });
-    }
-
-    const hf = new InferenceClient(hfToken);
-
     // 1. Authenticate (Only logged in students can have their posts reviewed)
     const sessionCookie = req.cookies.get('session_token');
     if (!sessionCookie?.value) {
@@ -65,19 +62,51 @@ POST CONTENT: ${content}
 ${poll ? `POLL QUESTION: ${poll.question}\nPOLL OPTIONS: ${poll.options.join(', ')}` : ''}
 `.trim();
 
-    // 2. Inference Call
-    const response = await hf.chatCompletion({
-      model: aiModel,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: postContext }
-      ],
-      max_tokens: 500,
-      temperature: 0.1, // Low temperature for consistent JSON output
-      response_format: { type: "json_object" }
-    });
+    let resultText = "{}";
 
-    const resultText = response.choices[0].message.content || "{}";
+    // 2. Inference Call
+    try {
+        // Use a different token for moderation as requested
+        const hfToken = process.env.HUGGINGFACE_MODERATION_TOKEN || process.env.HUGGINGFACE_API_KEY;
+        const aiModel = "moonshotai/Kimi-K2.5"; // High-quality reasoning model
+
+        if (!hfToken) {
+           throw new Error('Moderation API token is not set.');
+        }
+
+        const hf = new InferenceClient(hfToken);
+
+        const response = await hf.chatCompletion({
+          model: aiModel,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: postContext }
+          ],
+          max_tokens: 500,
+          temperature: 0.1, // Low temperature for consistent JSON output
+          response_format: { type: "json_object" }
+        });
+
+        resultText = response.choices[0].message.content || "{}";
+    } catch (hfError: any) {
+        console.warn('HuggingFace moderation failed, falling back to xAI:', hfError.message);
+        
+        try {
+            const response = await xaiClient.chat.completions.create({
+              model: 'grok-3',
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: postContext },
+              ],
+              response_format: { type: "json_object" }
+            });
+             resultText = response.choices[0].message.content || "{}";
+        } catch (xaiError: any) {
+            console.error('xAI fallback failed:', xaiError.message);
+            throw new Error('All AI services failed to review post.');
+        }
+    }
+
     let result;
     try {
       result = JSON.parse(resultText);

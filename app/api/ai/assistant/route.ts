@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { db } from '@/lib/db';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
@@ -7,11 +7,7 @@ import { decrypt } from '@/lib/auth';
 
 export const maxDuration = 30;
 
-// Initialize OpenAI client with xAI configuration
-const xaiClient = new OpenAI({
-  apiKey: process.env.XAI_API_KEY || '',
-  baseURL: 'https://api.x.ai/v1',
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '');
 
 export async function POST(req: NextRequest) {
   try {
@@ -66,10 +62,15 @@ export async function POST(req: NextRequest) {
     const offeredSubjects = prospectusSnap.docs.map(d => ({ code: d.id, ...d.data() })) as any[];
 
     const systemPrompt = `
-You are "Portal AI", a professional Student Assistant for La Concepcion College (LCC).
+You are "Portal Assistant", a friendly and helpful academic advisor for La Concepcion College (LCC).
 Today is ${new Date().toLocaleDateString()}.
 
-STUDENT: ${student.name} (${student.course}, Year ${student.year_level})
+STUDENT INFO:
+Name: ${student.name}
+Course: ${student.course}
+Year: ${student.year_level}
+
+ACADEMIC CONTEXT:
 SCHEDULE: ${scheduleItems.map((s: any) => {
   const fullSubject = offeredSubjects.find((o: any) => o.code === s.subject);
   const title = fullSubject ? `${s.subject} - ${fullSubject.description}` : s.subject;
@@ -77,35 +78,41 @@ SCHEDULE: ${scheduleItems.map((s: any) => {
 }).join(', ') || 'None'}
 FINANCIALS: ${financials ? `Balance: ₱${financials.balance}, Total: ₱${financials.total}, Due: ₱${financials.due_today}` : 'No data'}
 GRADES: ${allGrades.map(g => `${g.description}: ${g.grade} (${g.remarks})`).slice(0, 10).join(', ')}...
-OFFERED: ${offeredSubjects.map((s: any) => `${s.code}: ${s.description}`).slice(0, 10).join(', ')}...
 
 INSTRUCTIONS:
-- Be concise.
-- Answer only using provided student data.
+- Use the student's data to provide personalized assistance.
+- Be encouraging and professional.
+- If they ask about something not in their data, politely say you don't have access to that information yet.
+- Keep responses concise but thorough.
 `.trim();
 
-    // 3. Inference Call with actual xAI API via OpenAI SDK
-    const response = await xaiClient.chat.completions.create({
-      model: 'grok-3',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...messages.map((m: any) => ({
-          role: m.role === 'assistant' ? 'assistant' : 'user',
-          content: m.content,
+    // 3. Inference Call with Gemini
+    const modelName = "gemini-3-flash-preview";
+    const model = genAI.getGenerativeModel({ model: modelName });
+
+    const chat = model.startChat({
+      history: [
+        { role: "user", parts: [{ text: systemPrompt }] },
+        { role: "model", parts: [{ text: "Understood. I am ready to assist the student based on their profile and academic data." }] },
+        ...messages.slice(0, -1).map((m: any) => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.content }],
         })),
       ],
-      stream: true,
     });
 
-    // 4. Create a ReadableStream to stream the response back to the client
+    const lastMessage = messages[messages.length - 1].content;
+    const result = await chat.sendMessageStream(lastMessage);
+
+    // 4. Stream the response
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
         try {
-          for await (const chunk of response) {
-            const content = chunk.choices[0]?.delta?.content || "";
-            if (content) {
-              controller.enqueue(encoder.encode(content));
+          for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            if (chunkText) {
+              controller.enqueue(encoder.encode(chunkText));
             }
           }
         } catch (err) {
@@ -123,7 +130,7 @@ INSTRUCTIONS:
     });
 
   } catch (error: any) {
-    console.error('Chat API Error:', error);
+    console.error('Assistant API Error:', error);
     return new Response('Failed to process request: ' + error.message, { status: 500 });
   }
 }

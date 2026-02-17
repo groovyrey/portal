@@ -18,7 +18,8 @@ import {
   ChevronDown,
   Building2,
   Settings,
-  Info
+  Info,
+  BrainCircuit
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -62,6 +63,7 @@ export default function Navbar() {
 
   const authLinks = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
     { name: 'Profile', href: '/profile', icon: UserIcon },
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
     { name: 'Subjects', href: '/offered-subjects', icon: BookOpen },
@@ -75,6 +77,7 @@ export default function Navbar() {
   // For desktop view: show a few primary links and the rest in "More"
   const desktopPrimary = isLoggedIn ? [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
     { name: 'Community', href: '/community', icon: MessageSquare },
     { name: 'Profile', href: '/profile', icon: UserIcon },
