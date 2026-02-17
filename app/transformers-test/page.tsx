@@ -1,12 +1,6 @@
 'use client'; // This component will use client-side features
 
-// import { pipeline, env } from '@huggingface/transformers'; // Removed direct import
-
-// Configure Transformers.js environment for browser usage
-// This tells Transformers.js where to store models (e.g., IndexedDB in the browser)
-// and can optionally configure WebGPU for faster inference.
-// env.allowLocalModels = false; // Moved inside dynamic import block
-// env.useWebGPU = true; // Moved inside dynamic import block
+import React, { useState, useEffect, useRef } from 'react';
 
 // Define the type for the sentiment analysis result
 interface SentimentResult {
@@ -84,63 +78,66 @@ export default function TransformersTestPage() {
   const isButtonDisabled = loading || !isModelReady || !inputText.trim();
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
-      <h1 className="text-3xl font-bold mb-6 text-center">Transformers.js Sentiment Analysis Test</h1>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-2xl transform transition-all duration-300 hover:scale-105">
+        <h1 className="text-4xl font-extrabold mb-8 text-center text-gray-800">Transformers.js Sentiment Analyzer</h1>
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-          <strong className="font-bold">Error:</strong>
-          <span className="block sm:inline"> {error}</span>
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6 shadow-md" role="alert">
+            <strong className="font-bold">Error: </strong>
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+
+        <div className="mb-6">
+          <label htmlFor="inputText" className="block text-gray-700 text-lg font-semibold mb-3">
+            Enter Text for Analysis:
+          </label>
+          <textarea
+            id="inputText"
+            className="w-full px-5 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-500 transition-all duration-200 h-40 resize-y"
+            placeholder="Type something to analyze its sentiment, e.g., 'This is a fantastic movie, I loved every moment of it!'"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            disabled={!isModelReady && loading}
+          ></textarea>
         </div>
-      )}
 
-      <div className="mb-4">
-        <label htmlFor="inputText" className="block text-gray-700 text-sm font-bold mb-2">
-          Enter Text:
-        </label>
-        <textarea
-          id="inputText"
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-32"
-          placeholder="Type something to analyze its sentiment, e.g., 'This is a fantastic movie!'"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          disabled={!isModelReady && loading} // Disable while initial model loading
-        ></textarea>
+        <button
+          onClick={analyzeSentiment}
+          className={`w-full px-6 py-3 bg-blue-600 text-white text-xl font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
+            isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+          disabled={isButtonDisabled}
+        >
+          {loading && isModelReady ? 'Analyzing...' : (loading && !isModelReady ? 'Loading AI Model...' : 'Analyze Sentiment')}
+        </button>
+
+        {sentiment && (
+          <div className="mt-10 p-8 bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
+            <h2 className="text-2xl font-bold mb-4 text-blue-800">Analysis Result:</h2>
+            {sentiment.map((item, index) => (
+              <p key={index} className="text-xl text-gray-800 mb-2">
+                <span className="font-semibold text-blue-700">Label:</span> {item.label}{' '}
+                <span className="text-gray-600">(Score: {(item.score * 100).toFixed(2)}%)</span>
+              </p>
+            ))}
+            {sentiment.length > 0 && (
+              <p className={`text-4xl mt-6 font-extrabold text-center ${sentiment[0].label === 'POSITIVE' ? 'text-green-700' : 'text-red-700'}`}>
+                Overall Sentiment: {sentiment[0].label}
+              </p>
+            )}
+          </div>
+        )}
+
+        {loading && !isModelReady && (
+          <div className="mt-10 text-center text-gray-600 text-lg p-4 bg-blue-50 rounded-lg shadow-sm">
+            <p className="font-semibold mb-2">Loading AI model for the first time...</p>
+            <p>This might take a moment. Please be patient.</p>
+            <p className="text-sm mt-2">The model will be cached in your browser for faster subsequent use.</p>
+          </div>
+        )}
       </div>
-
-      <button
-        onClick={analyzeSentiment}
-        className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
-          isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
-        disabled={isButtonDisabled}
-      >
-        {loading && isModelReady ? 'Analyzing...' : (loading && !isModelReady ? 'Loading Model...' : 'Analyze Sentiment')}
-      </button>
-
-      {sentiment && (
-        <div className="mt-8 p-4 border rounded shadow-sm bg-gray-50">
-          <h2 className="text-xl font-semibold mb-2">Analysis Result:</h2>
-          {sentiment.map((item, index) => (
-            <p key={index} className="text-lg">
-              <span className="font-medium">Label:</span> {item.label} (Score: {(item.score * 100).toFixed(2)}%)
-            </p>
-          ))}
-          {/* Display overall sentiment based on the highest scoring label */}
-          {sentiment.length > 0 && (
-            <p className={`text-2xl mt-4 font-bold ${sentiment[0].label === 'POSITIVE' ? 'text-green-600' : 'text-red-600'}`}>
-              Overall Sentiment: {sentiment[0].label}
-            </p>
-          )}
-        </div>
-      )}
-
-      {loading && !isModelReady && (
-        <div className="mt-8 text-center text-gray-500">
-          <p>Loading AI model for the first time... This might take a moment. Please be patient.</p>
-          <p>The model will be cached for faster subsequent use.</p>
-        </div>
-      )}
     </div>
   );
 }
