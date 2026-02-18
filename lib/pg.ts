@@ -4,7 +4,7 @@ import { awsCredentialsProvider } from "@vercel/oidc-aws-credentials-provider";
 import { attachDatabasePool } from "@vercel/functions";
 
 const region = process.env.PGUS3R_AWS_REGION || 'us-east-1';
-const hostname = process.env.PGUS3R_PGHOST;
+const hostname = process.env.PGUS3R_PGHOST || '';
 const port = parseInt(process.env.PGUS3R_PGPORT || '5432', 10);
 const username = process.env.PGUS3R_PGUSER || 'postgres';
 const database = process.env.PGUS3R_PGDATABASE || 'postgres';
