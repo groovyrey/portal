@@ -32,9 +32,20 @@ const pageConfig: { [key: string]: { title: string, icon: React.ReactNode } } = 
 export default function PageHeader() {
   const router = useRouter();
   const pathname = usePathname();
+  const [isRestricted, setIsRestricted] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkRestricted = () => {
+      setIsRestricted(document.cookie.includes('is_restricted=1'));
+    };
+    checkRestricted();
+    const interval = setInterval(checkRestricted, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   // Get config for the current path, handling dynamic profile route
   const getConfig = () => {
+    if (isRestricted) return null;
     if (pathname === '/') return null;
     if (pathname.startsWith('/profile/')) return pageConfig['/profile'];
     return pageConfig[pathname];
