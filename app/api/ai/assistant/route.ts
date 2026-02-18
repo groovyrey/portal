@@ -12,7 +12,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.N
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages } = await req.json();
+    const { messages, timezone = 'Asia/Manila' } = await req.json();
     
     // 1. Authenticate
     const sessionCookie = req.cookies.get('session_token');
@@ -42,14 +42,44 @@ export async function POST(req: NextRequest) {
     }
     const student = studentDoc.data();
 
-    const [scheduleSnap, financialsSnap, gradesSnap] = await Promise.all([
+    const [scheduleSnap, financialsSnap, gradesSnap, prospectusSnap] = await Promise.all([
       getDoc(doc(db, 'schedules', userId)),
       getDoc(doc(db, 'financials', userId)),
-      getDocs(query(collection(db, 'grades'), where('student_id', '==', userId)))
+      getDocs(query(collection(db, 'grades'), where('student_id', '==', userId))),
+      getDocs(collection(db, 'prospectus_subjects'))
     ]);
+
+    const prospectus: Record<string, string> = {};
+    prospectusSnap.forEach(doc => {
+      prospectus[doc.id] = doc.data().description;
+    });
 
     const scheduleItems = scheduleSnap.exists() ? scheduleSnap.data().items || [] : [];
     const financials = financialsSnap.exists() ? financialsSnap.data() : null;
+    let financialContext = 'No financial data found.';
+    if (financials) {
+      financialContext = `
+- Current Balance: ${financials.balance || '0.00'}
+- Total Assessment: ${financials.total || '0.00'}
+- Due Today: ${financials.due_today || '0.00'}
+`.trim();
+
+      if (financials.details) {
+        const details = financials.details;
+        if (details.installments?.length > 0) {
+          financialContext += '\n\nINSTALLMENTS/ASSESSMENT:\n' + details.installments.map((i: any) => `- ${i.description} (${i.dueDate}): Assessed: ${i.assessed} | Outstanding: ${i.outstanding}`).join('\n');
+        }
+        if (details.payments?.length > 0) {
+          financialContext += '\n\nRECENT PAYMENTS:\n' + details.payments.map((p: any) => `- ${p.date}: ${p.amount} (Ref: ${p.reference})`).join('\n');
+        }
+        if (details.adjustments?.length > 0) {
+          financialContext += '\n\nADJUSTMENTS:\n' + details.adjustments.map((a: any) => `- ${a.description} (${a.dueDate}): ${a.adjustment} | Outstanding: ${a.outstanding}`).join('\n');
+        }
+        if (details.dueAccounts?.length > 0) {
+          financialContext += '\n\nSTATEMENT OF ACCOUNT (DUE):\n' + details.dueAccounts.map((d: any) => `- ${d.description} (${d.dueDate}): Due: ${d.due} | Paid: ${d.paid}`).join('\n');
+        }
+      }
+    }
     
     // Process all grades for better context
     const allGrades: any[] = [];
@@ -57,12 +87,14 @@ export async function POST(req: NextRequest) {
       const data = doc.data();
       if (data.items) {
         data.items.forEach((item: any) => {
+          const code = item.code || 'N/A';
+          const title = item.description || prospectus[code] || item.subject || 'Unknown Subject';
           allGrades.push({ 
             report: data.report_name, 
-            code: item.code, 
-            description: item.description, 
-            grade: item.grade, 
-            remarks: item.remarks 
+            code: code, 
+            description: title, 
+            grade: item.grade || 'N/A', 
+            remarks: item.remarks || 'N/A'
           });
         });
       }
@@ -81,12 +113,14 @@ export async function POST(req: NextRequest) {
       weekday: 'long', 
       year: 'numeric', 
       month: 'long', 
-      day: 'numeric' 
+      day: 'numeric',
+      timeZone: timezone
     });
     const timeStr = now.toLocaleTimeString('en-PH', { 
       hour: '2-digit', 
       minute: '2-digit',
-      hour12: true 
+      hour12: true,
+      timeZone: timezone
     });
 
     const systemPrompt = `
@@ -108,13 +142,14 @@ ACADEMIC QUICK STATS:
 - Total Subjects Recorded: ${allGrades.length}
 
 CURRENT SCHEDULE:
-${scheduleItems.length > 0 ? scheduleItems.map((s: any) => `- ${s.subject} (${s.code}): ${s.time} | Room: ${s.room}`).join('\n') : 'No schedule data found.'}
+${scheduleItems.length > 0 ? scheduleItems.map((s: any) => {
+  const code = s.code || s.subject || 'N/A';
+  const title = s.description || prospectus[code] || s.subject || 'Unknown Subject';
+  return `- ${title} (${code}): ${s.time} | Room: ${s.room}`;
+}).join('\n') : 'No schedule data found.'}
 
 FINANCIAL STATUS:
-- Current Balance: ₱${financials?.balance || '0.00'}
-- Total Assessment: ₱${financials?.total || '0.00'}
-- Due Today: ₱${financials?.due_today || '0.00'}
-${financials?.details ? `Details: ${Object.entries(financials.details).map(([k, v]) => `${k}: ₱${v}`).join(', ')}` : ''}
+${financialContext}
 
 GRADE SUMMARY (MOST RECENT):
 ${allGrades.slice(0, 20).map(g => `- [${g.report}] ${g.description}: ${g.grade} (${g.remarks})`).join('\n')}

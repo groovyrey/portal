@@ -104,6 +104,9 @@ export interface Student {
   id: string;
   course: string;
   email?: string;
+  address?: string;
+  mobile?: string;
+  enrollment_date?: string;
   yearLevel?: string;
   semester?: string;
   section?: string;
@@ -116,6 +119,7 @@ export interface Student {
     notifications: boolean;
     isPublic: boolean;
     showAcademicInfo: boolean;
+    showStudentId?: boolean;
   };
 }
 

@@ -2,7 +2,7 @@
 
 import { ScheduleItem, ProspectusSubject } from '../types';
 import { useState, useMemo, useEffect } from 'react';
-import { X, MapPin, Clock, Hash, BookOpen } from 'lucide-react';
+import { X, MapPin, Clock, Hash, BookOpen, Info } from 'lucide-react';
 import Modal from './Modal';
 
 interface ScheduleTableProps {
@@ -100,8 +100,18 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
   }
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
-      <div className="overflow-x-auto">
+    <div className="space-y-4">
+      <div className="bg-blue-50/50 border border-blue-100/50 rounded-2xl p-4 flex items-start gap-3">
+        <div className="h-6 w-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+          <Info className="h-3.5 w-3.5" />
+        </div>
+        <p className="text-xs text-blue-700 leading-relaxed">
+          <span className="font-bold">Pro-tip:</span> Tap or click on any class in the schedule to view full subject details, room location, and section information.
+        </p>
+      </div>
+
+      <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
         <table className="w-full border-collapse table-fixed min-w-[600px]">
           <thead>
             <tr className="bg-slate-50/50">
@@ -179,6 +189,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
             })()}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Detail Modal */}

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Info, 
   Sparkles, 
@@ -11,12 +11,24 @@ import {
   Code2, 
   Heart,
   ExternalLink,
-  GraduationCap
+  GraduationCap,
+  Star
 } from 'lucide-react';
 import Link from 'next/link';
 import LottieAnimation from '@/components/LottieAnimation';
 
 export default function AboutPage() {
+  const [stats, setStats] = useState({ average: 0, count: 0 });
+
+  useEffect(() => {
+    fetch('/api/ratings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.average !== undefined) setStats(data);
+      })
+      .catch(console.error);
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100">
       <div className="max-w-4xl mx-auto px-6 py-12 md:py-16">
@@ -105,12 +117,23 @@ export default function AboutPage() {
                 </div>
               </div>
               <div className="flex gap-4 p-6 rounded-2xl border border-slate-100 bg-white hover:border-blue-200 transition-colors shadow-sm">
-                <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600 shrink-0">
-                  <ShieldCheck className="h-5 w-5" />
+                <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
+                  <Star className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 mb-1">Secure & Private</h4>
-                  <p className="text-sm text-slate-500 leading-relaxed">Encrypted data transit and secure session management keep your records safe.</p>
+                  <h4 className="font-bold text-slate-900 mb-1">User Satisfaction</h4>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-black text-slate-900">{stats.average || '0.0'}</span>
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star 
+                          key={s} 
+                          className={`h-3 w-3 ${s <= Math.round(stats.average) ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} 
+                        />
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase ml-1">({stats.count})</span>
+                  </div>
                 </div>
               </div>
             </div>

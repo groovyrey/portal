@@ -1,12 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { GraduationCap, Github, Heart } from 'lucide-react';
 import { APP_VERSION } from '@/lib/version';
+import { obfuscateId } from '@/lib/utils';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [studentId, setStudentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const data = localStorage.getItem('student_data');
+    if (data) {
+      setStudentId(JSON.parse(data).id);
+    }
+  }, []);
 
   return (
     <footer className="bg-white border-t border-slate-200 mt-auto">
@@ -52,7 +61,7 @@ export default function Footer() {
                 <Link href="/community" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Portal Feed</Link>
               </li>
               <li>
-                <Link href="/profile" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Your Profile</Link>
+                <Link href={studentId ? `/profile/${obfuscateId(studentId)}` : '/profile'} className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Your Profile</Link>
               </li>
               <li>
                 <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-sm text-slate-500 hover:text-blue-600 transition-colors flex items-center gap-2">

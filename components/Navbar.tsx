@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { obfuscateId } from '@/lib/utils';
 import { 
   LayoutDashboard, 
   GraduationCap, 
@@ -27,12 +28,18 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [studentId, setStudentId] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if logged in to show navbar
     const checkLogin = () => {
       const data = localStorage.getItem('student_data');
       setIsLoggedIn(!!data);
+      if (data) {
+        setStudentId(JSON.parse(data).id);
+      } else {
+        setStudentId(null);
+      }
     };
     
     checkLogin();
@@ -64,7 +71,7 @@ export default function Navbar() {
   const authLinks = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
-    { name: 'Profile', href: '/profile', icon: UserIcon },
+    { name: 'Profile', href: studentId ? `/profile/${obfuscateId(studentId)}` : '/profile', icon: UserIcon },
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
     { name: 'Subjects', href: '/offered-subjects', icon: BookOpen },
     { name: 'Community', href: '/community', icon: MessageSquare },
@@ -80,7 +87,7 @@ export default function Navbar() {
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
     { name: 'Community', href: '/community', icon: MessageSquare },
-    { name: 'Profile', href: '/profile', icon: UserIcon },
+    { name: 'Profile', href: studentId ? `/profile/${obfuscateId(studentId)}` : '/profile', icon: UserIcon },
   ] : [];
 
   const desktopMore = isLoggedIn ? [

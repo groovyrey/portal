@@ -57,3 +57,33 @@ export function parseStudentName(name: string): ParsedName {
 
   return result;
 }
+
+/**
+ * Obfuscates a string (userId) for use in URLs.
+ * Not cryptographically secure, just prevents casual reading.
+ */
+export function obfuscateId(id: string): string {
+  if (!id) return "";
+  // Simple Base64 + some character swapping
+  try {
+    const b64 = btoa(id);
+    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  } catch (e) {
+    return id;
+  }
+}
+
+/**
+ * De-obfuscates a string back to the original ID.
+ */
+export function deobfuscateId(obfuscated: string): string {
+  if (!obfuscated) return "";
+  try {
+    // Restore Base64 padding and chars
+    let b64 = obfuscated.replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    return atob(b64);
+  } catch (e) {
+    return obfuscated;
+  }
+}

@@ -1,1 +1,373 @@
-Assistant API Error: Error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?alt=sse: [404 Not Found] models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+Step 1: Visiting https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=20241322
+Step 2: Logging in via https://premium.schoolista.com/LCC/Gate/LCC.Login.aspx
+Step 2 Status: 200
+Step 3: Extracted Period Code: SY2025-2026-2
+Step 4: Fetching EAF: https://premium.schoolista.com/LCC/Reports/Enrollment/LCC.EAF.aspx?_sid=20241322&_pc=SY2025-2026-2
+Step 4 Status: 200, Content Length: 28496
+
+--- RAW SCRAPED CONTENT ---
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" >
+<HTML>
+	<HEAD>
+		<title>EAF</title>
+		<LINK href="../../Styles/PrintEAF.css" type="text/css" rel="stylesheet">
+		<SCRIPT language="javascript" src="../../Styles/Main.js"></SCRIPT>
+		<style type="text/css">
+		    
+		    .HeaderText { font-weight:bold;
+		                  font-size:6pt;
+		                  border:solid 1px #000000;
+		                  font-family:Verdana;}
+		    .GroupHeaderText{ border:solid 1px #000000;
+		                      font-family:Verdana;
+		                      font-size:6pt;}
+            #otbAssessmentDueDetailsTable, #otbAssessmentDetailsTable{ font-family:Verdana;
+                                        font-size:6pt;}
+            .HeaderTitle, .DetailText{ font-family:Verdana;
+                                        font-size:6pt;
+                                        }
+            .FooterText, .GroupFooterText{ font-size:7pt;}
+
+		    .button
+			{
+			background-color:#011b4b;	
+			background-image:none;
+			}
+        </style>
+
+		<style type="text/css" media="print">
+		    .print 
+		    {
+		        visibility:hidden;
+		        }
+		</style>
+
+	</HEAD>
+	<body onload="initObjects();">
+		<SCRIPT language="javascript">
+		function initObjects( )
+		{
+			if( xgetObjectText( txtName ) != '' )
+			{
+				// initialized
+				return;
+			}
+			
+			//
+			xsetObjectText( txtDatePrinted, xgetObjectText( fldSystemUser ) + '/' + xgetObjectText( fldSystemDate ) );
+			xsetObjectText( txtName, xgetObjectText( fldName ).toUpperCase( ) );
+			xsetObjectText( txtStudentID, 'Student Number: ' + xgetObjectText( fldStuID ) );
+			xsetObjectText( txtStudentType, 'Type: ' + xgetObjectText( fldPPrdStat ) + "-" + xgetObjectText( fldEnrolType ) );
+			xsetObjectText(txtMobile, 'Phone: ' + xgetObjectText(fldMobile));
+			xsetObjectText(txtYearLvl, 'Level: ' + xgetObjectText(fldLevelDesc));
+			xsetObjectText(txtAddress, 'Address: ' + xgetObjectText(fldAddress) + ', ' + xgetObjectText(fldBrgy) + ', ' + xgetObjectText(fldCity) + ' ' + xgetObjectText(fldProvince) + ' ' + xgetObjectText(fldPostCode));
+			xsetObjectText(txtCourse, xgetObjectText(fldCourseDesc).toUpperCase( ));
+			xsetObjectText(txtSection, xgetObjectText(fldSecCode));
+
+			xsetObjectText(txtStudentSig, xgetObjectText(fldFName).toUpperCase() + ' ' + xgetObjectText(fldMInitl).toUpperCase() + ' ' + xgetObjectText(fldLName).toUpperCase());
+			
+			//
+			var sPrdNum = xgetObjectText( fldPrdCode ).substring(11);
+			var sPrdDesc = '';
+			if( sPrdNum == '-1' )
+			{
+				sPrdDesc = '1st Semester,';
+			}
+			if( sPrdNum == '-2' )
+			{
+				sPrdDesc = '2nd Semester,';
+			}
+			if( sPrdNum == '-3' )
+			{
+				sPrdDesc = 'Mid Year,';
+			}
+			if( sPrdNum == '-H1' )
+			{
+				sPrdDesc = '1st Semester,';
+			}
+			if( sPrdNum == '-H2' )
+			{
+				sPrdDesc = '2nd Semester,';
+			}
+
+			//
+			xsetObjectText( txtPeriod, xgetObjectText( fldPrdCode ).substring(0,11) );
+			if( sPrdDesc  != '' )
+			{
+				xsetObjectText( txtPeriod, sPrdDesc + '  ' + xgetObjectText( fldPrdCode ).substring(0,11) );
+			}
+			//xsetObjectText( txtPeriod2, xgetObjectText( txtPeriod ) );
+
+			//
+			window.status = "Ledgea School ERP - Enrollment Assessment Form";
+		}
+		</SCRIPT>
+		<SCRIPT language="javascript" event="onload" for="window">
+			initObjects( );
+		</SCRIPT>
+		<form name="EAF" method="post" action="./LCC.EAF.aspx?_sid=20241322&amp;_pc=SY2025-2026-2" id="EAF">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE2OTkzMTkzMDAPZBYCAgEPZBaAAQIDDxYCHglpbm5lcmh0bWwFEzIwMjYtMDItMTggMTQ6MzM6NDdkAgUPFgIfAAUIMjAyNDEzMjJkAgcPFgIfAAUTQ2VudGVubywgUmV5bWFydCBQLmQCCQ8WAh8ABQgyMDI0MTMyMmQCCw8WAh8ABQRCU0lTZAINDxYCHwAFBUJTSVMyZAIPDxYCHwAFDVNZMjAyNS0yMDI2LTJkAhEPFgIfAAUjMm5kIFNlbWVzdGVyLCBTY2hvb2wgWWVhciAyMDI1LTIwMjZkAhMPFgIfAAULMjAyNi1KYW4tMDdkAhUPFgIfAAUFQmxvY2tkAhcPFgIfAAUHUmVndWxhcmQCGQ8WAh8ABQZCU0lTMkFkAhsPFgIfAAULSW5zdGFsbG1lbnRkAh0PFgIfAAUIRW5yb2xsZWRkAh8PFgIfAAUDT2xkZAIhDxYCHwBlZAIjDxYCHwAFAk9rZAIlDxYCHwAFBDIwLjBkAicPFgIfAAUDMC4wZAIpDxYCHwAFAzAuMGQCKw8WAh8ABQQyMC4wZAItDxYCHwAFAzAuMGQCLw8WAh8ABQQwLjAwZAIxDxYCHwAFBDAuMDBkAjMPFgIfAAUJMTEsMTAwLjAwZAI1DxYCHwAFCTEwLDYwMC4wMGQCNw8WAh8ABQgzLDE1MC4wMGQCOQ8WAh8ABQgyLDY1MC4wMGQCOw8WAh8ABQYyMDAuMDBkAj0PFgIfAAUGMjAwLjAwZAI/DxYCHwAFBjIwMC4wMGQCQQ8WAh8ABQYyMDAuMDBkAkMPFgIfAAUJMTEsMzAwLjAwZAJFDxYCHwAFCTEwLDgwMC4wMGQCRw8WAh8ABQgzLDM1MC4wMGQCSQ8WAh8ABQgyLDg1MC4wMGQCSw8WAh8ABQZPbmxpbmVkAk0PFgIfAGVkAk8PFgIfAAUHUHJpbnRlZGQCUQ8WAh8ABQE3ZAJTDxYCHwAFB0NlbnRlbm9kAlUPFgIfAAUHUmV5bWFydGQCVw8WAh8ABQdQcmlldG9zZAJZDxYCHwAFAlAuZAJbDxYCHwAFBU11em9uZAJdDxYCHwAFBE1hbGVkAl8PFgIfAAUoQmxrIDE3IGxvdCA2IHNlYyAxNCBwaGFzZSAyIHBhYmFoYXkgMjAwMGQCYQ8WAh8ABRJTYW4gSm9zZSBEZWwgTW9udGVkAmMPFgIfAAUHQnVsYWNhbmQCZQ8WAh8ABQQzMDI4ZAJnDxYCHwAFC1BoaWxpcHBpbmVzZAJpDxYCHwAFCzA5MjY4NDAzODQzZAJrDxYCHwBlZAJtDxYCHwAFFmZhY2Vib29rLmNvbS9yZXl5eW1hcnRkAm8PFgIfAAULMDkyNjg0MDM4NDNkAnEPFgIfAAUacmV5bWFydGNlbnRlbm8wM0BnbWFpbC5jb21kAnMPFgIfAGVkAnUPFgIfAAUIRmlsaXBpbm9kAncPFgIfAAUGU2luZ2xlZAJ5DxYCHwBlZAJ7DxYCHwAFCEZpbGlwaW5vZAJ9DxYCHwAFCDJuZCBZZWFyZAJ/DxYCHwAFKkJhY2hlbG9yIG9mIFNjaWVuY2UgaW4gSW5mb3JtYXRpb24gU3lzdGVtc2QCgQEPFgIfAAUFTXV6b25kZBtO2kK4mx3fiKVDKpfd6aySttqsja0/tH9HIc2WJzOH" />
+
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="9EAA6ACD" />
+			
+			<div id="divP" style="LEFT: 0.335in; WIDTH: 9in; TOP: 0in; HEIGHT: 10in; border:solid 0px black;">
+				<div id="fldSystemDate" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">2026-02-18 14:33:47</div>
+				<div id="fldSystemUser" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">20241322</div>
+				<div id="fldName" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Centeno, Reymart P.</div>
+				<div id="fldStuID" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">20241322</div>
+				<div id="fldCrsCode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">BSIS</div>
+				<div id="fldLvlCode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">BSIS2</div>
+				<div id="fldPrdCode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">SY2025-2026-2</div>
+				<div id="fldPrdDesc" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">2nd Semester, School Year 2025-2026</div>
+				<div id="fldEnrolDate" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">2026-Jan-07</div>
+				<div id="fldSecType" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Block</div>
+				<div id="fldEnrolType" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Regular</div>
+				<div id="fldSecCode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">BSIS2A</div>
+				<div id="fldPaymtMode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Installment</div>
+				<div id="fldPrdStat" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Enrolled</div>
+				<div id="fldPPrdStat" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Old</div>
+				<div id="fldRem" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in"></div>
+				<div id="fldStatus" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Ok</div>
+				<div id="fldTUnits" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">20.0</div>
+				<div id="fldAUnits" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">0.0</div>
+				<div id="fldNAUnits" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">0.0</div>
+				<div id="fldUnitsTotal" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">20.0</div>
+				<div id="fldMUnitsTotal" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">0.0</div>
+				<div id="fldFwdBalance" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">0.00</div>
+				<div id="fldBackBalance" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">0.00</div>
+				<div id="fldAssessmentTotal" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">11,100.00</div>
+				<div id="fldAssessmentBalance" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">10,600.00</div>
+				<div id="fldAssessmentDueTotal" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">3,150.00</div>
+				<div id="fldAssessmentDueBalance" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">2,650.00</div>
+				<div id="fldAdjustmentTotal" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">200.00</div>
+				<div id="fldAdjustmentBalance" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">200.00</div>
+				<div id="fldAdjustmentDueTotal" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">200.00</div>
+				<div id="fldAdjustmentDueBalance" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">200.00</div>
+				<div id="fldNetTotal" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">11,300.00</div>
+				<div id="fldNetBalance" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">10,800.00</div>
+				<div id="fldNetDueTotal" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">3,350.00</div>
+				<div id="fldNetDueBalance" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">2,850.00</div>
+				<div id="fldAccStatus" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Online</div>
+				<div id="fldRCmpsCode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in"></div>
+				<div id="fldRStatus" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Printed</div>
+				<div id="fldSCount" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">7</div>
+				<div id="fldLName" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Centeno</div>
+				<div id="fldFName" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Reymart</div>
+				<div id="fldMName" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Prietos</div>
+				<div id="fldMInitl" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">P.</div>
+				<div id="fldTitle" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Muzon</div>
+				<div id="fldGender" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Male</div>
+				<div id="fldAddress" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Blk 17 lot 6 sec 14 phase 2 pabahay 2000</div>
+				<div id="fldCity" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">San Jose Del Monte</div>
+				<div id="fldProvince" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Bulacan</div>
+				<div id="fldPostCode" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">3028</div>
+				<div id="fldCountry" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Philippines</div>
+				<div id="fldPhone1" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">09268403843</div>
+				<div id="fldPhone2" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in"></div>
+				<div id="fldFax" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">facebook.com/reyyymart</div>
+				<div id="fldMobile" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">09268403843</div>
+				<div id="fldEMail" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">reymartcenteno03@gmail.com</div>
+				<div id="fldWebSite" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in"></div>
+				<div id="fldNationality" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Filipino</div>
+				<div id="fldMStat" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Single</div>
+				<div id="fldNickName" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in"></div>
+				<div id="fldCitizen" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Filipino</div>
+				<div id="fldLevelDesc" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">2nd Year</div>
+				<div id="fldCourseDesc" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Bachelor of Science in Information Systems</div>
+				<div id="fldBrgy" style="LEFT: 0in; WIDTH: 0in; CLIP: rect(0in 0in 0in 0in); TOP: 0in; HEIGHT: 0in">Muzon</div>
+
+				<div id="divPHeaderTable" style="LEFT: 0in; WIDTH: 7in; CLIP: rect(0in 7in 1in 0in); TOP: 0in; HEIGHT: 1in">
+					<table width="100%">
+
+					</table>
+				</div>
+				<div id="divTitleTable" style="LEFT: 0in; WIDTH: 9in; CLIP: rect(0in 7in 2in 0in); TOP: 0.25in; HEIGHT: 2in">
+					<table width="100%">
+		                                 <tr>    
+		                                              <td style="vertical-align:top; text-align:left;"><input type="button" value=" Print this page " onclick="window.print();return false;" class="print" />
+		                                             </td>
+		                                  </tr>
+                                                <tr> 
+                                                       <td style="FONT-WEIGHT: bold; FONT-FAMILY: Copperplate Gothic; FONT-SIZE: 16pt;" noWrap align="center">LA CONCEPCION COLLEGE, INC.
+                                                       </td>
+                                                </tr>
+                                                <tr> 
+                                                       <td style=" FONT-FAMILY: Arial; FONT-SIZE: 9pt;" noWrap align="center">Kaypian Road, Quirino Highway, City of San Jose del Monte, Bulacan
+                                                       </td>
+                                                </tr>
+                                                <tr> 
+                                                       <td style=" FONT-FAMILY: Arial; FONT-SIZE: 9pt;" noWrap align="center">Telefax No.: (044) 767-0686 Website: www.laconcepcioncollege.com
+                                                </tr>
+
+						<tr>
+							<td style="FONT-WEIGHT: bold; FONT-FAMILY: Copperplate Gothic; FONT-SIZE: 14pt;" noWrap align="center">CERTIFICATE OF MATRICULATION (COM)
+							</td>
+						</tr>
+					</table>
+				</div>
+
+				<div id="divHeaderTable" style="LEFT: 0in; WIDTH: 7.48in; BORDER-BOTTOM: thin solid; TOP: 1.5in;   ">
+					<table width="100%" style=" font-size:8pt;">
+
+					    <tr>
+						    <td id="txtPeriod" noWrap style=" font-weight:bold; font-size:8pt;"></td>
+						    <td></td>
+						    <td id="txtStudentType" style="FONT-SIZE: 8pt" vAlign="top" ></td>
+							
+						</tr>
+					    <tr>
+					        <td id="txtName" style="font-weight:bold;"noWrap></td>
+					        <td id="txtStudentID" style="font-weight:bold;" noWrap></td>					        
+					        <td id="txtYearLvl" noWrap></td>
+					    </tr>					    
+					    <tr>
+					        <td id="txtAddress" noWrap colspan="2"></td>					   
+					        <td id="txtMobile" noWrap></td>
+                       			 </tr>
+					    <tr>
+					        <td id="txtCourse" style="font-weight:bold;" noWrap colspan="2"></td>					   
+					        <td id="txtSection" noWrap></td>
+                       			 </tr>
+                     			</table>
+				</div>
+				<div id="divEnrollmentTable" style="LEFT: .05in; WIDTH: 9in;  TOP:02.35in; ">
+				<table>
+				<tr>
+				<td style="WIDTH: 5.45in;" vAlign="top">				
+					<table  id="otbEnrollmentTable"style="border-collapse:collapse;width:100%;">
+<tr><td id="otbEnrollmentTable_ColTitle_Subject" class="HeaderText" align="center">Subject</td><td class="HeaderText" align="center"></td><td id="otbEnrollmentTable_ColTitle_Sec" class="HeaderText" align="center">Sec</td><td id="otbEnrollmentTable_ColTitle_Units" class="HeaderText" align="right">Units</td><td id="otbEnrollmentTable_ColTitle_Schedule" class="HeaderText" align="center">Schedule</td><td id="otbEnrollmentTable_ColTitle_Room" class="HeaderText" align="center">Room</td></tr>
+<tr><td class="DetailText" align="center">ELEC2-AH</td><td class="DetailText" align="left">Kontekstwalisadong Komunikasyon sa Filipino</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">SAT 10:00AM-12:00PM</td><td class="DetailText" align="center">FCM2-311</td></tr>
+<tr><td class="DetailText" align="center">IS121</td><td class="DetailText" align="left">Professional Issues in Information Systems</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">TUE 1:00PM-3:00PM</td><td class="DetailText" align="center">FCM2-308</td></tr>
+<tr><td class="DetailText" align="center">IS123</td><td class="DetailText" align="left">System Analysis and Design</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">FRI 10:00AM-12:00PM</td><td class="DetailText" align="center">FCM2-308</td></tr>
+<tr><td class="DetailText" align="center">IS151</td><td class="DetailText" align="left">Accounting and Financial Management</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">FRI 8:00AM-10:00AM</td><td class="DetailText" align="center">FCM2-511</td></tr>
+<tr><td class="DetailText" align="center">IT172</td><td class="DetailText" align="left">Fundamentals of Database Systems</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">TUE 3:00PM-5:00PM</td><td class="DetailText" align="center">CADLAB</td></tr>
+<tr><td class="DetailText" align="center">MST2</td><td class="DetailText" align="left">Science Technology and Society (with Climate Change and Environmental Awareness)</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">SAT 8:00AM-10:00AM</td><td class="DetailText" align="center">FCM2-310</td></tr>
+<tr><td class="DetailText" align="center">PE4</td><td class="DetailText" align="left">Physical Activities Towards Health and Fitness 4</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">2.00</td><td class="DetailText" align="center">TUE 10:00AM-12:00PM</td><td class="DetailText" align="center">FCM2-310</td></tr>
+<tr><td class="FooterText" align="right" colspan="1"></td><td class="FooterText" align="right" colspan="1"></td><td class="FooterText" align="right" colspan="2">20.00</td><td class="FooterText" align="left" colspan="1">unit(s)</td><td class="FooterText" align="right" colspan="1"></td></tr></table>
+				        	<table style=" font-size:8pt; font-weight:bold;">
+							<tr><td>		
+					   		<p><b><u>Declaration: </u><i> I hereby submit myself to LCC and promise to abide with all the policies governing my stay in the institution.</i></b></p>
+							</td></tr>
+						</table>	            
+				            			<table  style=" margin-left:40px; font-family:Verdana; font-size:8pt;">
+									
+				            				<tr>
+				                				<td id="txtStudentSig" style=" border-bottom:solid 1px #000000; margin:0px 5px; text-align:center;">
+				                				</td>
+				                				<td width="30px">				                    
+				               	 				</td>
+				                				<td style=" border-bottom:solid 1px #000000;">
+				                					FRANCISCO F. MAGPANTAY JR.
+				                				</td>
+				            				</tr>
+				            				<tr>
+				                				<td align="center">
+				                    					Student's Signature
+				                				</td>
+				                				<td>
+				                				</td>
+				                				<td align="center">
+				                    					Registrar
+				                				</td>
+				            				</tr>
+
+				        			</table>
+
+				  </td>
+				  <td style="">
+				    	<table  id="otbAssessmentDetailsTable"style="border-collapse:collapse;width:100%;">
+<tr><td class="GroupHeaderText" align="center" colspan="3">Academic</td></tr><tr><td class="DetailText">Registration</td><td class="DetailText" align="right">1,500.00</td></tr><tr><td class="DetailText">Misc. Fee</td><td class="DetailText" align="right">2,000.00</td></tr><tr><td class="DetailText">Tuition Fee</td><td class="DetailText" align="right">6,500.00</td></tr><tr><td class="GroupFooterText"></td><td class="GroupFooterText" align="right">10,000.00</td></tr><tr><td class="GroupHeaderText" align="center" colspan="3">Auxilliary</td></tr><tr><td class="DetailText">Computer System Fee</td><td class="DetailText" align="right">300.00</td></tr><tr><td class="DetailText">Foundation Fee</td><td class="DetailText" align="right">300.00</td></tr><tr><td class="DetailText">Laboratory Fee</td><td class="DetailText" align="right">500.00</td></tr><tr><td class="GroupFooterText"></td><td class="GroupFooterText" align="right">1,100.00</td></tr><tr><td class="GroupHeaderText" align="center" colspan="3">Others</td></tr><tr><td class="DetailText">Penalty</td><td class="DetailText" align="right">200.00</td></tr><tr><td class="GroupFooterText"></td><td class="GroupFooterText" align="right">200.00</td></tr><tr><td class="FooterText" align="right" colspan="3">Total: 11,300.00</td></tr></table>
+				  	
+				    	
+					<table width="100%" style="border-collapse:collapse;">
+						<tr width="100%">
+							<td vAlign="top" align="left">
+								<table  id="otbAssessmentAdjustmentDueSummaryTable"style="border-collapse:collapse;width:3.0in;">
+<tr><td id="otbAssessmentAdjustmentDueSummaryTable_ColTitle_DueDate" class="HeaderText" align="center">DueDate</td><td id="otbAssessmentAdjustmentDueSummaryTable_ColTitle_Desc" class="HeaderText" align="center">Desc</td><td id="otbAssessmentAdjustmentDueSummaryTable_ColTitle_Assessed" class="HeaderText" align="center">Assessed</td><td id="otbAssessmentAdjustmentDueSummaryTable_ColTitle_Outstanding" class="HeaderText" align="center">Outstanding</td></tr>
+<tr><td class="DetailText">2026/01/07</td><td class="DetailText" nowrap>Down payment</td><td class="DetailText" align="right" nowrap>500.00</td><td class="DetailText" align="right" nowrap>0.00</td></tr>
+<tr><td class="DetailText">2026/02/14</td><td class="DetailText" nowrap>1st Installment</td><td class="DetailText" align="right" nowrap>2,650.00</td><td class="DetailText" align="right" nowrap>2,650.00</td></tr>
+<tr><td class="DetailText">2026/03/07</td><td class="DetailText" nowrap>2nd Installment</td><td class="DetailText" align="right" nowrap>2,650.00</td><td class="DetailText" align="right" nowrap>2,650.00</td></tr>
+<tr><td class="DetailText">2026/05/07</td><td class="DetailText" nowrap>3rd Installment</td><td class="DetailText" align="right" nowrap>2,650.00</td><td class="DetailText" align="right" nowrap>2,650.00</td></tr>
+<tr><td class="DetailText">2026/06/01</td><td class="DetailText" nowrap>4th Installment</td><td class="DetailText" align="right" nowrap>2,650.00</td><td class="DetailText" align="right" nowrap>2,650.00</td></tr>
+<tr><td class="DetailText"></td><td class="DetailText">Adjustments</td><td class="DetailText" align="right" nowrap>200.00</td><td class="DetailText" align="right" nowrap>200.00</td></tr>
+<tr><td class="DetailText"></td><td class="DetailText" nowrap>Net Total:</td><td class="DetailText" align="right" nowrap>11,300.00</td><td class="DetailText" align="right" nowrap>10,800.00</td></tr>
+</table>
+							</td>
+					</table>
+		
+
+				  </td>
+				  </tr>
+
+				  <tr>
+					<table width="100%" height="100%" style="border-collapse:collapse;">
+						<tr>
+							<td style="font-size: 12px; font-weight:bold; LEFT: 0.3in;">REMINDERS:</td>
+						</tr>
+						<tr>
+							<td style="font-size: 11px; LEFT: 0in;">
+                                        			<ul style="margin-top:0px; margin-bottom:0px;">
+													<li>A Certificate of Matriculation serves as your proof of enrollment. Present this on the first day of classes.</li>
+													<li>Students without this COM have not completed the enrollment process and are not Officially Enrolled.</li>
+													<li>A student is expected to finish the semester registered since he/she is under contract.</li>
+													<li>A student withdraws his/her enrollment before or within the start of classes, will be charged 10% of his tuition fee for the semester.</li>
+													<li>Registration and miscellaneous fees are non-refundable.</li>
+													<li>A student who withdraws within the first week of classes shall be charged of 25% from his/her tuition fee for the semester.</li>
+													<li>If the tuition fee is fully paid, the remaining of 25% will be refunded, in case of installment, he/she will be required to pay the 25% before he/she will be cleared from the accounting office.</li>
+													<li>In case of withdrawal happens on the second week of classes, whether he/she attended classes or not, the subject student will be charged 50% of the tuition fee, laboratory fee and other pertinent fees.</li>
+													<li>A student who withdraws after the second week of classes, 100% of tuition fee, laboratory fee and other pertinent fees are required to be paid before he/she will be cleared in accounting office.</li>
+													<li>A student who dropped or undergone with absent without leave (AWOL) from his/her classes after two weeks, without informing the accounting office will be charged 100% of the tuition fee of the semester.</li>
+               				                         </ul>
+							</td>
+
+						</tr>
+
+				  <tr>
+				            <td id="txtDatePrinted" style="FONT-SIZE: 8pt"></td>
+				  </tr>	
+					</table>
+				  </tr>
+			
+				  </table>
+
+								        
+				</div>				
+				<div id="div1" style="LEFT: 5.55in; WIDTH: 1.875in; TOP: 2.3in;  font-size:8pt;">
+				    <!--div style=" background-color:#989898;width:100%;font-size:8pt; font-weight:bold; text-align:center;padding:1px 0px;">Particulars</div-->
+				    
+				    
+				    <!--div>
+				    </div-->
+				    <div id="divAssessmentSummaryTable" style="right:0px; WIDTH: 3in; margin-top:10px;">
+							<td width="100%">
+							</td>
+							<!--td vAlign="top" align="right">
+								<table  id="otbAssessmentAdjustmentClassSummaryTable"style="border-collapse:collapse;width:2.0in;">
+<tr><td class="GroupFooterText" nowrap>Academic</td><td class="GroupFooterText" align="right" nowrap>10,000.00</td></tr><tr><td class="GroupFooterText" nowrap>Auxilliary</td><td class="GroupFooterText" align="right" nowrap>1,100.00</td></tr><tr><td class="GroupFooterText">Others</td><td class="GroupFooterText" align="right">200.00</td></tr><tr><td class="FooterText" align="right" colspan="3">Total: 11,300.00</td></tr></table>
+							</td-->
+						</tr>
+					</table>
+				    </div>
+
+
+				    
+				</div>
+
+
+				
+							
+				<!--div id="divMainAssessmentTable" style="LEFT: 5.55in; WIDTH: 1.875in; CLIP: rect(0in 1.875in 5in 0in); TOP: 3in; HEIGHT: 4in">
+
+				</div-->
+				<div id="divPFooterTable" style="LEFT: 0in; WIDTH: 7in; CLIP: rect(0in 7in 5in 0in); TOP: 4.5in; HEIGHT: 5in">
+					
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</form>
+	</body>
+</HTML>
+

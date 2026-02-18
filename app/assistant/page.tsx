@@ -93,6 +93,7 @@ export default function AssistantPage() {
             role: m.role,
             content: m.content,
           })),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }),
       });
 

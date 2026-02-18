@@ -14,13 +14,18 @@ import {
   Mail,
   Calendar,
   GraduationCap,
-  User
+  User,
+  Star,
+  MapPin,
+  Phone,
+  IdCard
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Drawer from '@/components/Drawer';
 import SecuritySettings from '@/components/SecuritySettings';
+import StarRating from '@/components/StarRating';
 import { APP_VERSION } from '@/lib/version';
 
 export default function SettingsPage() {
@@ -123,6 +128,19 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        {/* Feedback Section */}
+        <section>
+          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 ml-1">Feedback</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <SettingsItem 
+              icon={<Star className="text-amber-500" />} 
+              title="Rate LCC Hub" 
+              description="Help us improve with your rating"
+              onClick={() => setActiveDrawer('rating')}
+            />
+          </div>
+        </section>
+
         {/* Support Section */}
         <section>
           <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 ml-1">Support</h2>
@@ -166,6 +184,17 @@ export default function SettingsPage() {
       </Drawer>
 
       <Drawer 
+        isOpen={activeDrawer === 'rating'} 
+        onClose={() => setActiveDrawer(null)} 
+        title="Rate LCC Hub"
+      >
+        <div className="space-y-6">
+            <p className="text-sm text-slate-500 mb-6 text-center">Your feedback is valuable to us. Let us know your experience using LCC Hub.</p>
+            <StarRating onSuccess={() => setTimeout(() => setActiveDrawer(null), 2000)} />
+        </div>
+      </Drawer>
+
+      <Drawer 
         isOpen={activeDrawer === 'profile'} 
         onClose={() => setActiveDrawer(null)} 
         title="Personal Information"
@@ -192,11 +221,28 @@ export default function SettingsPage() {
                     <DrawerInfoItem icon={<User className="text-slate-400" />} label="Middle Name" value={student.parsedName?.middleName} />
                     <DrawerInfoItem icon={<User className="text-blue-500" />} label="Last Name" value={student.parsedName?.lastName} />
                 </div>
-                <DrawerInfoItem icon={<Mail />} label="Email Address" value={student.email} />
+                
+                <div className="pt-4 border-t border-slate-100 space-y-4">
+                    <DrawerInfoItem icon={<Mail />} label="Email Address" value={student.email} />
+                    <DrawerInfoItem icon={<Phone />} label="Mobile Number" value={student.mobile} />
+                    <DrawerInfoItem icon={<MapPin />} label="Home Address" value={student.address} />
+                </div>
+
                 <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-4">
                     <DrawerInfoItem icon={<GraduationCap />} label="Program" value={student.course} />
                     <DrawerInfoItem icon={<Calendar />} label="Year/Sem" value={`${student.yearLevel} / ${student.semester}`} />
+                    <DrawerInfoItem icon={<Calendar />} label="Enrolled On" value={student.enrollment_date} />
                 </div>
+            </div>
+
+            <div className="p-4 bg-slate-900 rounded-2xl text-white flex items-center gap-4">
+              <div className="p-2.5 bg-blue-600 rounded-xl">
+                <Shield className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold">Privacy Control</p>
+                <p className="text-[10px] text-slate-400">Your personal contact details and address are strictly private and only visible to you in this settings panel.</p>
+              </div>
             </div>
           </div>
         )}
@@ -223,6 +269,13 @@ export default function SettingsPage() {
                     description="Show course and year level"
                     enabled={student?.settings?.showAcademicInfo ?? true}
                     onToggle={(val) => updateSettings({ ...student?.settings, showAcademicInfo: val })}
+                />
+                <SettingsToggle 
+                    icon={<IdCard className="text-amber-500" />} 
+                    title="Show Student ID" 
+                    description="Make your ID visible to others"
+                    enabled={student?.settings?.showStudentId ?? false}
+                    onToggle={(val) => updateSettings({ ...student?.settings, showStudentId: val })}
                 />
             </div>
         </div>

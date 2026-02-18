@@ -250,12 +250,9 @@ export async function POST(req: NextRequest) {
       }
 
       if (subjects && subjects.length > 0) {
-        // In Firestore, we'll store grades for a specific report in a document
-        // Path: students/{userId}/grades/{reportName}
-        // But since we want to query across all grades for AI context easily, 
-        // let's use a flatter structure: grades/{userId}_{reportName}
-        const gradeDocId = `${userId}_${reportName.replace(/\//g, '_')}`;
-        const gradeRef = doc(db, 'grades', gradeDocId);
+        // We use userId as the document ID for the grades collection.
+        // This keeps the collection flat and easy to manage.
+        const gradeRef = doc(db, 'grades', userId);
         
         await setDoc(gradeRef, {
           student_id: userId,

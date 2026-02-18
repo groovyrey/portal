@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
                        $dashboard('.enrollment_student_info_cell_course').text().trim() ||
                        pageText.match(new RegExp(`${userId}\\s+SY\\d{4}-\\d{4}-\\d\\s+(.*?) (User Setup|Logout|Main)`, 'i'));
     
-    const course = courseMatch ? courseMatch[courseMatch.length - 1].trim() : "Not specified";
+    let course = courseMatch ? courseMatch[courseMatch.length - 1].trim() : "Not specified";
 
     const email = pageText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i)?.[0] || "";
     const semMatch = pageText.match(/\d(?:st|nd|rd|th)\s+Semester/i);
@@ -168,38 +168,11 @@ export async function POST(req: NextRequest) {
       return n + (s[(v - 20) % 10] || s[v] || s[0]) + " Year";
     };
 
-    // 5. Extract Schedule (Subjects)
-    let schedule: any[] = [];
-    $dashboard('table tr').each((_, row) => {
-      const cells = $dashboard(row).find('td');
-      if (cells.length >= 5) {
-        const subject = $dashboard(cells[0]).text().trim();
-        const section = $dashboard(cells[1]).text().trim();
-        const units = $dashboard(cells[2]).text().trim();
-        const time = $dashboard(cells[3]).text().trim();
-        const room = $dashboard(cells[4]).text().trim();
-        if (/^\d+\.\d+$/.test(units) && subject.length > 1) {
-          schedule.push({ subject, section, units, time, room });
-        }
-      }
-    });
-
-    // De-duplicate schedule
-    const seenSched = new Set();
-    schedule = schedule.filter(s => {
-      const key = `${s.subject}-${s.time}`.toLowerCase();
-      if (seenSched.has(key)) return false;
-      seenSched.add(key);
-      return true;
-    });
-    const finalSchedule = schedule;
-
     const dashboardUrl = loginRes.request.res.responseUrl || baseUrl;
 
     // 6. Fetch Multiple Pages in Parallel for Speed
     const eafUrl = `https://premium.schoolista.com/LCC/Reports/Enrollment/LCC.EAF.aspx?_sid=${userId}&_pc=${periodCode}`;
     const gradesUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=Grades&_nm=`;
-    const accountUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=Account&_nm=`;
     
     // Dynamic Subject List URL discovery
     let subjectListUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=${periodCode}&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=`;
@@ -213,20 +186,93 @@ export async function POST(req: NextRequest) {
         }
     });
 
-    // PARALLEL FETCH
-    const [eafRes, subListRes, gradesRes, accRes] = await Promise.all([
+    // PARALLEL FETCH (Reduced to 3 requests from 4)
+    const [eafRes, subListRes, gradesRes] = await Promise.all([
         client.get(eafUrl),
         client.get(subjectListUrl, { headers: { 'Referer': dashboardUrl } }),
-        client.get(gradesUrl, { headers: { 'Referer': dashboardUrl } }),
-        client.get(accountUrl, { headers: { 'Referer': dashboardUrl } })
+        client.get(gradesUrl, { headers: { 'Referer': dashboardUrl } })
     ]);
 
     const $eaf = cheerio.load(eafRes.data);
     const $sub = cheerio.load(subListRes.data);
     const $grades = cheerio.load(gradesRes.data);
-    const $acc = cheerio.load(accRes.data);
     
-    // 7. Extract Available Report Card Links
+    // 7. Extract Student Info from EAF (More reliable)
+    const eafName = $eaf('#fldName').text().trim();
+    if (eafName) studentName = eafName;
+
+    const eafCourse = $eaf('#fldCourseDesc').text().trim();
+    if (eafCourse) course = eafCourse;
+
+    const eafYear = $eaf('#fldLevelDesc').text().trim();
+    const eafSem = $eaf('#fldPrdDesc').text().trim();
+    
+    // Extract Contact & Enrollment Info
+    const address = `${$eaf('#fldAddress').text().trim()}, ${$eaf('#fldBrgy').text().trim()}, ${$eaf('#fldCity').text().trim()}`;
+    const mobile = $eaf('#fldMobile').text().trim();
+    const enrollmentDate = $eaf('#fldEnrolDate').text().trim();
+
+    const yearLevel = eafYear || (yearMatch ? formatYearLevel(yearMatch[1]) : "2nd Year");
+    const semesterStr = eafSem.split(',')[0].trim() || (semMatch ? semMatch[0] : "2nd Semester");
+
+    // 8. Extract Schedule from EAF (Better structured)
+    let finalSchedule: any[] = [];
+    $eaf('#otbEnrollmentTable tr').each((i, row) => {
+      if (i === 0) return; 
+      const cells = $eaf(row).find('td');
+      if (cells.length >= 6) {
+        const units = $eaf(cells[3]).text().trim();
+        if (!isNaN(parseFloat(units))) {
+          finalSchedule.push({
+            subject: $eaf(cells[0]).text().trim(), // This is the code
+            description: $eaf(cells[1]).text().trim(),
+            section: $eaf(cells[2]).text().trim(),
+            units: units,
+            time: $eaf(cells[4]).text().trim(),
+            room: $eaf(cells[5]).text().trim()
+          });
+        }
+      }
+    });
+
+    // 9. Extract Financials from EAF
+    let installments: any[] = [];
+    $eaf('#otbAssessmentAdjustmentDueSummaryTable tr').each((i, row) => {
+        if (i === 0) return;
+        const cells = $eaf(row).find('td');
+        if (cells.length === 4) {
+            installments.push({
+                dueDate: $eaf(cells[0]).text().trim(),
+                description: $eaf(cells[1]).text().trim(),
+                assessed: $eaf(cells[2]).text().trim(),
+                outstanding: $eaf(cells[3]).text().trim()
+            });
+        }
+    });
+
+    let eafAssessment: any[] = [];
+    $eaf('#otbAssessmentDetailsTable tr').each((i, row) => {
+        const cells = $eaf(row).find('td');
+        if (cells.length === 2 && !$eaf(row).find('.GroupHeaderText').length) {
+            const desc = $eaf(cells[0]).text().trim();
+            const amount = $eaf(cells[1]).text().trim();
+            if (desc && amount) {
+                eafAssessment.push({ description: desc, amount: '₱' + amount.replace('₱', '') });
+            }
+        }
+    });
+
+    // Get Totals from the bottom of assessment table
+    let totalAssessment = "---";
+    let totalBalance = "---";
+    const netTotalRow = $eaf('#otbAssessmentAdjustmentDueSummaryTable tr').last();
+    const netTotalCells = netTotalRow.find('td');
+    if (netTotalCells.length === 4) {
+        totalAssessment = '₱' + $eaf(netTotalCells[2]).text().trim();
+        totalBalance = '₱' + $eaf(netTotalCells[3]).text().trim();
+    }
+
+    // 10. Extract Available Report Card Links
     const availableReports: any[] = [];
     $grades('a').each((_, el) => {
         const text = $grades(el).text().trim();
@@ -236,188 +282,33 @@ export async function POST(req: NextRequest) {
         }
     });
 
-    // 5. Scrape the Subject List (Targeting Table 9)
+    // 11. Scrape the Subject List (Prospectus Subjects)
     let offeredSubjects: any[] = [];
-    
     const table9 = $sub('table').eq(9);
     if (table9.length > 0) {
         const rows = table9.find('tr');
-
         rows.each((rIdx, row) => {
             const cells = $sub(row).find('td');
-            
-            // Subject rows
             if (cells.length >= 8) {
                 const code = $sub(cells[0]).text().trim();
                 const desc = $sub(cells[1]).text().trim();
                 const units = $sub(cells[3]).text().trim() || $sub(cells[2]).text().trim(); 
                 const preReq = cells.length >= 6 ? $sub(cells[5]).text().trim() : "";
-
                 if (code && desc && !code.toLowerCase().includes('subject')) {
-                    const subjObj = { code, description: desc, units, preReq };
-                    
-                    // Always add to offered list
-                    offeredSubjects.push(subjObj);
+                    offeredSubjects.push({ code, description: desc, units, preReq });
                 }
             }
         });
     }
-
-    // 8. Financial Data Scraping (from parallel-fetched $acc)
-    let dueAccounts: any[] = [];
-    let payments: any[] = [];
-    let installments: any[] = [];
-    let adjustments: any[] = [];
-    let scrapedTotal = "---";
-    let scrapedBalance = "---";
-    let scrapedDueToday = "---";
-
-    // 1. Due Accounts (Statement of Account)
-    const $dueTable = $acc('#otbStatementOfAccountTable');
-    if ($dueTable.length > 0) {
-        $dueTable.find('tr').each((i, row) => {
-            const cells = $acc(row).find('td');
-            if (cells.length === 5 && i > 1) { // Skip title and header
-                const dueDate = $acc(cells[0]).text().trim();
-                const description = $acc(cells[1]).text().trim();
-                const amount = $acc(cells[2]).text().trim();
-                const paid = $acc(cells[3]).text().trim();
-                const due = $acc(cells[4]).text().trim();
-                if (dueDate && description && !dueDate.toLowerCase().includes('total') && !dueDate.toLowerCase().includes('due')) {
-                    dueAccounts.push({ dueDate, description, amount, paid, due });
-                }
-            }
-        });
-    }
-
-    // 2. Payments
-    const $paymentTable = $acc('#otbPaymentTable');
-    if ($paymentTable.length > 0) {
-        $paymentTable.find('tr').each((i, row) => {
-            const cells = $acc(row).find('td');
-            if (cells.length === 3 && i > 1) {
-                const date = $acc(cells[0]).text().trim();
-                const reference = $acc(cells[1]).text().trim();
-                const amount = $acc(cells[2]).text().trim();
-                if (date && reference && !date.toLowerCase().includes('paid')) {
-                    payments.push({ date, reference, amount });
-                }
-            }
-        });
-    }
-
-    // 3. Assessment of Fees (Installments)
-    const $assessmentTable = $acc('#otbAssessmentDueDetailsTable');
-    if ($assessmentTable.length > 0) {
-        $assessmentTable.find('tr').each((i, row) => {
-            const cells = $acc(row).find('td');
-            const rowText = $acc(row).text().trim();
-
-            if (cells.length === 4 && i > 3) { // Skip title1, title2, forwarded/balance, and header
-                const dueDate = $acc(cells[0]).text().trim();
-                const description = $acc(cells[1]).text().trim();
-                const assessed = $acc(cells[2]).text().trim();
-                const outstanding = $acc(cells[3]).text().trim();
-                
-                if (dueDate && description && !dueDate.toLowerCase().includes('due today') && !dueDate.toLowerCase().includes('net total')) {
-                    installments.push({ dueDate, description, assessed, outstanding });
-                }
-            }
-
-            // Extract Totals from this table
-            if (rowText.includes('Net Total')) {
-                const totalCells = $acc(row).find('td');
-                if (totalCells.length >= 3) {
-                    scrapedTotal = $acc(totalCells[totalCells.length - 2]).text().trim();
-                    scrapedBalance = $acc(totalCells[totalCells.length - 1]).text().trim();
-                }
-            }
-
-            if (rowText.includes('Due Today')) {
-                const dueCells = $acc(row).find('td');
-                if (dueCells.length >= 3) {
-                    scrapedDueToday = $acc(dueCells[dueCells.length - 1]).text().trim();
-                }
-            }
-        });
-    }
-
-    // 4. Adjustments
-    const $adjustmentTable = $acc('#otbAdjustmentTable');
-    if ($adjustmentTable.length > 0) {
-        $adjustmentTable.find('tr').each((i, row) => {
-            const cells = $acc(row).find('td');
-            if (cells.length === 4 && i > 1) {
-                const dueDate = $acc(cells[0]).text().trim();
-                const description = $acc(cells[1]).text().trim();
-                const adjustment = $acc(cells[2]).text().trim();
-                const outstanding = $acc(cells[3]).text().trim();
-                if (dueDate && description && !dueDate.toLowerCase().includes('total') && !dueDate.toLowerCase().includes('no adjustments')) {
-                    adjustments.push({ dueDate, description, adjustment, outstanding });
-                }
-            }
-        });
-    }
-
-
-
-    // Financials Summary (Fallback to EAF if not scraped from Account page)
-    const eafText = $eaf('body').text().replace(/\s+/g, ' ');
-    const currencyRegex = /\d{1,3}(,\d{3})*(\.\d{2})/g;
-    const allAmounts = eafText.match(currencyRegex) || [];
-    let totalAssessment = scrapedTotal !== "---" ? scrapedTotal : "---";
-    let totalBalance = scrapedBalance !== "---" ? scrapedBalance : "---";
-
-    if (totalAssessment === "---" || totalBalance === "---") {
-        if (allAmounts.length >= 2) {
-            const totalIdx = eafText.indexOf("Total Assessment");
-            if (totalIdx !== -1) {
-                const afterTotal = eafText.substring(totalIdx, totalIdx + 200);
-                const matches = afterTotal.match(currencyRegex);
-                if (matches) totalAssessment = matches.find(m => parseFloat(m.replace(/,/g, '')) > 0) || matches[0];
-            }
-            const balanceIdx = eafText.lastIndexOf("Balance");
-            if (balanceIdx !== -1) {
-                const afterBalance = eafText.substring(balanceIdx, balanceIdx + 200);
-                const matches = afterBalance.match(currencyRegex);
-                if (matches) totalBalance = matches[0];
-            }
-            if (totalAssessment === "---") totalAssessment = allAmounts.find(m => parseFloat(m.replace(/,/g, '')) > 500) || allAmounts[0] || "---";
-            if (totalBalance === "---") totalBalance = allAmounts[allAmounts.length - 1] || "---";
-        }
-    }
-
-    // Ensure currency symbol if missing
-    if (totalAssessment !== "---" && !totalAssessment.includes('₱')) totalAssessment = '₱' + totalAssessment;
-    if (totalBalance !== "---" && !totalBalance.includes('₱')) totalBalance = '₱' + totalBalance;
-    if (scrapedDueToday !== "---" && !scrapedDueToday.includes('₱')) scrapedDueToday = '₱' + scrapedDueToday;
-
-    // EAF Detailed Assessment Scraping
-    let eafAssessment: any[] = [];
-    $eaf('table tr').each((_, row) => {
-        const cells = $eaf(row).find('td');
-        if (cells.length === 2) {
-            const desc = $eaf(cells[0]).text().trim();
-            const amount = $eaf(cells[1]).text().trim();
-            if (desc && amount && /^\d{1,3}(,\d{3})*(\.\d{2})/.test(amount)) {
-                if (!desc.toLowerCase().includes('total') && !desc.toLowerCase().includes('assessment') && desc.length > 2) {
-                    eafAssessment.push({ description: desc, amount: '₱' + amount.replace('₱', '') });
-                }
-            }
-        }
-    });
 
     // Save to database
     let existingSettings = null;
     let isNewUser = false;
     try {
       if (!db) {
-        throw new Error('Firestore database is not initialized. Check your environment variables.');
+        throw new Error('Firestore database is not initialized.');
       }
       await initDatabase();
-
-      const yearLevel = yearMatch ? formatYearLevel(yearMatch[1]) : "2nd Year";
-      const semesterStr = semMatch ? semMatch[0] : "2nd Semester";
 
       // Upsert Student
       const studentRef = doc(db, 'students', userId);
@@ -432,28 +323,26 @@ export async function POST(req: NextRequest) {
         year_level: yearLevel,
         semester: semesterStr,
         available_reports: availableReports,
+        address: address,
+        mobile: mobile,
+        enrollment_date: enrollmentDate,
         updated_at: serverTimestamp()
       }, { merge: true });
 
       // Update Financials
-      const financialDetails = {
-        dueAccounts: dueAccounts.length > 0 ? dueAccounts : null,
-        payments: payments.length > 0 ? payments : null,
-        installments: installments.length > 0 ? installments : null,
-        adjustments: adjustments.length > 0 ? adjustments : null,
-        assessment: eafAssessment.length > 0 ? eafAssessment : null
-      };
-
       const financialRef = doc(db, 'financials', userId);
       await setDoc(financialRef, {
         total: totalAssessment,
         balance: totalBalance,
-        due_today: scrapedDueToday,
-        details: financialDetails,
+        due_today: "Check Assessment",
+        details: {
+            installments: installments,
+            assessment: eafAssessment
+        },
         updated_at: serverTimestamp()
       }, { merge: true });
 
-      // Update Schedules (Store as an array in a document)
+      // Update Schedules
       if (finalSchedule && finalSchedule.length > 0) {
         const schedulesRef = doc(db, 'schedules', userId);
         await setDoc(schedulesRef, {
@@ -462,7 +351,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Update Prospectus Subjects (Global cache)
+      // Update Prospectus Subjects
       if (offeredSubjects && offeredSubjects.length > 0) {
         for (const sub of offeredSubjects) {
           const subRef = doc(db, 'prospectus_subjects', sub.code);
@@ -476,16 +365,10 @@ export async function POST(req: NextRequest) {
       }
     } catch (dbError: any) {
       console.error('Database sync error:', dbError);
-      if (dbError.code === 'not-found' || dbError.message?.includes('NOT_FOUND')) {
-        console.error('CRITICAL: Firestore database not found. Please ensure Firestore is enabled in the Firebase Console and the Project ID is correct.');
-      }
     }
 
     if (studentName && studentName.length > 2) {
-        // Encrypt credentials for session cookie
-        const sessionData = JSON.stringify({ userId, password });
-        const encryptedSession = encrypt(sessionData);
-
+        const encryptedSession = encrypt(JSON.stringify({ userId, password }));
         const response = NextResponse.json({
             success: true,
             isNewUser,
@@ -495,43 +378,35 @@ export async function POST(req: NextRequest) {
                 id: userId, 
                 course, 
                 email, 
-                semester: semMatch ? semMatch[0] : "2nd Semester",
-                yearLevel: yearMatch ? formatYearLevel(yearMatch[1]) : "2nd Year",
-                schedule: finalSchedule.length > 0 ? finalSchedule : null,
-                offeredSubjects: offeredSubjects.length > 0 ? offeredSubjects : null,
-                availableReports: availableReports.length > 0 ? availableReports : null,
-                settings: existingSettings || {
-                    notifications: true,
-                    isPublic: true,
-                    showAcademicInfo: true
-                },
+                address,
+                mobile,
+                enrollment_date: enrollmentDate,
+                semester: semesterStr,
+                yearLevel: yearLevel,
+                schedule: finalSchedule,
+                offeredSubjects,
+                availableReports,
+                settings: existingSettings || { notifications: true, isPublic: true, showAcademicInfo: true },
                 financials: { 
                     total: totalAssessment, 
                     balance: totalBalance,
-                    dueToday: scrapedDueToday,
-                    dueAccounts: dueAccounts.length > 0 ? dueAccounts : null,
-                    payments: payments.length > 0 ? payments : null,
-                    installments: installments.length > 0 ? installments : null,
-                    adjustments: adjustments.length > 0 ? adjustments : null,
-                    assessment: eafAssessment.length > 0 ? eafAssessment : null
+                    installments,
+                    assessment: eafAssessment
                 }
             }
         });
 
-        // Set secure HttpOnly cookie
-        // Use a more robust check for 'secure' to allow local testing
         const isProd = process.env.NODE_ENV === 'production';
-        
         response.cookies.set('session_token', encryptedSession, {
             httpOnly: true,
             secure: isProd && !req.nextUrl.hostname.includes('localhost'),
-            sameSite: 'lax', // Use 'lax' for better compatibility with redirections if any
-            maxAge: 60 * 60 * 24 * 7, // 1 week
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 7,
             path: '/',
         });
-
         return response;
     }
+
 
     const title = $dashboard('title').text() || "No Title";
     const snippet = pageText.substring(0, 1000).replace(/\s+/g, ' ');

@@ -5,7 +5,6 @@ import { LoginResponse, Student } from '../types';
 import LoginForm from '../components/LoginForm';
 import DashboardHeader from '../components/DashboardHeader';
 import ScheduleTable from '../components/ScheduleTable';
-import PersonalInfo from '../components/PersonalInfo';
 import { toast } from 'sonner';
 import Skeleton from '../components/Skeleton';
 import LoginProgressModal from '../components/LoginProgressModal';
@@ -128,18 +127,13 @@ export default function Home() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
         <DashboardHeader student={student} onLogout={handleLogout} />
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            {student.schedule && (
-              <ScheduleTable 
-                schedule={student.schedule} 
-                offeredSubjects={student.offeredSubjects || undefined} 
-              />
-            )}
-          </div>
-          <div className="lg:col-span-1">
-            <PersonalInfo student={student} />
-          </div>
+        <div className="max-w-4xl mx-auto">
+          {student.schedule && (
+            <ScheduleTable 
+              schedule={student.schedule} 
+              offeredSubjects={student.offeredSubjects || undefined} 
+            />
+          )}
         </div>
       </main>
     </div>

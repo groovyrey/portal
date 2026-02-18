@@ -33,12 +33,21 @@ export default function PageHeader() {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Get config for the current path, handling dynamic profile route
+  const getConfig = () => {
+    if (pathname === '/') return null;
+    if (pathname.startsWith('/profile/')) return pageConfig['/profile'];
+    return pageConfig[pathname];
+  };
+
+  const config = getConfig();
+
   // Don't show header on home page or if pathname is not in config
-  if (pathname === '/' || !pageConfig[pathname]) {
+  if (!config) {
     return null;
   }
 
-  const { title, icon } = pageConfig[pathname];
+  const { title, icon } = config;
 
   return (
     <div className="bg-white/80 border-b border-slate-200 sticky top-16 z-[90] backdrop-blur-md">
