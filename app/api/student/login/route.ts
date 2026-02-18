@@ -12,6 +12,8 @@ import { initDatabase } from '@/lib/db-init';
 import { encrypt } from '@/lib/auth';
 import { parseStudentName } from '@/lib/utils';
 
+import { getSessionClient, saveSession } from '@/lib/session-proxy';
+
 export async function POST(req: NextRequest) {
     const { userId, password } = await req.json();
     try {
@@ -20,51 +22,50 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'UserID and Password are required' }, { status: 400 });
     }
 
-    const jar = new CookieJar();
-    const client = wrapper(axios.create({ 
-      jar, 
-      withCredentials: true,
-      maxRedirects: 5,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-      }
-    }));
+    await initDatabase();
 
+    // --- GHOST SESSION PROXY CHECK ---
+    const { client, jar, isNew } = await getSessionClient(userId);
     const baseUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}`;
-    
-    // 1. Initial visit to get tokens and Session ID
-    const initRes = await client.get(baseUrl);
-    const finalInitUrl = initRes.request.res.responseUrl || baseUrl;
-    const $init = cheerio.load(initRes.data);
+    let loginRes;
 
-    // Capture ALL hidden inputs (important for some ASP.NET configs)
-    const formData: any = {};
-    $init('input[type="hidden"]').each((_, el) => {
-      const name = $init(el).attr('name');
-      if (name) formData[name] = $init(el).val() || '';
-    });
+    if (!isNew) {
+      // Re-use session: visit main dashboard directly
+      loginRes = await client.get(baseUrl);
+    } else {
+      // Step 1: Initial visit to get tokens and Session ID
+      const initRes = await client.get(baseUrl);
+      const finalInitUrl = initRes.request.res.responseUrl || baseUrl;
+      const $init = cheerio.load(initRes.data);
 
-    // Add credentials and login button
-    formData.otbUserID = userId;
-    formData.otbPassword = password;
-    formData.obtnLogin = 'LOGIN';
+      const formData: any = {};
+      $init('input[type="hidden"]').each((_, el) => {
+        const name = $init(el).attr('name');
+        if (name) formData[name] = $init(el).val() || '';
+      });
 
-    // 2. Perform POST to the login page
-    let loginForm = $init('#Login');
-    if (loginForm.length === 0) loginForm = $init('form').first();
-    
-    const loginAction = loginForm.attr('action') || './LCC.Login.aspx';
-    const loginUrl = new URL(loginAction, finalInitUrl).toString();
+      formData.otbUserID = userId;
+      formData.otbPassword = password;
+      formData.obtnLogin = 'LOGIN';
 
-    const loginRes = await client.post(loginUrl, qs.stringify(formData), {
-      headers: { 
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Referer': finalInitUrl,
-        'Origin': 'https://premium.schoolista.com'
-      },
-    });
+      let loginForm = $init('#Login');
+      if (loginForm.length === 0) loginForm = $init('form').first();
+      
+      const loginAction = loginForm.attr('action') || './LCC.Login.aspx';
+      const loginUrl = new URL(loginAction, finalInitUrl).toString();
+
+      loginRes = await client.post(loginUrl, qs.stringify(formData), {
+        headers: { 
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Referer': finalInitUrl,
+          'Origin': 'https://premium.schoolista.com'
+        },
+      });
+
+      // Save the session after a successful (first-time) login
+      await saveSession(userId, jar);
+    }
+    // --- END PROXY LOGIC ---
 
     const $dashboard = cheerio.load(loginRes.data);
     const dashboardTitle = $dashboard('title').text().trim();
@@ -351,17 +352,22 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Update Prospectus Subjects
+      // Update Prospectus Subjects using a Batch for efficiency
       if (offeredSubjects && offeredSubjects.length > 0) {
-        for (const sub of offeredSubjects) {
+        const batch = writeBatch(db);
+        // Firestore batches are limited to 500 operations
+        const subjectsToProcess = offeredSubjects.slice(0, 450); 
+        
+        for (const sub of subjectsToProcess) {
           const subRef = doc(db, 'prospectus_subjects', sub.code);
-          await setDoc(subRef, {
+          batch.set(subRef, {
             description: sub.description,
             units: sub.units,
             pre_req: sub.preReq,
             updated_at: serverTimestamp()
           }, { merge: true });
         }
+        await batch.commit();
       }
     } catch (dbError: any) {
       console.error('Database sync error:', dbError);

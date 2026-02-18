@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { db } from '@/lib/db';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
+import { getFullStudentData } from '@/lib/data-service';
 
 export const maxDuration = 30;
 
@@ -35,78 +35,31 @@ export async function POST(req: NextRequest) {
       return new Response('Database connection failed', { status: 500 });
     }
 
-    // 2. Gather Initial Context (User-specific)
-    const studentDoc = await getDoc(doc(db, 'students', userId));
-    if (!studentDoc.exists()) {
+    // 2. Gather Initial Context via Centralized Service
+    const studentData = await getFullStudentData(userId);
+
+    if (!studentData) {
       return new Response('Student profile not found.', { status: 404 });
     }
-    const student = studentDoc.data();
 
-    const [scheduleSnap, financialsSnap, gradesSnap, prospectusSnap] = await Promise.all([
-      getDoc(doc(db, 'schedules', userId)),
-      getDoc(doc(db, 'financials', userId)),
-      getDocs(query(collection(db, 'grades'), where('student_id', '==', userId))),
-      getDocs(collection(db, 'prospectus_subjects'))
-    ]);
+    const scheduleItems = studentData.schedule || [];
+    const financials = studentData.financials;
+    const allGrades = studentData.allGrades || [];
+    const gpa = studentData.gpa || 'N/A';
 
-    const prospectus: Record<string, string> = {};
-    prospectusSnap.forEach(doc => {
-      prospectus[doc.id] = doc.data().description;
-    });
-
-    const scheduleItems = scheduleSnap.exists() ? scheduleSnap.data().items || [] : [];
-    const financials = financialsSnap.exists() ? financialsSnap.data() : null;
     let financialContext = 'No financial data found.';
     if (financials) {
       financialContext = `
 - Current Balance: ${financials.balance || '0.00'}
 - Total Assessment: ${financials.total || '0.00'}
-- Due Today: ${financials.due_today || '0.00'}
+- Due Today: ${financials.dueToday || '0.00'}
 `.trim();
 
-      if (financials.details) {
-        const details = financials.details;
-        if (details.installments?.length > 0) {
-          financialContext += '\n\nINSTALLMENTS/ASSESSMENT:\n' + details.installments.map((i: any) => `- ${i.description} (${i.dueDate}): Assessed: ${i.assessed} | Outstanding: ${i.outstanding}`).join('\n');
-        }
-        if (details.payments?.length > 0) {
-          financialContext += '\n\nRECENT PAYMENTS:\n' + details.payments.map((p: any) => `- ${p.date}: ${p.amount} (Ref: ${p.reference})`).join('\n');
-        }
-        if (details.adjustments?.length > 0) {
-          financialContext += '\n\nADJUSTMENTS:\n' + details.adjustments.map((a: any) => `- ${a.description} (${a.dueDate}): ${a.adjustment} | Outstanding: ${a.outstanding}`).join('\n');
-        }
-        if (details.dueAccounts?.length > 0) {
-          financialContext += '\n\nSTATEMENT OF ACCOUNT (DUE):\n' + details.dueAccounts.map((d: any) => `- ${d.description} (${d.dueDate}): Due: ${d.due} | Paid: ${d.paid}`).join('\n');
-        }
+      if (financials.installments && financials.installments.length > 0) {
+        financialContext += '\n\nINSTALLMENTS/ASSESSMENT:\n' + financials.installments.map((i: any) => `- ${i.description} (${i.dueDate}): Assessed: ${i.assessed} | Outstanding: ${i.outstanding}`).join('\n');
       }
+      // Add other details if available in the type definition, adapting to what getFullStudentData provides
     }
-    
-    // Process all grades for better context
-    const allGrades: any[] = [];
-    gradesSnap.forEach(doc => {
-      const data = doc.data();
-      if (data.items) {
-        data.items.forEach((item: any) => {
-          const code = item.code || 'N/A';
-          const title = item.description || prospectus[code] || item.subject || 'Unknown Subject';
-          allGrades.push({ 
-            report: data.report_name, 
-            code: code, 
-            description: title, 
-            grade: item.grade || 'N/A', 
-            remarks: item.remarks || 'N/A'
-          });
-        });
-      }
-    });
-
-    // Calculate basic stats for the AI
-    const numericGrades = allGrades
-      .map(g => parseFloat(g.grade))
-      .filter(g => !isNaN(g));
-    const gpa = numericGrades.length > 0 
-      ? (numericGrades.reduce((a, b) => a + b, 0) / numericGrades.length).toFixed(2) 
-      : 'N/A';
 
     const now = new Date();
     const dateStr = now.toLocaleDateString('en-PH', { 
@@ -131,10 +84,10 @@ CURRENT CONTEXT:
 - Time: ${timeStr}
 
 STUDENT PROFILE:
-- Name: ${student.name}
-- Course: ${student.course}
-- Year Level: ${student.year_level}
-- Semester: ${student.semester || 'N/A'}
+- Name: ${studentData.name}
+- Course: ${studentData.course}
+- Year Level: ${studentData.yearLevel}
+- Semester: ${studentData.semester || 'N/A'}
 - Student ID: ${userId}
 
 ACADEMIC QUICK STATS:
@@ -143,8 +96,8 @@ ACADEMIC QUICK STATS:
 
 CURRENT SCHEDULE:
 ${scheduleItems.length > 0 ? scheduleItems.map((s: any) => {
-  const code = s.code || s.subject || 'N/A';
-  const title = s.description || prospectus[code] || s.subject || 'Unknown Subject';
+  const code = s.subject || s.code || 'N/A'; // Handle variations
+  const title = s.description || s.subject || 'Unknown Subject';
   return `- ${title} (${code}): ${s.time} | Room: ${s.room}`;
 }).join('\n') : 'No schedule data found.'}
 
@@ -152,7 +105,7 @@ FINANCIAL STATUS:
 ${financialContext}
 
 GRADE SUMMARY (MOST RECENT):
-${allGrades.slice(0, 20).map(g => `- [${g.report}] ${g.description}: ${g.grade} (${g.remarks})`).join('\n')}
+${allGrades.slice(0, 20).map(g => `- [${g.code}] ${g.description}: ${g.grade} (${g.remarks})`).join('\n')}
 ${allGrades.length > 20 ? '...and more subjects in the record.' : ''}
 
 INSTRUCTIONS:

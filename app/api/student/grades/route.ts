@@ -9,6 +9,8 @@ import { doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 
+import { getSessionClient, saveSession } from '@/lib/session-proxy';
+
 export async function POST(req: NextRequest) {
   let debugLog = "";
   try {
@@ -35,50 +37,52 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required parameters or valid session' }, { status: 401 });
     }
 
-    const jar = new CookieJar();
-    const client = wrapper(axios.create({ 
-      jar, 
-      withCredentials: true,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+    await initDatabase();
+
+    // --- GHOST SESSION PROXY LOGIC ---
+    const { client, jar, isNew } = await getSessionClient(userId);
+    const baseUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}`;
+    let finalInitUrl = baseUrl;
+
+    if (isNew) {
+      // Step 1: Initial visit to get tokens
+      debugLog += `Step 1: Initial visit to ${baseUrl}\n`;
+      const initRes = await client.get(baseUrl);
+      finalInitUrl = initRes.request.res.responseUrl || baseUrl;
+      const $init = cheerio.load(initRes.data);
+      
+      const formData: any = {};
+      $init('input[type="hidden"]').each((_, el) => {
+        const name = $init(el).attr('name');
+        if (name) formData[name] = $init(el).val() || '';
+      });
+      formData.otbUserID = userId;
+      formData.otbPassword = password;
+      formData.obtnLogin = 'LOGIN';
+
+      // Step 2: Perform Login
+      debugLog += `Step 2: Performing POST login\n`;
+      const loginAction = $init('#Login').attr('action') || './LCC.Login.aspx';
+      const loginUrl = new URL(loginAction, finalInitUrl).toString();
+
+      const loginRes = await client.post(loginUrl, qs.stringify(formData), {
+        headers: { 
+          'Content-Type': 'application/x-www-form-urlencoded', 
+          'Referer': finalInitUrl,
+          'Origin': 'https://premium.schoolista.com'
+        }
+      });
+
+      if (loginRes.data.includes('unexpected error') || loginRes.data.includes('USER ID')) {
+          debugLog += `ERROR: Login failed.\n`;
+      } else {
+          debugLog += `SUCCESS: Logged in successfully.\n`;
+          await saveSession(userId, jar);
       }
-    }));
-    
-    // 1. Initial visit to get tokens
-    const baseUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}&_pc=SY2025-2026-2&_dm=Main&_nm=`;
-    debugLog += `Step 1: Visiting ${baseUrl}\n`;
-    const initRes = await client.get(baseUrl);
-    const finalInitUrl = initRes.request.res.responseUrl || baseUrl;
-    const $init = cheerio.load(initRes.data);
-    
-    const formData: any = {};
-    $init('input[type="hidden"]').each((_, el) => {
-      const name = $init(el).attr('name');
-      if (name) formData[name] = $init(el).val() || '';
-    });
-    formData.otbUserID = userId;
-    formData.otbPassword = password;
-    formData.obtnLogin = 'LOGIN';
-
-    // 2. Perform Login
-    debugLog += `Step 2: Performing POST login\n`;
-    const loginAction = $init('#Login').attr('action') || './LCC.Login.aspx';
-    const loginUrl = new URL(loginAction, finalInitUrl).toString();
-
-    const loginRes = await client.post(loginUrl, qs.stringify(formData), {
-      headers: { 
-        'Content-Type': 'application/x-www-form-urlencoded', 
-        'Referer': finalInitUrl,
-        'Origin': 'https://premium.schoolista.com'
-      }
-    });
-
-    if (loginRes.data.includes('unexpected error') || loginRes.data.includes('USER ID')) {
-        debugLog += `ERROR: Login failed. Content starts with: ${loginRes.data.substring(0, 100)}\n`;
     } else {
-        debugLog += `SUCCESS: Logged in successfully.\n`;
+      debugLog += `Ghost Session Active: Bypassing login handshake.\n`;
     }
+    // --- END PROXY LOGIC ---
 
     // 3. Visit the Report Card URL
     const reportCardUrl = new URL(href, 'https://premium.schoolista.com/LCC/Student/').toString();
@@ -87,7 +91,6 @@ export async function POST(req: NextRequest) {
     let res = await client.get(reportCardUrl, {
         headers: { 'Referer': finalInitUrl }
     });
-
     // If we were redirected back to login page even after "success" login
     if (res.data.includes('otbUserID') && res.data.includes('otbPassword')) {
         debugLog += `WARNING: Redirected to login page. Retrying one more time with main dashboard visit...\n`;
@@ -240,9 +243,10 @@ export async function POST(req: NextRequest) {
         throw new Error('Database not initialized');
       }
 
-      // Try to extract report name from href (e.g., _nm=Grades+of+1st+Semester+SY+2024-2025)
-      let reportName = 'Unknown Report';
-      if (href.includes('_nm=')) {
+      // Try to extract report name from href or use a fallback
+      let reportName = body.reportName || 'Unknown Report';
+      
+      if (reportName === 'Unknown Report' && href.includes('_nm=')) {
         const match = href.match(/_nm=([^&]+)/);
         if (match) {
           reportName = decodeURIComponent(match[1].replace(/\+/g, ' '));
@@ -250,9 +254,16 @@ export async function POST(req: NextRequest) {
       }
 
       if (subjects && subjects.length > 0) {
-        // We use userId as the document ID for the grades collection.
-        // This keeps the collection flat and easy to manage.
-        const gradeRef = doc(db, 'grades', userId);
+        // Create a unique ID. If reportName is unknown, use a hash of href to prevent collisions.
+        let reportSlug = reportName.replace(/[^a-zA-Z0-9]/g, '_');
+        if (reportName === 'Unknown Report') {
+          // Simple hash of href for uniqueness when name is missing
+          const hash = href.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
+          reportSlug = `unknown_${Math.abs(hash)}`;
+        }
+        
+        const reportId = `${userId}_${reportSlug}`;
+        const gradeRef = doc(db, 'grades', reportId);
         
         await setDoc(gradeRef, {
           student_id: userId,

@@ -17,6 +17,7 @@ import PostCard from '@/components/PostCard';
 import { Info, ExternalLink } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { obfuscateId } from '@/lib/utils';
+import { useRef } from 'react';
 
 export default function CommunityPage() {
   const queryClient = useQueryClient();
@@ -33,6 +34,7 @@ export default function CommunityPage() {
   const [reviewError, setReviewError] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState('All');
   const [student, setStudent] = useState<Student | null>(null);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
   const topics = ['All', 'Academics', 'Campus Life', 'Career', 'Well-being', 'General'];
 
@@ -55,6 +57,28 @@ export default function CommunityPage() {
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
   }, []);
+
+  const handlePointerDown = (postId: string, hasLikes: boolean) => {
+    longPressTimer.current = setTimeout(() => {
+      if (hasLikes) fetchReactors(postId);
+      longPressTimer.current = null;
+    }, 500);
+  };
+
+  const handlePointerUp = (postId: string, isLiked: boolean) => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+      handleLike(postId, isLiked);
+    }
+  };
+
+  const handlePointerLeave = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
 
   const { data: posts = [], isLoading: loading } = useQuery({
     queryKey: ['community-posts'],
@@ -613,11 +637,15 @@ export default function CommunityPage() {
             )}
 
             <div className="flex items-center gap-4 py-4 border-y border-slate-50">
-                <div 
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg
+                <button 
+                    onPointerDown={() => handlePointerDown(selectedPost.id, (selectedPost.likes || []).length > 0)}
+                    onPointerUp={() => handlePointerUp(selectedPost.id, (selectedPost.likes || []).includes(student?.id || ''))}
+                    onPointerLeave={handlePointerLeave}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all
                         ${(selectedPost.likes || []).includes(student?.id || '') 
                             ? 'bg-red-50 text-red-600' 
-                            : 'bg-slate-50 text-slate-500'}`}
+                            : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                 >
                     <Heart 
                         className={`h-3.5 w-3.5 ${ (selectedPost.likes || []).includes(student?.id || '') ? 'fill-current' : ''}`} 
@@ -625,7 +653,7 @@ export default function CommunityPage() {
                     <span className="text-[10px] font-bold uppercase tracking-wider">
                         {(selectedPost.likes || []).length}
                     </span>
-                </div>
+                </button>
 
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-500">
                     <MessageSquare className="h-3.5 w-3.5" />

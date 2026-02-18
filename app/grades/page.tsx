@@ -42,7 +42,10 @@ export default function GradesPage() {
         fetch('/api/student/grades', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ href: report.href }),
+          body: JSON.stringify({ 
+            href: report.href,
+            reportName: report.text // Pass the report name
+          }),
         }).then(res => res.json())
       );
 

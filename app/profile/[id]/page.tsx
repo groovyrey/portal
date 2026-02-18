@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { Student, CommunityPost, CommunityComment } from '@/types';
 import { 
   GraduationCap, 
@@ -36,6 +36,7 @@ function ProfileContent() {
   const params = useParams();
   const router = useRouter();
   const profileId = deobfuscateId(params.id as string);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Community functionality states
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -48,6 +49,29 @@ function ProfileContent() {
   const [newComment, setNewComment] = useState('');
   const [commenting, setCommenting] = useState(false);
 
+  // ... (keep the rest of the hooks)
+
+  const handlePointerDown = (postId: string, hasLikes: boolean) => {
+    longPressTimer.current = setTimeout(() => {
+      if (hasLikes) fetchReactors(postId);
+      longPressTimer.current = null;
+    }, 500);
+  };
+
+  const handlePointerUp = (postId: string, isLiked: boolean) => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+      handleLike(postId, isLiked);
+    }
+  };
+
+  const handlePointerLeave = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
   const { data: posts = [], isLoading: loadingPosts } = useQuery({
     queryKey: ['user-posts', profileId],
     queryFn: async () => {
@@ -389,18 +413,12 @@ function ProfileContent() {
               </div>
             </div>
             
-            {/* Verified Icon - Floating beside avatar */}
+            {/* Verified Badge - Floating beside avatar */}
             {!isPublicView && (
-              <div className="absolute bottom-2 right-[-8px] group cursor-pointer sm:cursor-help">
-                <div className="bg-green-500 text-white p-1.5 rounded-xl shadow-lg shadow-green-200 border-2 border-white transition-transform active:scale-90">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-                {/* Tooltip - Positioned above for better mobile visibility */}
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex group-active:flex items-center z-[100]">
-                  <div className="bg-slate-900 text-white text-[10px] font-bold py-1.5 px-3 rounded-xl whitespace-nowrap shadow-2xl animate-in fade-in slide-in-from-bottom-1 duration-200">
-                    Verified Account
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-slate-900" />
-                  </div>
+              <div className="absolute bottom-2 right-[-12px]">
+                <div className="bg-green-500 text-white py-1.5 px-3 rounded-xl shadow-lg shadow-green-200 border-2 border-white flex items-center gap-1.5 transition-transform active:scale-95 cursor-default">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Verified</span>
                 </div>
               </div>
             )}
@@ -573,11 +591,15 @@ function ProfileContent() {
             )}
 
             <div className="flex items-center gap-4 py-4 border-y border-slate-50">
-                <div 
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg
+                <button 
+                    onPointerDown={() => handlePointerDown(selectedPost.id, (selectedPost.likes || []).length > 0)}
+                    onPointerUp={() => handlePointerUp(selectedPost.id, (selectedPost.likes || []).includes(student?.id || ''))}
+                    onPointerLeave={handlePointerLeave}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all
                         ${(selectedPost.likes || []).includes(student?.id || '') 
                             ? 'bg-red-50 text-red-600' 
-                            : 'bg-slate-50 text-slate-500'}`}
+                            : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                 >
                     <Heart 
                         className={`h-3.5 w-3.5 ${ (selectedPost.likes || []).includes(student?.id || '') ? 'fill-current' : ''}`} 
@@ -585,7 +607,7 @@ function ProfileContent() {
                     <span className="text-[10px] font-bold uppercase tracking-wider">
                         {(selectedPost.likes || []).length}
                     </span>
-                </div>
+                </button>
 
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-500">
                     <MessageSquare className="h-3.5 w-3.5" />

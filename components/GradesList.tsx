@@ -27,7 +27,10 @@ export default function GradesList({ reports }: GradesListProps) {
       const response = await fetch('/api/student/grades', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ href: selectedHref }), 
+        body: JSON.stringify({ 
+          href: selectedHref,
+          reportName: selectedSem // Pass the report name (e.g., "Grades of...")
+        }), 
       });
       const result = await response.json();
       return result.success ? (result.subjects as SubjectGrade[]) : null;
