@@ -1,35 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { collection, addDoc, query, orderBy, getDocs, serverTimestamp, doc, updateDoc, increment, where, deleteDoc, getDoc } from 'firebase/firestore';
+import { query, getClient } from '@/lib/pg';
 import { decrypt } from '@/lib/auth';
-import { initDatabase } from '@/lib/db-init';
 
 export async function GET(req: NextRequest) {
   try {
-    await initDatabase();
-    if (!db) return NextResponse.json({ error: 'DB not ready' }, { status: 500 });
-
     const { searchParams } = new URL(req.url);
-    const postId = searchParams.get('postId');
+    const postIdStr = searchParams.get('postId');
 
-    if (!postId) {
+    if (!postIdStr) {
       return NextResponse.json({ error: 'Post ID required' }, { status: 400 });
     }
 
-    const q = query(
-      collection(db, 'community_comments'),
-      where('postId', '==', postId)
-    );
-    const querySnapshot = await getDocs(q);
-    
-    const comments = querySnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
-      };
-    }).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    const postId = parseInt(postIdStr, 10);
+    if (isNaN(postId)) return NextResponse.json({ error: 'Invalid post ID' }, { status: 400 });
+
+    const commentsRes = await query(`
+      SELECT * FROM community_comments 
+      WHERE post_id = $1 
+      ORDER BY created_at ASC
+    `, [postId]);
+
+    const comments = commentsRes.rows.map(row => ({
+      ...row,
+      id: row.id.toString(),
+      postId: row.post_id.toString(),
+      userId: row.user_id,
+      userName: row.user_name,
+      createdAt: row.created_at.toISOString()
+    }));
 
     return NextResponse.json({ success: true, comments });
   } catch (error: any) {
@@ -40,8 +38,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { postId, content, userName } = await req.json();
-    if (!postId || !content) return NextResponse.json({ error: 'Post ID and content required' }, { status: 400 });
+    const { postId: postIdStr, content, userName } = await req.json();
+    if (!postIdStr || !content) return NextResponse.json({ error: 'Post ID and content required' }, { status: 400 });
+
+    const postId = parseInt(postIdStr, 10);
+    if (isNaN(postId)) return NextResponse.json({ error: 'Invalid post ID' }, { status: 400 });
 
     const sessionCookie = req.cookies.get('session_token');
     if (!sessionCookie) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -50,33 +51,32 @@ export async function POST(req: NextRequest) {
     const sessionData = JSON.parse(decrypted);
     const userId = sessionData.userId;
 
-    await initDatabase();
-    if (!db) return NextResponse.json({ error: 'DB not ready' }, { status: 500 });
+    // Ensure student exists (minimal record if not already synced)
+    await query(`
+      INSERT INTO students (id, name, updated_at)
+      VALUES ($1, $2, CURRENT_TIMESTAMP)
+      ON CONFLICT (id) DO NOTHING
+    `, [userId, userName || 'Anonymous Student']);
 
-    const commentData = {
-      postId,
+    const commentRes = await query(`
+      INSERT INTO community_comments (post_id, user_id, user_name, content)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, created_at
+    `, [postId, userId, userName || 'Anonymous Student', content]);
+
+    const newComment = {
+      id: commentRes.rows[0].id.toString(),
+      postId: postId.toString(),
       userId,
       userName: userName || 'Anonymous Student',
       content,
-      createdAt: serverTimestamp(),
+      createdAt: commentRes.rows[0].created_at.toISOString()
     };
-
-    const docRef = await addDoc(collection(db, 'community_comments'), commentData);
-
-    // Increment comment count on the post
-    const postRef = doc(db, 'community_posts', postId);
-    await updateDoc(postRef, {
-      commentCount: increment(1)
-    });
 
     return NextResponse.json({ 
       success: true, 
-      id: docRef.id,
-      comment: {
-        ...commentData,
-        id: docRef.id,
-        createdAt: new Date().toISOString()
-      }
+      id: newComment.id,
+      comment: newComment
     });
   } catch (error: any) {
     console.error('Create comment error:', error);
@@ -87,11 +87,14 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const commentId = searchParams.get('id');
+    const commentIdStr = searchParams.get('id');
 
-    if (!commentId) {
+    if (!commentIdStr) {
       return NextResponse.json({ error: 'Comment ID required' }, { status: 400 });
     }
+
+    const commentId = parseInt(commentIdStr, 10);
+    if (isNaN(commentId)) return NextResponse.json({ error: 'Invalid comment ID' }, { status: 400 });
 
     const sessionCookie = req.cookies.get('session_token');
     if (!sessionCookie) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -100,28 +103,17 @@ export async function DELETE(req: NextRequest) {
     const sessionData = JSON.parse(decrypted);
     const userId = sessionData.userId;
 
-    await initDatabase();
-    if (!db) return NextResponse.json({ error: 'DB not ready' }, { status: 500 });
-
-    const commentRef = doc(db, 'community_comments', commentId);
-    const commentSnap = await getDoc(commentRef);
-
-    if (!commentSnap.exists()) {
+    // Check ownership
+    const commentCheck = await query('SELECT user_id FROM community_comments WHERE id = $1', [commentId]);
+    if (commentCheck.rows.length === 0) {
       return NextResponse.json({ error: 'Comment not found' }, { status: 404 });
     }
 
-    const commentData = commentSnap.data();
-    if (commentData.userId !== userId) {
+    if (commentCheck.rows[0].user_id !== userId) {
       return NextResponse.json({ error: 'Unauthorized to delete this comment' }, { status: 403 });
     }
 
-    await deleteDoc(commentRef);
-
-    // Decrement comment count on the post
-    const postRef = doc(db, 'community_posts', commentData.postId);
-    await updateDoc(postRef, {
-      commentCount: increment(-1)
-    });
+    await query('DELETE FROM community_comments WHERE id = $1', [commentId]);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

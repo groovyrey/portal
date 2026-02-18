@@ -76,18 +76,9 @@ function ProfileContent() {
     queryKey: ['user-posts', profileId],
     queryFn: async () => {
       if (!profileId) return [];
-      const q = query(
-        collection(db, 'community_posts'), 
-        where('userId', '==', profileId),
-        orderBy('createdAt', 'desc'),
-        limit(20)
-      );
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
-      } as CommunityPost));
+      const res = await fetch(`/api/community?userId=${profileId}`);
+      const data = await res.json();
+      return data.success ? data.posts : [];
     },
     enabled: !!profileId,
   });
@@ -119,25 +110,31 @@ function ProfileContent() {
 
       if (viewingOthers) {
         try {
-          const docRef = doc(db, 'students', profileId!);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            targetStudent = {
-              id: profileId,
-              name: data.name,
-              parsedName: parseStudentName(data.name),
-              course: data.course,
-              yearLevel: data.year_level,
-              semester: data.semester,
-              email: data.email,
-              settings: data.settings || {
-                notifications: true,
-                isPublic: true,
-                showAcademicInfo: true
-              }
-            } as any;
-            setStudent(targetStudent);
+          const res = await fetch(`/api/student/profile?id=${profileId}`);
+          const result = await res.json();
+          if (result.success) {
+            setStudent(result.data);
+          } else {
+            // Fallback to Firestore if not found in PG (for transition period)
+            const docRef = doc(db, 'students', profileId!);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              setStudent({
+                id: profileId,
+                name: data.name,
+                parsedName: parseStudentName(data.name),
+                course: data.course,
+                yearLevel: data.year_level,
+                semester: data.semester,
+                email: data.email,
+                settings: data.settings || {
+                  notifications: true,
+                  isPublic: true,
+                  showAcademicInfo: true
+                }
+              } as any);
+            }
           }
         } catch (err) {
           console.error('Failed to fetch public profile', err);
@@ -485,7 +482,7 @@ function ProfileContent() {
               </div>
             ) : (
               <div className="space-y-4">
-                {posts.map((post) => (
+                {posts.map((post: CommunityPost) => (
                   <PostCard
                     key={post.id}
                     post={post}

@@ -369,6 +369,24 @@ export async function POST(req: NextRequest) {
         }
         await batch.commit();
       }
+
+      // --- PostgreSQL Synchronization ---
+      try {
+        const { query: pgQuery } = await import('@/lib/pg');
+        await pgQuery(`
+          INSERT INTO students (id, name, course, email, year_level, semester, updated_at)
+          VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+          ON CONFLICT (id) DO UPDATE SET
+            name = EXCLUDED.name,
+            course = EXCLUDED.course,
+            email = EXCLUDED.email,
+            year_level = EXCLUDED.year_level,
+            semester = EXCLUDED.semester,
+            updated_at = CURRENT_TIMESTAMP
+        `, [userId, studentName, course, email, yearLevel, semesterStr]);
+      } catch (pgError) {
+        console.error('PostgreSQL student sync error:', pgError);
+      }
     } catch (dbError: any) {
       console.error('Database sync error:', dbError);
     }
