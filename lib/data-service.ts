@@ -134,14 +134,36 @@ export async function getStudentGrades(userId: string): Promise<SubjectGrade[]> 
   }
 }
 
+export async function getOfferedSubjects(): Promise<ProspectusSubject[]> {
+  try {
+    const querySnap = await getDocs(collection(db, 'prospectus_subjects'));
+    const subjects: ProspectusSubject[] = [];
+    querySnap.forEach(doc => {
+      const data = doc.data();
+      subjects.push({
+        code: doc.id,
+        description: data.description || '',
+        units: data.units || '0',
+        preReq: data.pre_req || ''
+      });
+    });
+    // Sort by code for better UX
+    return subjects.sort((a, b) => a.code.localeCompare(b.code));
+  } catch (error) {
+    console.error('Error fetching offered subjects:', error);
+    return [];
+  }
+}
+
 export async function getFullStudentData(userId: string): Promise<AggregatedStudentData | null> {
   const profile = await getStudentProfile(userId);
   if (!profile) return null;
 
-  const [schedule, financials, grades] = await Promise.all([
+  const [schedule, financials, grades, offeredSubjects] = await Promise.all([
     getStudentSchedule(userId),
     getStudentFinancials(userId),
-    getStudentGrades(userId)
+    getStudentGrades(userId),
+    getOfferedSubjects()
   ]);
 
   // Calculate GPA
@@ -158,6 +180,7 @@ export async function getFullStudentData(userId: string): Promise<AggregatedStud
     schedule,
     financials: financials || undefined,
     allGrades: grades,
+    offeredSubjects,
     gpa
   };
 }
