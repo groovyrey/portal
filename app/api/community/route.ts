@@ -136,6 +136,13 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden: You can only delete your own posts' }, { status: 403 });
     }
 
+    // Delete associated comments first
+    const commentsQuery = query(collection(db, 'community_comments'), where('postId', '==', postId));
+    const commentsSnap = await getDocs(commentsQuery);
+    
+    const deleteCommentsPromises = commentsSnap.docs.map(commentDoc => deleteDoc(commentDoc.ref));
+    await Promise.all(deleteCommentsPromises);
+
     await deleteDoc(postRef);
 
     return NextResponse.json({ success: true });
