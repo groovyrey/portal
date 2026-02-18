@@ -47,7 +47,9 @@ export default function DashboardHeader({ student, onLogout }: DashboardHeaderPr
             </div>
             
             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-              {student.name}
+              {student.parsedName 
+                ? `${student.parsedName.firstName} ${student.parsedName.lastName}`
+                : student.name}
             </h2>
             
             <div className="flex items-center gap-2 mt-2 text-slate-500">

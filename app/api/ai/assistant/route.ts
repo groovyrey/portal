@@ -7,6 +7,7 @@ import { decrypt } from '@/lib/auth';
 
 export const maxDuration = 30;
 
+// Google Generative AI setup
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '');
 
 export async function POST(req: NextRequest) {
@@ -34,61 +35,106 @@ export async function POST(req: NextRequest) {
       return new Response('Database connection failed', { status: 500 });
     }
 
-    // 2. Gather Context
+    // 2. Gather Initial Context (User-specific)
     const studentDoc = await getDoc(doc(db, 'students', userId));
     if (!studentDoc.exists()) {
       return new Response('Student profile not found.', { status: 404 });
     }
     const student = studentDoc.data();
 
-    const [scheduleSnap, financialsSnap, gradesSnap, prospectusSnap] = await Promise.all([
+    const [scheduleSnap, financialsSnap, gradesSnap] = await Promise.all([
       getDoc(doc(db, 'schedules', userId)),
       getDoc(doc(db, 'financials', userId)),
-      getDocs(query(collection(db, 'grades'), where('student_id', '==', userId))),
-      getDocs(collection(db, 'prospectus_subjects'))
+      getDocs(query(collection(db, 'grades'), where('student_id', '==', userId)))
     ]);
 
     const scheduleItems = scheduleSnap.exists() ? scheduleSnap.data().items || [] : [];
     const financials = financialsSnap.exists() ? financialsSnap.data() : null;
+    
+    // Process all grades for better context
     const allGrades: any[] = [];
     gradesSnap.forEach(doc => {
       const data = doc.data();
       if (data.items) {
         data.items.forEach((item: any) => {
-          allGrades.push({ report_name: data.report_name, ...item });
+          allGrades.push({ 
+            report: data.report_name, 
+            code: item.code, 
+            description: item.description, 
+            grade: item.grade, 
+            remarks: item.remarks 
+          });
         });
       }
     });
-    const offeredSubjects = prospectusSnap.docs.map(d => ({ code: d.id, ...d.data() })) as any[];
+
+    // Calculate basic stats for the AI
+    const numericGrades = allGrades
+      .map(g => parseFloat(g.grade))
+      .filter(g => !isNaN(g));
+    const gpa = numericGrades.length > 0 
+      ? (numericGrades.reduce((a, b) => a + b, 0) / numericGrades.length).toFixed(2) 
+      : 'N/A';
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-PH', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    const timeStr = now.toLocaleTimeString('en-PH', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
 
     const systemPrompt = `
 You are "Portal Assistant", a friendly and helpful academic advisor for La Concepcion College (LCC).
-Today is ${new Date().toLocaleDateString()}.
 
-STUDENT INFO:
-Name: ${student.name}
-Course: ${student.course}
-Year: ${student.year_level}
+CURRENT CONTEXT:
+- Date: ${dateStr}
+- Time: ${timeStr}
 
-ACADEMIC CONTEXT:
-SCHEDULE: ${scheduleItems.map((s: any) => {
-  const fullSubject = offeredSubjects.find((o: any) => o.code === s.subject);
-  const title = fullSubject ? `${s.subject} - ${fullSubject.description}` : s.subject;
-  return `${title}: ${s.time} (${s.room})`;
-}).join(', ') || 'None'}
-FINANCIALS: ${financials ? `Balance: ₱${financials.balance}, Total: ₱${financials.total}, Due: ₱${financials.due_today}` : 'No data'}
-GRADES: ${allGrades.map(g => `${g.description}: ${g.grade} (${g.remarks})`).slice(0, 10).join(', ')}...
+STUDENT PROFILE:
+- Name: ${student.name}
+- Course: ${student.course}
+- Year Level: ${student.year_level}
+- Semester: ${student.semester || 'N/A'}
+- Student ID: ${userId}
+
+ACADEMIC QUICK STATS:
+- Calculated Avg Grade (Numeric only): ${gpa}
+- Total Subjects Recorded: ${allGrades.length}
+
+CURRENT SCHEDULE:
+${scheduleItems.length > 0 ? scheduleItems.map((s: any) => `- ${s.subject} (${s.code}): ${s.time} | Room: ${s.room}`).join('\n') : 'No schedule data found.'}
+
+FINANCIAL STATUS:
+- Current Balance: ₱${financials?.balance || '0.00'}
+- Total Assessment: ₱${financials?.total || '0.00'}
+- Due Today: ₱${financials?.due_today || '0.00'}
+${financials?.details ? `Details: ${Object.entries(financials.details).map(([k, v]) => `${k}: ₱${v}`).join(', ')}` : ''}
+
+GRADE SUMMARY (MOST RECENT):
+${allGrades.slice(0, 20).map(g => `- [${g.report}] ${g.description}: ${g.grade} (${g.remarks})`).join('\n')}
+${allGrades.length > 20 ? '...and more subjects in the record.' : ''}
 
 INSTRUCTIONS:
-- Use the student's data to provide personalized assistance.
-- Be encouraging and professional.
-- If they ask about something not in their data, politely say you don't have access to that information yet.
+- Use the student's data to provide highly personalized assistance.
+- If the student asks about their grades, analyze the record provided above.
+- If they ask about fees, reference the financial status.
+- If they ask about their classes, look at the current schedule.
+- Be encouraging, professional, and empathetic.
 - Keep responses concise but thorough.
+- Reference the current time and date if relevant.
 `.trim();
 
     // 3. Inference Call with Gemini
-    const modelName = "gemini-3-flash-preview";
-    const model = genAI.getGenerativeModel({ model: modelName });
+    const modelName = "gemma-3-27b-it"; 
+    const model = genAI.getGenerativeModel({ 
+      model: modelName,
+    });
 
     const chat = model.startChat({
       history: [
@@ -103,29 +149,33 @@ INSTRUCTIONS:
 
     const lastMessage = messages[messages.length - 1].content;
     const result = await chat.sendMessageStream(lastMessage);
+    
+    // We create a TransformStream to handle the streaming response back to the client
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
+    const encoder = new TextEncoder();
 
-    // 4. Stream the response
-    const stream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
-        try {
-          for await (const chunk of result.stream) {
-            const chunkText = chunk.text();
-            if (chunkText) {
-              controller.enqueue(encoder.encode(chunkText));
-            }
+    // Background process to stream text
+    (async () => {
+      try {
+        for await (const chunk of result.stream) {
+          const text = chunk.text();
+          if (text) {
+            await writer.write(encoder.encode(text));
           }
-        } catch (err) {
-          controller.error(err);
-        } finally {
-          controller.close();
         }
-      },
-    });
+      } catch (err: any) {
+        console.error("Streaming error:", err);
+        await writer.write(encoder.encode("\n\n[Error during processing: " + err.message + "]"));
+      } finally {
+        await writer.close();
+      }
+    })();
 
-    return new Response(stream, {
+    return new Response(stream.readable, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
+        'Transfer-Encoding': 'chunked',
       },
     });
 

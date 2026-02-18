@@ -149,9 +149,13 @@ export default function GradesPage() {
           </button>
         </div>
 
-        {allGrades.length > 0 && <GradeStats allGrades={allGrades} />}
-        
         <GradesList reports={student.availableReports} />
+
+        {allGrades.length > 0 && (
+          <div className="mt-10">
+            <GradeStats allGrades={allGrades} />
+          </div>
+        )}
       </main>
     </div>
   );

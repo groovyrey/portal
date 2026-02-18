@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Student } from '@/types';
 import { 
-  User, 
   Lock, 
   Bell, 
   Eye, 
@@ -13,16 +12,16 @@ import {
   LogOut,
   Loader2,
   Mail,
-  Phone,
-  MapPin,
   Calendar,
-  GraduationCap
+  GraduationCap,
+  User
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Drawer from '@/components/Drawer';
 import SecuritySettings from '@/components/SecuritySettings';
+import { APP_VERSION } from '@/lib/version';
 
 export default function SettingsPage() {
   const [student, setStudent] = useState<Student | null>(null);
@@ -90,9 +89,9 @@ export default function SettingsPage() {
           <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 ml-1">Account</h2>
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
             <SettingsItem 
-              icon={<User className="text-blue-500" />} 
+              icon={<Shield className="text-blue-500" />} 
               title="Personal Information" 
-              description="View your contact and address details"
+              description="View your profile details"
               onClick={() => setActiveDrawer('profile')}
             />
             <SettingsItem 
@@ -188,19 +187,16 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <DrawerInfoItem icon={<User className="text-blue-500" />} label="First Name" value={student.parsedName?.firstName} />
+                    <DrawerInfoItem icon={<User className="text-slate-400" />} label="Middle Name" value={student.parsedName?.middleName} />
+                    <DrawerInfoItem icon={<User className="text-blue-500" />} label="Last Name" value={student.parsedName?.lastName} />
+                </div>
                 <DrawerInfoItem icon={<Mail />} label="Email Address" value={student.email} />
-                <DrawerInfoItem icon={<Phone />} label="Contact Number" value={student.contact} />
-                <DrawerInfoItem icon={<MapPin />} label="Permanent Address" value={student.address} />
                 <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-4">
                     <DrawerInfoItem icon={<GraduationCap />} label="Program" value={student.course} />
                     <DrawerInfoItem icon={<Calendar />} label="Year/Sem" value={`${student.yearLevel} / ${student.semester}`} />
                 </div>
-            </div>
-
-            <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <p className="text-[10px] text-blue-700 font-medium leading-relaxed">
-                    Note: To update official records like your name or course, please visit the Registrar's Office.
-                </p>
             </div>
           </div>
         )}
@@ -215,7 +211,7 @@ export default function SettingsPage() {
             <p className="text-sm text-slate-500">Manage what information is visible to other students in the community portal.</p>
             <div className="space-y-4">
                 <SettingsToggle 
-                    icon={<User className="text-blue-500" />} 
+                    icon={<Shield className="text-blue-500" />} 
                     title="Public Profile" 
                     description="Allow others to view your profile"
                     enabled={student?.settings?.isPublic ?? true}
@@ -233,7 +229,7 @@ export default function SettingsPage() {
       </Drawer>
 
       <footer className="mt-12 text-center">
-        <p className="text-xs font-medium text-slate-400">LCC Hub v1.1.0</p>
+        <p className="text-xs font-medium text-slate-400">LCC Hub v{APP_VERSION}</p>
       </footer>
     </div>
   );

@@ -2,10 +2,7 @@
 
 import { Student } from '../types';
 import { 
-  User, 
-  Phone, 
   Mail, 
-  MapPin, 
   ShieldCheck,
   Hash
 } from 'lucide-react';
@@ -13,22 +10,24 @@ import { motion } from 'framer-motion';
 
 interface PersonalInfoProps {
   student: Student;
+  isPublic?: boolean;
 }
 
-export default function PersonalInfo({ student }: PersonalInfoProps) {
+export default function PersonalInfo({ student, isPublic = false }: PersonalInfoProps) {
+  const showPersonal = !isPublic || (student.settings?.isPublic ?? true);
+
   const details = [
-    { label: 'Gender', value: student.gender, icon: User },
-    { label: 'Contact', value: student.contact, icon: Phone },
-    { label: 'Email', value: student.email, icon: Mail },
-    { label: 'Address', value: student.address, icon: MapPin },
+    { label: 'Email', value: student.email, icon: Mail, visible: !isPublic },
   ];
 
-  const initials = student.name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
+  const initials = student.parsedName 
+    ? (student.parsedName.firstName[0] + (student.parsedName.lastName[0] || '')).toUpperCase()
+    : student.name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .substring(0, 2)
+        .toUpperCase();
 
   return (
     <motion.div 
@@ -51,7 +50,7 @@ export default function PersonalInfo({ student }: PersonalInfoProps) {
         </div>
 
         <div className="space-y-6">
-          {details.map((detail, idx) => (
+          {details.filter(d => d.visible).map((detail, idx) => (
             <div key={idx} className="flex items-start gap-4">
               <div className="mt-1">
                 <detail.icon className="h-4 w-4 text-slate-400" />

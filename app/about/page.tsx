@@ -19,34 +19,7 @@ import LottieAnimation from '@/components/LottieAnimation';
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-100">
-      <div className="max-w-4xl mx-auto px-6 py-16 md:py-24">
-        {/* Header Section */}
-        <header className="mb-16 flex flex-col md:flex-row items-center gap-12 text-center md:text-left">
-          <div className="flex-1">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white text-blue-700 text-[10px] font-bold uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-6">
-              <Sparkles className="h-3 w-3" />
-              Project Spotlight
-            </div>
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-6">
-              LCC Hub <span className="text-blue-600">.</span>
-            </h1>
-            <p className="text-xl text-slate-500 max-w-2xl leading-relaxed">
-              A modern, community-driven interface designed to streamline student life at La Concepcion College.
-            </p>
-            <div className="mt-8 flex items-center justify-center md:justify-start gap-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              <span>Version 1.3.0</span>
-              <span className="w-1 h-1 rounded-full bg-slate-300" />
-              <span>Open Beta</span>
-            </div>
-          </div>
-          <div className="w-full md:w-1/3 max-w-xs">
-            <LottieAnimation 
-              animationPath="/animations/creative-team.json"
-              className="w-full h-full"
-            />
-          </div>
-        </header>
-
+      <div className="max-w-4xl mx-auto px-6 py-12 md:py-16">
         <div className="grid gap-12">
           {/* Mission Card */}
           <div className="bg-white p-8 md:p-12 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden group">
@@ -143,21 +116,51 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Disclaimer Footer */}
-          <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-xl shadow-slate-200 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <h3 className="text-lg font-bold mb-2">Notice of Unofficial Status</h3>
-              <p className="text-slate-400 text-sm max-w-md">
-                LCC Hub is an independent third-party application and is not affiliated with, endorsed by, or maintained by La Concepcion College.
-              </p>
+          {/* System Architecture Section */}
+          <div className="bg-slate-900 text-white p-8 md:p-12 rounded-3xl shadow-xl shadow-slate-200 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-5">
+              <Cpu size={160} />
             </div>
-            <Link 
-              href="/disclaimer" 
-              className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold uppercase tracking-widest transition-all backdrop-blur-md flex items-center gap-2"
-            >
-              Read Legal Disclaimer
-              <ExternalLink className="h-3 w-3" />
-            </Link>
+            <div className="relative z-10">
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                <Code2 className="h-6 w-6 text-blue-400" />
+                System Architecture
+              </h2>
+              <div className="grid md:grid-cols-2 gap-12 text-slate-300">
+                <div>
+                  <h4 className="text-white font-bold mb-3 flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-blue-400" />
+                    Real-time Data Sync
+                  </h4>
+                  <p className="text-sm leading-relaxed">
+                    LCC Hub acts as a highly optimized <strong>Headless Browser Wrapper</strong>. Instead of maintaining a separate copy of school records, we programmatically fetch and sync your real-time data directly from the official portal on demand.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-white font-bold mb-3 flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-blue-400" />
+                    AES-256 Security
+                  </h4>
+                  <p className="text-sm leading-relaxed">
+                    Security is baked into our core. We utilize <strong>AES-256 bit encryption</strong> for all session tokens. Your portal credentials are never permanently stored; they exist only within your local, encrypted session.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-12 p-6 bg-white/5 rounded-2xl border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-widest text-blue-400 mb-1">Project Status</p>
+                  <p className="text-sm font-medium">Independent Community Project (Not affiliated with LCC)</p>
+                </div>
+                <Link 
+                  href="/disclaimer" 
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2"
+                >
+                  View Full Disclaimer
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -8,19 +8,21 @@ import { Send, User, MessageSquare, Loader2, PenLine, Eye, MoreVertical, Trash2,
 import { CommunityPost, Student, CommunityComment } from '@/types';
 import Link from 'next/link';
 import Drawer from '@/components/Drawer';
+import Modal from '@/components/Modal';
 import PostReviewModal from '@/components/PostReviewModal';
 import PostReviewResultModal from '@/components/PostReviewResultModal';
 import CommunityGuidelinesDrawer from '@/components/CommunityGuidelinesDrawer';
+import Skeleton from '@/components/Skeleton';
 import { Info, ExternalLink } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function CommunityPage() {
-  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const queryClient = useQueryClient();
   const [postsToShow, setPostsToShow] = useState(5);
   const [content, setContent] = useState('');
   const [showPollEditor, setShowPollEditor] = useState(false);
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState(['', '']);
-  const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
@@ -48,33 +50,38 @@ export default function CommunityPage() {
   const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [commentToDelete, setCommentToDelete] = useState<{postId: string, commentId: string} | null>(null);
-  const [comments, setComments] = useState<{[key: string]: CommunityComment[]} >({});
   const [commentsToShow, setCommentsToShow] = useState<{[key: string]: number}>({});
-  const [loadingComments, setLoadingComments] = useState<{[key: string]: boolean}>({});
   const [newComment, setNewComment] = useState('');
   const [commenting, setCommenting] = useState(false);
 
   useEffect(() => {
     const savedStudent = localStorage.getItem('student_data');
     if (savedStudent) setStudent(JSON.parse(savedStudent));
-    fetchPosts();
 
     const handleClickOutside = () => setActiveMenu(null);
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
   }, []);
 
-  const fetchPosts = async () => {
-    try {
+  const { data: posts = [], isLoading: loading } = useQuery({
+    queryKey: ['community-posts'],
+    queryFn: async () => {
       const res = await fetch('/api/community');
       const data = await res.json();
-      if (data.success) setPosts(data.posts);
-    } catch (err) {
-      toast.error('Failed to load posts');
-    } finally {
-      setLoading(false);
+      return data.success ? (data.posts as CommunityPost[]) : [];
     }
-  };
+  });
+
+  const { data: comments = {}, isLoading: loadingCommentsObj } = useQuery({
+    queryKey: ['comments', selectedPost?.id],
+    queryFn: async () => {
+      if (!selectedPost) return {};
+      const res = await fetch(`/api/community/comments?postId=${selectedPost.id}`);
+      const data = await res.json();
+      return data.success ? { [selectedPost.id]: data.comments as CommunityComment[] } : {};
+    },
+    enabled: !!selectedPost,
+  });
 
   const fetchReactors = async (postId: string) => {
     setLoadingReactors(true);
@@ -87,21 +94,6 @@ export default function CommunityPage() {
         toast.error('Failed to load reactors');
     } finally {
         setLoadingReactors(false);
-    }
-  };
-
-  const fetchComments = async (postId: string) => {
-    setLoadingComments(prev => ({ ...prev, [postId]: true }));
-    try {
-      const res = await fetch(`/api/community/comments?postId=${postId}`);
-      const data = await res.json();
-      if (data.success) {
-        setComments(prev => ({ ...prev, [postId]: data.comments }));
-      }
-    } catch (err) {
-      toast.error('Failed to load comments');
-    } finally {
-      setLoadingComments(prev => ({ ...prev, [postId]: false }));
     }
   };
 
@@ -123,19 +115,8 @@ export default function CommunityPage() {
       const data = await res.json();
       if (data.success) {
         setNewComment('');
-        setComments(prev => ({
-          ...prev,
-          [postId]: [...(prev[postId] || []), data.comment]
-        }));
-        
-        const updatePost = (p: CommunityPost) => 
-          p.id === postId ? { ...p, commentCount: (p.commentCount || 0) + 1 } : p;
-        
-        setPosts(prev => prev.map(updatePost));
-        if (selectedPost?.id === postId) {
-            setSelectedPost(prev => prev ? updatePost(prev) : null);
-        }
-        
+        queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+        queryClient.invalidateQueries({ queryKey: ['community-posts'] });
         toast.success('Comment added!');
       } else {
         toast.error(data.error || 'Failed to add comment');
@@ -163,17 +144,8 @@ export default function CommunityPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setComments(prev => ({
-          ...prev,
-          [postId]: (prev[postId] || []).filter(c => c.id !== commentId)
-        }));
-        // Update post comment count locally
-        setPosts(prev => prev.map(p => 
-          p.id === postId ? { ...p, commentCount: Math.max(0, (p.commentCount || 0) - 1) } : p
-        ));
-        if (selectedPost?.id === postId) {
-            setSelectedPost(prev => prev ? { ...prev, commentCount: Math.max(0, (prev.commentCount || 0) - 1) } : null);
-        }
+        queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+        queryClient.invalidateQueries({ queryKey: ['community-posts'] });
         toast.success('Comment deleted', { id: deleteToast });
       } else {
         toast.error(data.error || 'Failed to delete comment', { id: deleteToast });
@@ -186,24 +158,10 @@ export default function CommunityPage() {
   const openPostModal = (post: CommunityPost) => {
     setSelectedPost(post);
     setCommentsToShow(prev => ({ ...prev, [post.id]: 5 }));
-    if (!comments[post.id]) {
-      fetchComments(post.id);
-    }
   };
 
   const handleLike = async (postId: string, isLiked: boolean) => {
     if (!student) return;
-
-    // Optimistic Update
-    setPosts(prev => prev.map(p => {
-        if (p.id === postId) {
-            const newLikes = isLiked 
-                ? (p.likes || []).filter(id => id !== student.id)
-                : [...(p.likes || []), student.id];
-            return { ...p, likes: newLikes };
-        }
-        return p;
-    }));
 
     try {
       const res = await fetch('/api/community', {
@@ -216,9 +174,8 @@ export default function CommunityPage() {
       });
 
       if (!res.ok) throw new Error();
+      queryClient.invalidateQueries({ queryKey: ['community-posts'] });
     } catch (err) {
-      // Revert on error
-      fetchPosts();
       toast.error('Failed to update reaction');
     }
   };
@@ -239,7 +196,7 @@ export default function CommunityPage() {
       const data = await res.json();
       if (data.success) {
         toast.success('Post deleted', { id: deleteToast });
-        setPosts(prev => prev.filter(p => p.id !== postId));
+        queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       } else {
         toast.error(data.error || 'Failed to delete', { id: deleteToast });
       }
@@ -320,7 +277,7 @@ export default function CommunityPage() {
         setView('edit');
         setShowReviewModal(false);
         setShowResultModal(true); // Show success or error modal
-        fetchPosts();
+        queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       } else {
         setShowReviewModal(false);
         toast.error(data.error || 'Failed to post');
@@ -336,27 +293,6 @@ export default function CommunityPage() {
   const handleVote = async (postId: string, optionIndex: number) => {
     if (!student) return;
 
-    const updatePost = (p: CommunityPost) => {
-        if (p.id === postId && p.poll) {
-            const hasVoted = p.poll.options.some(opt => opt.votes.includes(student.id));
-            if (hasVoted) return p;
-
-            const newOptions = [...p.poll.options];
-            newOptions[optionIndex] = {
-              ...newOptions[optionIndex],
-              votes: [...newOptions[optionIndex].votes, student.id]
-            };
-            return { ...p, poll: { ...p.poll, options: newOptions } };
-        }
-        return p;
-    };
-
-    // Optimistic Update
-    setPosts(prev => prev.map(updatePost));
-    if (selectedPost?.id === postId) {
-        setSelectedPost(prev => prev ? updatePost(prev) : null);
-    }
-
     try {
       const res = await fetch('/api/community', {
         method: 'PATCH',
@@ -369,8 +305,8 @@ export default function CommunityPage() {
       });
 
       if (!res.ok) throw new Error();
+      queryClient.invalidateQueries({ queryKey: ['community-posts'] });
     } catch (err) {
-      fetchPosts();
       toast.error('Failed to cast vote');
     }
   };
@@ -380,24 +316,32 @@ export default function CommunityPage() {
     : posts.filter(p => (p as any).topic === selectedTopic);
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto space-y-8">
-        <header className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-              <MessageSquare className="h-6 w-6 text-blue-600" />
-              Community
-            </h1>
-            <p className="text-slate-500 text-sm font-medium mt-1">Connect and share with fellow students.</p>
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowGuidelines(true)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:shadow-sm transition-all"
+            >
+              <Info className="h-4 w-4" />
+              Guidelines
+            </button>
+            <a 
+              href="https://www.markdownguide.org/basic-syntax/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:shadow-sm transition-all cursor-help group"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Markdown Help
+            </a>
           </div>
-          <button
-            onClick={() => setShowGuidelines(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-wider text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:shadow-sm transition-all"
-          >
-            <Info className="h-4 w-4" />
-            Guidelines
-          </button>
-        </header>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            {posts.length} Posts shared
+          </p>
+        </div>
 
         {/* Create Post */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -419,15 +363,6 @@ export default function CommunityPage() {
                   Preview
                 </button>
               </div>
-              <a 
-                href="https://www.markdownguide.org/basic-syntax/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all cursor-help group"
-              >
-                <ExternalLink className="h-3 w-3 transition-transform group-hover:scale-110" />
-                Markdown Supported
-              </a>
             </div>
 
             {view === 'edit' ? (
@@ -549,8 +484,27 @@ export default function CommunityPage() {
         {/* Feed */}
         <div className="space-y-4">
           {loading ? (
-            <div className="flex justify-center py-20">
-              <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white rounded-2xl p-6 border border-slate-200 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-9 w-9 rounded-lg" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </div>
+                  <div className="flex gap-4 pt-4 border-t border-slate-50">
+                    <Skeleton className="h-8 w-16" />
+                    <Skeleton className="h-8 w-16" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : filteredPosts.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 text-slate-400">
@@ -835,7 +789,7 @@ export default function CommunityPage() {
               </div>
 
               <div className="space-y-6 pb-20">
-                {loadingComments[selectedPost.id] ? (
+                {loadingCommentsObj ? (
                   <div className="flex justify-center py-10">
                     <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
                   </div>
@@ -922,107 +876,94 @@ export default function CommunityPage() {
       </Drawer>
 
       {/* Reactors Modal */}
-      {reactors && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setReactors(null)}>
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-xs bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100"
-          >
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Hearts</h3>
-              <button onClick={() => setReactors(null)} className="text-slate-400 hover:text-slate-600">
-                <X className="h-4 w-4" />
-              </button>
+      <Modal 
+        isOpen={!!reactors} 
+        onClose={() => setReactors(null)}
+        maxWidth="max-w-xs"
+        title={<h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Hearts</h3>}
+      >
+        <div className="max-h-60 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+          {loadingReactors ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
             </div>
-            
-            <div className="max-h-60 overflow-y-auto p-2 space-y-1 custom-scrollbar">
-              {loadingReactors ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+          ) : (
+            reactors?.map(user => (
+              <Link 
+                key={user.id} 
+                href={`/profile?id=${user.id}`}
+                onClick={() => setReactors(null)}
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                <div className="h-8 w-8 rounded bg-slate-900 flex items-center justify-center text-white font-bold text-[10px]">
+                  {user.name.charAt(0)}
                 </div>
-              ) : (
-                reactors.map(user => (
-                  <Link 
-                    key={user.id} 
-                    href={`/profile?id=${user.id}`}
-                    onClick={() => setReactors(null)}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="h-8 w-8 rounded bg-slate-900 flex items-center justify-center text-white font-bold text-[10px]">
-                      {user.name.charAt(0)}
-                    </div>
-                    <span className="text-sm font-semibold text-slate-700">
-                      {user.name}
-                    </span>
-                  </Link>
-                ))
-              )}
-            </div>
-          </div>
+                <span className="text-sm font-semibold text-slate-700">
+                  {user.name}
+                </span>
+              </Link>
+            ))
+          )}
         </div>
-      )}
+      </Modal>
 
       {/* Delete Confirmation Modal */}
-      {postToDelete && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setPostToDelete(null)}>
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-xs bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 p-6 text-center"
-          >
-            <div className="h-12 w-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="h-6 w-6" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 mb-1">Delete Post?</h3>
-            <p className="text-xs text-slate-500 font-medium mb-6">This action cannot be undone. Are you sure you want to remove this post?</p>
-            
-            <div className="flex flex-col gap-2">
-                <button 
-                    onClick={handleDelete}
-                    className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-colors shadow-lg shadow-red-600/10"
-                >
-                    Confirm Delete
-                </button>
-                <button 
-                    onClick={() => setPostToDelete(null)}
-                    className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-xl transition-colors"
-                >
-                    Cancel
-                </button>
-            </div>
-          </div>
+      <Modal 
+        isOpen={!!postToDelete} 
+        onClose={() => setPostToDelete(null)}
+        maxWidth="max-w-xs"
+        className="p-6 text-center"
+      >
+        <div className="h-12 w-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="h-6 w-6" />
         </div>
-      )}
+        <h3 className="text-base font-bold text-slate-900 mb-1">Delete Post?</h3>
+        <p className="text-xs text-slate-500 font-medium mb-6">This action cannot be undone. Are you sure you want to remove this post?</p>
+        
+        <div className="flex flex-col gap-2">
+            <button 
+                onClick={handleDelete}
+                className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-colors shadow-lg shadow-red-600/10"
+            >
+                Confirm Delete
+            </button>
+            <button 
+                onClick={() => setPostToDelete(null)}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-xl transition-colors"
+            >
+                Cancel
+            </button>
+        </div>
+      </Modal>
 
       {/* Comment Delete Confirmation Modal */}
-      {commentToDelete && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setCommentToDelete(null)}>
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-xs bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 p-6 text-center"
-          >
-            <div className="h-12 w-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="h-6 w-6" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 mb-1">Delete Comment?</h3>
-            <p className="text-xs text-slate-500 font-medium mb-6">Are you sure you want to remove this comment?</p>
-            
-            <div className="flex flex-col gap-2">
-                <button 
-                    onClick={confirmDeleteComment}
-                    className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-colors shadow-lg shadow-red-600/10"
-                >
-                    Confirm Delete
-                </button>
-                <button 
-                    onClick={() => setCommentToDelete(null)}
-                    className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-xl transition-colors"
-                >
-                    Cancel
-                </button>
-            </div>
-          </div>
+      <Modal 
+        isOpen={!!commentToDelete} 
+        onClose={() => setCommentToDelete(null)}
+        maxWidth="max-w-xs"
+        className="p-6 text-center"
+      >
+        <div className="h-12 w-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="h-6 w-6" />
         </div>
-      )}
+        <h3 className="text-base font-bold text-slate-900 mb-1">Delete Comment?</h3>
+        <p className="text-xs text-slate-500 font-medium mb-6">Are you sure you want to remove this comment?</p>
+        
+        <div className="flex flex-col gap-2">
+            <button 
+                onClick={confirmDeleteComment}
+                className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-colors shadow-lg shadow-red-600/10"
+            >
+                Confirm Delete
+            </button>
+            <button 
+                onClick={() => setCommentToDelete(null)}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-xl transition-colors"
+            >
+                Cancel
+            </button>
+        </div>
+      </Modal>
 
       <PostReviewModal isOpen={showReviewModal} />
       <PostReviewResultModal 

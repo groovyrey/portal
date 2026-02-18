@@ -1,7 +1,13 @@
-import { ScheduleItem } from '../types';
+'use client';
+
+import { ScheduleItem, ProspectusSubject } from '../types';
+import { useState, useMemo, useEffect } from 'react';
+import { X, MapPin, Clock, Hash, BookOpen } from 'lucide-react';
+import Modal from './Modal';
 
 interface ScheduleTableProps {
   schedule: ScheduleItem[];
+  offeredSubjects?: ProspectusSubject[];
 }
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -11,14 +17,50 @@ const HOURS = [
   '7:00 PM', '8:00 PM', '9:00 PM'
 ];
 
-export default function ScheduleTable({ schedule }: ScheduleTableProps) {
-  if (!schedule || schedule.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm">
-        <p className="text-slate-400 text-sm">No classes found.</p>
-      </div>
-    );
-  }
+const SUBJECT_COLORS = [
+  'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100',
+  'bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100',
+  'bg-violet-50 text-violet-700 border-violet-100 hover:bg-violet-100',
+  'bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100',
+  'bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100',
+  'bg-cyan-50 text-cyan-700 border-cyan-100 hover:bg-cyan-100',
+  'bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100',
+  'bg-orange-50 text-orange-700 border-orange-100 hover:bg-orange-100',
+];
+
+export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTableProps) {
+  const [selectedItem, setSelectedItem] = useState<ScheduleItem | null>(null);
+
+  const getSubjectCode = (subject: string) => {
+    // Extracts "CS 101" from "CS 101 - Computer Science"
+    const parts = subject.split(' - ');
+    return parts[0].trim();
+  };
+
+  const getSubjectName = (subject: string) => {
+    const parts = subject.split(' - ');
+    if (parts.length > 1) {
+      return parts.slice(1).join(' - ').trim();
+    }
+    
+    // Fallback: look it up in offeredSubjects
+    if (offeredSubjects) {
+      const sub = offeredSubjects.find(s => s.code === subject || s.code === parts[0].trim());
+      if (sub) return sub.description;
+    }
+    
+    return subject;
+  };
+
+  const getSubjectColor = (subject: string) => {
+    let hash = 0;
+    const code = getSubjectCode(subject);
+    for (let i = 0; i < code.length; i++) {
+      hash = code.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % SUBJECT_COLORS.length;
+    return SUBJECT_COLORS[index];
+  };
 
   const parseTimeRange = (timeStr: string) => {
     const timePart = timeStr.match(/(\d+:\d+\s*(?:AM|PM))\s*-\s*(\d+:\d+\s*(?:AM|PM))/i);
@@ -49,16 +91,24 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
     return map[dayAbbr] ? [map[dayAbbr]] : null;
   };
 
+  if (!schedule || schedule.length === 0) {
+    return (
+      <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-sm">
+        <h3 className="text-slate-900 font-bold mb-1">No Schedule</h3>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse min-w-[800px] table-fixed">
+        <table className="w-full border-collapse table-fixed min-w-[600px]">
           <thead>
-            <tr>
-              <th className="w-16 py-3 bg-slate-50/50 border-b border-slate-100"></th>
+            <tr className="bg-slate-50/50">
+              <th className="w-14 py-2 border-b border-slate-100"></th>
               {DAYS.map(day => (
-                <th key={day} className="py-3 px-2 bg-slate-50/50 border-b border-slate-100">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">{day}</span>
+                <th key={day} className="py-2 px-1 border-b border-slate-100 text-center">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{day.substring(0, 3)}</span>
                 </th>
               ))}
             </tr>
@@ -70,10 +120,13 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
                 const currentHour = 7 + hIdx;
 
                 return (
-                  <tr key={hourStr} className="h-16">
-                    <td className="py-4 border-b border-slate-50 text-center bg-slate-50/30">
-                      <span className="text-[11px] font-bold text-slate-400 tabular-nums">{hourStr.split(' ')[0]}</span>
+                  <tr key={hourStr} className="h-10">
+                    <td className="border-r border-b border-slate-50 text-center bg-slate-50/30">
+                      <span className="text-[9px] font-bold text-slate-400 tabular-nums">
+                        {hourStr.split(' ')[0]}
+                      </span>
                     </td>
+                    
                     {DAYS.map((day, dayIdx) => {
                       if (cellSpans[dayIdx] > 0) {
                         cellSpans[dayIdx]--;
@@ -95,27 +148,30 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
                           <td
                             key={day}
                             rowSpan={duration}
-                            className="p-1 border-b border-slate-50 align-top h-px"
+                            className="p-0.5 border-b border-l border-slate-50 align-top h-px"
                           >
-                            <div className="h-full rounded-xl p-3 bg-slate-900 text-white flex flex-col transition-all hover:ring-2 hover:ring-blue-500 cursor-default shadow-sm shadow-slate-200">
-                              <div className="text-[10px] font-medium opacity-60 mb-1 truncate">
-                                {classToRender.time.split(/\s+/).slice(1).join(' ')}
-                              </div>
-                              <div className="text-[13px] font-black leading-tight line-clamp-4 mb-2 uppercase tracking-tight">
-                                {classToRender.subject}
-                              </div>
-                              <div className="mt-auto flex flex-col gap-1 opacity-80 text-[10px] font-bold border-t border-white/10 pt-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="truncate mr-1">📍 {classToRender.room}</span>
-                                    <span className="shrink-0">{classToRender.units} Units</span>
-                                </div>
-                              </div>
-                            </div>
+                            <button
+                              onClick={() => setSelectedItem(classToRender)}
+                              className={`
+                                w-full h-full rounded-lg p-1.5 flex flex-col items-center justify-center text-center
+                                transition-all border ${getSubjectColor(classToRender.subject)}
+                                shadow-sm hover:shadow-md active:scale-[0.98] overflow-hidden
+                              `}
+                            >
+                              <span className="text-[10px] font-black leading-tight truncate w-full">
+                                {getSubjectCode(classToRender.subject)}
+                              </span>
+                              {duration > 1 && (
+                                <span className="text-[8px] font-bold opacity-60 mt-0.5 truncate w-full">
+                                  {classToRender.room}
+                                </span>
+                              )}
+                            </button>
                           </td>
                         );
                       }
 
-                      return <td key={day} className="p-0.5 border-b border-slate-50"></td>;
+                      return <td key={day} className="border-b border-l border-slate-50 h-10"></td>;
                     })}
                   </tr>
                 );
@@ -124,6 +180,82 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
           </tbody>
         </table>
       </div>
+
+      {/* Detail Modal */}
+      <Modal
+        isOpen={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+      >
+        {selectedItem && (
+          <div className="overflow-hidden">
+            <div className={`p-6 ${getSubjectColor(selectedItem.subject)} border-b border-black/5`}>
+              <div className="flex justify-between items-start mb-4">
+                <div className="px-2 py-1 bg-white/40 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                  {selectedItem.section}
+                </div>
+              </div>
+              <h3 className="text-lg font-black leading-tight mb-2 uppercase tracking-tight">
+                {getSubjectName(selectedItem.subject)}
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
+                  {getSubjectCode(selectedItem.subject)}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-4 group">
+                <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                  <Clock className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Time Schedule</p>
+                  <p className="text-sm font-bold text-slate-700">{selectedItem.time}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 group">
+                <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                  <MapPin className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Room / Facility</p>
+                  <p className="text-sm font-bold text-slate-700">{selectedItem.room}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                    <Hash className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Units</p>
+                    <p className="text-xs font-bold text-slate-700">{selectedItem.units} Units</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                    <BookOpen className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Section</p>
+                    <p className="text-xs font-bold text-slate-700">{selectedItem.section}</p>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setSelectedItem(null)}
+                className="w-full mt-4 py-3 bg-slate-900 text-white text-xs font-bold uppercase tracking-widest rounded-2xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20"
+              >
+                Close Details
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

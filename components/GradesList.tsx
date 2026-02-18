@@ -1,48 +1,61 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Student, SubjectGrade } from '../types';
 import { 
   FileText, 
   ChevronRight, 
   CheckCircle2, 
   XCircle, 
-  Loader2,
   BookOpenCheck
 } from 'lucide-react';
 import Drawer from './Drawer';
+import Skeleton from './Skeleton';
+import { useQuery } from '@tanstack/react-query';
 
 interface GradesListProps {
   reports: Student['availableReports'];
 }
 
 export default function GradesList({ reports }: GradesListProps) {
+  const [selectedHref, setSelectedHref] = useState<string | null>(null);
   const [selectedSem, setSelectedSem] = useState<string | null>(null);
-  const [grades, setGrades] = useState<SubjectGrade[] | null>(null);
-  const [loading, setLoading] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  if (!reports) return null;
-
-  const fetchGrades = async (href: string, title: string) => {
-    setLoading(true);
-    setSelectedSem(title);
-    setIsDrawerOpen(true);
-    setGrades(null);
-    
-    try {
+  const { data: grades, isLoading: loading } = useQuery({
+    queryKey: ['grades', selectedHref],
+    queryFn: async () => {
+      if (!selectedHref) return null;
       const response = await fetch('/api/student/grades', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ href }), 
+        body: JSON.stringify({ href: selectedHref }), 
       });
       const result = await response.json();
-      if (result.success) {
-        setGrades(result.subjects);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+      return result.success ? (result.subjects as SubjectGrade[]) : null;
+    },
+    enabled: !!selectedHref,
+  });
+
+  if (!reports) return null;
+
+  const handleOpenReport = (href: string, title: string) => {
+    setSelectedHref(href);
+    setSelectedSem(title);
+    setIsDrawerOpen(true);
+  };
+
+  // Reset selected state after drawer closes (with animation delay)
+  useEffect(() => {
+    if (!isDrawerOpen) {
+      const timer = setTimeout(() => {
+        setSelectedSem(null);
+        setSelectedHref(null);
+      }, 300);
+      return () => clearTimeout(timer);
     }
+  }, [isDrawerOpen]);
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
   };
 
   return (
@@ -64,7 +77,7 @@ export default function GradesList({ reports }: GradesListProps) {
             return (
               <button
                 key={idx}
-                onClick={() => fetchGrades(report.href, report.text)}
+                onClick={() => handleOpenReport(report.href, report.text)}
                 className={`flex items-center justify-between p-4 rounded-xl text-xs font-bold transition-all border outline-none ${
                   isActive
                     ? 'bg-blue-600 text-white border-blue-600 shadow-md scale-[1.02]'
@@ -86,14 +99,27 @@ export default function GradesList({ reports }: GradesListProps) {
 
       <Drawer
         isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
+        onClose={handleCloseDrawer}
         title={selectedSem ? selectedSem.replace('Grades of ', '') : "Grades"}
       >
         <div className="space-y-6">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-              <Loader2 className="h-10 w-10 text-blue-600 animate-spin mb-4" />
-              <p className="text-xs font-bold uppercase tracking-widest animate-pulse">Loading Academic Records...</p>
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-full" />
+              <div className="divide-y divide-slate-100">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="py-4 first:pt-0 last:pb-0">
+                    <div className="flex justify-between items-start gap-4 mb-2">
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/4" />
+                      </div>
+                      <Skeleton className="h-8 w-12 rounded-lg" />
+                    </div>
+                    <Skeleton className="h-3 w-20 mt-2" />
+                  </div>
+                ))}
+              </div>
             </div>
           ) : grades ? (
             <div className="space-y-4">

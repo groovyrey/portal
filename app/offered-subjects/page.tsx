@@ -1,52 +1,44 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Student, LoginResponse } from '../../types';
+import { Student } from '../../types';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Search, X } from 'lucide-react';
 import LottieAnimation from '@/components/LottieAnimation';
 import Skeleton from '@/components/Skeleton';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function OfferedSubjectsPage() {
-  const [student, setStudent] = useState<Student | null>(null);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [isInitialized, setIsInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    const savedStudent = localStorage.getItem('student_data');
-    if (savedStudent) {
-      try {
-        setStudent(JSON.parse(savedStudent));
-      } catch (e) {
-        console.error('Failed to parse saved student data');
+  const { data: student, isLoading: loading, isError } = useQuery({
+    queryKey: ['student-data'],
+    queryFn: async () => {
+      const response = await fetch('/api/student/me');
+      const result = await response.json();
+      if (response.ok && result.success && result.data) {
+        // Still sync to localStorage for dashboard's optimistic UI if needed
+        localStorage.setItem('student_data', JSON.stringify(result.data));
+        return result.data as Student;
       }
+      throw new Error(result.error || 'Failed to fetch student data');
     }
+  });
+
+  useEffect(() => {
     setIsInitialized(true);
   }, []);
 
   const handleRefresh = async () => {
-    if (!student) return;
-    setLoading(true);
     const refreshToast = toast.loading('Refreshing subject listing...');
-
     try {
-      const response = await fetch('/api/student/me');
-      const result = await response.json();
-
-      if (response.ok && result.success && result.data) {
-        setStudent(result.data);
-        localStorage.setItem('student_data', JSON.stringify(result.data));
-        window.dispatchEvent(new Event('local-storage-update'));
-        toast.success('Subjects updated!', { id: refreshToast });
-      } else {
-        toast.error(result.error || 'Refresh failed.', { id: refreshToast });
-      }
+      await queryClient.invalidateQueries({ queryKey: ['student-data'] });
+      toast.success('Subjects updated!', { id: refreshToast });
     } catch (err) {
-      toast.error('Network error. Please try again.', { id: refreshToast });
-    } finally {
-      setLoading(false);
+      toast.error('Refresh failed.', { id: refreshToast });
     }
   };
 

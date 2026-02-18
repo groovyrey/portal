@@ -3,11 +3,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { Student } from '@/types';
 import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Calendar, 
   GraduationCap, 
   ShieldCheck,
   ArrowLeft,
@@ -19,6 +14,8 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { db } from '@/lib/db';
 import { doc, getDoc } from 'firebase/firestore';
+import PersonalInfo from '@/components/PersonalInfo';
+import { parseStudentName } from '@/lib/utils';
 
 function ProfileContent() {
   const [student, setStudent] = useState<Student | null>(null);
@@ -48,13 +45,11 @@ function ProfileContent() {
             setStudent({
               id: profileId,
               name: data.name,
+              parsedName: parseStudentName(data.name),
               course: data.course,
               yearLevel: data.year_level,
               semester: data.semester,
-              gender: data.gender,
               email: data.email,
-              contact: data.contact,
-              address: data.address,
               settings: data.settings || {
                 notifications: true,
                 isPublic: true,
@@ -144,7 +139,11 @@ function ProfileContent() {
               />
             </div>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-slate-900 leading-tight mb-1">{student.name}</h1>
+              <h1 className="text-2xl font-bold text-slate-900 leading-tight mb-1">
+                {student.parsedName 
+                  ? `${student.parsedName.firstName} ${student.parsedName.lastName}`
+                  : student.name}
+              </h1>
               <p className="text-slate-500 font-mono text-sm mb-3">{student.id}</p>
               {showAcademic && (
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold uppercase tracking-wider border border-blue-100">
@@ -158,23 +157,19 @@ function ProfileContent() {
 
         {/* Info Grid */}
         <div className="p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-            {showAcademic && (
-              <>
-                <InfoItem icon={<User />} label="Year Level" value={student.yearLevel} />
-                <InfoItem icon={<Calendar />} label="Semester" value={student.semester} />
-              </>
-            )}
-            <InfoItem icon={<User />} label="Gender" value={student.gender} />
-            
-            {!isPublicView && (
-              <>
-                <InfoItem icon={<Mail />} label="Email Address" value={student.email} />
-                <InfoItem icon={<Phone />} label="Contact Number" value={student.contact} />
-                <InfoItem icon={<MapPin />} label="Mailing Address" value={student.address} className="md:col-span-2" />
-              </>
-            )}
-          </div>
+          {showAcademic && (
+            <div className="grid grid-cols-2 gap-6 mb-8 pb-8 border-b border-slate-50">
+               <div>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Year Level</p>
+                 <p className="text-sm font-semibold text-slate-700">{student.yearLevel}</p>
+               </div>
+               <div>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Semester</p>
+                 <p className="text-sm font-semibold text-slate-700">{student.semester}</p>
+               </div>
+            </div>
+          )}
+          <PersonalInfo student={student} isPublic={isPublicView} />
 
           {!isPublicView && (
             <div className="mt-12 p-4 bg-slate-900 rounded-xl text-white flex items-center justify-between">
@@ -193,20 +188,6 @@ function ProfileContent() {
             </div>
           )}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function InfoItem({ icon, label, value, className = "" }: { icon: React.ReactNode, label: string, value?: string, className?: string }) {
-  return (
-    <div className={`flex items-start gap-4 ${className}`}>
-      <div className="h-9 w-9 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 text-slate-400">
-        {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 18 }) : icon}
-      </div>
-      <div>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
-        <p className="text-sm font-semibold text-slate-700">{value || 'Not Specified'}</p>
       </div>
     </div>
   );

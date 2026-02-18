@@ -64,6 +64,13 @@ export interface ReportLink {
   href: string;
 }
 
+export interface ParsedName {
+  firstName: string;
+  lastName: string;
+  middleName: string;
+  full: string;
+}
+
 export interface CommunityPost {
   id: string;
   userId: string;
@@ -93,11 +100,9 @@ export interface CommunityComment {
 
 export interface Student {
   name: string;
+  parsedName?: ParsedName;
   id: string;
   course: string;
-  gender?: string;
-  address?: string;
-  contact?: string;
   email?: string;
   yearLevel?: string;
   semester?: string;

@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
+import { parseStudentName } from '@/lib/utils';
 
 export async function GET(req: NextRequest) {
   try {
@@ -66,10 +67,8 @@ export async function GET(req: NextRequest) {
         const studentData = {
           id: userId,
           name: student.name,
+          parsedName: parseStudentName(student.name),
           course: student.course,
-          gender: student.gender,
-          address: student.address,
-          contact: student.contact,
           email: student.email,
           yearLevel: student.year_level,
           semester: student.semester,

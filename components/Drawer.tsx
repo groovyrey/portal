@@ -57,7 +57,7 @@ export default function Drawer({ isOpen, onClose, title, children, side = 'right
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
               <div className={isBottom ? 'max-w-2xl mx-auto' : ''}>
                 {children}
               </div>

@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "../components/Navbar";
 import PageHeader from "../components/PageHeader";
 import Footer from "../components/Footer";
+import Providers from "../components/Providers";
+import VersionChecker from "../components/VersionChecker";
 import { Toaster } from 'sonner';
 
 const inter = Inter({ 
@@ -24,13 +26,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased text-slate-900 bg-slate-50 min-h-screen flex flex-col`}>
-        <Navbar />
-        <PageHeader />
-        <main className="flex-1">
-          {children}
-        </main>
-        <Footer />
-        <Toaster position="top-center" richColors />
+        <Providers>
+          <VersionChecker />
+          <Navbar />
+          <PageHeader />
+          <main className="flex-1">
+            {children}
+          </main>
+          <Footer />
+          <Toaster position="top-center" richColors />
+        </Providers>
       </body>
     </html>
   );

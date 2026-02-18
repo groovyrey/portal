@@ -9,118 +9,88 @@ import PersonalInfo from '../components/PersonalInfo';
 import { toast } from 'sonner';
 import Skeleton from '../components/Skeleton';
 import LoginProgressModal from '../components/LoginProgressModal';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function Home() {
-  const [student, setStudent] = useState<Student | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | undefined>(undefined);
+  const queryClient = useQueryClient();
+  const [loginError, setLoginError] = useState<string | undefined>(undefined);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // ... rest of state and effects ...
-
-  // Initial session check
-  useEffect(() => {
-    const checkSession = async () => {
-      // Optimistic UI: Load from cache if available
-      const savedStudent = localStorage.getItem('student_data');
-      if (savedStudent) {
-        try {
-          setStudent(JSON.parse(savedStudent));
-        } catch (e) { /* ignore */ }
-      }
-
-      try {
-        const res = await fetch('/api/student/me');
-        if (res.ok) {
-          const result = await res.json();
-          if (result.success && result.data) {
-            setStudent(result.data);
-            localStorage.setItem('student_data', JSON.stringify(result.data));
-            // Trigger login event
-            window.dispatchEvent(new Event('local-storage-update'));
-          }
-        } else {
-          // Session invalid/expired
-          if (savedStudent) {
-            setStudent(null);
-            localStorage.removeItem('student_data');
-            window.dispatchEvent(new Event('local-storage-update'));
-            toast.error('Session expired. Please log in again.');
-          }
+  // Use React Query for student data
+  const { data: student, isLoading: isQueryLoading } = useQuery({
+    queryKey: ['student-data'],
+    queryFn: async () => {
+      const res = await fetch('/api/student/me');
+      if (res.ok) {
+        const result = await res.json();
+        if (result.success && result.data) {
+          localStorage.setItem('student_data', JSON.stringify(result.data));
+          return result.data as Student;
         }
-      } catch (err) {
-        console.error('Session check failed', err);
-      } finally {
-        setIsInitialized(true);
       }
-    };
+      // If not ok or not success, return null (logged out)
+      localStorage.removeItem('student_data');
+      return null;
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  });
 
-    checkSession();
+  useEffect(() => {
+    setIsInitialized(true);
   }, []);
 
-  // Update localStorage only for data caching (NO credentials)
-  useEffect(() => {
-    if (isInitialized) {
-      if (student) {
-        localStorage.setItem('student_data', JSON.stringify(student));
-      } else {
-        localStorage.removeItem('student_data');
-      }
-    }
-  }, [student, isInitialized]);
-
-  const handleLogin = async (userId: string, pass: string) => {
-    setLoading(true);
-    setError(undefined);
-
-    try {
+  const loginMutation = useMutation({
+    mutationFn: async ({ userId, pass }: { userId: string, pass: string }) => {
       const response = await fetch('/api/student/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, password: pass }),
       });
-
-      const result: LoginResponse = await response.json();
-
+      return response.json() as Promise<LoginResponse>;
+    },
+    onSuccess: (result) => {
       if (result.success && result.data) {
-        // Clear any old credentials if they exist
         localStorage.removeItem('student_pass'); 
-        
-        setStudent(result.data);
-        toast.success(`Welcome, ${result.data.name}!`);
-        
-        // Cache data only
+        queryClient.setQueryData(['student-data'], result.data);
         localStorage.setItem('student_data', JSON.stringify(result.data));
         window.dispatchEvent(new Event('local-storage-update'));
+        const displayName = result.data.parsedName ? result.data.parsedName.firstName : result.data.name;
+        toast.success(`Welcome, ${displayName}!`);
+        setLoginError(undefined);
       } else {
         const msg = result.error || 'Login failed. Please check your credentials.';
-        setError(msg);
+        setLoginError(msg);
         toast.error(msg);
       }
-    } catch (err) {
-      setError('Network error. Please try again.');
+    },
+    onError: () => {
+      setLoginError('Network error. Please try again.');
       toast.error('Network error. Please try again.');
-    } finally {
-      setLoading(false);
     }
+  });
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await fetch('/api/student/logout', { method: 'POST' });
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(['student-data'], null);
+      localStorage.removeItem('student_data');
+      localStorage.removeItem('student_pass');
+      window.dispatchEvent(new Event('local-storage-update'));
+      toast.success('Logged out successfully.');
+    }
+  });
+
+  const handleLogin = (userId: string, pass: string) => {
+    loginMutation.mutate({ userId, pass });
   };
 
-  const handleLogout = async () => {
-    try {
-        await fetch('/api/student/logout', { method: 'POST' });
-        toast.success('Logged out successfully.');
-    } catch (e) {
-        console.error('Logout API failed', e);
-    }
-    
-    setStudent(null);
-    setError(undefined);
-    localStorage.removeItem('student_data');
-    localStorage.removeItem('student_pass'); // Ensure this is gone
-    window.dispatchEvent(new Event('local-storage-update'));
+  const handleLogout = () => {
+    logoutMutation.mutate();
   };
 
-  if (!isInitialized) {
+  if (!isInitialized || (isQueryLoading && !student)) {
     return (
       <div className="min-h-screen bg-slate-50 p-8">
         <div className="max-w-5xl mx-auto space-y-8">
@@ -147,8 +117,8 @@ export default function Home() {
   if (!student) {
     return (
       <>
-        <LoginForm onLogin={handleLogin} loading={loading} error={error} />
-        <LoginProgressModal isOpen={loading} />
+        <LoginForm onLogin={handleLogin} loading={loginMutation.isPending} error={loginError} />
+        <LoginProgressModal isOpen={loginMutation.isPending} />
       </>
     );
   }
@@ -160,7 +130,12 @@ export default function Home() {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            {student.schedule && <ScheduleTable schedule={student.schedule} />}
+            {student.schedule && (
+              <ScheduleTable 
+                schedule={student.schedule} 
+                offeredSubjects={student.offeredSubjects || undefined} 
+              />
+            )}
           </div>
           <div className="lg:col-span-1">
             <PersonalInfo student={student} />

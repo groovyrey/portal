@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { LayoutDashboard, User, Lock, AlertCircle, Info } from 'lucide-react';
+import Link from 'next/link';
 
 interface LoginFormProps {
-  onLogin: (id: string, pass: string) => Promise<void>;
+  onLogin: (id: string, pass: string) => void;
   loading: boolean;
   error?: string;
 }
@@ -10,9 +11,11 @@ interface LoginFormProps {
 export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!agreedToTerms) return;
     onLogin(userId, password);
   };
 
@@ -63,6 +66,20 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
               </div>
             </div>
 
+            <div className="flex items-start gap-3 px-1.5 py-1">
+              <input
+                type="checkbox"
+                id="terms"
+                required
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600/10 cursor-pointer"
+              />
+              <label htmlFor="terms" className="text-xs text-slate-500 leading-normal font-medium cursor-pointer">
+                I agree to the <Link href="/disclaimer" className="text-blue-600 font-bold hover:underline">Terms of Service</Link> and acknowledge how my data is used for my convenience.
+              </label>
+            </div>
+
             {error && (
               <div className="flex gap-2 p-3 bg-red-50 border border-red-100 rounded-lg text-red-600">
                 <AlertCircle className="h-5 w-5 flex-shrink-0" />
@@ -72,9 +89,9 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !agreedToTerms}
               className={`w-full flex justify-center py-2.5 px-4 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none transition-colors mt-2 ${
-                loading ? 'opacity-70 cursor-wait' : ''
+                loading || !agreedToTerms ? 'opacity-70 cursor-not-allowed' : ''
               }`}
             >
               {loading ? (

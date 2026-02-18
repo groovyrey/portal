@@ -17,6 +17,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 type Message = {
   id: string;
@@ -24,22 +25,40 @@ type Message = {
   content: string;
 };
 
+// Helper component for word-by-word fade in
+const WordFadeIn = ({ children }: { children: string }) => {
+  return (
+    <motion.span
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      {children}
+    </motion.span>
+  );
+};
+
 export default function AssistantPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   };
 
-  // Removed auto-scroll useEffect as per user request
-  // useEffect(() => {
-  //   scrollToBottom();
-  // }, [messages, isLoading]);
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
@@ -53,7 +72,6 @@ export default function AssistantPage() {
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
-    setError(null);
 
     // Create a temporary assistant message with empty content to show loading state
     const assistantMessageId = (Date.now() + 1).toString();
@@ -111,14 +129,16 @@ export default function AssistantPage() {
       }
     } catch (err: any) {
       console.error('Assistant error:', err);
-      setError(err.message || 'Something went wrong');
-      setMessages((prev) => {
-        const last = prev[prev.length - 1];
-        if (last && last.id === assistantMessageId && !last.content) {
-          return prev.slice(0, -1);
-        }
-        return prev;
-      });
+      const friendlyError = "I'm having trouble connecting right now. Please try again in a moment.";
+      toast.error(friendlyError);
+      
+      setMessages((prev) => 
+        prev.map((msg) => 
+          msg.id === assistantMessageId 
+            ? { ...msg, content: `⚠️ ${friendlyError}` } 
+            : msg
+        )
+      );
     } finally {
       setIsLoading(false);
     }
@@ -137,29 +157,13 @@ export default function AssistantPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-4 md:py-8 flex flex-col h-[calc(100vh-100px)]">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 px-2">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 hover:text-slate-700">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <div>
-            <h1 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Bot className="h-5 w-5 text-blue-600" />
-              Student Assistant
-            </h1>
-            <div className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-xs font-medium text-slate-500">Online</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="max-w-4xl mx-auto px-4 py-4 md:py-8 flex flex-col h-[calc(100vh-128px)]">
       {/* Messages Area */}
       <div className="flex-1 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col relative">
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scroll-smooth">
+        <div 
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scroll-smooth custom-scrollbar"
+        >
           {messages.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto p-4">
               <div className="bg-blue-50 p-4 rounded-2xl mb-6">
@@ -222,7 +226,7 @@ export default function AssistantPage() {
                           rehypePlugins={[rehypeHighlight]}
                           className="prose prose-slate max-w-none leading-relaxed text-slate-700"
                           components={{
-                            p: ({node, ...props}) => <p className="mb-3 last:mb-0" {...props} />,
+                            p: ({node, children}) => <p className="mb-3 last:mb-0"><motion.span layout>{children}</motion.span></p>,
                             table: ({node, ...props}) => <div className="overflow-x-auto my-4 rounded-xl border border-slate-100 shadow-sm"><table className="w-full text-sm text-left" {...props} /></div>,
                             thead: ({node, ...props}) => <thead className="bg-slate-50/50 text-slate-700 font-medium" {...props} />,
                             th: ({node, ...props}) => <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider text-slate-500" {...props} />,
@@ -232,10 +236,10 @@ export default function AssistantPage() {
                             a: ({node, ...props}) => <a className="text-blue-600 hover:text-blue-700 font-medium hover:underline decoration-blue-200 underline-offset-4" target="_blank" rel="noopener noreferrer" {...props} />,
                             ul: ({node, ...props}) => <ul className="list-disc list-outside ml-5 my-3 space-y-1.5 text-slate-700 marker:text-slate-400" {...props} />,
                             ol: ({node, ...props}) => <ol className="list-decimal list-outside ml-5 my-3 space-y-1.5 text-slate-700 marker:text-slate-400" {...props} />,
-                            li: ({node, ...props}) => <li className="pl-1" {...props} />,
-                            h1: ({node, ...props}) => <h1 className="text-2xl font-bold text-slate-900 mt-6 mb-4 tracking-tight" {...props} />,
-                            h2: ({node, ...props}) => <h2 className="text-lg font-bold text-slate-900 mt-5 mb-3 tracking-tight" {...props} />,
-                            h3: ({node, ...props}) => <h3 className="text-base font-bold text-slate-900 mt-4 mb-2" {...props} />,
+                            li: ({node, children}) => <li className="pl-1"><motion.span layout>{children}</motion.span></li>,
+                            h1: ({node, children}) => <h1 className="text-2xl font-bold text-slate-900 mt-6 mb-4 tracking-tight"><motion.span layout>{children}</motion.span></h1>,
+                            h2: ({node, children}) => <h2 className="text-lg font-bold text-slate-900 mt-5 mb-3 tracking-tight"><motion.span layout>{children}</motion.span></h2>,
+                            h3: ({node, children}) => <h3 className="text-base font-bold text-slate-900 mt-4 mb-2"><motion.span layout>{children}</motion.span></h3>,
                             blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-blue-200 pl-4 py-1 my-4 text-slate-600 italic bg-slate-50 rounded-r-lg" {...props} />,
                             hr: ({node, ...props}) => <hr className="my-6 border-slate-100" {...props} />,
                           }}
@@ -255,18 +259,6 @@ export default function AssistantPage() {
             ))}
           </AnimatePresence>
 
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex justify-center"
-            >
-              <div className="bg-red-50 border border-red-100 px-4 py-2 rounded-full text-red-600 text-xs font-semibold flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-red-500" />
-                {error}
-              </div>
-            </motion.div>
-          )}
           <div ref={messagesEndRef} />
         </div>
 
@@ -278,8 +270,9 @@ export default function AssistantPage() {
                 type="text" 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about grades, schedule, or fees..."
-                className="w-full bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-full pl-5 pr-12 py-3.5 text-sm font-medium transition-all outline-none"
+                disabled={isLoading}
+                placeholder={isLoading ? "Assistant is thinking..." : "Ask about grades, schedule, or fees..."}
+                className="w-full bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-full pl-5 pr-12 py-3.5 text-sm font-medium transition-all outline-none disabled:opacity-60 disabled:cursor-not-allowed"
               />
               <button 
                 type="submit"

@@ -10,6 +10,7 @@ import { db } from '@/lib/db';
 import { doc, setDoc, getDoc, serverTimestamp, collection, writeBatch } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { encrypt } from '@/lib/auth';
+import { parseStudentName } from '@/lib/utils';
 
 export async function POST(req: NextRequest) {
     const { userId, password } = await req.json();
@@ -155,13 +156,9 @@ export async function POST(req: NextRequest) {
     
     const course = courseMatch ? courseMatch[courseMatch.length - 1].trim() : "Not specified";
 
-    const gender = pageText.match(/Male|Female/i)?.[0] || "";
     const email = pageText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i)?.[0] || "";
-    const contact = pageText.match(/09\d{9}/i)?.[0] || "";
     const semMatch = pageText.match(/\d(?:st|nd|rd|th)\s+Semester/i);
     const yearMatch = pageText.match(/BSIS(\d)/i) || pageText.match(/Year\s+(\d)/i);
-    const addressMatch = pageText.match(/(?:Male|Female)\s+(.*?)\s+(?:San Jose|Bulacan|Philippines)/i);
-    const address = addressMatch ? `${addressMatch[1].trim()} San Jose Del Monte, Bulacan` : "";
 
     const formatYearLevel = (year: string) => {
       const n = parseInt(year);
@@ -412,6 +409,7 @@ export async function POST(req: NextRequest) {
 
     // Save to database
     let existingSettings = null;
+    let isNewUser = false;
     try {
       if (!db) {
         throw new Error('Firestore database is not initialized. Check your environment variables.');
@@ -424,14 +422,12 @@ export async function POST(req: NextRequest) {
       // Upsert Student
       const studentRef = doc(db, 'students', userId);
       const existingStudentDoc = await getDoc(studentRef);
+      isNewUser = !existingStudentDoc.exists();
       existingSettings = existingStudentDoc.exists() ? existingStudentDoc.data().settings : null;
 
       await setDoc(studentRef, {
         name: studentName,
         course: course,
-        gender: gender,
-        address: address,
-        contact: contact,
         email: email,
         year_level: yearLevel,
         semester: semesterStr,
@@ -492,14 +488,13 @@ export async function POST(req: NextRequest) {
 
         const response = NextResponse.json({
             success: true,
+            isNewUser,
             data: { 
                 name: studentName, 
+                parsedName: parseStudentName(studentName),
                 id: userId, 
                 course, 
-                gender, 
                 email, 
-                contact, 
-                address,
                 semester: semMatch ? semMatch[0] : "2nd Semester",
                 yearLevel: yearMatch ? formatYearLevel(yearMatch[1]) : "2nd Year",
                 schedule: finalSchedule.length > 0 ? finalSchedule : null,

@@ -213,7 +213,7 @@ export default function Navbar() {
               </button>
             </div>
             
-            <div className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+            <div className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
               {(isLoggedIn ? navLinks : publicLinks).map((link) => {
                 const Icon = link.icon;
                 return (

@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { GraduationCap, Github, Heart } from 'lucide-react';
+import { APP_VERSION } from '@/lib/version';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -65,7 +66,7 @@ export default function Footer() {
 
         <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs font-medium text-slate-400">
-            &copy; {currentYear} LCC Hub. All rights reserved.
+            &copy; {currentYear} LCC Hub. All rights reserved. v{APP_VERSION}
           </p>
         </div>
       </div>
