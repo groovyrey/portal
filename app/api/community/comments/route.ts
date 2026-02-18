@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/pg';
 import { decrypt } from '@/lib/auth';
+import { publishUpdate } from '@/lib/realtime';
 
 export async function GET(req: NextRequest) {
   try {
@@ -73,6 +74,9 @@ export async function POST(req: NextRequest) {
       createdAt: commentRes.rows[0].created_at.toISOString()
     };
 
+    // Notify all clients of new comment
+    await publishUpdate('community', { type: 'COMMENT_CREATED', postId });
+
     return NextResponse.json({ 
       success: true, 
       id: newComment.id,
@@ -113,7 +117,11 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized to delete this comment' }, { status: 403 });
     }
 
+    const commentData = commentCheck.rows[0];
     await query('DELETE FROM community_comments WHERE id = $1', [commentId]);
+
+    // Notify all clients of comment deletion
+    await publishUpdate('community', { type: 'COMMENT_DELETED', postId: commentData.post_id });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/pg';
 import { decrypt } from '@/lib/auth';
+import { publishUpdate } from '@/lib/realtime';
 
 export async function GET(req: NextRequest) {
   try {
@@ -133,6 +134,14 @@ export async function POST(req: NextRequest) {
     }
 
     await client.query('COMMIT');
+
+    // Notify all clients of new post
+    await publishUpdate('community', { 
+      type: 'POST_CREATED', 
+      postId,
+      userName: userName || 'Anonymous Student'
+    });
+
     return NextResponse.json({ success: true, id: postId.toString() });
   } catch (error: any) {
     await client.query('ROLLBACK');
@@ -169,6 +178,9 @@ export async function DELETE(req: NextRequest) {
     }
 
     await query('DELETE FROM community_posts WHERE id = $1', [postId]);
+
+    // Notify all clients of post deletion
+    await publishUpdate('community', { type: 'POST_DELETED', postId });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -235,6 +247,9 @@ export async function PATCH(req: NextRequest) {
         VALUES ($1, $2)
       `, [targetOptionId, userId]);
     }
+
+    // Notify all clients of post interaction
+    await publishUpdate('community', { type: 'POST_UPDATED', postId });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

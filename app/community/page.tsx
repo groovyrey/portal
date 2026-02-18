@@ -18,9 +18,11 @@ import { Info, ExternalLink } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { obfuscateId } from '@/lib/utils';
 import { useRef } from 'react';
+import { useRealtime } from '@/components/RealtimeProvider';
 
 export default function CommunityPage() {
   const queryClient = useQueryClient();
+  const { setActivePostId } = useRealtime();
   const [postsToShow, setPostsToShow] = useState(5);
   const [content, setContent] = useState('');
   const [showPollEditor, setShowPollEditor] = useState(false);
@@ -174,6 +176,7 @@ export default function CommunityPage() {
 
   const openPostModal = (post: CommunityPost) => {
     setSelectedPost(post);
+    setActivePostId(post.id);
     setCommentsToShow(prev => ({ ...prev, [post.id]: 5 }));
   };
 
@@ -561,7 +564,10 @@ export default function CommunityPage() {
       {/* Post Detail Drawer */}
       <Drawer
         isOpen={!!selectedPost}
-        onClose={() => setSelectedPost(null)}
+        onClose={() => {
+          setSelectedPost(null);
+          setActivePostId(null);
+        }}
         title={selectedPost ? `Post by ${selectedPost.userName}` : "Post Details"}
         side="bottom"
       >
