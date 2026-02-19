@@ -55,10 +55,21 @@ export async function POST(req: NextRequest) {
 - Due Today: ${financials.dueToday || '0.00'}
 `.trim();
 
-      if (financials.installments && financials.installments.length > 0) {
-        financialContext += '\n\nINSTALLMENTS/ASSESSMENT:\n' + financials.installments.map((i: any) => `- ${i.description} (${i.dueDate}): Assessed: ${i.assessed} | Outstanding: ${i.outstanding}`).join('\n');
+      if (financials.dueAccounts && financials.dueAccounts.length > 0) {
+        financialContext += '\n\nPENDING DUES (Payable ASAP):\n' + financials.dueAccounts.map((d: any) => `- Due Date: ${d.dueDate} | ${d.description} | Due: ${d.due}`).join('\n');
       }
-      // Add other details if available in the type definition, adapting to what getFullStudentData provides
+
+      if (financials.installments && financials.installments.length > 0) {
+        financialContext += '\n\nINSTALLMENT PLAN:\n' + financials.installments.map((i: any) => `- ${i.description} (${i.dueDate}): Assessed: ${i.assessed} | Outstanding: ${i.outstanding}`).join('\n');
+      }
+
+      if (financials.payments && financials.payments.length > 0) {
+        financialContext += '\n\nPAYMENT HISTORY:\n' + financials.payments.map((p: any) => `- ${p.date}: ${p.amount} (Ref: ${p.reference})`).join('\n');
+      }
+
+      if (financials.adjustments && financials.adjustments.length > 0) {
+        financialContext += '\n\nADJUSTMENTS:\n' + financials.adjustments.map((a: any) => `- ${a.dueDate}: ${a.description} | ${a.adjustment}`).join('\n');
+      }
     }
 
     const now = new Date();

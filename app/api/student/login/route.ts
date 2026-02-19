@@ -92,16 +92,25 @@ export async function POST(req: NextRequest) {
     // --- SCRAPING ---
     const { periodCode, dashboardUrl } = await scraper.fetchDashboard();
     
-    // Parallel Fetch (EAF, Grades, Subject List)
-    const [eafRes, subListRes, gradesRes] = await Promise.all([
+    // Parallel Fetch (EAF, Grades, Subject List, Accounts)
+    const [eafRes, subListRes, gradesRes, accountsRes] = await Promise.all([
       scraper.fetchEAF(periodCode),
       scraper.fetchSubjectList(periodCode, dashboardUrl, $dashboard),
-      scraper.fetchGrades(periodCode, dashboardUrl)
+      scraper.fetchGrades(periodCode, dashboardUrl),
+      scraper.fetchAccounts(periodCode, dashboardUrl)
     ]);
 
     const studentInfo = scraper.parseStudentInfo($dashboard, eafRes.$);
     const schedule = scraper.parseSchedule(eafRes.$);
     const financials = scraper.parseFinancials(eafRes.$);
+    const extraFinancials = scraper.parseAccounts(accountsRes.$);
+    
+    // Merge financial data
+    const mergedFinancials = {
+      ...financials,
+      ...extraFinancials
+    };
+
     const reportLinks = scraper.parseReportCardLinks(gradesRes.$);
     const offeredSubjects = scraper.parseOfferedSubjects(subListRes.$);
 
@@ -110,7 +119,7 @@ export async function POST(req: NextRequest) {
     
     // Background Sync (Not truly background in Vercel unless using waitUntil, but decoupled here)
     await Promise.all([
-      syncer.syncFinancials(financials),
+      syncer.syncFinancials(mergedFinancials),
       syncer.syncSchedule(schedule),
       syncer.syncProspectusSubjects(offeredSubjects),
       syncer.syncToPostgres(studentInfo)
@@ -129,7 +138,9 @@ export async function POST(req: NextRequest) {
           offeredSubjects,
           availableReports: reportLinks,
           settings: settings || { notifications: true, isPublic: true, showAcademicInfo: true },
-          financials
+          financials: mergedFinancials,
+          // Diagnostic raw data for the specific account page
+          _debug_accounts_html: accountsRes.data
         }
       });
 

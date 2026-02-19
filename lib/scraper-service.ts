@@ -26,8 +26,12 @@ export interface ScrapedScheduleItem {
 export interface ScrapedFinancials {
   total: string;
   balance: string;
+  dueToday?: string;
+  dueAccounts?: any[];
+  payments?: any[];
   installments: any[];
   assessment: any[];
+  adjustments?: any[];
 }
 
 export interface ScrapedSubject {
@@ -77,6 +81,12 @@ export class ScraperService {
   async fetchGrades(periodCode: string, dashboardUrl: string) {
     const gradesUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${this.userId}&_pc=${periodCode}&_dm=Grades&_nm=`;
     const res = await this.client.get(gradesUrl, { headers: { 'Referer': dashboardUrl } });
+    return { $: cheerio.load(res.data), data: res.data };
+  }
+
+  async fetchAccounts(periodCode: string, dashboardUrl: string) {
+    const accountsUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${this.userId}&_pc=${periodCode}&_dm=Account&_nm=`;
+    const res = await this.client.get(accountsUrl, { headers: { 'Referer': dashboardUrl } });
     return { $: cheerio.load(res.data), data: res.data };
   }
 
@@ -207,6 +217,98 @@ export class ScraperService {
     }
 
     return { total: totalAssessment, balance: totalBalance, installments, assessment };
+  }
+
+  parseAccounts($accounts: cheerio.CheerioAPI): Partial<ScrapedFinancials> {
+    const dueAccounts: any[] = [];
+    $accounts('#otbStatementOfAccountTable tr').each((i, row) => {
+      // Skip header and footer rows
+      if (i === 0 || $accounts(row).find('.HeaderText').length || $accounts(row).find('.FooterText').length) return;
+      const cells = $accounts(row).find('td');
+      if (cells.length === 5) {
+        dueAccounts.push({
+          dueDate: $accounts(cells[0]).text().trim(),
+          description: $accounts(cells[1]).text().trim(),
+          amount: $accounts(cells[2]).text().trim(),
+          paid: $accounts(cells[3]).text().trim(),
+          due: $accounts(cells[4]).text().trim()
+        });
+      }
+    });
+
+    const payments: any[] = [];
+    $accounts('#otbPaymentTable tr').each((i, row) => {
+      if (i === 0 || $accounts(row).find('.HeaderText').length || $accounts(row).find('.FooterText').length) return;
+      const cells = $accounts(row).find('td');
+      if (cells.length === 3) {
+        payments.push({
+          date: $accounts(cells[0]).text().trim(),
+          reference: $accounts(cells[1]).text().trim(),
+          amount: $accounts(cells[2]).text().trim()
+        });
+      }
+    });
+
+    const installments: any[] = [];
+    $accounts('#otbAssessmentDueDetailsTable tr').each((i, row) => {
+      if (i === 0 || $accounts(row).find('.HeaderText').length || $accounts(row).find('.FooterText').length || $accounts(row).find('.HeaderTitle').length) return;
+      const cells = $accounts(row).find('td');
+      if (cells.length === 4) {
+        // Only push if it's not the "Adjustments" summary row which sometimes appears here
+        const desc = $accounts(cells[1]).text().trim();
+        if (desc.toLowerCase() !== 'adjustments') {
+          installments.push({
+            dueDate: $accounts(cells[0]).text().trim(),
+            description: desc,
+            assessed: $accounts(cells[2]).text().trim(),
+            outstanding: $accounts(cells[3]).text().trim()
+          });
+        }
+      }
+    });
+
+    const adjustments: any[] = [];
+    $accounts('#otbAdjustmentTable tr').each((i, row) => {
+       if (i === 0 || $accounts(row).find('.HeaderText').length || $accounts(row).find('.FooterText').length || $accounts(row).find('.HeaderTitle').length) return;
+       const cells = $accounts(row).find('td');
+       if (cells.length === 4) {
+          adjustments.push({
+             dueDate: $accounts(cells[0]).text().trim(),
+             description: $accounts(cells[1]).text().trim(),
+             adjustment: $accounts(cells[2]).text().trim(),
+             outstanding: $accounts(cells[3]).text().trim()
+          });
+       }
+    });
+
+    // Extract totals from Assessment table footer if available
+    const assessmentTable = $accounts('#otbAssessmentDueDetailsTable');
+    let totalAssessment = undefined;
+    let totalBalance = undefined;
+    let dueToday = undefined;
+
+    assessmentTable.find('tr').each((_, row) => {
+      const text = $accounts(row).text().toLowerCase();
+      const cells = $accounts(row).find('td');
+      
+      if (text.includes('net total') && cells.length >= 3) {
+        totalAssessment = '₱' + $accounts(cells[cells.length - 2]).text().trim();
+        totalBalance = '₱' + $accounts(cells[cells.length - 1]).text().trim();
+      }
+      if (text.includes('due today') && cells.length >= 3) {
+        dueToday = '₱' + $accounts(cells[cells.length - 1]).text().trim();
+      }
+    });
+
+    return { 
+      dueAccounts, 
+      payments, 
+      installments,
+      dueToday,
+      total: totalAssessment,
+      balance: totalBalance,
+      adjustments 
+    };
   }
 
   parseReportCardLinks($grades: cheerio.CheerioAPI): any[] {

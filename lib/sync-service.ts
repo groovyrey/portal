@@ -38,10 +38,13 @@ export class SyncService {
     await setDoc(financialRef, {
       total: financials.total,
       balance: financials.balance,
-      due_today: "Check Assessment",
+      due_today: financials.dueToday || "₱0.00",
       details: {
-        installments: financials.installments,
-        assessment: financials.assessment
+        installments: financials.installments || [],
+        assessment: financials.assessment || [],
+        dueAccounts: financials.dueAccounts || [],
+        payments: financials.payments || [],
+        adjustments: financials.adjustments || []
       },
       updated_at: serverTimestamp()
     }, { merge: true });

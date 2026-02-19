@@ -8,15 +8,13 @@ import {
   CreditCard, 
   History, 
   FileText, 
-  ArrowUpRight, 
   Calendar,
-  AlertCircle,
-  TrendingDown,
-  ArrowRight,
   RefreshCw,
-  Loader2
+  Loader2,
+  TrendingDown,
+  AlertCircle,
+  Check
 } from 'lucide-react';
-import PageHeader from '@/components/shared/PageHeader';
 import { motion, AnimatePresence } from 'framer-motion';
 import Skeleton from '@/components/ui/Skeleton';
 import LottieAnimation from '@/components/ui/LottieAnimation';
@@ -31,10 +29,24 @@ export default function AccountsPage() {
   }, []);
 
   const handleManualRefresh = async () => {
+    if (!student) return;
     const refreshToast = toast.loading('Synchronizing latest financial records...');
     try {
-      await refetch();
-      toast.success('Accounts ledger updated!', { id: refreshToast });
+      const res = await fetch('/api/student/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}), // This triggers auto-sync using session cookies
+      });
+      const result = await res.json();
+      
+      if (result.success) {
+        localStorage.setItem('student_data', JSON.stringify(result.data));
+        window.dispatchEvent(new Event('local-storage-update'));
+        await refetch();
+        toast.success('Accounts ledger updated!', { id: refreshToast });
+      } else {
+        toast.error(result.error || 'Sync failed.', { id: refreshToast });
+      }
     } catch (err) {
       toast.error('Failed to sync records.', { id: refreshToast });
     }
@@ -111,12 +123,16 @@ export default function AccountsPage() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-20">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8 group">
-          <PageHeader 
-            title="Account Ledger" 
-            description="Detailed overview of your school finances"
-            icon={<CreditCard className="h-5 w-5" />}
-          />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 p-2.5 rounded-2xl text-white shadow-lg shadow-blue-200">
+              <CreditCard className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-none">Account Ledger</h1>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Official Student Records</p>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <AnimatePresence>
               {isFetching && (
@@ -124,7 +140,7 @@ export default function AccountsPage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full border border-blue-100 shadow-sm"
+                  className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full border border-blue-100 shadow-sm"
                 >
                   <Loader2 className="h-3 w-3 animate-spin" />
                   <span className="text-[10px] font-black uppercase tracking-widest">Refreshing...</span>
@@ -193,11 +209,11 @@ export default function AccountsPage() {
                         <td className="px-6 py-5">
                           <p className="text-xs font-bold text-slate-800 uppercase tracking-tight">{item.description}</p>
                         </td>
-                        <td className="px-6 py-5 text-xs font-black text-slate-600 text-right">{item.amount}</td>
-                        <td className="px-6 py-5 text-xs font-black text-emerald-600 text-right">{item.paid}</td>
-                        <td className="px-6 py-5 text-right">
-                          <span className={`text-xs font-black ${item.due !== '₱0.00' ? 'text-orange-600' : 'text-slate-400'}`}>
-                            {item.due}
+                        <td className="px-6 py-5 text-xs font-black text-slate-600 text-right uppercase">₱{item.amount.replace('₱', '')}</td>
+                        <td className="px-6 py-5 text-xs font-black text-emerald-600 text-right uppercase">₱{item.paid.replace('₱', '')}</td>
+                        <td className="px-6 py-5 text-right uppercase">
+                          <span className={`text-xs font-black ${item.due.replace('₱', '') !== '0.00' ? 'text-orange-600' : 'text-slate-400'}`}>
+                            ₱{item.due.replace('₱', '')}
                           </span>
                         </td>
                       </tr>
@@ -245,8 +261,8 @@ export default function AccountsPage() {
                             {item.reference}
                           </span>
                         </td>
-                        <td className="px-6 py-5 text-right">
-                          <span className="text-sm font-black text-slate-900">{item.amount}</span>
+                        <td className="px-6 py-5 text-right uppercase">
+                          <span className="text-sm font-black text-slate-900">₱{item.amount.replace('₱', '')}</span>
                         </td>
                       </tr>
                     ))}
@@ -272,7 +288,7 @@ export default function AccountsPage() {
                       {financials.assessment.map((item, idx) => (
                         <tr key={idx} className="hover:bg-slate-50/30 transition-colors">
                           <td className="px-6 py-4 text-[11px] font-bold text-slate-600 uppercase tracking-tight leading-tight">{item.description}</td>
-                          <td className="px-6 py-4 text-xs font-black text-slate-900 text-right tabular-nums">{item.amount}</td>
+                          <td className="px-6 py-4 text-xs font-black text-slate-900 text-right tabular-nums">₱{item.amount.replace('₱', '')}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -307,8 +323,19 @@ export default function AccountsPage() {
                               <p className="text-[10px] font-black text-slate-800 uppercase">{item.description}</p>
                               <p className="text-[9px] font-bold text-slate-400 font-mono mt-0.5">{item.dueDate}</p>
                             </td>
-                            <td className="px-6 py-4 text-xs font-black text-slate-600 text-right tabular-nums">{item.assessed}</td>
-                            <td className="px-6 py-4 text-xs font-black text-red-600 text-right tabular-nums">{item.outstanding}</td>
+                            <td className="px-6 py-4 text-xs font-black text-slate-600 text-right tabular-nums">₱{item.assessed.replace('₱', '')}</td>
+                            <td className="px-6 py-4 text-right tabular-nums">
+                              {item.outstanding.replace('₱', '') === '0.00' ? (
+                                <div className="flex items-center justify-end gap-1.5 text-emerald-600">
+                                  <span className="text-[10px] font-black uppercase tracking-widest">Paid</span>
+                                  <div className="bg-emerald-100 p-0.5 rounded-full">
+                                    <Check className="h-2.5 w-2.5" />
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-xs font-black text-red-600">₱{item.outstanding.replace('₱', '')}</span>
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -341,7 +368,7 @@ export default function AccountsPage() {
                               <p className="text-[10px] font-black text-slate-800 uppercase">{item.description}</p>
                               <p className="text-[9px] font-bold text-slate-400 font-mono mt-0.5">{item.dueDate}</p>
                             </td>
-                            <td className="px-6 py-4 text-xs font-black text-blue-600 text-right tabular-nums">{item.adjustment}</td>
+                            <td className="px-6 py-4 text-xs font-black text-blue-600 text-right tabular-nums">₱{item.adjustment.replace('₱', '')}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -350,30 +377,6 @@ export default function AccountsPage() {
                 </motion.div>
               )}
             </div>
-          </div>
-        </motion.div>
-
-        <motion.div 
-          variants={item}
-          initial="hidden"
-          animate="show"
-          className="mt-12 p-6 bg-slate-900 rounded-[2rem] text-white relative overflow-hidden group shadow-xl shadow-blue-900/10"
-        >
-          <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-blue-600 rounded-full blur-[100px] opacity-20 group-hover:opacity-40 transition-opacity" />
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-2">
-              <h3 className="text-xl font-black uppercase tracking-tight">Need help with payments?</h3>
-              <p className="text-slate-400 text-sm font-medium max-w-md">
-                For payment verification or concerns regarding your account ledger, please coordinate with the school's finance office.
-              </p>
-            </div>
-            <Link 
-              href="/docs"
-              className="px-6 py-3 bg-white text-slate-900 font-black rounded-xl text-xs uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 group/btn"
-            >
-              Finance FAQ
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
           </div>
         </motion.div>
       </main>

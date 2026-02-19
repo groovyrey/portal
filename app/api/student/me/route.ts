@@ -6,6 +6,7 @@ import { getFullStudentData } from '@/lib/data-service';
 import { getSessionClient } from '@/lib/session-proxy';
 import { ScraperService } from '@/lib/scraper-service';
 import { SyncService } from '@/lib/sync-service';
+import { publishUpdate } from '@/lib/realtime';
 import * as cheerio from 'cheerio';
 
 const AUTO_SYNC_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
@@ -111,24 +112,36 @@ async function backgroundSync(userId: string, password: string) {
   }
 
   const { periodCode, dashboardUrl } = await scraper.fetchDashboard();
-  const [eafRes, subListRes, gradesRes] = await Promise.all([
+  const [eafRes, subListRes, gradesRes, accountsRes] = await Promise.all([
     scraper.fetchEAF(periodCode),
     scraper.fetchSubjectList(periodCode, dashboardUrl, $dashboard),
-    scraper.fetchGrades(periodCode, dashboardUrl)
+    scraper.fetchGrades(periodCode, dashboardUrl),
+    scraper.fetchAccounts(periodCode, dashboardUrl)
   ]);
 
   const studentInfo = scraper.parseStudentInfo($dashboard, eafRes.$);
   const schedule = scraper.parseSchedule(eafRes.$);
   const financials = scraper.parseFinancials(eafRes.$);
+  const extraFinancials = scraper.parseAccounts(accountsRes.$);
+
+  const mergedFinancials = {
+    ...financials,
+    ...extraFinancials
+  };
+
   const reportLinks = scraper.parseReportCardLinks(gradesRes.$);
   const offeredSubjects = scraper.parseOfferedSubjects(subListRes.$);
 
   await syncer.syncStudentData(studentInfo, reportLinks);
   await Promise.all([
-    syncer.syncFinancials(financials),
+    syncer.syncFinancials(mergedFinancials),
     syncer.syncSchedule(schedule),
     syncer.syncProspectusSubjects(offeredSubjects),
     syncer.syncToPostgres(studentInfo)
   ]);
+
+  // Notify client via Ably
+  await publishUpdate(`student-${userId}`, { type: 'SYNC_COMPLETE' });
+  
   console.log(`Auto-sync completed for student ${userId}`);
 }

@@ -1,23 +1,166 @@
-Create post error: error: relation "students" does not exist
-    at async j (.next/server/app/api/community/route.js:20:879)
-    at async k (.next/server/app/api/community/route.js:49:4898)
-    at async j (.next/server/app/api/community/route.js:49:5910)
-    at async Module.y (.next/server/app/api/community/route.js:49:6977) {
-  length: 107,
-  severity: 'ERROR',
-  code: '42P01',
-  detail: undefined,
-  hint: undefined,
-  position: '20',
-  internalPosition: undefined,
-  internalQuery: undefined,
-  where: undefined,
-  schema: undefined,
-  table: undefined,
-  column: undefined,
-  dataType: undefined,
-  constraint: undefined,
-  file: 'parse_relation.c',
-  line: '1486',
-  routine: 'parserOpenTable'
-}
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" >
+<HTML>
+	<HEAD>
+		<title>Student Main</title>
+		<link rel="stylesheet" type="text/css" href="../Styles/Main.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/Schedule.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/FlowChart.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/serp_main.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/serp_header.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/serp_menu.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/serp_button.css" />
+		<link rel="stylesheet" type="text/css" href="../Styles/serp_container.css" />
+<script language="javascript" type="text/javascript">
+    function showWindow(sURL, sName, sSpecs) {
+        popupWindow = window.open(sURL, sName, sSpecs);
+        popupWindow.focus();
+    }
+</script>
+	</HEAD>
+	<body>
+		<form name="Main" method="post" action="./Main.aspx?_sid=20241322&amp;_pc=SY2025-2026-2&amp;_dm=Account&amp;_nm=" id="Main">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUJOTM4MTM5MDQzD2QWAmYPZBYiAgUPDxYCHgdWaXNpYmxlaGRkAgcPDxYCHwBoZGQCCw8PFgIfAGhkZAINDw8WAh8AaGRkAg8PDxYCHwBnZGQCEQ8PFgIfAGdkZAITDw8WAh8AZ2RkAhUPDxYCHwBnZGQCFw8PFg4eBVdpZHRoGwAAAAAAwHJAAQAAAB4Jb2FsQWRqS2V5FgAeDm9hbEFkalNlbGVjdElEFgAeD29hbEFkaklzQ2hlY2tlZBYAHgpvYWxBZGpEYXRhFgAeBF8hU0ICgAIfAGdkZAIZDw8WAh8AaGRkAhsPDxYCHwBoZGQCHQ8PFgIfAGhkZAIfDw8WAh8AaGRkAiEPDxYCHwBoZGQCIw8PFgIfAGhkZAIlDw8WAh8AaGQWBAIBDw8WAh8AaGRkAgUPDxYMHgpvYWxGaWxlS2V5FgAeD29hbEZpbGVTZWxlY3RJRBYAHhBvYWxJc0ZpbGVDaGVja2VkFgAeC29hbEZpbGVEYXRhFgAeDUN1cnJlbnRBY3Rpb25lHwBoZGQCJw8PFgIfAGhkFgoCAQ8PFgIfAGhkZAIFDxYCHwBoZAIHDw8WAh8AaGRkAgkPFgIfAGhkAgsPDxYCHwBoZGRkdx3cmxeG+wl8SBKz1po50ggG4UFNWP5zBnM4gysth7o=" />
+
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="81D1DD1A" />
+			<table class="main_table">
+				<tr>
+					<td>
+						<table id="oHeaderNav" border="0">
+	<tr>
+		<td><table id="top_container" border="0">
+			<tr>
+				<td id="logo"></td><td><table id="enrollment_student_info" border="0">
+					<tr>
+						<td align="left" valign="middle"><span class="enrollment_student_info_cell_name">Centeno, Reymart P. - 20241322</span></td>
+					</tr><tr>
+						<td align="left" valign="middle"><span class="enrollment_student_info_cell_sy">SY2025-2026-2</span></td>
+					</tr><tr>
+						<td align="left" valign="middle"><span class="enrollment_student_info_cell_course">Bachelor of Science in Information Systems</span></td>
+					</tr>
+				</table></td><td class="enrollment_top_menu" valign="top"><a class="nav_button_inactive" href="Main.aspx?_sid=20241322&amp;_pc=SY2025-2026-2&amp;_am=UserSetup&amp;_nm=" target="_self">User Setup</a><a class="nav_button_inactive" href="https://premium.schoolista.com/LCC/Gate/LCC.Login.aspx" target="_self">Logout</a></td>
+			</tr>
+		</table></td>
+	</tr><tr>
+		<td><table id="bottom_container" border="0">
+			<tr>
+				<td><table id="student_nav_container" border="0">
+					<tr align="center">
+						<td class="enrollment_nav_cell" align="center" valign="middle"><a class="nav_button_inactive" href="Main.aspx?_sid=20241322&amp;_pc=SY2025-2026-2&amp;_dm=Main&amp;_nm=" target="_self">Main</a></td><td class="enrollment_nav_cell" align="center" valign="middle"><a class="nav_button_inactive" href="Main.aspx?_sid=20241322&amp;_pc=SY2025-2026-2&amp;_dm=StudentSchedule&amp;_nm=" target="_self">Schedule</a></td><td class="enrollment_nav_cell" align="center" valign="middle"><a class="nav_button_inactive" href="Main.aspx?_sid=20241322&amp;_pc=SY2025-2026-2&amp;_dm=Account&amp;_nm=" target="_self">Student Accounts</a></td><td class="enrollment_nav_cell" align="center" valign="middle"><a class="nav_button_inactive" href="Main.aspx?_sid=20241322&amp;_pc=SY2025-2026-2&amp;_dm=Grades&amp;_nm=" target="_self">Grades</a></td><td class="enrollment_nav_cell" align="center" valign="middle" style="width:100%;"></td>
+					</tr>
+				</table></td>
+			</tr>
+		</table></td>
+	</tr>
+</table>
+					</td>
+				</tr>
+				<tr>
+					<td class="main_table_detail_content">
+						<TABLE id="otbMain" cellSpacing="1" cellPadding="1" border="0" width="100%">
+							<TR>
+								<TD valign="top" width="25%">
+									<table  id="otbEnrollmentTable"  width="100%">
+<tr><td id="otbEnrollmentTable_TabTitle_Enrolled_Subjects" class="HeaderTitle" align="center" colspan="5">Enrolled Subjects</td></tr><tr><td id="otbEnrollmentTable_ColTitle_Subject" class="HeaderText" align="center">Subject</td><td id="otbEnrollmentTable_ColTitle_Sec" class="HeaderText" align="center">Sec</td><td id="otbEnrollmentTable_ColTitle_Units" class="HeaderText" align="right">Units</td><td id="otbEnrollmentTable_ColTitle_Schedule" class="HeaderText" align="center">Schedule</td><td id="otbEnrollmentTable_ColTitle_Room" class="HeaderText" align="center">Room</td></tr>
+<tr><td class="DetailText" align="center">ELEC2-AH</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">SAT 10:00AM-12:00PM</td><td class="DetailText" align="center">FCM2-311</td></tr>
+<tr><td class="DetailText" align="center">IS121</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">TUE 1:00PM-3:00PM</td><td class="DetailText" align="center">FCM2-308</td></tr>
+<tr><td class="DetailText" align="center">IS123</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">FRI 10:00AM-12:00PM</td><td class="DetailText" align="center">FCM2-308</td></tr>
+<tr><td class="DetailText" align="center">IS151</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">FRI 8:00AM-10:00AM</td><td class="DetailText" align="center">FCM2-511</td></tr>
+<tr><td class="DetailText" align="center">IT172</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">TUE 3:00PM-5:00PM</td><td class="DetailText" align="center">CADLAB</td></tr>
+<tr><td class="DetailText" align="center">MST2</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">3.00</td><td class="DetailText" align="center">SAT 8:00AM-10:00AM</td><td class="DetailText" align="center">FCM2-310</td></tr>
+<tr><td class="DetailText" align="center">PE4</td><td class="DetailText" align="center">BSIS2A</td><td class="DetailText" align="right">2.00</td><td class="DetailText" align="center">TUE 10:00AM-12:00PM</td><td class="DetailText" align="center">FCM2-310</td></tr>
+<tr><td class="FooterText" align="right" colspan="1"></td><td class="FooterText" align="right" colspan="1"></td><td class="FooterText" align="right" colspan="1">20.00</td><td class="FooterText" align="left" colspan="1"></td><td class="FooterText" align="right" colspan="1"></td></tr></table>
+									
+			                        
+								</TD>
+								<TD valign="top" width="65%">
+									
+									
+									
+									<table width="300px">
+<tr><td  nowrap=""><div><br><a href="../Reports/Enrollment/LCC.EAF.aspx?_sid=20241322&_pc=SY2025-2026-2" target="_blank">EAF of SY2025-2026-2</a><br><a href="../Reports/Enrollment/LCC.EAF.aspx?_sid=20241322&_pc=SY2025-2026-1" target="_blank">EAF of SY2025-2026-1</a><br><a href="../Reports/Enrollment/LCC.EAF.aspx?_sid=20241322&_pc=SY2024-2025-2" target="_blank">EAF of SY2024-2025-2</a><br><a href="../Reports/Enrollment/LCC.EAF.aspx?_sid=20241322&_pc=SY2024-2025-1" target="_blank">EAF of SY2024-2025-1</a><br></div>
+</td></tr>
+</table>
+
+
+									<table  id="otbStatementOfAccountTable"  width="300px">
+<tr><td class="HeaderTitle" align="center" colspan="5">Due Accounts</td></tr><tr><td class="HeaderText" align="center">DueDate</td><td class="HeaderText" align="center">Desc</td><td class="HeaderText" align="right">Amount</td><td class="HeaderText" align="center">Paid</td><td class="HeaderText" align="center">Due</td></tr><tr><td class="FooterText" align="right" colspan="5">Total: 0.00</td></tr><tr><td class="FooterText" align="right" colspan="5">Due (Feb 19): 0.00</td></tr></table>
+
+
+									<table  id="otbPaymentTable"  width="300px">
+<tr><td class="HeaderTitle" align="center" colspan="3">Payments</td></tr><tr><td class="HeaderText" align="center">Detail</td><td class="HeaderText" align="center">Ref</td><td class="HeaderText" align="center">Amount</td></tr><tr><td class="DetailText">2026/01/07</td><td class="DetailText">ORMZ2025-37898</td><td class="DetailText" align="right">500.00</td></tr><tr><td class="DetailText">2026/02/19</td><td class="DetailText">ORMZ2026-00938</td><td class="DetailText" align="right">2,650.00</td></tr><tr><td class="FooterText" align="right" colspan="3">Paid: 3,150.00</td></tr></table>
+									<table  id="otbAssessmentDueDetailsTable"  width="300px">
+<tr><td id="otbAssessmentDueDetailsTable_TabTitle_AssDueDet" class="HeaderTitle" align="center" colspan="4">Assessment of Fees</td></tr><tr><td id="otbAssessmentDueDetailsTable_TabTitle_AssDueDetPay" class="HeaderTitle" align="center" colspan="4">(Installment)</td></tr><tr class="HeaderText"><td colspan="4" align="right"><div class="HeaderTextPreTotal" align="right">Forwarded:  0.00</div><div class="HeaderTextTotal" align="right">Back Balance:  0.00</div></td></tr><tr><td id="otbAssessmentDueDetailsTable_ColTitle_DueDate" class="HeaderText" align="center">DueDate</td><td id="otbAssessmentDueDetailsTable_ColTitle_Desc" class="HeaderText" align="center">Desc</td><td id="otbAssessmentDueDetailsTable_ColTitle_Assessed" class="HeaderText" align="center">Assessed</td><td id="otbAssessmentDueDetailsTable_ColTitle_Outstanding" class="HeaderText" align="center">Outstanding</td></tr>
+<tr><td class="DetailText">2026/01/07</td><td class="DetailText">Down payment</td><td class="DetailText" align="right" nowrap>500.00</td><td class="DetailText" align="right" nowrap>0.00</td></tr>
+<tr><td class="DetailText">2026/02/14</td><td class="DetailText">1st Installment</td><td class="DetailText" align="right" nowrap>2,650.00</td><td class="DetailText" align="right" nowrap>0.00</td></tr>
+<tr><td class="DetailText">2026/03/07</td><td class="DetailText">2nd Installment</td><td class="DetailText" align="right" nowrap>2,650.00</td><td class="DetailText" align="right" nowrap>2,650.00</td></tr>
+<tr><td class="DetailText">2026/05/07</td><td class="DetailText">3rd Installment</td><td class="DetailText" align="right" nowrap>2,650.00</td><td class="DetailText" align="right" nowrap>2,650.00</td></tr>
+<tr><td class="DetailText">2026/06/01</td><td class="DetailText">4th Installment</td><td class="DetailText" align="right" nowrap>2,650.00</td><td class="DetailText" align="right" nowrap>2,650.00</td></tr>
+<tr><td class="DetailText" colspan="1"></td><td class="DetailText" colspan="1">Adjustments</td><td class="DetailText" align="right" colspan="1">200.00</td><td class="DetailText" align="right" colspan="1">0.00</td></tr>
+<tr><td class="DetailTextWarning" align="right" colspan="2" title="7,950.00 is outstanding">Net Total</td><td class="FooterText" align="right" colspan="1">11,300.00</td><td class="DetailTextWarning" align="right" colspan="1" title="7,950.00 is outstanding">7,950.00</td></tr>
+<tr><td class="FooterText" align="right" colspan="2">Due Today</td><td class="FooterText" align="right" colspan="1">3,350.00</td><td class="FooterText" align="right" colspan="1">0.00</td></tr>
+
+</table>
+									<table id="otbAdjustmentTable" border="0" style="width:300px;">
+	<tr>
+		<td id="otbAdjustmentTable_TabTitle_Adjustments" align="center" class="HeaderTitle" colspan="4" rowspan="1">Adjustments</td>
+	</tr><tr>
+		<td id="otbAdjustmentTable_ColTitle_DueDate" align="center" class="HeaderText" colspan="1" rowspan="1">DueDate</td><td id="otbAdjustmentTable_ColTitle_Desc" align="center" class="HeaderText" colspan="1" rowspan="1">Desc</td><td id="otbAdjustmentTable_ColTitle_Adjustment" align="center" class="HeaderText" colspan="1" rowspan="1">Adjustment</td><td id="otbAdjustmentTable_ColTitle_Outstanding" align="center" class="HeaderText" colspan="1" rowspan="1">Outstanding</td>
+	</tr><tr>
+		<td class="DetailText" colspan="1" rowspan="1">2026/02/15</td><td class="DetailText" colspan="1" rowspan="1">Penalty-2,650.00</td><td nowrap="nowrap" align="right" class="DetailText" colspan="1" rowspan="1">200.00</td><td nowrap="nowrap" align="right" class="DetailText" colspan="1" rowspan="1">0.00</td>
+	</tr><tr>
+		<td align="right" class="FooterText" colspan="2" rowspan="1">Total Adjustments</td><td align="right" class="HeaderText" colspan="1" rowspan="1">200.00</td><td align="right" class="HeaderText" colspan="1" rowspan="1">0.00</td>
+	</tr>
+</table>
+									
+									
+									
+									
+									
+		   					        
+
+                                    
+
+									<b>
+									
+									</b>
+
+								</TD>
+							</TR>
+						</TABLE>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<div id="footer">
+<a class="links" href="../User/Menu.aspx">User: 20241322  [reymartcenteno03@gmail.com]</a></br>
+© 2022 <a class="links" href="http://www.ledgea.com">Ledgea Systems, Inc.</a> All rights reserved.</div>
+
+					</td>
+				</tr>
+			</table>
+		</form>
+    <script type="text/javascript">
+        if (!window.File) {
+            alert('Your browser doesn\'t support the File API.  Last modified date will not be available.');
+        }
+        else {
+            document.getElementById('fileupload').onchange = function () {
+                if (this.files.length > 0) {
+                    if (typeof this.files[0].lastModifiedDate === 'undefined') {
+                        alert('Your browser doesn\'t support the File API.  Last modified date will not be available.');
+                    }
+                    else {
+                        var dtLMDate = this.files[0].lastModifiedDate;
+                        var hiddenLMDate = document.getElementById('ohiddenLastModifiedDate');
+                        //hidden.value = lmDate.getFullYear() + '-' + (lmDate.getMonth() + 1) + '-' + lmDate.getDate();
+                        hiddenLMDate.value = dtLMDate.getFullYear() + '-' + (dtLMDate.getMonth() + 1) + '-' + dtLMDate.getDate() + '  ' + dtLMDate.getHours() + ':' + dtLMDate.getMinutes() + ':' + dtLMDate.getSeconds() + '.' + dtLMDate.getMilliseconds();
+                        //hidden.value = lmDate.getFullYear() + '-' + (lmDate.getMonth() + 1) + '-' + lmDate.getDate() + '  ' + lmDate.getHours() + ':' + lmDate.getMinutes() + ':' + lmDate.getSeconds();
+                    }
+                }
+            };
+        }
+    </script>
+	</body>
+</HTML>
+
