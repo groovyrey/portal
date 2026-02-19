@@ -31,16 +31,23 @@ import { useStudent } from '@/lib/hooks';
 
 function ProfileContent() {
   const queryClient = useQueryClient();
-  const { student: currentUserData } = useStudent();
-  const [student, setStudent] = useState<Student | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isPublicView, setIsPublicView] = useState(false);
+  const { student: currentUserData, isLoading: isUserLoading } = useStudent();
   const params = useParams();
   const router = useRouter();
   const profileId = deobfuscateId(params.id as string);
+  
+  const [student, setStudent] = useState<Student | null>(() => {
+    // Immediate initialization if viewing own profile
+    if (currentUserData && profileId === currentUserData.id) {
+      return currentUserData;
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(true);
+  const [isPublicView, setIsPublicView] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Community functionality states
+  // ... (rest of the states)
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [reactors, setReactors] = useState<{id: string, name: string}[] | null>(null);
   const [loadingReactors, setLoadingReactors] = useState(false);
@@ -98,23 +105,25 @@ function ProfileContent() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      setLoading(true);
-      
-      const currentUserId = currentUserData?.id;
+      if (!profileId) {
+        setLoading(false);
+        return;
+      }
 
-      // Determine if we are viewing someone else's profile
+      const currentUserId = currentUserData?.id;
       const viewingOthers = !!(profileId && profileId !== currentUserId);
       setIsPublicView(viewingOthers);
 
       if (viewingOthers) {
+        setLoading(true);
         try {
           const res = await fetch(`/api/student/profile?id=${profileId}`);
           const result = await res.json();
           if (result.success) {
             setStudent(result.data);
           } else {
-            // Fallback to Firestore if not found in PG (for transition period)
-            const docRef = doc(db, 'students', profileId!);
+            // Fallback to Firestore
+            const docRef = doc(db, 'students', profileId);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
               const data = docSnap.data();
@@ -136,13 +145,17 @@ function ProfileContent() {
           }
         } catch (err) {
           console.error('Failed to fetch public profile', err);
+        } finally {
+          setLoading(false);
         }
       } else {
         // Viewing own profile
         if (currentUserData) {
           setStudent(currentUserData);
-        } else {
-          // If no local data, try to fetch from /me
+          setLoading(false);
+        } else if (!isUserLoading) {
+          // If no local data and user hook is finished, try to fetch from /me
+          setLoading(true);
           try {
             const res = await fetch('/api/student/me');
             const result = await res.json();
@@ -151,11 +164,11 @@ function ProfileContent() {
             }
           } catch (e) {
             console.error('Failed to fetch own profile', e);
+          } finally {
+            setLoading(false);
           }
         }
       }
-
-      setLoading(false);
     };
 
     fetchProfile();
@@ -163,7 +176,7 @@ function ProfileContent() {
     const handleClickOutside = () => setActiveMenu(null);
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
-  }, [profileId, currentUserData]);
+  }, [profileId, currentUserData, isUserLoading]);
 
   const handleLike = async (postId: string, isLiked: boolean) => {
     const saved = localStorage.getItem('student_data');
@@ -383,78 +396,71 @@ function ProfileContent() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6">
-      <div className="bg-white rounded-[2rem] overflow-hidden shadow-xl shadow-slate-200/50 border border-slate-100">
-        {/* Banner */}
-        <div className={`h-32 sm:h-48 bg-gradient-to-br ${getGradient(student.id)} relative overflow-hidden`}>
+    <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6">
+      <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/40 border border-slate-100">
+        {/* Banner - increased height */}
+        <div className={`h-40 sm:h-56 bg-gradient-to-br ${getGradient(student.id)} relative overflow-hidden`}>
           <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]" />
-          <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute -top-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute -top-12 -left-12 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
         </div>
 
-        {/* Profile Info Area */}
-        <div className="px-6 sm:px-10 pb-10 relative">
-          {/* Overlapping Avatar */}
-          <div className="relative -mt-12 sm:-mt-16 mb-6">
-            <div className="inline-block p-1.5 bg-white rounded-[2rem] shadow-lg">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-[1.6rem] overflow-hidden border border-slate-50 bg-slate-50">
+        {/* Profile Header Area */}
+        <div className="px-8 sm:px-12 pb-12 relative">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
+            {/* Avatar - overlapping the banner more significantly */}
+            <div className="shrink-0 -mt-16 sm:-mt-20 relative z-10">
+              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-[2.5rem] overflow-hidden bg-white border-4 border-white shadow-2xl">
                 <img 
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=f8fafc&color=334155&size=256&font-size=0.33&bold=true`}
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=f1f5f9&color=64748b&size=256&font-size=0.33&bold=true`}
                   alt={student.name}
                   className="w-full h-full object-cover"
                 />
               </div>
             </div>
-          </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-            <div className="space-y-1">
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                {student.parsedName 
-                  ? `${student.parsedName.firstName} ${student.parsedName.lastName}`
-                  : student.name}
-              </h1>
-              <div className="flex items-center gap-3 flex-wrap">
-                {showAcademic && (
-                   <div className="flex items-center gap-1.5 text-blue-600 font-bold text-[11px] uppercase tracking-wider">
-                     <GraduationCap className="h-3.5 w-3.5" />
-                     {student.course}
-                   </div>
-                )}
-                {(!isPublicView || (student.settings?.showStudentId)) && (
-                   <div className="flex items-center gap-1.5 text-slate-400 font-bold text-[11px] uppercase tracking-wider">
-                     <IdCard className="h-3.5 w-3.5" />
-                     {student.id}
-                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {showAcademic && (
-            <div className="mt-10 grid grid-cols-2 gap-4">
-              <div className="p-5 bg-slate-50/50 rounded-3xl border border-slate-100 group hover:bg-white hover:shadow-md transition-all duration-300">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Academic Level</p>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-blue-500" />
-                  <p className="text-lg font-bold text-slate-800 tracking-tight">{student.yearLevel}</p>
+            <div className="flex-1 text-center sm:text-left space-y-4 pt-2">
+              <div className="space-y-1">
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+                  {student.parsedName 
+                    ? `${student.parsedName.firstName} ${student.parsedName.lastName}`
+                    : student.name}
+                </h1>
+                <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2">
+                  {showAcademic && (
+                    <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100/50">
+                      {student.course}
+                    </span>
+                  )}
+                  {(!isPublicView || (student.settings?.showStudentId)) && (
+                    <span className="px-3 py-1 rounded-full bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest border border-slate-100/50">
+                      ID: {student.id}
+                    </span>
+                  )}
                 </div>
               </div>
-              <div className="p-5 bg-slate-50/50 rounded-3xl border border-slate-100 group hover:bg-white hover:shadow-md transition-all duration-300">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Current Semester</p>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-indigo-500" />
-                  <p className="text-lg font-bold text-slate-800 tracking-tight">{student.semester}</p>
+
+              {showAcademic && (
+                <div className="flex flex-wrap justify-center sm:justify-start gap-6 pt-2">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] mb-1">Level</span>
+                    <span className="text-sm font-bold text-slate-700">{student.yearLevel}</span>
+                  </div>
+                  <div className="h-8 w-px bg-slate-100 self-end hidden sm:block" />
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] mb-1">Semester</span>
+                    <span className="text-sm font-bold text-slate-700">{student.semester}</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-          )}
+          </div>
 
           {/* User Posts Section */}
-          <div className="mt-12 space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Community Posts</h3>
-              <span className="text-[10px] font-bold text-slate-300 uppercase">{posts.length} shared</span>
+          <div className="mt-16 space-y-8">
+            <div className="flex items-center gap-4">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 whitespace-nowrap">Activity</h3>
+              <div className="h-px w-full bg-slate-50" />
             </div>
 
             {loadingPosts ? (

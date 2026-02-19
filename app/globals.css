@@ -21,6 +21,11 @@
       transform: translateY(0); 
     }
   }
+
+  @keyframes cursorPulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.5); opacity: 1; }
+  }
 }
 
 :root {
@@ -44,6 +49,20 @@ body {
 .prose a:hover {
   text-decoration: underline;
   opacity: 0.8;
+}
+
+/* AI Streaming Indicator */
+.streaming-active p:last-child::after {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: #2563eb; /* blue-600 */
+  border-radius: 50%;
+  margin-left: 8px;
+  vertical-align: middle;
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.7);
+  animation: cursorPulse 0.8s infinite ease-in-out;
 }
 
 @layer base {

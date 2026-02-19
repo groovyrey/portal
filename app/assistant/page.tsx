@@ -25,18 +25,26 @@ type Message = {
   content: string;
 };
 
-// Helper component for word-by-word fade in
-const WordFadeIn = ({ children }: { children: string }) => {
-  return (
-    <motion.span
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-    >
-      {children}
-    </motion.span>
-  );
-};
+// Modern Typing Indicator Component
+const TypingIndicator = () => (
+  <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 rounded-2xl border border-slate-100 w-fit">
+    <motion.div
+      animate={{ scale: [1, 1.2, 1] }}
+      transition={{ repeat: Infinity, duration: 1, delay: 0 }}
+      className="w-1.5 h-1.5 bg-blue-400 rounded-full"
+    />
+    <motion.div
+      animate={{ scale: [1, 1.2, 1] }}
+      transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
+      className="w-1.5 h-1.5 bg-blue-500 rounded-full"
+    />
+    <motion.div
+      animate={{ scale: [1, 1.2, 1] }}
+      transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
+      className="w-1.5 h-1.5 bg-blue-600 rounded-full"
+    />
+  </div>
+);
 
 export default function AssistantPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -215,43 +223,44 @@ export default function AssistantPage() {
                   {/* Bubble */}
                   <div className={`text-sm leading-relaxed ${
                     m.role === 'user' 
-                      ? 'p-4 rounded-2xl shadow-sm bg-blue-600 text-white rounded-tr-none' 
+                      ? 'p-4 rounded-3xl shadow-lg shadow-blue-500/10 bg-blue-600 text-white rounded-tr-none border border-blue-500/20' 
                       : 'py-2 px-1 text-slate-800'
                   }`}>
                     {m.role === 'user' ? (
-                      <p>{m.content}</p>
+                      <p className="font-medium">{m.content}</p>
                     ) : (
                       m.content ? (
-                        <ReactMarkdown 
-                          remarkPlugins={[remarkGfm]} 
-                          rehypePlugins={[rehypeHighlight]}
-                          className="prose prose-slate max-w-none leading-relaxed text-slate-700"
-                          components={{
-                            p: ({node, children}) => <p className="mb-3 last:mb-0"><motion.span layout>{children}</motion.span></p>,
-                            table: ({node, ...props}) => <div className="overflow-x-auto my-4 rounded-xl border border-slate-100 shadow-sm"><table className="w-full text-sm text-left" {...props} /></div>,
-                            thead: ({node, ...props}) => <thead className="bg-slate-50/50 text-slate-700 font-medium" {...props} />,
-                            th: ({node, ...props}) => <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider text-slate-500" {...props} />,
-                            td: ({node, ...props}) => <td className="px-4 py-3 border-t border-slate-50 text-slate-600" {...props} />,
-                            code: ({node, ...props}) => <code className="bg-slate-100 text-slate-800 rounded-md px-1.5 py-0.5 font-mono text-[0.9em] font-medium" {...props} />,
-                            pre: ({node, ...props}) => <pre className="bg-slate-900 text-slate-50 rounded-2xl p-4 my-4 overflow-x-auto text-sm shadow-md" {...props} />,
-                            a: ({node, ...props}) => <a className="text-blue-600 hover:text-blue-700 font-medium hover:underline decoration-blue-200 underline-offset-4" target="_blank" rel="noopener noreferrer" {...props} />,
-                            ul: ({node, ...props}) => <ul className="list-disc list-outside ml-5 my-3 space-y-1.5 text-slate-700 marker:text-slate-400" {...props} />,
-                            ol: ({node, ...props}) => <ol className="list-decimal list-outside ml-5 my-3 space-y-1.5 text-slate-700 marker:text-slate-400" {...props} />,
-                            li: ({node, children}) => <li className="pl-1"><motion.span layout>{children}</motion.span></li>,
-                            h1: ({node, children}) => <h1 className="text-2xl font-bold text-slate-900 mt-6 mb-4 tracking-tight"><motion.span layout>{children}</motion.span></h1>,
-                            h2: ({node, children}) => <h2 className="text-lg font-bold text-slate-900 mt-5 mb-3 tracking-tight"><motion.span layout>{children}</motion.span></h2>,
-                            h3: ({node, children}) => <h3 className="text-base font-bold text-slate-900 mt-4 mb-2"><motion.span layout>{children}</motion.span></h3>,
-                            blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-blue-200 pl-4 py-1 my-4 text-slate-600 italic bg-slate-50 rounded-r-lg" {...props} />,
-                            hr: ({node, ...props}) => <hr className="my-6 border-slate-100" {...props} />,
-                          }}
-                        >
-                          {m.content}
-                        </ReactMarkdown>
-                      ) : (
-                        <div className="flex items-center gap-2 text-slate-400 italic">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Thinking...</span>
+                        <div className="relative">
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm]} 
+                            rehypePlugins={[rehypeHighlight]}
+                            className={`prose prose-slate max-w-none leading-relaxed text-slate-700 font-medium ${
+                              isLoading && m.id === messages[messages.length - 1].id ? 'streaming-active' : ''
+                            }`}
+                            components={{
+                              p: ({node, children}) => <p className="mb-4 last:mb-0 inline-block w-full">{children}</p>,
+                              table: ({node, ...props}) => <div className="overflow-x-auto my-6 rounded-2xl border border-slate-100 shadow-sm"><table className="w-full text-sm text-left" {...props} /></div>,
+                              thead: ({node, ...props}) => <thead className="bg-slate-50/80 text-slate-800 font-semibold uppercase tracking-wider text-[10px]" {...props} />,
+                              th: ({node, ...props}) => <th className="px-5 py-4" {...props} />,
+                              td: ({node, ...props}) => <td className="px-5 py-4 border-t border-slate-50 text-slate-600" {...props} />,
+                              code: ({node, ...props}) => <code className="bg-blue-50 text-blue-700 rounded-lg px-2 py-0.5 font-mono text-[0.85em] font-bold border border-blue-100/50" {...props} />,
+                              pre: ({node, ...props}) => <pre className="bg-slate-900 text-slate-50 rounded-[2rem] p-6 my-6 overflow-x-auto text-xs shadow-2xl border border-slate-800" {...props} />,
+                              a: ({node, ...props}) => <a className="text-blue-600 hover:text-blue-700 font-bold hover:underline decoration-blue-200 underline-offset-4 decoration-2" target="_blank" rel="noopener noreferrer" {...props} />,
+                              ul: ({node, ...props}) => <ul className="list-disc list-outside ml-6 my-4 space-y-2.5 text-slate-700 marker:text-blue-400" {...props} />,
+                              ol: ({node, ...props}) => <ol className="list-decimal list-outside ml-6 my-4 space-y-2.5 text-slate-700 marker:text-blue-500 font-bold" {...props} />,
+                              li: ({node, children}) => <li className="pl-1">{children}</li>,
+                              h1: ({node, children}) => <h1 className="text-2xl font-black text-slate-900 mt-8 mb-4 tracking-tight border-b border-slate-100 pb-2">{children}</h1>,
+                              h2: ({node, children}) => <h2 className="text-xl font-black text-slate-900 mt-7 mb-4 tracking-tight">{children}</h2>,
+                              h3: ({node, children}) => <h3 className="text-lg font-bold text-slate-900 mt-6 mb-3">{children}</h3>,
+                              blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-blue-500/20 pl-6 py-2 my-6 text-slate-500 italic bg-blue-50/30 rounded-r-3xl" {...props} />,
+                              hr: ({node, ...props}) => <hr className="my-8 border-slate-100" {...props} />,
+                            }}
+                          >
+                            {m.content}
+                          </ReactMarkdown>
                         </div>
+                      ) : (
+                        <TypingIndicator />
                       )
                     )}
                   </div>

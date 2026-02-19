@@ -24,10 +24,13 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="bg-blue-600 rounded-lg p-1.5 text-white">
+              <div className="bg-blue-600 rounded-lg p-1.5 text-white shadow-lg shadow-blue-100">
                 <GraduationCap className="h-5 w-5" />
               </div>
-              <span className="font-bold text-xl tracking-tight text-slate-800">LCC Hub</span>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-xl tracking-tight text-slate-800">LCC Hub</span>
+                <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-[10px] font-black text-blue-600 border border-blue-100 tracking-tighter uppercase">Beta</span>
+              </div>
             </Link>
             <p className="text-slate-500 text-sm max-w-xs leading-relaxed">
               A modern, unofficial interface for accessing student information with ease and security. Optimized for the best academic experience.
@@ -45,7 +48,7 @@ export default function Footer() {
                 <Link href="/docs" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Documentation</Link>
               </li>
               <li>
-                <Link href="/docs/deep" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">System Architecture</Link>
+                <Link href="/docs/arch" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">System Architecture</Link>
               </li>
               <li>
                 <Link href="/disclaimer" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Disclaimer</Link>

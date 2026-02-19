@@ -100,6 +100,36 @@ const DocsPage: React.FC = () => {
                   Browse through all offered subjects for the current semester. View course descriptions, units, and check for prerequisite requirements.
                 </p>
               </div>
+
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                <div className="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center mb-4 text-pink-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <h3 className="font-bold mb-2">Student Community</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Connect with fellow students through our integrated community forum. Share thoughts, ask questions, and participate in campus-wide polls.
+                </p>
+              </div>
+
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                <div className="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center mb-4 text-violet-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                </div>
+                <h3 className="font-bold mb-2">AI Academic Assistant</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  An intelligent companion powered by Gemini. Ask questions about your grades, schedule, or general academic inquiries for instant, data-driven answers.
+                </p>
+              </div>
+
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-4 text-blue-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </div>
+                <h3 className="font-bold mb-2">Real-time Notifications</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Stay updated with a centralized notification system. Get alerted when someone comments on your posts or when new community activity occurs.
+                </p>
+              </div>
             </div>
           </section>
 
@@ -175,6 +205,7 @@ const DocsPage: React.FC = () => {
             &copy; {new Date().getFullYear()} LCC Hub — Unofficial Documentation
           </p>
           <div className="flex gap-6">
+            <Link href="/docs/arch" className="text-sm text-slate-400 hover:text-blue-600 transition-colors">Technical Deep Dive</Link>
             <a href="/disclaimer" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">Disclaimer</a>
             <a href="/" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">Home</a>
           </div>
