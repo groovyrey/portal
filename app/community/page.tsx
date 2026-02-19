@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
-import { Send, User, MessageSquare, Loader2, PenLine, Eye, MoreVertical, Trash2, Heart, X, Plus, BarChart2 } from 'lucide-react';
+import { Send, User, MessageSquare, Loader2, PenLine, Eye, MoreVertical, Trash2, Heart, X, Plus, BarChart2, ShieldAlert } from 'lucide-react';
 import { CommunityPost, Student, CommunityComment } from '@/types';
 import Link from 'next/link';
 import Drawer from '@/components/layout/Drawer';
@@ -56,8 +56,6 @@ export default function CommunityPage() {
       const savedStudent = localStorage.getItem('student_data');
       if (savedStudent) {
         setStudent(JSON.parse(savedStudent));
-        // Force refresh posts when student data changes (e.g., after login)
-        queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       } else {
         setStudent(null);
       }
@@ -75,7 +73,7 @@ export default function CommunityPage() {
       window.removeEventListener('storage', checkStudent);
       window.removeEventListener('click', handleClickOutside);
     };
-  }, [queryClient]);
+  }, []);
 
   const handlePointerDown = (postId: string, hasLikes: boolean) => {
     longPressTimer.current = setTimeout(() => {
@@ -99,10 +97,11 @@ export default function CommunityPage() {
     }
   };
 
-  const { data: posts = [], isLoading: loading } = useQuery({
+  const { data: posts = [], isLoading: loading, isError, error, refetch } = useQuery({
     queryKey: ['community-posts'],
     queryFn: async () => {
       const res = await fetch('/api/community');
+      if (!res.ok) throw new Error('Failed to fetch posts');
       const data = await res.json();
       return data.success ? (data.posts as CommunityPost[]) : [];
     }
@@ -542,6 +541,17 @@ export default function CommunityPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : isError ? (
+            <div className="text-center py-20 bg-white rounded-2xl border border-red-100 text-red-400">
+              <ShieldAlert className="h-10 w-10 mx-auto mb-3 opacity-20" />
+              <p className="font-semibold text-xs uppercase tracking-wider mb-4">Failed to load posts</p>
+              <button 
+                onClick={() => refetch()}
+                className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-colors"
+              >
+                Retry Fetching
+              </button>
             </div>
           ) : filteredPosts.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 text-slate-400">

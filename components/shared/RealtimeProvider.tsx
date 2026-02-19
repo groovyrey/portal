@@ -21,24 +21,33 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
   const ablyRef = useRef<Ably.Realtime | null>(null);
 
   useEffect(() => {
-    const checkLogin = () => {
+    const checkLogin = (isInitial = false) => {
       const data = localStorage.getItem('student_data');
       if (data) {
         const parsed = JSON.parse(data);
-        setStudentId(parsed.id);
-        queryClient.invalidateQueries({ queryKey: ['community-posts'] });
-      } else {
+        if (parsed.id !== studentId) {
+          setStudentId(parsed.id);
+          // Only invalidate if it's not the initial mount to avoid double-fetching
+          if (!isInitial) {
+            queryClient.invalidateQueries({ queryKey: ['community-posts'] });
+            queryClient.invalidateQueries({ queryKey: ['student-data'] });
+          }
+        }
+      } else if (studentId) {
         setStudentId(null);
       }
     };
-    checkLogin();
-    window.addEventListener('local-storage-update', checkLogin);
-    window.addEventListener('storage', checkLogin);
+
+    const handleUpdate = () => checkLogin(false);
+
+    checkLogin(true);
+    window.addEventListener('local-storage-update', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
     return () => {
-      window.removeEventListener('local-storage-update', checkLogin);
-      window.removeEventListener('storage', checkLogin);
+      window.removeEventListener('local-storage-update', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
     };
-  }, [queryClient]);
+  }, [queryClient, studentId]);
 
   useEffect(() => {
     // Initialize Ably once
@@ -50,10 +59,17 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
 
       ablyRef.current.connection.on('connected', () => {
         console.log('Ably Connected');
+        toast.success('Real-time connection established', {
+          description: 'You will receive live updates from the community.',
+          duration: 3000,
+        });
       });
 
       ablyRef.current.connection.on('failed', () => {
         console.error('Ably Connection Failed');
+        toast.error('Real-time connection failed', {
+          description: 'Live updates may be delayed. Try reloading if the issue persists.',
+        });
       });
       
       ablyRef.current.connection.on('closed', () => {
