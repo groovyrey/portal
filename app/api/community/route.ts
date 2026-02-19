@@ -136,15 +136,15 @@ export async function POST(req: NextRequest) {
 
     await client.query('COMMIT');
 
-    // Notify all students of new community post
+    // Notify all students of new community post asynchronously to avoid blocking the user
     const senderName = userName || 'A fellow student';
-    await notifyAllStudents({
+    notifyAllStudents({
       excludeUserId: userId,
       title: 'New Community Post',
       message: `${senderName} just posted in Community: "${content?.substring(0, 50) || 'New Poll'}..."`,
       type: 'info',
       link: '/community'
-    });
+    }).catch(e => console.error('Background notification error:', e));
 
     // Notify all clients of new post (Real-time community update)
     await publishUpdate('community', { 

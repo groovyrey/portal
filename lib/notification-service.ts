@@ -17,8 +17,9 @@ export async function createNotification({
   title,
   message,
   type = 'info',
-  link
-}: CreateNotificationParams) {
+  link,
+  skipRealtime = false
+}: CreateNotificationParams & { skipRealtime?: boolean }) {
   try {
     const res = await query(`
       INSERT INTO notifications (user_id, title, message, type, link)
@@ -26,20 +27,22 @@ export async function createNotification({
       RETURNING id, created_at
     `, [userId, title, message, type, link]);
 
-    // Notify the user via Ably if they are online
-    await publishUpdate(`notifications:${userId}`, {
-      type: 'NOTIFICATION_RECEIVED',
-      notification: {
-        id: res.rows[0].id.toString(),
-        userId,
-        title,
-        message,
-        type,
-        link,
-        isRead: false,
-        createdAt: res.rows[0].created_at.toISOString()
-      }
-    });
+    if (!skipRealtime) {
+      // Notify the user via Ably if they are online
+      await publishUpdate(`student-${userId}`, {
+        type: 'NOTIFICATION_RECEIVED',
+        notification: {
+          id: res.rows[0].id.toString(),
+          userId,
+          title,
+          message,
+          type,
+          link,
+          isRead: false,
+          createdAt: res.rows[0].created_at.toISOString()
+        }
+      });
+    }
 
     return res.rows[0];
   } catch (error) {
@@ -49,7 +52,7 @@ export async function createNotification({
 }
 
 /**
- * Notifies all students except the sender.
+ * Notifies all students except the sender using a single bulk database operation.
  */
 export async function notifyAllStudents({
   excludeUserId,
@@ -59,21 +62,21 @@ export async function notifyAllStudents({
   link
 }: Omit<CreateNotificationParams, 'userId'> & { excludeUserId: string }) {
   try {
-    // Get all student IDs except the sender
-    const studentsRes = await query('SELECT id FROM students WHERE id != $1', [excludeUserId]);
+    // Bulk insert into notifications for all students except the sender
+    // This is significantly more efficient than individual inserts at scale
+    await query(`
+      INSERT INTO notifications (user_id, title, message, type, link)
+      SELECT id, $1, $2, $3, $4
+      FROM students
+      WHERE id != $5
+    `, [title, message, type, link, excludeUserId]);
     
-    // Create notifications for each student
-    const promises = studentsRes.rows.map(student => 
-      createNotification({
-        userId: student.id,
-        title,
-        message,
-        type,
-        link
-      })
-    );
-
-    await Promise.all(promises);
+    // Broadcast a general update to all students to check their notifications
+    // Instead of 1,000+ individual messages, we send one broadcast message
+    await publishUpdate('community', {
+      type: 'GLOBAL_NOTIFICATION_RELOAD',
+      title
+    });
   } catch (error) {
     console.error('Error notifying all students:', error);
   }

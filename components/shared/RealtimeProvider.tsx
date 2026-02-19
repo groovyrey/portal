@@ -101,15 +101,31 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
           duration: 5000,
         });
       }
+
+      if (type === 'GLOBAL_NOTIFICATION_RELOAD') {
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      }
     };
 
     const onStudentUpdate = (message: any) => {
-      const { type } = message.data;
+      const { type, notification } = message.data;
       if (type === 'SYNC_COMPLETE') {
         queryClient.invalidateQueries({ queryKey: ['student-data'] });
         toast.success('Your data has been updated in the background.', {
           description: 'Latest records from the portal are now visible.',
           duration: 3000,
+        });
+      }
+
+      if (type === 'NOTIFICATION_RECEIVED' && notification) {
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        toast.info(notification.title, {
+          description: notification.message,
+          action: notification.link ? {
+            label: 'View',
+            onClick: () => window.location.href = notification.link
+          } : undefined,
+          duration: 5000,
         });
       }
     };

@@ -74,13 +74,13 @@ export async function POST(req: NextRequest) {
       
       // Don't notify if the owner is the one commenting
       if (postOwnerId !== userId) {
-        await createNotification({
+        createNotification({
           userId: postOwnerId,
           title: 'New Comment',
           message: `${userName || 'A student'} commented on "${postPreview}...": "${content.substring(0, 50)}..."`,
           type: 'info',
           link: '/community'
-        });
+        }).catch(e => console.error('Comment notification error:', e));
       }
     }
 
