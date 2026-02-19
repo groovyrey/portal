@@ -57,7 +57,7 @@ export default function Navbar() {
             }
 
             if (!isNaN(date.getTime())) {
-              setLastSynced(date.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' }));
+              setLastSynced(date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }));
             } else {
               setLastSynced('Just now');
             }
