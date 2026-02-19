@@ -8,7 +8,8 @@ import ScheduleTable from '@/components/dashboard/ScheduleTable';
 import { toast } from 'sonner';
 import Skeleton from '@/components/ui/Skeleton';
 import LoginProgressModal from '@/components/auth/LoginProgressModal';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useStudentQuery } from '@/lib/hooks';
 
 export default function Home() {
   const queryClient = useQueryClient();
@@ -16,23 +17,7 @@ export default function Home() {
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Use React Query for student data
-  const { data: student, isLoading: isQueryLoading } = useQuery({
-    queryKey: ['student-data'],
-    queryFn: async () => {
-      const res = await fetch('/api/student/me');
-      if (res.ok) {
-        const result = await res.json();
-        if (result.success && result.data) {
-          localStorage.setItem('student_data', JSON.stringify(result.data));
-          return result.data as Student;
-        }
-      }
-      // If not ok or not success, return null (logged out)
-      localStorage.removeItem('student_data');
-      return null;
-    },
-    staleTime: 1000 * 60 * 10, // 10 minutes
-  });
+  const { data: student, isLoading: isQueryLoading } = useStudentQuery();
 
   useEffect(() => {
     setIsInitialized(true);

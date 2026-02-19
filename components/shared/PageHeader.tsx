@@ -29,7 +29,13 @@ const pageConfig: { [key: string]: { title: string, icon: React.ReactNode } } = 
   '/assistant': { title: 'AI Assistant', icon: <Bot className="h-5 w-5" /> },
 };
 
-export default function PageHeader() {
+interface PageHeaderProps {
+  title?: string;
+  description?: string;
+  icon?: React.ReactNode;
+}
+
+export default function PageHeader({ title: propsTitle, description, icon: propsIcon }: PageHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isRestricted, setIsRestricted] = React.useState(false);
@@ -48,17 +54,19 @@ export default function PageHeader() {
     if (isRestricted) return null;
     if (pathname === '/') return null;
     if (pathname.startsWith('/profile/')) return pageConfig['/profile'];
-    return pageConfig[pathname];
+    return pageConfig[pathname] || null;
   };
 
   const config = getConfig();
 
-  // Don't show header on home page or if pathname is not in config
-  if (!config) {
+  // If title is passed as prop, use it. Otherwise, use config title.
+  const title = propsTitle || config?.title;
+  const icon = propsIcon || config?.icon;
+
+  // Don't show header if no title/icon found and not provided as props
+  if (!title && !icon) {
     return null;
   }
-
-  const { title, icon } = config;
 
   return (
     <div className="bg-white/80 border-b border-slate-200 sticky top-16 z-[90] backdrop-blur-md">
@@ -71,11 +79,18 @@ export default function PageHeader() {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="flex items-center gap-2.5">
-            <div className="text-blue-600">
-              {icon}
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2.5">
+              <div className="text-blue-600">
+                {icon}
+              </div>
+              <h1 className="text-lg font-bold text-slate-900 tracking-tight">{title}</h1>
             </div>
-            <h1 className="text-lg font-bold text-slate-900 tracking-tight">{title}</h1>
+            {description && (
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 ml-7">
+                {description}
+              </p>
+            )}
           </div>
         </div>
       </div>

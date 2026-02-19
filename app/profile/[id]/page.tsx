@@ -27,9 +27,11 @@ import Drawer from '@/components/layout/Drawer';
 import Modal from '@/components/ui/Modal';
 import { toast } from 'sonner';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useStudent } from '@/lib/hooks';
 
 function ProfileContent() {
   const queryClient = useQueryClient();
+  const { student: currentUserData } = useStudent();
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPublicView, setIsPublicView] = useState(false);
@@ -98,15 +100,11 @@ function ProfileContent() {
     const fetchProfile = async () => {
       setLoading(true);
       
-      const saved = localStorage.getItem('student_data');
-      const currentUser = saved ? JSON.parse(saved) : null;
-      const currentUserId = currentUser?.id;
+      const currentUserId = currentUserData?.id;
 
       // Determine if we are viewing someone else's profile
       const viewingOthers = !!(profileId && profileId !== currentUserId);
       setIsPublicView(viewingOthers);
-
-      let targetStudent: Student | null = null;
 
       if (viewingOthers) {
         try {
@@ -141,16 +139,14 @@ function ProfileContent() {
         }
       } else {
         // Viewing own profile
-        if (currentUser) {
-          targetStudent = currentUser;
-          setStudent(currentUser);
+        if (currentUserData) {
+          setStudent(currentUserData);
         } else {
           // If no local data, try to fetch from /me
           try {
             const res = await fetch('/api/student/me');
             const result = await res.json();
             if (result.success) {
-                targetStudent = result.data;
                 setStudent(result.data);
             }
           } catch (e) {
@@ -167,7 +163,7 @@ function ProfileContent() {
     const handleClickOutside = () => setActiveMenu(null);
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
-  }, [profileId]);
+  }, [profileId, currentUserData]);
 
   const handleLike = async (postId: string, isLiked: boolean) => {
     const saved = localStorage.getItem('student_data');

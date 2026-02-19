@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { obfuscateId } from '@/lib/utils';
 import { 
@@ -24,8 +24,11 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function Navbar() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
@@ -100,6 +103,11 @@ export default function Navbar() {
       if (result.success) {
         localStorage.setItem('student_data', JSON.stringify(result.data));
         window.dispatchEvent(new Event('local-storage-update'));
+        
+        // Update frontend state immediately
+        await queryClient.invalidateQueries({ queryKey: ['student-data'] });
+        router.refresh();
+        
         toast.success('Synchronization complete!', { id: syncToast });
       } else {
         toast.error(result.error || 'Sync failed.', { id: syncToast });

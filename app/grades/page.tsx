@@ -1,30 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Student, SubjectGrade } from '@/types';
+import { SubjectGrade } from '@/types';
 import GradesList from '@/components/dashboard/GradesList';
 import GradeStats from '@/components/dashboard/GradeStats';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import LottieAnimation from '@/components/ui/LottieAnimation';
 import Skeleton from '@/components/ui/Skeleton';
+import { useStudent } from '@/lib/hooks';
 
 export default function GradesPage() {
-  const [student, setStudent] = useState<Student | null>(null);
+  const { student } = useStudent();
   const [isInitialized, setIsInitialized] = useState(false);
   const [allGrades, setAllGrades] = useState<SubjectGrade[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
 
   useEffect(() => {
-    const savedStudent = localStorage.getItem('student_data');
     const savedAllGrades = localStorage.getItem('all_grades_cache');
-    
-    if (savedStudent) {
+    if (savedAllGrades) {
       try {
-        setStudent(JSON.parse(savedStudent));
-        if (savedAllGrades) setAllGrades(JSON.parse(savedAllGrades));
+        setAllGrades(JSON.parse(savedAllGrades));
       } catch (e) {
-        console.error('Failed to parse saved student data');
+        console.error('Failed to parse saved grades data');
       }
     }
     setIsInitialized(true);
