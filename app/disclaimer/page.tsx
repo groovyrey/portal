@@ -1,5 +1,5 @@
 import React from 'react';
-import DisclaimerContent from '@/components/DisclaimerContent';
+import DisclaimerContent from '@/components/shared/DisclaimerContent';
 
 const DisclaimerPage: React.FC = () => {
   return (

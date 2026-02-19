@@ -29,6 +29,8 @@ export default function Navbar() {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [studentId, setStudentId] = useState<string | null>(null);
+  const [studentName, setStudentName] = useState<string | null>(null);
+  const [lastSynced, setLastSynced] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if logged in to show navbar
@@ -36,9 +38,18 @@ export default function Navbar() {
       const data = localStorage.getItem('student_data');
       setIsLoggedIn(!!data);
       if (data) {
-        setStudentId(JSON.parse(data).id);
+        const parsed = JSON.parse(data);
+        setStudentId(parsed.id);
+        setStudentName(parsed.parsedName?.firstName || parsed.name.split(',')[0]);
+        
+        if (parsed.updated_at) {
+          const date = parsed.updated_at?.toDate ? parsed.updated_at.toDate() : new Date(parsed.updated_at);
+          setLastSynced(date.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' }));
+        }
       } else {
         setStudentId(null);
+        setStudentName(null);
+        setLastSynced(null);
       }
     };
     
@@ -210,14 +221,30 @@ export default function Navbar() {
           }`}
         >
           <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <span className="font-bold text-sm text-slate-900">Navigation</span>
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="p-2 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
+            <div className="p-6 border-b border-slate-100">
+              <div className="flex items-center justify-between mb-4">
+                <span className="font-bold text-xs uppercase tracking-widest text-slate-400">Student Portal</span>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              {isLoggedIn && (
+                <div className="flex flex-col gap-1">
+                  <div className="text-lg font-bold text-slate-900 tracking-tight">
+                    {studentName}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Synced {lastSynced || 'Just now'}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">

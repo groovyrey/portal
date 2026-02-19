@@ -22,9 +22,9 @@ import { doc, getDoc, collection, query, where, orderBy, getDocs, limit } from '
 import { parseStudentName, deobfuscateId, obfuscateId } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import PostCard from '@/components/PostCard';
-import Drawer from '@/components/Drawer';
-import Modal from '@/components/Modal';
+import PostCard from '@/components/community/PostCard';
+import Drawer from '@/components/layout/Drawer';
+import Modal from '@/components/ui/Modal';
 import { toast } from 'sonner';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 

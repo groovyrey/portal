@@ -1,10 +1,15 @@
 import crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-cbc';
-// Use a stable fallback for development. In production, SESSION_SECRET must be set.
-const FALLBACK_SECRET = '4a2c918e7b1f3d5c6e8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e';
-const SECRET_KEY = process.env.SESSION_SECRET || FALLBACK_SECRET;
-const KEY = Buffer.from(SECRET_KEY, 'hex');
+const SECRET_KEY = process.env.SESSION_SECRET;
+
+if (!SECRET_KEY && process.env.NODE_ENV === 'production') {
+  throw new Error('SESSION_SECRET environment variable is not set in production.');
+}
+
+// Fallback for development only if SESSION_SECRET is not provided
+const DEV_SECRET = '4a2c918e7b1f3d5c6e8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e';
+const KEY = Buffer.from(SECRET_KEY || DEV_SECRET, 'hex');
 
 export function encrypt(text: string): string {
   const iv = crypto.randomBytes(16);

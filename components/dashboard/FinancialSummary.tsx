@@ -1,4 +1,4 @@
-import { Financials } from '../types';
+import { Financials } from '@/types';
 import { Wallet, Clock, AlertCircle } from 'lucide-react';
 
 interface FinancialSummaryProps {

@@ -32,6 +32,7 @@ export async function getStudentProfile(userId: string): Promise<Student | null>
       yearLevel: data.year_level,
       semester: data.semester,
       availableReports: data.available_reports,
+      updated_at: data.updated_at,
       settings: data.settings
     };
   } catch (error) {

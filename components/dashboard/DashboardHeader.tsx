@@ -1,6 +1,6 @@
 'use client';
 
-import { Student } from '../types';
+import { Student } from '@/types';
 import { LogOut, GraduationCap, Calendar, UserCheck, LayoutDashboard } from 'lucide-react';
 import { motion } from 'framer-motion';
 

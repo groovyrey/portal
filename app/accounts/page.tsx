@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Student } from '../../types';
-import FinancialSummary from '../../components/FinancialSummary';
+import { Student } from '@/types';
+import FinancialSummary from '@/components/dashboard/FinancialSummary';
 import Link from 'next/link';
 
 export default function AccountsPage() {

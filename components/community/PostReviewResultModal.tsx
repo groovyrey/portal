@@ -1,7 +1,7 @@
 'use client';
 
 import { ShieldCheck, ShieldAlert, ArrowRight, Lightbulb } from 'lucide-react';
-import Modal from './Modal';
+import Modal from '@/components/ui/Modal';
 
 interface PostReviewResult {
   decision: 'APPROVED' | 'REJECTED';

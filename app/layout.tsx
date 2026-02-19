@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Providers from "../components/Providers";
-import VersionChecker from "../components/VersionChecker";
+import Providers from "@/components/shared/Providers";
+import VersionChecker from "@/components/shared/VersionChecker";
 import { Toaster } from 'sonner';
 import { Suspense } from 'react';
-import ClientLayoutWrapper from "../components/ClientLayoutWrapper";
-import RealtimeProvider from "../components/RealtimeProvider";
+import ClientLayoutWrapper from "@/components/layout/ClientLayoutWrapper";
+import RealtimeProvider from "@/components/shared/RealtimeProvider";
 
 const inter = Inter({ 
   subsets: ["latin"],

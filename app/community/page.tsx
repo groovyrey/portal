@@ -7,18 +7,18 @@ import { toast } from 'sonner';
 import { Send, User, MessageSquare, Loader2, PenLine, Eye, MoreVertical, Trash2, Heart, X, Plus, BarChart2 } from 'lucide-react';
 import { CommunityPost, Student, CommunityComment } from '@/types';
 import Link from 'next/link';
-import Drawer from '@/components/Drawer';
-import Modal from '@/components/Modal';
-import PostReviewModal from '@/components/PostReviewModal';
-import PostReviewResultModal from '@/components/PostReviewResultModal';
-import CommunityGuidelinesDrawer from '@/components/CommunityGuidelinesDrawer';
-import Skeleton from '@/components/Skeleton';
-import PostCard from '@/components/PostCard';
+import Drawer from '@/components/layout/Drawer';
+import Modal from '@/components/ui/Modal';
+import PostReviewModal from '@/components/community/PostReviewModal';
+import PostReviewResultModal from '@/components/community/PostReviewResultModal';
+import CommunityGuidelinesDrawer from '@/components/community/CommunityGuidelinesDrawer';
+import Skeleton from '@/components/ui/Skeleton';
+import PostCard from '@/components/community/PostCard';
 import { Info, ExternalLink } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { obfuscateId } from '@/lib/utils';
 import { useRef } from 'react';
-import { useRealtime } from '@/components/RealtimeProvider';
+import { useRealtime } from '@/components/shared/RealtimeProvider';
 
 export default function CommunityPage() {
   const queryClient = useQueryClient();

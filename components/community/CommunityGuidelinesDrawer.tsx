@@ -1,7 +1,7 @@
 'use client';
 
 import { ShieldCheck, Info, MessageSquare, AlertTriangle, GraduationCap, HeartHandshake } from 'lucide-react';
-import Drawer from './Drawer';
+import Drawer from '@/components/layout/Drawer';
 
 interface CommunityGuidelinesDrawerProps {
   isOpen: boolean;

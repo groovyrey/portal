@@ -115,6 +115,7 @@ export interface Student {
   offeredSubjects?: ProspectusSubject[];
   grades?: SemesterGrade[];
   availableReports?: ReportLink[];
+  updated_at?: any;
   settings?: {
     notifications: boolean;
     isPublic: boolean;

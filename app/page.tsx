@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LoginResponse, Student } from '../types';
-import LoginForm from '../components/LoginForm';
-import DashboardHeader from '../components/DashboardHeader';
-import ScheduleTable from '../components/ScheduleTable';
+import { LoginResponse, Student } from '@/types';
+import LoginForm from '@/components/auth/LoginForm';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import ScheduleTable from '@/components/dashboard/ScheduleTable';
 import { toast } from 'sonner';
-import Skeleton from '../components/Skeleton';
-import LoginProgressModal from '../components/LoginProgressModal';
+import Skeleton from '@/components/ui/Skeleton';
+import LoginProgressModal from '@/components/auth/LoginProgressModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function Home() {

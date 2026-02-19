@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
-import PageHeader from '../components/PageHeader';
-import Footer from '../components/Footer';
+import Navbar from '@/components/layout/Navbar';
+import PageHeader from '@/components/shared/PageHeader';
+import Footer from '@/components/layout/Footer';
 
 export default function ClientLayoutWrapper({ children }: { children: React.ReactNode }) {
   const [isRestricted, setIsRestricted] = useState(false);

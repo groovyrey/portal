@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
-import Modal from './Modal';
+import Modal from '@/components/ui/Modal';
 
 interface PostReviewModalProps {
   isOpen: boolean;

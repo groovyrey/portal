@@ -23,9 +23,9 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import Drawer from '@/components/Drawer';
-import SecuritySettings from '@/components/SecuritySettings';
-import StarRating from '@/components/StarRating';
+import Drawer from '@/components/layout/Drawer';
+import SecuritySettings from '@/components/dashboard/SecuritySettings';
+import StarRating from '@/components/ui/StarRating';
 import { APP_VERSION } from '@/lib/version';
 
 export default function SettingsPage() {

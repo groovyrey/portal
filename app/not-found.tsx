@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowLeft, Home, MessageSquare } from 'lucide-react';
-import LottieAnimation from '@/components/LottieAnimation';
+import LottieAnimation from '@/components/ui/LottieAnimation';
 
 export default function NotFound() {
   return (

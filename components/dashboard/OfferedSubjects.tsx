@@ -1,4 +1,4 @@
-import { ProspectusSubject } from '../types';
+import { ProspectusSubject } from '@/types';
 
 interface OfferedSubjectsProps {
   subjects: ProspectusSubject[];

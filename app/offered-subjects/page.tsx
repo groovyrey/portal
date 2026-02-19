@@ -5,8 +5,8 @@ import { Student } from '../../types';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Search, X } from 'lucide-react';
-import LottieAnimation from '@/components/LottieAnimation';
-import Skeleton from '@/components/Skeleton';
+import LottieAnimation from '@/components/ui/LottieAnimation';
+import Skeleton from '@/components/ui/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function OfferedSubjectsPage() {

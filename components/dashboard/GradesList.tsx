@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Student, SubjectGrade } from '../types';
+import { Student, SubjectGrade } from '@/types';
 import { 
   FileText, 
   ChevronRight, 
@@ -7,8 +7,8 @@ import {
   XCircle, 
   BookOpenCheck
 } from 'lucide-react';
-import Drawer from './Drawer';
-import Skeleton from './Skeleton';
+import Drawer from '@/components/layout/Drawer';
+import Skeleton from '@/components/ui/Skeleton';
 import { useQuery } from '@tanstack/react-query';
 
 interface GradesListProps {

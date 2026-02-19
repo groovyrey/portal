@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Student, SubjectGrade } from '../../types';
-import GradesList from '../../components/GradesList';
-import GradeStats from '../../components/GradeStats';
+import { Student, SubjectGrade } from '@/types';
+import GradesList from '@/components/dashboard/GradesList';
+import GradeStats from '@/components/dashboard/GradeStats';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import LottieAnimation from '@/components/LottieAnimation';
-import Skeleton from '@/components/Skeleton';
+import LottieAnimation from '@/components/ui/LottieAnimation';
+import Skeleton from '@/components/ui/Skeleton';
 
 export default function GradesPage() {
   const [student, setStudent] = useState<Student | null>(null);

@@ -1,9 +1,9 @@
 'use client';
 
-import { ScheduleItem, ProspectusSubject } from '../types';
+import { ScheduleItem, ProspectusSubject } from '@/types';
 import { useState, useMemo, useEffect } from 'react';
 import { X, MapPin, Clock, Hash, BookOpen, Info } from 'lucide-react';
-import Modal from './Modal';
+import Modal from '@/components/ui/Modal';
 
 interface ScheduleTableProps {
   schedule: ScheduleItem[];

@@ -1,6 +1,6 @@
 'use client';
 
-import { Student } from '../types';
+import { Student } from '@/types';
 import { 
   Mail, 
   ShieldCheck,

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Circle, Loader2 } from 'lucide-react';
-import Modal from './Modal';
+import Modal from '@/components/ui/Modal';
 
 interface LoginProgressModalProps {
   isOpen: boolean;

@@ -15,7 +15,7 @@ import {
   Star
 } from 'lucide-react';
 import Link from 'next/link';
-import LottieAnimation from '@/components/LottieAnimation';
+import LottieAnimation from '@/components/ui/LottieAnimation';
 
 export default function AboutPage() {
   const [stats, setStats] = useState({ average: 0, count: 0 });
