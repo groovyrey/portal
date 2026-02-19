@@ -20,8 +20,10 @@ import {
   Building2,
   Settings,
   Info,
-  BrainCircuit
+  BrainCircuit,
+  RefreshCw
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -31,6 +33,7 @@ export default function Navbar() {
   const [studentId, setStudentId] = useState<string | null>(null);
   const [studentName, setStudentName] = useState<string | null>(null);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     // Check if logged in to show navbar
@@ -40,11 +43,27 @@ export default function Navbar() {
       if (data) {
         const parsed = JSON.parse(data);
         setStudentId(parsed.id);
-        setStudentName(parsed.parsedName?.firstName || parsed.name.split(',')[0]);
+        const firstName = parsed.parsedName?.firstName || parsed.name.split(',')[0];
+        setStudentName(firstName);
         
         if (parsed.updated_at) {
-          const date = parsed.updated_at?.toDate ? parsed.updated_at.toDate() : new Date(parsed.updated_at);
-          setLastSynced(date.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' }));
+          try {
+            // Handle multiple possible date formats (Firebase Timestamp, ISO string, etc.)
+            let date: Date;
+            if (typeof parsed.updated_at === 'object' && parsed.updated_at.seconds) {
+              date = new Date(parsed.updated_at.seconds * 1000);
+            } else {
+              date = new Date(parsed.updated_at);
+            }
+
+            if (!isNaN(date.getTime())) {
+              setLastSynced(date.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' }));
+            } else {
+              setLastSynced('Just now');
+            }
+          } catch (e) {
+            setLastSynced('Just now');
+          }
         }
       } else {
         setStudentId(null);
@@ -64,6 +83,33 @@ export default function Navbar() {
       window.removeEventListener('local-storage-update', checkLogin);
     };
   }, []);
+
+  const handleManualSync = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    const syncToast = toast.loading('Syncing your academic records...');
+    
+    try {
+      const res = await fetch('/api/student/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}), // Trigger auto-sync from cookie
+      });
+      
+      const result = await res.json();
+      if (result.success) {
+        localStorage.setItem('student_data', JSON.stringify(result.data));
+        window.dispatchEvent(new Event('local-storage-update'));
+        toast.success('Synchronization complete!', { id: syncToast });
+      } else {
+        toast.error(result.error || 'Sync failed.', { id: syncToast });
+      }
+    } catch (err) {
+      toast.error('Network error during sync.', { id: syncToast });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   // Close more menu when clicking outside
   useEffect(() => {
@@ -233,16 +279,34 @@ export default function Navbar() {
               </div>
               
               {isLoggedIn && (
-                <div className="flex flex-col gap-1">
-                  <div className="text-lg font-bold text-slate-900 tracking-tight">
-                    {studentName}
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-1">
+                    <div className="text-lg font-bold text-slate-900 tracking-tight">
+                      {studentName}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className={`h-1.5 w-1.5 rounded-full bg-emerald-500 ${isSyncing ? 'animate-ping' : 'animate-pulse'}`}></div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Synced {lastSynced || 'Just now'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Synced {lastSynced || 'Just now'}
-                    </span>
-                  </div>
+                  
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleManualSync();
+                    }}
+                    disabled={isSyncing}
+                    className={`p-2 rounded-lg border transition-all ${
+                      isSyncing 
+                        ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed' 
+                        : 'bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-100'
+                    }`}
+                    title="Manual Sync"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                  </button>
                 </div>
               )}
             </div>

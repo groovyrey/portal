@@ -18,6 +18,25 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
   const pathname = usePathname();
   const [activePostId, setActivePostId] = useState<string | null>(null);
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkLogin = () => {
+      const data = localStorage.getItem('student_data');
+      setIsLoggedIn(!!data);
+      if (!!data) {
+        queryClient.invalidateQueries({ queryKey: ['community-posts'] });
+      }
+    };
+    checkLogin();
+    window.addEventListener('local-storage-update', checkLogin);
+    window.addEventListener('storage', checkLogin);
+    return () => {
+      window.removeEventListener('local-storage-update', checkLogin);
+      window.removeEventListener('storage', checkLogin);
+    };
+  }, [queryClient]);
+
   useEffect(() => {
     // Ably Realtime Setup
     const ably = new Ably.Realtime({ authUrl: '/api/ably/auth' });
@@ -52,7 +71,7 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
       channel.unsubscribe();
       ably.close();
     };
-  }, [queryClient, pathname, activePostId]);
+  }, [queryClient, pathname, activePostId, isLoggedIn]);
 
   return (
     <RealtimeContext.Provider value={{ activePostId, setActivePostId }}>

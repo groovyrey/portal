@@ -52,13 +52,30 @@ export default function CommunityPage() {
   const [commenting, setCommenting] = useState(false);
 
   useEffect(() => {
-    const savedStudent = localStorage.getItem('student_data');
-    if (savedStudent) setStudent(JSON.parse(savedStudent));
+    const checkStudent = () => {
+      const savedStudent = localStorage.getItem('student_data');
+      if (savedStudent) {
+        setStudent(JSON.parse(savedStudent));
+        // Force refresh posts when student data changes (e.g., after login)
+        queryClient.invalidateQueries({ queryKey: ['community-posts'] });
+      } else {
+        setStudent(null);
+      }
+    };
+
+    checkStudent();
+    window.addEventListener('local-storage-update', checkStudent);
+    window.addEventListener('storage', checkStudent);
 
     const handleClickOutside = () => setActiveMenu(null);
     window.addEventListener('click', handleClickOutside);
-    return () => window.removeEventListener('click', handleClickOutside);
-  }, []);
+
+    return () => {
+      window.removeEventListener('local-storage-update', checkStudent);
+      window.removeEventListener('storage', checkStudent);
+      window.removeEventListener('click', handleClickOutside);
+    };
+  }, [queryClient]);
 
   const handlePointerDown = (postId: string, hasLikes: boolean) => {
     longPressTimer.current = setTimeout(() => {
