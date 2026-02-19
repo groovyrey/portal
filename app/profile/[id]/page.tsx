@@ -405,16 +405,6 @@ function ProfileContent() {
                 />
               </div>
             </div>
-            
-            {/* Verified Badge - Floating beside avatar */}
-            {!isPublicView && (
-              <div className="absolute bottom-2 right-[-12px]">
-                <div className="bg-green-500 text-white py-1.5 px-3 rounded-xl shadow-lg shadow-green-200 border-2 border-white flex items-center gap-1.5 transition-transform active:scale-95 cursor-default">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Verified</span>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/pg';
 import { decrypt } from '@/lib/auth';
 import { publishUpdate } from '@/lib/realtime';
+import { notifyAllStudents } from '@/lib/notification-service';
 
 export async function GET(req: NextRequest) {
   try {
@@ -135,7 +136,17 @@ export async function POST(req: NextRequest) {
 
     await client.query('COMMIT');
 
-    // Notify all clients of new post
+    // Notify all students of new community post
+    const senderName = userName || 'A fellow student';
+    await notifyAllStudents({
+      excludeUserId: userId,
+      title: 'New Community Post',
+      message: `${senderName} just posted in Community: "${content?.substring(0, 50) || 'New Poll'}..."`,
+      type: 'info',
+      link: '/community'
+    });
+
+    // Notify all clients of new post (Real-time community update)
     await publishUpdate('community', { 
       type: 'POST_CREATED', 
       postId,

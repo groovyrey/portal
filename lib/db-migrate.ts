@@ -76,3 +76,41 @@ export async function migrateCommunity() {
     throw error;
   }
 }
+
+export async function migrateNotifications() {
+  console.log('Starting Notifications migration...');
+
+  try {
+    // Ensure students table exists
+    await query(`
+      CREATE TABLE IF NOT EXISTS students (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        course TEXT,
+        email TEXT,
+        year_level TEXT,
+        semester TEXT,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create notifications table
+    await query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        type TEXT DEFAULT 'info',
+        is_read BOOLEAN DEFAULT FALSE,
+        link TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    console.log('Notifications migration completed successfully.');
+  } catch (error) {
+    console.error('Notifications migration failed:', error);
+    throw error;
+  }
+}

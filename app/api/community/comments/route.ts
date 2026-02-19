@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/pg';
 import { decrypt } from '@/lib/auth';
 import { publishUpdate } from '@/lib/realtime';
+import { createNotification } from '@/lib/notification-service';
 
 export async function GET(req: NextRequest) {
   try {
@@ -64,6 +65,24 @@ export async function POST(req: NextRequest) {
       VALUES ($1, $2, $3, $4)
       RETURNING id, created_at
     `, [postId, userId, userName || 'Anonymous Student', content]);
+
+    // Notify the post owner
+    const postRes = await query('SELECT user_id, content FROM community_posts WHERE id = $1', [postId]);
+    if (postRes.rows.length > 0) {
+      const postOwnerId = postRes.rows[0].user_id;
+      const postPreview = postRes.rows[0].content?.substring(0, 30) || 'your post';
+      
+      // Don't notify if the owner is the one commenting
+      if (postOwnerId !== userId) {
+        await createNotification({
+          userId: postOwnerId,
+          title: 'New Comment',
+          message: `${userName || 'A student'} commented on "${postPreview}...": "${content.substring(0, 50)}..."`,
+          type: 'info',
+          link: '/community'
+        });
+      }
+    }
 
     const newComment = {
       id: commentRes.rows[0].id.toString(),

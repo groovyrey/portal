@@ -42,10 +42,6 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
           </div>
           <div>
             <h3 className="text-lg font-bold text-slate-900">Student Identity</h3>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-green-600" />
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Official Record</span>
-            </div>
           </div>
         </div>
 

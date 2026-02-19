@@ -2,7 +2,7 @@
 
 import { ScheduleItem, ProspectusSubject } from '@/types';
 import { useState, useMemo, useEffect } from 'react';
-import { X, MapPin, Clock, Hash, BookOpen, Info } from 'lucide-react';
+import { X, MapPin, Clock, Hash, BookOpen, Info, Calendar } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 
 interface ScheduleTableProps {
@@ -101,6 +101,18 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-200">
+            <Calendar className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-slate-900 tracking-tight">Class Schedule</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Weekly Overview</p>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-blue-50/50 border border-blue-100/50 rounded-2xl p-4 flex items-start gap-3">
         <div className="h-6 w-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
           <Info className="h-3.5 w-3.5" />

@@ -21,22 +21,26 @@ import {
   Settings,
   Info,
   BrainCircuit,
-  RefreshCw
+  RefreshCw,
+  Bell
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import NotificationDrawer from './NotificationDrawer';
 
 export default function Navbar() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [studentName, setStudentName] = useState<string | null>(null);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     // Check if logged in to show navbar
@@ -86,6 +90,30 @@ export default function Navbar() {
       window.removeEventListener('local-storage-update', checkLogin);
     };
   }, []);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      const fetchUnreadCount = async () => {
+        try {
+          const res = await fetch('/api/student/notifications');
+          const data = await res.json();
+          if (data.success) {
+            const unread = data.notifications.filter((n: any) => !n.isRead).length;
+            setUnreadCount(unread);
+          }
+        } catch (err) {
+          console.error('Failed to fetch unread count');
+        }
+      };
+      
+      fetchUnreadCount();
+      // Poll for notifications every 30 seconds
+      const interval = setInterval(fetchUnreadCount, 30000);
+      return () => clearInterval(interval);
+    } else {
+      setUnreadCount(0);
+    }
+  }, [isLoggedIn]);
 
   const handleManualSync = async () => {
     if (isSyncing) return;
@@ -177,7 +205,10 @@ export default function Navbar() {
                 <div className="bg-blue-600 rounded-lg p-1.5 text-white shadow-lg shadow-blue-200">
                   <GraduationCap className="h-5 w-5" />
                 </div>
-                <span className="font-bold text-xl tracking-tight text-slate-800">LCC Hub</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xl tracking-tight text-slate-800">LCC Hub</span>
+                  <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-[10px] font-black text-blue-600 border border-blue-100 tracking-tighter uppercase">Beta</span>
+                </div>
               </Link>
             </div>
 
@@ -202,49 +233,80 @@ export default function Navbar() {
               })}
 
               {isLoggedIn && (
-                <div className="relative">
+                <div className="flex items-center gap-1 ml-2">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsMoreOpen(!isMoreOpen);
-                    }}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isMoreOpen || desktopMore.some(link => isActive(link.href))
-                        ? 'bg-slate-50 text-slate-900'
+                    onClick={() => setIsNotifOpen(true)}
+                    className={`relative p-2 rounded-lg transition-colors ${
+                      isNotifOpen 
+                        ? 'bg-blue-50 text-blue-600' 
                         : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
-                    More
-                    <ChevronDown className={`h-4 w-4 transition-transform ${isMoreOpen ? 'rotate-180' : ''}`} />
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white ring-2 ring-white">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
                   </button>
 
-                  {isMoreOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-2 z-[110] animate-in fade-in zoom-in duration-200">
-                      {desktopMore.map((link) => {
-                        const Icon = link.icon;
-                        return (
-                          <Link
-                            key={link.name}
-                            href={link.href}
-                            className={`flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors ${
-                              isActive(link.href)
-                                ? 'text-blue-600 bg-blue-50'
-                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                            }`}
-                          >
-                            <Icon className="h-4 w-4" />
-                            {link.name}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsMoreOpen(!isMoreOpen);
+                      }}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        isMoreOpen || desktopMore.some(link => isActive(link.href))
+                          ? 'bg-slate-50 text-slate-900'
+                          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                      }`}
+                    >
+                      More
+                      <ChevronDown className={`h-4 w-4 transition-transform ${isMoreOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isMoreOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-2 z-[110] animate-in fade-in zoom-in duration-200">
+                        {desktopMore.map((link) => {
+                          const Icon = link.icon;
+                          return (
+                            <Link
+                              key={link.name}
+                              href={link.href}
+                              className={`flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors ${
+                                isActive(link.href)
+                                  ? 'text-blue-600 bg-blue-50'
+                                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                              }`}
+                            >
+                              <Icon className="h-4 w-4" />
+                              {link.name}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Mobile menu button */}
-            <div className="lg:hidden flex items-center">
+            <div className="lg:hidden flex items-center gap-1">
+              {isLoggedIn && (
+                <button
+                  onClick={() => setIsNotifOpen(true)}
+                  className="relative p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white ring-2 ring-white">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+              )}
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-slate-500 hover:bg-slate-100 focus:outline-none transition-colors"
@@ -255,6 +317,12 @@ export default function Navbar() {
           </div>
         </div>
       </nav>
+
+      {/* Notification Drawer */}
+      <NotificationDrawer 
+        isOpen={isNotifOpen} 
+        onClose={() => setIsNotifOpen(false)} 
+      />
 
       {/* Mobile Menu (Drawer) */}
       <div 
@@ -341,7 +409,7 @@ export default function Navbar() {
             </div>
 
             <div className="p-6 border-t border-slate-100 text-center">
-              <p className="text-[10px] font-medium text-slate-400">LCC Hub v1.1</p>
+              <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">LCC Hub v1.2.0-BETA</p>
             </div>
           </div>
         </div>
