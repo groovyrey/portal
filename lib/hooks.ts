@@ -79,10 +79,14 @@ export function usePushNotifications() {
     try {
       if (Notification.permission === 'granted') {
         const registration = await navigator.serviceWorker.register('/sw.js');
+        // Wait for service worker to be ready/active
+        await navigator.serviceWorker.ready;
+        
         const currentToken = await getToken(messaging, {
           vapidKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
           serviceWorkerRegistration: registration
         });
+        
         if (currentToken) {
           setToken(currentToken);
           setIsSubscribed(true);
@@ -107,18 +111,26 @@ export function usePushNotifications() {
   }
 
   async function subscribe() {
-    if (!messaging || !student?.id) return;
+    if (!messaging || !student?.id) {
+      console.warn('Messaging or Student ID missing', { messaging: !!messaging, studentId: student?.id });
+      return;
+    }
 
     try {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
+        console.log('Notification permission granted. Registering service worker...');
         const registration = await navigator.serviceWorker.register('/sw.js');
+        await navigator.serviceWorker.ready;
+        
+        console.log('Service worker ready. Requesting FCM token...');
         const currentToken = await getToken(messaging, {
           vapidKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
           serviceWorkerRegistration: registration
         });
 
         if (currentToken) {
+          console.log('FCM Token received:', currentToken);
           setToken(currentToken);
           setIsSubscribed(true);
           await syncTokenWithBackend(student.id, currentToken);
@@ -127,10 +139,17 @@ export function usePushNotifications() {
           console.warn('No registration token available.');
           toast.error('Failed to get notification token.');
         }
+      } else {
+        console.warn('Notification permission denied:', permission);
+        toast.error('Permission denied. Please allow notifications in your browser settings.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to subscribe to FCM:', err);
-      toast.error('Failed to enable notifications.');
+      // Log more details if available
+      if (err.message) console.error('Error message:', err.message);
+      if (err.code) console.error('Error code:', err.code);
+      
+      toast.error(`Failed to enable notifications: ${err.message || 'Unknown error'}`);
     }
   }
 
