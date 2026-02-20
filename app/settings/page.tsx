@@ -28,11 +28,13 @@ import SecuritySettings from '@/components/dashboard/SecuritySettings';
 import StarRating from '@/components/ui/StarRating';
 import { APP_VERSION } from '@/lib/version';
 import { useStudent } from '@/lib/hooks';
+import PushNotificationDrawer from '@/components/layout/PushNotificationDrawer';
 
 export default function SettingsPage() {
   const { student } = useStudent();
   const [loading, setLoading] = useState(true);
   const [activeDrawer, setActiveDrawer] = useState<string | null>(null);
+  const [isPushOpen, setIsPushOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -116,12 +118,11 @@ export default function SettingsPage() {
         <section>
           <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 ml-1">Preferences</h2>
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-            <SettingsToggle 
+            <SettingsItem 
               icon={<Bell className="text-amber-500" />} 
               title="Notifications" 
               description="Manage how you receive updates"
-              enabled={student?.settings?.notifications ?? true}
-              onToggle={(val) => updateSettings({ ...student?.settings, notifications: val })}
+              onClick={() => setIsPushOpen(true)}
             />
             <SettingsItem 
               icon={<Eye className="text-emerald-500" />} 
@@ -284,6 +285,12 @@ export default function SettingsPage() {
             </div>
         </div>
       </Drawer>
+
+      {/* Push Notification Settings Drawer */}
+      <PushNotificationDrawer 
+        isOpen={isPushOpen} 
+        onClose={() => setIsPushOpen(false)} 
+      />
 
       <footer className="mt-12 text-center">
         <p className="text-xs font-medium text-slate-400">LCC Hub v{APP_VERSION}</p>
