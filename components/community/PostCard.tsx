@@ -111,33 +111,31 @@ export default function PostCard({
           </div>
         </div>
 
-        <div className="relative" onClick={(e) => e.stopPropagation()}>
-          <button 
-            onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}
-            className="p-1.5 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
+        {student?.id === post.userId && (
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <button 
+              onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}
+              className="p-1.5 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </button>
 
-          {activeMenu === post.id && (
-            <div className="absolute right-0 mt-1 w-40 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-50">
-              {student?.id === post.userId ? (
-                <button 
-                  onClick={() => {
-                    onDelete(post.id);
-                    setActiveMenu(null);
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete Post
-                </button>
-              ) : (
-                <p className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase">No actions</p>
-              )}
-            </div>
-          )}
-        </div>
+            {activeMenu === post.id && (
+              <div className="absolute right-0 mt-1 w-40 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-50">
+                  <button 
+                    onClick={() => {
+                      onDelete(post.id);
+                      setActiveMenu(null);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Post
+                  </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
       <div className="prose prose-slate max-w-none prose-sm font-medium text-slate-700 leading-relaxed mb-4 line-clamp-3">
@@ -158,12 +156,12 @@ export default function PostCard({
               return (
                 <button
                   key={idx}
-                  disabled={hasVoted}
+                  disabled={!student || hasVoted}
                   onClick={() => onVote(post.id, idx)}
                   className={`w-full relative h-10 rounded-xl overflow-hidden border transition-all ${
                     hasVoted 
                       ? isSelected ? 'border-blue-200 bg-blue-50/50' : 'border-slate-100 bg-white/50'
-                      : 'border-slate-200 bg-white hover:border-blue-600/30'
+                      : !student ? 'border-slate-100 bg-slate-50/50 cursor-not-allowed' : 'border-slate-200 bg-white hover:border-blue-600/30'
                   }`}
                 >
                   {hasVoted && (
@@ -190,7 +188,7 @@ export default function PostCard({
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
               {post.poll.options.reduce((acc, curr) => acc + curr.votes.length, 0)} Total Votes
             </p>
-            {post.poll.options.some(opt => opt.votes.includes(student?.id || '')) && (
+            {student && post.poll.options.some(opt => opt.votes.includes(student.id)) && (
               <span className="text-[9px] font-bold text-blue-500 uppercase">Voted</span>
             )}
           </div>
@@ -204,10 +202,13 @@ export default function PostCard({
               onPointerLeave={handlePointerLeave}
               onContextMenu={(e) => e.preventDefault()}
               onClick={(e) => e.stopPropagation()}
+              disabled={!student}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all
                   ${isLiked 
                       ? 'bg-red-50 text-red-600' 
-                      : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                      : !student 
+                        ? 'bg-slate-50 text-slate-300 cursor-not-allowed'
+                        : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
           >
               <Heart 
                   className={`h-3.5 w-3.5 ${ isLiked ? 'fill-current' : ''}`} 

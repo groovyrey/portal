@@ -478,7 +478,7 @@ function ProfileContent() {
                   <PostCard
                     key={post.id}
                     post={post}
-                    student={student}
+                    student={currentUserData}
                     onLike={handleLike}
                     onVote={handleVote}
                     onDelete={setPostToDelete}
@@ -534,18 +534,18 @@ function ProfileContent() {
                   {selectedPost.poll.options.map((option, idx) => {
                     const totalVotes = selectedPost.poll?.options.reduce((acc, curr) => acc + curr.votes.length, 0) || 0;
                     const percentage = totalVotes > 0 ? Math.round((option.votes.length / totalVotes) * 100) : 0;
-                    const hasVoted = selectedPost.poll?.options.some(opt => opt.votes.includes(student?.id || ''));
-                    const isSelected = option.votes.includes(student?.id || '');
+                    const hasVoted = selectedPost.poll?.options.some(opt => opt.votes.includes(currentUserData?.id || ''));
+                    const isSelected = option.votes.includes(currentUserData?.id || '');
 
                     return (
                       <button
                         key={idx}
-                        disabled={hasVoted}
+                        disabled={!currentUserData || hasVoted}
                         onClick={() => handleVote(selectedPost.id, idx)}
                         className={`w-full relative h-10 rounded-xl overflow-hidden border transition-all ${
                           hasVoted 
                             ? isSelected ? 'border-blue-200 bg-blue-50/50' : 'border-slate-100 bg-white/50'
-                            : 'border-slate-200 bg-white hover:border-blue-600/30'
+                            : !currentUserData ? 'border-slate-100 bg-slate-50/50 cursor-not-allowed' : 'border-slate-200 bg-white hover:border-blue-600/30'
                         }`}
                       >
                         {hasVoted && (
@@ -572,7 +572,7 @@ function ProfileContent() {
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                     {selectedPost.poll.options.reduce((acc, curr) => acc + curr.votes.length, 0)} Total Votes
                   </p>
-                  {selectedPost.poll.options.some(opt => opt.votes.includes(student?.id || '')) && (
+                  {currentUserData && selectedPost.poll.options.some(opt => opt.votes.includes(currentUserData.id)) && (
                     <span className="text-[9px] font-bold text-blue-500 uppercase">Voted</span>
                   )}
                 </div>
@@ -581,17 +581,20 @@ function ProfileContent() {
 
             <div className="flex items-center gap-4 py-4 border-y border-slate-50">
                 <button 
-                    onPointerDown={() => handlePointerDown(selectedPost.id, (selectedPost.likes || []).length > 0)}
-                    onPointerUp={() => handlePointerUp(selectedPost.id, (selectedPost.likes || []).includes(student?.id || ''))}
+                    onPointerDown={() => currentUserData && handlePointerDown(selectedPost.id, (selectedPost.likes || []).length > 0)}
+                    onPointerUp={() => currentUserData && handlePointerUp(selectedPost.id, (selectedPost.likes || []).includes(currentUserData.id))}
                     onPointerLeave={handlePointerLeave}
                     onContextMenu={(e) => e.preventDefault()}
+                    disabled={!currentUserData}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all
-                        ${(selectedPost.likes || []).includes(student?.id || '') 
+                        ${currentUserData && (selectedPost.likes || []).includes(currentUserData.id) 
                             ? 'bg-red-50 text-red-600' 
-                            : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                            : !currentUserData 
+                              ? 'bg-slate-50 text-slate-300 cursor-not-allowed'
+                              : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                 >
                     <Heart 
-                        className={`h-3.5 w-3.5 ${ (selectedPost.likes || []).includes(student?.id || '') ? 'fill-current' : ''}`} 
+                        className={`h-3.5 w-3.5 ${ currentUserData && (selectedPost.likes || []).includes(currentUserData.id) ? 'fill-current' : ''}`} 
                     />
                     <span className="text-[10px] font-bold uppercase tracking-wider">
                         {(selectedPost.likes || []).length}
@@ -624,17 +627,27 @@ function ProfileContent() {
                 ) : (
                   <>
                     {(comments[selectedPost.id] || []).slice(0, commentsToShow[selectedPost.id] || 5).map((comment, idx, arr) => {
-                      const isMe = comment.userId === student?.id;
+                      const isMe = currentUserData && comment.userId === currentUserData.id;
                       return (
                         <div key={comment.id} className={`flex gap-4 group items-start pb-6 ${idx !== arr.length - 1 ? 'border-b border-slate-50' : ''}`}>
-                          <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs shrink-0">
-                            {comment.userName.charAt(0)}
-                          </div>
+                          <Link 
+                            href={`/profile/${obfuscateId(comment.userId)}`}
+                            className="shrink-0 group/avatar"
+                          >
+                            <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs shrink-0 group-hover/avatar:bg-blue-50 group-hover/avatar:text-blue-600 transition-colors">
+                              {comment.userName.charAt(0)}
+                            </div>
+                          </Link>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1 gap-4">
-                              <span className={`text-sm font-bold truncate ${isMe ? 'text-blue-600' : 'text-slate-900'}`}>
-                                {isMe ? 'You' : comment.userName}
-                              </span>
+                              <Link 
+                                href={`/profile/${obfuscateId(comment.userId)}`}
+                                className="truncate"
+                              >
+                                <span className={`text-sm font-bold truncate hover:text-blue-500 transition-colors ${isMe ? 'text-blue-600' : 'text-slate-900'}`}>
+                                  {isMe ? 'You' : comment.userName}
+                                </span>
+                              </Link>
                               <div className="flex items-center gap-3">
                                 <span className="text-[10px] font-bold text-slate-400 uppercase whitespace-nowrap">
                                   {new Date(comment.createdAt).toLocaleDateString()}
@@ -676,23 +689,30 @@ function ProfileContent() {
 
             {/* Sticky/Fixed Comment Input at the bottom of drawer content area */}
             <div className="fixed bottom-0 inset-x-0 bg-white/80 backdrop-blur-md border-t border-slate-100 p-4 z-[170]">
-              <div className="max-w-2xl mx-auto flex gap-3 items-center bg-white p-2 rounded-2xl border border-slate-200 focus-within:ring-4 focus-within:ring-blue-600/5 focus-within:border-blue-600 transition-all shadow-sm">
-                <input
-                  type="text"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleComment(selectedPost.id)}
-                  placeholder="Share your thoughts..."
-                  className="flex-1 bg-transparent border-none px-4 text-sm font-medium focus:outline-none py-2"
-                />
-                <button
-                  disabled={!newComment.trim() || commenting}
-                  onClick={() => handleComment(selectedPost.id)}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white p-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-95"
-                >
-                  {commenting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                </button>
-              </div>
+              {currentUserData ? (
+                <div className="max-w-2xl mx-auto flex gap-3 items-center bg-white p-2 rounded-2xl border border-slate-200 focus-within:ring-4 focus-within:ring-blue-600/5 focus-within:border-blue-600 transition-all shadow-sm">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleComment(selectedPost.id)}
+                    placeholder="Share your thoughts..."
+                    className="flex-1 bg-transparent border-none px-4 text-sm font-medium focus:outline-none py-2"
+                  />
+                  <button
+                    disabled={!newComment.trim() || commenting}
+                    onClick={() => handleComment(selectedPost.id)}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white p-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-95"
+                  >
+                    {commenting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </button>
+                </div>
+              ) : (
+                <div className="max-w-2xl mx-auto flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <p className="text-xs font-bold text-slate-500">Log in to join the discussion</p>
+                  <Link href="/" className="text-xs font-black uppercase tracking-widest text-blue-600 hover:underline">Sign In</Link>
+                </div>
+              )}
             </div>
           </div>
         )}

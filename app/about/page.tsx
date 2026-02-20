@@ -35,7 +35,7 @@ const staggerContainer = {
 };
 
 export default function AboutPage() {
-  const [stats, setStats] = useState({ average: 0, count: 0 });
+  const [stats, setStats] = useState({ average: 0, count: 0, recentFeedbacks: [] as any[] });
 
   useEffect(() => {
     fetch('/api/ratings')
@@ -74,7 +74,7 @@ export default function AboutPage() {
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link 
-                  href="/api/student/login" 
+                  href="/" 
                   className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:scale-95"
                 >
                   Get Started
@@ -329,7 +329,7 @@ export default function AboutPage() {
             <h2 className="text-4xl md:text-6xl font-black mb-8">Ready to upgrade your school experience?</h2>
             <div className="flex flex-wrap justify-center gap-6">
               <Link 
-                href="/api/student/login" 
+                href="/" 
                 className="px-10 py-5 bg-white text-blue-600 rounded-2xl font-black text-lg hover:scale-105 transition-all shadow-xl active:scale-95"
               >
                 Launch Hub

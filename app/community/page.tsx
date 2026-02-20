@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
-import { Send, User, MessageSquare, Loader2, PenLine, Eye, MoreVertical, Trash2, Heart, X, Plus, BarChart2, ShieldAlert } from 'lucide-react';
+import { Send, User, MessageSquare, Loader2, PenLine, Eye, MoreVertical, Trash2, Heart, X, Plus, BarChart2, ShieldAlert, Lock as LockIcon } from 'lucide-react';
 import { CommunityPost, Student, CommunityComment } from '@/types';
 import Link from 'next/link';
 import Drawer from '@/components/layout/Drawer';
@@ -380,125 +380,141 @@ export default function CommunityPage() {
         </div>
 
         {/* Create Post */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <form onSubmit={handlePost} className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setView('edit')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${view === 'edit' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
-                >
-                  Write
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setView('preview')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${view === 'preview' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
-                >
-                  Preview
-                </button>
-              </div>
-            </div>
-
-            {view === 'edit' ? (
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="What's on your mind?"
-                className="w-full min-h-[120px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all resize-none"
-              />
-            ) : (
-              <div className="w-full min-h-[120px] p-4 bg-slate-50 border border-slate-200 rounded-xl prose prose-slate prose-sm max-w-none">
-                {content.trim() ? (
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-                ) : (
-                  <p className="text-slate-400 italic">Nothing to preview...</p>
-                )}
-              </div>
-            )}
-
-            {showPollEditor && (
-              <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 space-y-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">Create Poll</span>
-                  <button type="button" onClick={() => setShowPollEditor(false)} className="text-slate-400 hover:text-slate-600">
-                    <X className="h-4 w-4" />
+        {student ? (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <form onSubmit={handlePost} className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setView('edit')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${view === 'edit' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
+                  >
+                    Write
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setView('preview')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${view === 'preview' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
+                  >
+                    Preview
                   </button>
                 </div>
-                <input
-                  type="text"
-                  value={pollQuestion}
-                  onChange={(e) => setPollQuestion(e.target.value)}
-                  placeholder="Poll Question"
-                  className="w-full bg-white border border-blue-100 rounded-lg px-4 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10"
+              </div>
+
+              {view === 'edit' ? (
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="What's on your mind?"
+                  className="w-full min-h-[120px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all resize-none"
                 />
-                <div className="space-y-2">
-                  {pollOptions.map((opt, idx) => (
-                    <div key={idx} className="flex gap-2">
-                      <input
-                        type="text"
-                        value={opt}
-                        onChange={(e) => {
-                          const newOpts = [...pollOptions];
-                          newOpts[idx] = e.target.value;
-                          setPollOptions(newOpts);
-                        }}
-                        placeholder={`Option ${idx + 1}`}
-                        className="flex-1 bg-white border border-blue-100 rounded-lg px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10"
-                      />
-                      {pollOptions.length > 2 && (
-                        <button
-                          type="button"
-                          onClick={() => setPollOptions(pollOptions.filter((_, i) => i !== idx))}
-                          className="p-2 text-slate-400 hover:text-red-500"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  {pollOptions.length < 5 && (
-                    <button
-                      type="button"
-                      onClick={() => setPollOptions([...pollOptions, ''])}
-                      className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline pt-1"
-                    >
-                      <Plus className="h-3 w-3" /> Add Option
-                    </button>
+              ) : (
+                <div className="w-full min-h-[120px] p-4 bg-slate-50 border border-slate-200 rounded-xl prose prose-slate prose-sm max-w-none">
+                  {content.trim() ? (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                  ) : (
+                    <p className="text-slate-400 italic">Nothing to preview...</p>
                   )}
                 </div>
-              </div>
-            )}
+              )}
 
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-slate-500">
-                  <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
-                    <User className="h-4 w-4" />
+              {showPollEditor && (
+                <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 space-y-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">Create Poll</span>
+                    <button type="button" onClick={() => setShowPollEditor(false)} className="text-slate-400 hover:text-slate-600">
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
-                  <span className="text-xs font-semibold">{student?.name || 'Anonymous'}</span>
+                  <input
+                    type="text"
+                    value={pollQuestion}
+                    onChange={(e) => setPollQuestion(e.target.value)}
+                    placeholder="Poll Question"
+                    className="w-full bg-white border border-blue-100 rounded-lg px-4 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-600/10"
+                  />
+                  <div className="space-y-2">
+                    {pollOptions.map((opt, idx) => (
+                      <div key={idx} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={opt}
+                          onChange={(e) => {
+                            const newOpts = [...pollOptions];
+                            newOpts[idx] = e.target.value;
+                            setPollOptions(newOpts);
+                          }}
+                          placeholder={`Option ${idx + 1}`}
+                          className="flex-1 bg-white border border-blue-100 rounded-lg px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10"
+                        />
+                        {pollOptions.length > 2 && (
+                          <button
+                            type="button"
+                            onClick={() => setPollOptions(pollOptions.filter((_, i) => i !== idx))}
+                            className="p-2 text-slate-400 hover:text-red-500"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    {pollOptions.length < 5 && (
+                      <button
+                        type="button"
+                        onClick={() => setPollOptions([...pollOptions, ''])}
+                        className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline pt-1"
+                      >
+                        <Plus className="h-3 w-3" /> Add Option
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-slate-500">
+                    <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
+                      <User className="h-4 w-4" />
+                    </div>
+                    <span className="text-xs font-semibold">{student?.name || 'Anonymous'}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPollEditor(!showPollEditor)}
+                    className={`p-2 rounded-lg transition-colors ${showPollEditor ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+                    title="Add Poll"
+                  >
+                    <BarChart2 className="h-5 w-5" />
+                  </button>
                 </div>
                 <button
-                  type="button"
-                  onClick={() => setShowPollEditor(!showPollEditor)}
-                  className={`p-2 rounded-lg transition-colors ${showPollEditor ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
-                  title="Add Poll"
+                  type="submit"
+                  disabled={(!content.trim() && !pollQuestion.trim()) || posting}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white font-bold text-xs uppercase tracking-wider px-6 py-2.5 rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-blue-600/20"
                 >
-                  <BarChart2 className="h-5 w-5" />
+                  {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  Share
                 </button>
               </div>
-              <button
-                type="submit"
-                disabled={(!content.trim() && !pollQuestion.trim()) || posting}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white font-bold text-xs uppercase tracking-wider px-6 py-2.5 rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-blue-600/20"
-              >
-                {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                Share
-              </button>
+            </form>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
+            <div className="h-12 w-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <LockIcon className="h-6 w-6" />
             </div>
-          </form>
-        </div>
+            <h3 className="text-base font-bold text-slate-900 mb-1">Login to participate</h3>
+            <p className="text-xs text-slate-500 font-medium mb-6">Join our student community to share posts, vote on polls, and join discussions.</p>
+            <Link 
+              href="/" 
+              className="inline-flex items-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-200 active:scale-95"
+            >
+              Sign In Now
+            </Link>
+          </div>
+        )}
 
         {/* Topic Filter */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
@@ -671,17 +687,20 @@ export default function CommunityPage() {
 
             <div className="flex items-center gap-4 py-4 border-y border-slate-50">
                 <button 
-                    onPointerDown={() => handlePointerDown(selectedPost.id, (selectedPost.likes || []).length > 0)}
-                    onPointerUp={() => handlePointerUp(selectedPost.id, (selectedPost.likes || []).includes(student?.id || ''))}
+                    onPointerDown={() => student && handlePointerDown(selectedPost.id, (selectedPost.likes || []).length > 0)}
+                    onPointerUp={() => student && handlePointerUp(selectedPost.id, (selectedPost.likes || []).includes(student.id))}
                     onPointerLeave={handlePointerLeave}
                     onContextMenu={(e) => e.preventDefault()}
+                    disabled={!student}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all
-                        ${(selectedPost.likes || []).includes(student?.id || '') 
+                        ${student && (selectedPost.likes || []).includes(student.id) 
                             ? 'bg-red-50 text-red-600' 
-                            : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                            : !student 
+                              ? 'bg-slate-50 text-slate-300 cursor-not-allowed'
+                              : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                 >
                     <Heart 
-                        className={`h-3.5 w-3.5 ${ (selectedPost.likes || []).includes(student?.id || '') ? 'fill-current' : ''}`} 
+                        className={`h-3.5 w-3.5 ${ student && (selectedPost.likes || []).includes(student.id) ? 'fill-current' : ''}`} 
                     />
                     <span className="text-[10px] font-bold uppercase tracking-wider">
                         {(selectedPost.likes || []).length}
@@ -714,17 +733,27 @@ export default function CommunityPage() {
                 ) : (
                   <>
                     {(comments[selectedPost.id] || []).slice(0, commentsToShow[selectedPost.id] || 5).map((comment, idx, arr) => {
-                      const isMe = comment.userId === student?.id;
+                      const isMe = student && comment.userId === student.id;
                       return (
                         <div key={comment.id} className={`flex gap-4 group items-start pb-6 ${idx !== arr.length - 1 ? 'border-b border-slate-50' : ''}`}>
-                          <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs shrink-0">
-                            {comment.userName.charAt(0)}
-                          </div>
+                          <Link 
+                            href={`/profile/${obfuscateId(comment.userId)}`}
+                            className="shrink-0 group/avatar"
+                          >
+                            <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs shrink-0 group-hover/avatar:bg-blue-50 group-hover/avatar:text-blue-600 transition-colors">
+                              {comment.userName.charAt(0)}
+                            </div>
+                          </Link>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1 gap-4">
-                              <span className={`text-sm font-bold truncate ${isMe ? 'text-blue-600' : 'text-slate-900'}`}>
-                                {isMe ? 'You' : comment.userName}
-                              </span>
+                              <Link 
+                                href={`/profile/${obfuscateId(comment.userId)}`}
+                                className="truncate"
+                              >
+                                <span className={`text-sm font-bold truncate hover:text-blue-500 transition-colors ${isMe ? 'text-blue-600' : 'text-slate-900'}`}>
+                                  {isMe ? 'You' : comment.userName}
+                                </span>
+                              </Link>
                               <div className="flex items-center gap-3">
                                 <span className="text-[10px] font-bold text-slate-400 uppercase whitespace-nowrap">
                                   {new Date(comment.createdAt).toLocaleDateString()}
@@ -766,23 +795,30 @@ export default function CommunityPage() {
 
             {/* Sticky/Fixed Comment Input at the bottom of drawer content area or separate */}
             <div className="fixed bottom-0 inset-x-0 bg-white/80 backdrop-blur-md border-t border-slate-100 p-4 z-[170]">
-              <div className="max-w-2xl mx-auto flex gap-3 items-center bg-white p-2 rounded-2xl border border-slate-200 focus-within:ring-4 focus-within:ring-blue-600/5 focus-within:border-blue-600 transition-all shadow-sm">
-                <input
-                  type="text"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleComment(selectedPost.id)}
-                  placeholder="Share your thoughts..."
-                  className="flex-1 bg-transparent border-none px-4 text-sm font-medium focus:outline-none py-2"
-                />
-                <button
-                  disabled={!newComment.trim() || commenting}
-                  onClick={() => handleComment(selectedPost.id)}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white p-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-95"
-                >
-                  {commenting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                </button>
-              </div>
+              {student ? (
+                <div className="max-w-2xl mx-auto flex gap-3 items-center bg-white p-2 rounded-2xl border border-slate-200 focus-within:ring-4 focus-within:ring-blue-600/5 focus-within:border-blue-600 transition-all shadow-sm">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleComment(selectedPost.id)}
+                    placeholder="Share your thoughts..."
+                    className="flex-1 bg-transparent border-none px-4 text-sm font-medium focus:outline-none py-2"
+                  />
+                  <button
+                    disabled={!newComment.trim() || commenting}
+                    onClick={() => handleComment(selectedPost.id)}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white p-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-95"
+                  >
+                    {commenting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </button>
+                </div>
+              ) : (
+                <div className="max-w-2xl mx-auto flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <p className="text-xs font-bold text-slate-500">Log in to join the discussion</p>
+                  <Link href="/" className="text-xs font-black uppercase tracking-widest text-blue-600 hover:underline">Sign In</Link>
+                </div>
+              )}
             </div>
           </div>
         )}
