@@ -38,7 +38,25 @@ export async function GET(req: NextRequest) {
     }
 
     const stats = statsSnap.exists() ? statsSnap.data() : { average: 0, count: 0 };
-    return NextResponse.json({ ...stats, userRating });
+    
+    // Fetch recent feedbacks with text
+    const feedbacksRef = collection(db, 'ratings');
+    const q = query(
+      feedbacksRef, 
+      orderBy('updatedAt', 'desc'),
+      limit(10)
+    );
+    const feedbackSnap = await getDocs(q);
+    const recentFeedbacks = feedbackSnap.docs
+      .map(doc => ({
+        rating: doc.data().rating,
+        feedback: doc.data().feedback,
+        updatedAt: doc.data().updatedAt?.toDate()
+      }))
+      .filter(f => f.feedback && f.feedback.trim().length > 0)
+      .slice(0, 3);
+
+    return NextResponse.json({ ...stats, userRating, recentFeedbacks });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
