@@ -5,7 +5,9 @@ if (!admin.apps.length) {
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
     
     if (serviceAccountJson) {
-      const serviceAccount = JSON.parse(serviceAccountJson);
+      // Handle potential wrapping quotes from environment variable injection
+      const sanitizedJson = serviceAccountJson.trim().replace(/^['"]|['"]$/g, '');
+      const serviceAccount = JSON.parse(sanitizedJson);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
       });
