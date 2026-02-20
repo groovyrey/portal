@@ -27,7 +27,6 @@ import {
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import NotificationDrawer from './NotificationDrawer';
-import PushNotificationDrawer from './PushNotificationDrawer';
 
 export default function Navbar() {
   const router = useRouter();
@@ -35,7 +34,6 @@ export default function Navbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [isPushOpen, setIsPushOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [studentId, setStudentId] = useState<string | null>(null);
@@ -252,18 +250,6 @@ export default function Navbar() {
                     )}
                   </button>
 
-                  <button
-                    onClick={() => setIsPushOpen(true)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      isPushOpen 
-                        ? 'bg-blue-50 text-blue-600' 
-                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                    }`}
-                    title="Notification Settings"
-                  >
-                    <Settings className="h-5 w-5" />
-                  </button>
-
                   <div className="relative">
                     <button
                       onClick={(e) => {
@@ -321,15 +307,6 @@ export default function Navbar() {
                   )}
                 </button>
               )}
-              {isLoggedIn && (
-                <button
-                  onClick={() => setIsPushOpen(true)}
-                  className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-                  title="Notification Settings"
-                >
-                  <Settings className="h-5 w-5" />
-                </button>
-              )}
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-slate-500 hover:bg-slate-100 focus:outline-none transition-colors"
@@ -345,12 +322,6 @@ export default function Navbar() {
       <NotificationDrawer 
         isOpen={isNotifOpen} 
         onClose={() => setIsNotifOpen(false)} 
-      />
-
-      {/* Push Notification Settings Drawer */}
-      <PushNotificationDrawer 
-        isOpen={isPushOpen} 
-        onClose={() => setIsPushOpen(false)} 
       />
 
       {/* Mobile Menu (Drawer) */}

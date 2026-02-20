@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Lock, ShieldCheck, AlertCircle, KeyRound, CheckCircle2, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Lock, ShieldCheck, AlertCircle, KeyRound, CheckCircle2, Loader2, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SecuritySettings() {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -12,7 +13,35 @@ export default function SecuritySettings() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [strength, setStrength] = useState({ score: 0, label: 'Very Weak', color: 'bg-slate-200' });
   const router = useRouter();
+
+  useEffect(() => {
+    calculateStrength(newPassword);
+  }, [newPassword]);
+
+  const calculateStrength = (pass: string) => {
+    let score = 0;
+    if (!pass) {
+      setStrength({ score: 0, label: 'None', color: 'bg-slate-200' });
+      return;
+    }
+
+    if (pass.length >= 8) score++;
+    if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) score++;
+    if (/\d/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+
+    const results = [
+      { label: 'Very Weak', color: 'bg-red-500' },
+      { label: 'Weak', color: 'bg-orange-500' },
+      { label: 'Medium', color: 'bg-amber-500' },
+      { label: 'Strong', color: 'bg-emerald-500' },
+      { label: 'Very Strong', color: 'bg-blue-600' }
+    ];
+
+    setStrength({ score, ...results[score] });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,9 +54,9 @@ export default function SecuritySettings() {
       return;
     }
 
-    if (newPassword.length < 4) {
-      toast.error("Password is too short.");
-      setError("Password is too short.");
+    if (strength.score < 2) {
+      toast.error("Password is too weak. Please use a stronger password.");
+      setError("Password strength must be at least Medium.");
       return;
     }
 
@@ -111,8 +140,34 @@ export default function SecuritySettings() {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all"
-            placeholder="Min 4 characters"
+            placeholder="Min 8 characters recommended"
           />
+        </div>
+
+        {/* Password Strength Indicator */}
+        <div className="mt-2 px-1">
+          <div className="flex justify-between items-center mb-1.5">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Strength</span>
+            <span className={`text-[9px] font-black uppercase tracking-widest transition-colors duration-300 ${strength.color.replace('bg-', 'text-')}`}>
+              {strength.label}
+            </span>
+          </div>
+          <div className="h-1 w-full flex gap-1.5 mt-1">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className={`h-full flex-1 rounded-full transition-all duration-500 ${
+                  i < strength.score 
+                    ? strength.color 
+                    : 'bg-slate-100'
+                }`}
+              />
+            ))}
+          </div>
+          <p className="mt-2 text-[10px] text-slate-400 font-medium leading-relaxed flex items-start gap-1.5">
+            <Info className="h-3 w-3 shrink-0 mt-0.5 opacity-60" />
+            Use 8+ characters with mixed case, numbers, and symbols for best security.
+          </p>
         </div>
       </div>
 
