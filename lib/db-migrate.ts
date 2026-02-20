@@ -114,3 +114,25 @@ export async function migrateNotifications() {
     throw error;
   }
 }
+
+export async function migratePushSubscriptions() {
+  console.log('Starting Push Subscriptions migration...');
+
+  try {
+    // Create push_subscriptions table
+    await query(`
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+        subscription JSONB NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (user_id, subscription)
+      );
+    `);
+
+    console.log('Push Subscriptions migration completed successfully.');
+  } catch (error) {
+    console.error('Push Subscriptions migration failed:', error);
+    throw error;
+  }
+}

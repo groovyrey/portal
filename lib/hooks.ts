@@ -56,3 +56,110 @@ export function useStudentQuery() {
     refetchOnWindowFocus: true,
   });
 }
+
+export function usePushNotifications() {
+  const [isSupported, setIsSupported] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [subscription, setSubscription] = useState<PushSubscription | null>(null);
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const { student } = useStudent();
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      setIsSupported(true);
+      registerServiceWorker();
+    }
+  }, []);
+
+  async function registerServiceWorker() {
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js');
+      setRegistration(reg);
+      
+      const sub = await reg.pushManager.getSubscription();
+      setSubscription(sub);
+      setIsSubscribed(!!sub);
+
+      if (sub && student?.id) {
+        // Sync with backend if student is logged in
+        syncSubscriptionWithBackend(student.id, sub);
+      }
+    } catch (err) {
+      console.error('Service worker registration failed:', err);
+    }
+  }
+
+  async function syncSubscriptionWithBackend(userId: string, sub: PushSubscription) {
+    try {
+      await fetch('/api/push-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, subscription: sub })
+      });
+    } catch (err) {
+      console.error('Failed to sync push subscription:', err);
+    }
+  }
+
+  async function subscribe() {
+    if (!registration || !student?.id) return;
+
+    try {
+      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidPublicKey) {
+        console.error('VAPID public key is not set');
+        return;
+      }
+
+      const sub = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+      });
+
+      setSubscription(sub);
+      setIsSubscribed(true);
+      await syncSubscriptionWithBackend(student.id, sub);
+    } catch (err) {
+      console.error('Failed to subscribe to push notifications:', err);
+    }
+  }
+
+  async function unsubscribe() {
+    if (!subscription || !student?.id) return;
+
+    try {
+      await subscription.unsubscribe();
+      
+      await fetch('/api/push-subscription', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId: student.id, 
+          endpoint: subscription.endpoint 
+        })
+      });
+
+      setSubscription(null);
+      setIsSubscribed(false);
+    } catch (err) {
+      console.error('Failed to unsubscribe:', err);
+    }
+  }
+
+  return { isSupported, isSubscribed, subscribe, unsubscribe };
+}
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}

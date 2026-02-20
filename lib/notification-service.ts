@@ -1,5 +1,22 @@
 import { query } from './pg';
 import { publishUpdate } from './realtime';
+import webpush from 'web-push';
+
+// Configuration for web-push (VAPID keys)
+// These should be in environment variables
+const vapidDetails = {
+  publicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
+  privateKey: process.env.VAPID_PRIVATE_KEY || '',
+  subject: process.env.VAPID_SUBJECT || 'mailto:admin@example.com'
+};
+
+if (vapidDetails.publicKey && vapidDetails.privateKey) {
+  webpush.setVapidDetails(
+    vapidDetails.subject,
+    vapidDetails.publicKey,
+    vapidDetails.privateKey
+  );
+}
 
 export interface CreateNotificationParams {
   userId: string;
@@ -10,7 +27,7 @@ export interface CreateNotificationParams {
 }
 
 /**
- * Creates a notification in the database and optionally publishes a real-time update.
+ * Creates a notification in the database and optionally publishes a real-time update and web push.
  */
 export async function createNotification({
   userId,
@@ -42,12 +59,53 @@ export async function createNotification({
           createdAt: res.rows[0].created_at.toISOString()
         }
       });
+
+      // Send a web push if subscriptions exist
+      await sendWebPush(userId, { title, message, link });
     }
 
     return res.rows[0];
   } catch (error) {
     console.error('Error creating notification:', error);
     throw error;
+  }
+}
+
+/**
+ * Helper to send web push notifications to a user
+ */
+async function sendWebPush(userId: string, payload: { title: string, message: string, link?: string }) {
+  if (!vapidDetails.publicKey || !vapidDetails.privateKey) {
+    return; // VAPID keys not configured
+  }
+
+  try {
+    // Get all subscriptions for this user
+    const res = await query(`
+      SELECT subscription FROM push_subscriptions WHERE user_id = $1
+    `, [userId]);
+
+    const subscriptions = res.rows;
+
+    const pushPromises = subscriptions.map(sub => {
+      return webpush.sendNotification(
+        sub.subscription,
+        JSON.stringify(payload)
+      ).catch(err => {
+        // If the subscription has expired or is invalid, remove it from the DB
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          return query(`
+            DELETE FROM push_subscriptions 
+            WHERE user_id = $1 AND subscription->>'endpoint' = $2
+          `, [userId, sub.subscription.endpoint]);
+        }
+        console.error('Web push error:', err);
+      });
+    });
+
+    await Promise.all(pushPromises);
+  } catch (error) {
+    console.error('Error sending web push:', error);
   }
 }
 
@@ -77,6 +135,28 @@ export async function notifyAllStudents({
       type: 'GLOBAL_NOTIFICATION_RELOAD',
       title
     });
+
+    // Handle mass push (this could be optimized)
+    const subscriptionsRes = await query(`
+      SELECT user_id, subscription FROM push_subscriptions WHERE user_id != $1
+    `, [excludeUserId]);
+
+    const pushPromises = subscriptionsRes.rows.map(sub => {
+      return webpush.sendNotification(
+        sub.subscription,
+        JSON.stringify({ title, message, link })
+      ).catch(err => {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          return query(`
+            DELETE FROM push_subscriptions 
+            WHERE user_id = $1 AND subscription->>'endpoint' = $2
+          `, [sub.user_id, sub.subscription.endpoint]);
+        }
+        console.error('Mass web push error:', err);
+      });
+    });
+
+    await Promise.all(pushPromises);
   } catch (error) {
     console.error('Error notifying all students:', error);
   }
