@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getMessaging, Messaging } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,6 +14,8 @@ const firebaseConfig = {
 
 // Initialize Firebase with safety check
 let db: any;
+let messaging: Messaging | null = null;
+
 try {
   const dbId = process.env.FIREBASE_DATABASE_ID || '(default)';
   
@@ -20,12 +23,26 @@ try {
     console.warn('CRITICAL: Firebase API Key is missing. Check your .env.local file.');
   }
   
+  // App for Firestore (lccportal)
   const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-  
-  // getFirestore(app, databaseId?) - databaseId must be a string if provided
   db = dbId === '(default)' ? getFirestore(app) : getFirestore(app, dbId);
+
+  // App for Messaging (nexo)
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    const messagingConfig = {
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_API_KEY || firebaseConfig.apiKey,
+      authDomain: firebaseConfig.authDomain,
+      projectId: "nexo-6d8ed",
+      storageBucket: firebaseConfig.storageBucket,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    };
+
+    const messagingApp = getApps().find(a => a.name === 'messaging') || initializeApp(messagingConfig, 'messaging');
+    messaging = getMessaging(messagingApp);
+  }
 } catch (error) {
   console.error('Failed to initialize Firebase:', error);
 }
 
-export { db };
+export { db, messaging };

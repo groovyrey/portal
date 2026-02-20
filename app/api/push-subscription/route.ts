@@ -34,11 +34,11 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Remove the subscription from the database
-    // Since subscription is JSONB, we can filter by the endpoint
+    // For FCM, we might store { token: '...' } or just the token string
     await query(`
       DELETE FROM push_subscriptions
-      WHERE user_id = $1 AND subscription->>'endpoint' = $2
-    `, [userId, endpoint]);
+      WHERE user_id = $1 AND (subscription->>'token' = $2 OR subscription::text = $3)
+    `, [userId, endpoint, JSON.stringify(endpoint)]);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

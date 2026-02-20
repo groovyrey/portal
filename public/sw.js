@@ -1,40 +1,75 @@
-self.addEventListener('push', function(event) {
-  if (event.data) {
-    const data = event.data.json();
-    const options = {
-      body: data.message,
-      icon: '/icons/icon-192x192.png', // Fallback icon
-      badge: '/icons/badge-72x72.png', // Fallback badge
-      vibrate: [100, 50, 100],
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
+
+// These values should ideally be injected or fetched, but for SW we often hardcode 
+// or use a placeholder that the build process replaces.
+// For now, we'll try to use the same config as the app.
+const firebaseConfig = {
+  apiKey: "AIzaSyCQ8Hf-zZhOKQ3TnvSDCngy4S0-3fhVx78",
+  authDomain: "lccportal.firebaseapp.com",
+  projectId: "nexo-6d8ed",
+  storageBucket: "lccportal.firebasestorage.app",
+  messagingSenderId: "951303838464",
+  appId: "1:951303838464:web:ee62b16864a0dddf30b1e5"
+};
+
+if (firebaseConfig.apiKey !== "REPLACE_WITH_YOUR_API_KEY") {
+  firebase.initializeApp(firebaseConfig);
+  const messaging = firebase.messaging();
+
+  messaging.onBackgroundMessage((payload) => {
+    console.log('[sw.js] Received background message ', payload);
+    const notificationTitle = payload.notification?.title || 'New Post';
+    const notificationOptions = {
+      body: payload.notification?.body || 'Check the community for updates!',
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/badge-72x72.png',
       data: {
-        link: data.link || '/'
-      },
-      actions: [
-        {
-          action: 'open',
-          title: 'Open'
-        },
-        {
-          action: 'close',
-          title: 'Close'
-        }
-      ]
+        link: payload.fcmOptions?.link || payload.data?.link || '/community'
+      }
     };
 
-    event.waitUntil(
-      self.registration.showNotification(data.title, options)
-    );
+    self.registration.showNotification(notificationTitle, notificationOptions);
+  });
+}
+
+// Fallback push listener for non-FCM or raw pushes
+self.addEventListener('push', function(event) {
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      
+      // If the message is already handled by FCM background handler, we might skip here
+      // but usually raw push doesn't have the same format
+      if (data.notification || data.data) {
+        const title = data.notification?.title || data.title || 'New Notification';
+        const message = data.notification?.body || data.message || 'You have a new message.';
+        const link = data.fcm_options?.link || data.data?.link || data.link || '/';
+
+        const options = {
+          body: message,
+          icon: '/icons/icon-192x192.png',
+          badge: '/icons/badge-72x72.png',
+          vibrate: [100, 50, 100],
+          data: {
+            link: link
+          }
+        };
+
+        event.waitUntil(
+          self.registration.showNotification(title, options)
+        );
+      }
+    } catch (e) {
+      console.error('Push event error:', e);
+    }
   }
 });
 
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
 
-  if (event.action === 'close') {
-    return;
-  }
-
-  const urlToOpen = event.notification.data.link;
+  const urlToOpen = event.notification.data.link || '/';
 
   event.waitUntil(
     clients.matchAll({

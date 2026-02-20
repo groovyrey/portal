@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Student } from '@/types';
 import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export function useStudent() {
   const [student, setStudent] = useState<Student | null>(null);
@@ -57,89 +58,97 @@ export function useStudentQuery() {
   });
 }
 
+import { messaging } from './db';
+import { getToken, onMessage } from 'firebase/messaging';
+
 export function usePushNotifications() {
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [subscription, setSubscription] = useState<PushSubscription | null>(null);
-  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const { student } = useStudent();
 
   useEffect(() => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
       setIsSupported(true);
-      registerServiceWorker();
+      checkExistingToken();
     }
-  }, []);
+  }, [student?.id]);
 
-  async function registerServiceWorker() {
+  async function checkExistingToken() {
+    if (!messaging || !student?.id) return;
     try {
-      const reg = await navigator.serviceWorker.register('/sw.js');
-      setRegistration(reg);
-      
-      const sub = await reg.pushManager.getSubscription();
-      setSubscription(sub);
-      setIsSubscribed(!!sub);
-
-      if (sub && student?.id) {
-        // Sync with backend if student is logged in
-        syncSubscriptionWithBackend(student.id, sub);
+      if (Notification.permission === 'granted') {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        const currentToken = await getToken(messaging, {
+          vapidKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+          serviceWorkerRegistration: registration
+        });
+        if (currentToken) {
+          setToken(currentToken);
+          setIsSubscribed(true);
+          syncTokenWithBackend(student.id, currentToken);
+        }
       }
     } catch (err) {
-      console.error('Service worker registration failed:', err);
+      console.error('Error checking existing FCM token:', err);
     }
   }
 
-  async function syncSubscriptionWithBackend(userId: string, sub: PushSubscription) {
+  async function syncTokenWithBackend(userId: string, fcmToken: string) {
     try {
       await fetch('/api/push-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, subscription: sub })
+        body: JSON.stringify({ userId, subscription: { token: fcmToken } })
       });
     } catch (err) {
-      console.error('Failed to sync push subscription:', err);
+      console.error('Failed to sync FCM token:', err);
     }
   }
 
   async function subscribe() {
-    if (!registration || !student?.id) return;
+    if (!messaging || !student?.id) return;
 
     try {
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!vapidPublicKey) {
-        console.error('VAPID public key is not set');
-        return;
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        const currentToken = await getToken(messaging, {
+          vapidKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+          serviceWorkerRegistration: registration
+        });
+
+        if (currentToken) {
+          setToken(currentToken);
+          setIsSubscribed(true);
+          await syncTokenWithBackend(student.id, currentToken);
+          toast.success('Notifications enabled!');
+        } else {
+          console.warn('No registration token available.');
+          toast.error('Failed to get notification token.');
+        }
       }
-
-      const sub = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
-      });
-
-      setSubscription(sub);
-      setIsSubscribed(true);
-      await syncSubscriptionWithBackend(student.id, sub);
     } catch (err) {
-      console.error('Failed to subscribe to push notifications:', err);
+      console.error('Failed to subscribe to FCM:', err);
+      toast.error('Failed to enable notifications.');
     }
   }
 
   async function unsubscribe() {
-    if (!subscription || !student?.id) return;
+    if (!token || !student?.id) return;
 
     try {
-      await subscription.unsubscribe();
-      
+      // For simplicity, we just remove it from our backend
       await fetch('/api/push-subscription', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           userId: student.id, 
-          endpoint: subscription.endpoint 
+          endpoint: token // We'll use token as endpoint for deletion
         })
       });
 
-      setSubscription(null);
+      setToken(null);
       setIsSubscribed(false);
     } catch (err) {
       console.error('Failed to unsubscribe:', err);
@@ -147,19 +156,4 @@ export function usePushNotifications() {
   }
 
   return { isSupported, isSubscribed, subscribe, unsubscribe };
-}
-
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
-    .replace(/_/g, '/');
-
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
 }

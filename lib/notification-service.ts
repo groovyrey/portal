@@ -1,22 +1,6 @@
 import { query } from './pg';
 import { publishUpdate } from './realtime';
-import webpush from 'web-push';
-
-// Configuration for web-push (VAPID keys)
-// These should be in environment variables
-const vapidDetails = {
-  publicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
-  privateKey: process.env.VAPID_PRIVATE_KEY || '',
-  subject: process.env.VAPID_SUBJECT || 'mailto:admin@example.com'
-};
-
-if (vapidDetails.publicKey && vapidDetails.privateKey) {
-  webpush.setVapidDetails(
-    vapidDetails.subject,
-    vapidDetails.publicKey,
-    vapidDetails.privateKey
-  );
-}
+import { messaging } from './firebase-admin';
 
 export interface CreateNotificationParams {
   userId: string;
@@ -27,7 +11,7 @@ export interface CreateNotificationParams {
 }
 
 /**
- * Creates a notification in the database and optionally publishes a real-time update and web push.
+ * Creates a notification in the database and optionally publishes a real-time update and web push (FCM).
  */
 export async function createNotification({
   userId,
@@ -60,8 +44,8 @@ export async function createNotification({
         }
       });
 
-      // Send a web push if subscriptions exist
-      await sendWebPush(userId, { title, message, link });
+      // Send a web push via FCM if tokens exist
+      await sendFCMNotifications(userId, { title, message, link });
     }
 
     return res.rows[0];
@@ -72,40 +56,65 @@ export async function createNotification({
 }
 
 /**
- * Helper to send web push notifications to a user
+ * Helper to send FCM notifications to a user
  */
-async function sendWebPush(userId: string, payload: { title: string, message: string, link?: string }) {
-  if (!vapidDetails.publicKey || !vapidDetails.privateKey) {
-    return; // VAPID keys not configured
-  }
-
+async function sendFCMNotifications(userId: string, payload: { title: string, message: string, link?: string }) {
   try {
-    // Get all subscriptions for this user
+    // Get all FCM tokens for this user
+    // We reuse the subscription JSONB to store { token: '...' } or just the token string
     const res = await query(`
       SELECT subscription FROM push_subscriptions WHERE user_id = $1
     `, [userId]);
 
-    const subscriptions = res.rows;
+    const tokens = res.rows.map(row => {
+      const sub = typeof row.subscription === 'string' ? JSON.parse(row.subscription) : row.subscription;
+      return sub.token || sub; // Support both { token: '...' } and raw string
+    }).filter(t => typeof t === 'string');
 
-    const pushPromises = subscriptions.map(sub => {
-      return webpush.sendNotification(
-        sub.subscription,
-        JSON.stringify(payload)
-      ).catch(err => {
-        // If the subscription has expired or is invalid, remove it from the DB
-        if (err.statusCode === 410 || err.statusCode === 404) {
-          return query(`
-            DELETE FROM push_subscriptions 
-            WHERE user_id = $1 AND subscription->>'endpoint' = $2
-          `, [userId, sub.subscription.endpoint]);
+    if (tokens.length === 0) return;
+
+    const messages = tokens.map(token => ({
+      token,
+      notification: {
+        title: payload.title,
+        body: payload.message,
+      },
+      data: {
+        link: payload.link || '/',
+      },
+      webpush: {
+        fcmOptions: {
+          link: payload.link || '/',
         }
-        console.error('Web push error:', err);
-      });
+      }
+    }));
+
+    // Send messages in batches (FCM limit is 500 per call, but we'll send individually or use sendEach)
+    const response = await messaging.sendEach(messages);
+    
+    // Cleanup invalid tokens
+    const tokensToRemove: string[] = [];
+    response.responses.forEach((resp, idx) => {
+      if (!resp.success) {
+        const errorCode = resp.error?.code;
+        if (errorCode === 'messaging/registration-token-not-registered' || 
+            errorCode === 'messaging/invalid-registration-token') {
+          tokensToRemove.push(tokens[idx]);
+        }
+        console.error('FCM individual error:', resp.error);
+      }
     });
 
-    await Promise.all(pushPromises);
+    if (tokensToRemove.length > 0) {
+      for (const token of tokensToRemove) {
+        await query(`
+          DELETE FROM push_subscriptions 
+          WHERE user_id = $1 AND (subscription->>'token' = $2 OR subscription::text = $3)
+        `, [userId, token, JSON.stringify(token)]);
+      }
+    }
   } catch (error) {
-    console.error('Error sending web push:', error);
+    console.error('Error sending FCM notifications:', error);
   }
 }
 
@@ -121,7 +130,6 @@ export async function notifyAllStudents({
 }: Omit<CreateNotificationParams, 'userId'> & { excludeUserId: string }) {
   try {
     // Bulk insert into notifications for all students except the sender
-    // This is significantly more efficient than individual inserts at scale
     await query(`
       INSERT INTO notifications (user_id, title, message, type, link)
       SELECT id, $1, $2, $3, $4
@@ -130,34 +138,67 @@ export async function notifyAllStudents({
     `, [title, message, type, link, excludeUserId]);
     
     // Broadcast a general update to all students to check their notifications
-    // Instead of 1,000+ individual messages, we send one broadcast message
     await publishUpdate('community', {
       type: 'GLOBAL_NOTIFICATION_RELOAD',
       title
     });
 
-    // Handle mass push (this could be optimized)
-    const subscriptionsRes = await query(`
+    // Handle mass FCM push
+    const tokensRes = await query(`
       SELECT user_id, subscription FROM push_subscriptions WHERE user_id != $1
     `, [excludeUserId]);
 
-    const pushPromises = subscriptionsRes.rows.map(sub => {
-      return webpush.sendNotification(
-        sub.subscription,
-        JSON.stringify({ title, message, link })
-      ).catch(err => {
-        if (err.statusCode === 410 || err.statusCode === 404) {
-          return query(`
-            DELETE FROM push_subscriptions 
-            WHERE user_id = $1 AND subscription->>'endpoint' = $2
-          `, [sub.user_id, sub.subscription.endpoint]);
-        }
-        console.error('Mass web push error:', err);
-      });
-    });
+    const allTokensData = tokensRes.rows.map(row => ({
+      userId: row.user_id,
+      token: (typeof row.subscription === 'string' ? JSON.parse(row.subscription) : row.subscription).token || row.subscription
+    })).filter(t => typeof t.token === 'string');
 
-    await Promise.all(pushPromises);
+    if (allTokensData.length === 0) return;
+
+    // Batching to avoid limits (max 500 per sendEach)
+    const batchSize = 500;
+    for (let i = 0; i < allTokensData.length; i += batchSize) {
+      const batch = allTokensData.slice(i, i + batchSize);
+      const messages = batch.map(data => ({
+        token: data.token,
+        notification: {
+          title,
+          body: message,
+        },
+        data: {
+          link: link || '/',
+        },
+        webpush: {
+          fcmOptions: {
+            link: link || '/',
+          }
+        }
+      }));
+
+      const response = await messaging.sendEach(messages);
+      
+      // Cleanup invalid tokens in the background
+      const tokensToRemove: {userId: string, token: string}[] = [];
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          const errorCode = resp.error?.code;
+          if (errorCode === 'messaging/registration-token-not-registered' || 
+              errorCode === 'messaging/invalid-registration-token') {
+            tokensToRemove.push(batch[idx]);
+          }
+        }
+      });
+
+      if (tokensToRemove.length > 0) {
+        for (const item of tokensToRemove) {
+          query(`
+            DELETE FROM push_subscriptions 
+            WHERE user_id = $1 AND (subscription->>'token' = $2 OR subscription::text = $3)
+          `, [item.userId, item.token, JSON.stringify(item.token)]).catch(e => console.error('Token cleanup error:', e));
+        }
+      }
+    }
   } catch (error) {
-    console.error('Error notifying all students:', error);
+    console.error('Error notifying all students via FCM:', error);
   }
 }
