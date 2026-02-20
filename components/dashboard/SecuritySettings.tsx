@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Lock, ShieldCheck, AlertCircle, KeyRound, CheckCircle2, Loader2, Bell, BellOff, Info } from 'lucide-react';
+import { Lock, ShieldCheck, AlertCircle, KeyRound, CheckCircle2, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { usePushNotifications } from '@/lib/hooks';
 
 export default function SecuritySettings() {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -14,7 +13,6 @@ export default function SecuritySettings() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
-  const { isSupported, isSubscribed, subscribe, unsubscribe } = usePushNotifications();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,51 +137,6 @@ export default function SecuritySettings() {
           <p className="text-xs font-medium">{error}</p>
         </div>
       )}
-
-      <div className="pt-6 mt-6 border-t border-slate-100">
-        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 mb-1.5 block">Web Push Notifications</label>
-        
-        {!isSupported ? (
-          <div className="flex items-center gap-2 p-3 bg-amber-50 text-amber-600 rounded-lg border border-amber-100">
-            <Info className="h-4 w-4 flex-shrink-0" />
-            <p className="text-[11px] font-medium leading-relaxed">Your browser does not support push notifications.</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            <p className="text-[11px] text-slate-500 font-medium px-1">
-              Receive real-time alerts even when your browser is closed.
-            </p>
-            
-            <button
-              type="button"
-              onClick={isSubscribed ? unsubscribe : subscribe}
-              className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all ${
-                isSubscribed 
-                  ? 'bg-blue-50/50 border-blue-200 text-blue-700' 
-                  : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${isSubscribed ? 'bg-blue-100 text-blue-600' : 'bg-slate-200 text-slate-500'}`}>
-                  {isSubscribed ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-                </div>
-                <div className="text-left">
-                  <p className="text-xs font-bold leading-tight">
-                    {isSubscribed ? 'Notifications Enabled' : 'Notifications Disabled'}
-                  </p>
-                  <p className="text-[10px] opacity-70 font-medium">
-                    {isSubscribed ? 'You are receiving push alerts' : 'Click to enable browser alerts'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className={`w-10 h-5 rounded-full relative transition-colors ${isSubscribed ? 'bg-blue-600' : 'bg-slate-300'}`}>
-                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${isSubscribed ? 'left-6' : 'left-1'}`} />
-              </div>
-            </button>
-          </div>
-        )}
-      </div>
 
       <button
         type="submit"
