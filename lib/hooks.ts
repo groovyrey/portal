@@ -82,7 +82,7 @@ export function usePushNotifications() {
         // Wait for service worker to be ready/active
         await navigator.serviceWorker.ready;
         
-        const currentToken = await getToken(messaging, {
+        const currentToken = await getToken(messaging!, {
           vapidKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
           serviceWorkerRegistration: registration
         });
@@ -90,7 +90,7 @@ export function usePushNotifications() {
         if (currentToken) {
           setToken(currentToken);
           setIsSubscribed(true);
-          syncTokenWithBackend(student.id, currentToken);
+          syncTokenWithBackend(student!.id, currentToken);
         }
       }
     } catch (err) {
@@ -111,6 +111,9 @@ export function usePushNotifications() {
   }
 
   async function subscribe() {
+    toast.error('Web push notifications are temporarily disabled.');
+    return;
+    
     if (!messaging || !student?.id) {
       console.warn('Messaging or Student ID missing', { messaging: !!messaging, studentId: student?.id });
       return;
@@ -124,7 +127,7 @@ export function usePushNotifications() {
         await navigator.serviceWorker.ready;
         
         console.log('Service worker ready. Requesting FCM token...');
-        const currentToken = await getToken(messaging, {
+        const currentToken = await getToken(messaging!, {
           vapidKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
           serviceWorkerRegistration: registration
         });
@@ -133,7 +136,7 @@ export function usePushNotifications() {
           console.log('FCM Token received:', currentToken);
           setToken(currentToken);
           setIsSubscribed(true);
-          await syncTokenWithBackend(student.id, currentToken);
+          await syncTokenWithBackend(student!.id, currentToken);
           toast.success('Notifications enabled!');
         } else {
           console.warn('No registration token available.');

@@ -27,20 +27,8 @@ try {
   const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
   db = dbId === '(default)' ? getFirestore(app) : getFirestore(app, dbId);
 
-  // App for Messaging (nexo)
-  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-    const messagingConfig = {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_API_KEY || firebaseConfig.apiKey,
-      authDomain: firebaseConfig.authDomain,
-      projectId: "nexo-6d8ed",
-      storageBucket: firebaseConfig.storageBucket,
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-    };
-
-    const messagingApp = getApps().find(a => a.name === 'messaging') || initializeApp(messagingConfig, 'messaging');
-    messaging = getMessaging(messagingApp);
-  }
+  // Messaging is disabled for now
+  messaging = null;
 } catch (error) {
   console.error('Failed to initialize Firebase:', error);
 }

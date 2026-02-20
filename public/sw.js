@@ -1,19 +1,17 @@
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-// These values should ideally be injected or fetched, but for SW we often hardcode 
-// or use a placeholder that the build process replaces.
-// For now, we'll try to use the same config as the app.
+// Messaging is disabled for now
 const firebaseConfig = {
-  apiKey: "AIzaSyCQ8Hf-zZhOKQ3TnvSDCngy4S0-3fhVx78",
-  authDomain: "lccportal.firebaseapp.com",
-  projectId: "nexo-6d8ed",
-  storageBucket: "lccportal.firebasestorage.app",
-  messagingSenderId: "951303838464",
-  appId: "1:951303838464:web:ee62b16864a0dddf30b1e5"
+  apiKey: "DISABLED",
+  authDomain: "DISABLED",
+  projectId: "DISABLED",
+  storageBucket: "DISABLED",
+  messagingSenderId: "DISABLED",
+  appId: "DISABLED"
 };
 
-if (firebaseConfig.apiKey !== "REPLACE_WITH_YOUR_API_KEY") {
+if (false && firebaseConfig.apiKey !== "REPLACE_WITH_YOUR_API_KEY") {
   firebase.initializeApp(firebaseConfig);
   const messaging = firebase.messaging();
 
