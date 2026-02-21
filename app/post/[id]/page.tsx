@@ -331,7 +331,7 @@ export default function PostPage() {
                     <MoreVertical className="h-5 w-5" />
                   </button>
                   {activeMenu === post.id && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in duration-200">
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50">
                       <button 
                         onClick={() => {
                           setPostToDelete(post.id);

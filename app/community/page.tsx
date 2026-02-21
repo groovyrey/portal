@@ -282,60 +282,94 @@ function CommunityContent() {
             </div>
             
             <form onSubmit={handlePost} className="p-6 space-y-4">
-              <div className="flex gap-4">
-                <div className="h-10 w-10 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg shadow-slate-900/10">
-                  {student.name.charAt(0)}
-                </div>
-                <div className="flex-1">
-                  {activeTab === 'write' ? (
-                    <div className="space-y-3">
-                      <textarea
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder="Share something with the community... (Markdown supported)"
-                        className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium placeholder:text-slate-400 resize-none min-h-[100px] outline-none"
-                      />
-                      {showPollEditor && (
-                        <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                          <div className="flex items-center justify-between">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Create Poll</label>
-                            <button type="button" onClick={() => setShowPollEditor(false)} className="text-slate-400 hover:text-red-500"><X className="h-4 w-4" /></button>
+              <div>
+                {activeTab === 'write' ? (
+                  <div className="space-y-3">
+                    <textarea
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      placeholder="Share something with the community... (Markdown supported)"
+                      className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium placeholder:text-slate-400 resize-none min-h-[100px] outline-none"
+                    />
+                    {showPollEditor && (
+                      <div className="mt-4 p-5 bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <BarChart2 className="h-4 w-4 text-blue-600" />
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-500">Poll Details</label>
                           </div>
-                          <input value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)} placeholder="What's your question?" className="w-full bg-white border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 outline-none transition-all" />
-                          <div className="space-y-2">
+                          <button 
+                            type="button" 
+                            onClick={() => setShowPollEditor(false)} 
+                            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Remove Poll"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <div className="relative group">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                              <span className="text-lg font-serif italic font-bold">Q</span>
+                            </div>
+                            <input 
+                              value={pollQuestion} 
+                              onChange={(e) => setPollQuestion(e.target.value)} 
+                              placeholder="Ask a question..." 
+                              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-sm" 
+                            />
+                          </div>
+
+                          <div className="space-y-2.5 pl-4 border-l-2 border-slate-100">
                             {pollOptions.map((opt, i) => (
-                              <input key={i} value={opt} onChange={(e) => { const n = [...pollOptions]; n[i] = e.target.value; setPollOptions(n); }} placeholder={`Option ${i+1}`} className="w-full bg-white border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 outline-none transition-all" />
+                              <div key={i} className="relative flex items-center gap-2 group">
+                                <span className="text-[10px] font-bold text-slate-300 w-4 text-center select-none group-focus-within:text-blue-600 transition-colors">{i + 1}</span>
+                                <input 
+                                  value={opt} 
+                                  onChange={(e) => { const n = [...pollOptions]; n[i] = e.target.value; setPollOptions(n); }} 
+                                  placeholder={`Option ${i+1}`} 
+                                  className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-sm placeholder:text-slate-400" 
+                                />
+                              </div>
                             ))}
                             {pollOptions.length < 5 && (
-                              <button type="button" onClick={() => setPollOptions([...pollOptions, ''])} className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline px-1">+ Add Option</button>
+                              <button 
+                                type="button" 
+                                onClick={() => setPollOptions([...pollOptions, ''])} 
+                                className="ml-6 mt-1 flex items-center gap-2 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                              >
+                                <Plus className="h-3 w-3" />
+                                Add Option
+                              </button>
                             )}
                           </div>
                         </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="min-h-[100px] prose prose-slate prose-sm max-w-none">
-                      {content.trim() ? (
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-                      ) : (
-                        <p className="text-slate-300 italic">Nothing to preview yet...</p>
-                      )}
-                      {showPollEditor && pollQuestion.trim() && (
-                        <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 not-prose">
-                          <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Poll Preview</p>
-                          <p className="text-sm font-bold text-slate-900 mb-3">{pollQuestion}</p>
-                          <div className="space-y-2">
-                            {pollOptions.filter(o => o.trim()).map((opt, i) => (
-                              <div key={i} className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 bg-white">
-                                {opt}
-                              </div>
-                            ))}
-                          </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="min-h-[100px] prose prose-slate prose-sm max-w-none">
+                    {content.trim() ? (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                    ) : (
+                      <p className="text-slate-300 italic">Nothing to preview yet...</p>
+                    )}
+                    {showPollEditor && pollQuestion.trim() && (
+                      <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 not-prose">
+                        <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Poll Preview</p>
+                        <p className="text-sm font-bold text-slate-900 mb-3">{pollQuestion}</p>
+                        <div className="space-y-2">
+                          {pollOptions.filter(o => o.trim()).map((opt, i) => (
+                            <div key={i} className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 bg-white">
+                              {opt}
+                            </div>
+                          ))}
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-slate-50">
                 <div className="flex gap-2">
