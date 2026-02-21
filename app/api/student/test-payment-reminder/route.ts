@@ -30,27 +30,36 @@ export async function POST(req: NextRequest) {
 
     const studentData = studentSnap.data();
 
-    // Calculate mock due date (5 days from now in PH Time)
-    const now = new Date();
-    const phTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"}));
-    const targetDate = new Date(phTime);
-    targetDate.setDate(phTime.getDate() + 5);
+    // 3. Fetch real financial data for this student
+    const financialSnap = await getDoc(doc(db, 'financials', userId));
+    let targetInstallment = null;
 
-    const year = targetDate.getFullYear();
-    const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-    const day = String(targetDate.getDate()).padStart(2, '0');
-    const targetDateStr = `${year}/${month}/${day}`;
+    if (financialSnap.exists()) {
+      const financialData = financialSnap.data();
+      const installments = financialData.details?.installments || [];
+      
+      // Find the first installment that is NOT paid (outstanding > 0)
+      // and optionally in the future (though for a test, any unpaid one is good)
+      targetInstallment = installments.find((inst: any) => {
+        const outstanding = parseFloat(inst.outstanding?.replace(/,/g, '') || "0");
+        return outstanding > 0;
+      });
+    }
 
-    // Mock installment for test
-    const mockInstallment = {
-      description: "🧪 TEST INSTALLMENT",
-      dueDate: targetDateStr,
+    // 4. Mock installment if no real unpaid installment is found
+    const displayInstallment = targetInstallment ? {
+      description: targetInstallment.description,
+      dueDate: targetInstallment.dueDate,
+      outstanding: targetInstallment.outstanding
+    } : {
+      description: "🧪 MOCK INSTALLMENT (No unpaid found)",
+      dueDate: "2026/12/25",
       outstanding: "1,234.56"
     };
 
-    const message = `🧪 Test Reminder: Your ${mockInstallment.description} of ₱${mockInstallment.outstanding} is due in 5 days (${mockInstallment.dueDate}). This is a test to verify your notification settings.`;
+    const message = `🧪 Test Reminder: Your ${displayInstallment.description} of ₱${displayInstallment.outstanding} is due on ${displayInstallment.dueDate}. This test identified your next pending payment.`;
 
-    // 1. Create in-app notification
+    // 5. Create in-app notification
     await createNotification({
       userId,
       title: "Test Payment Reminder 💳",
@@ -59,17 +68,17 @@ export async function POST(req: NextRequest) {
       link: '/accounts' 
     });
 
-    // 2. Send Email Alert (if email exists)
+    // 6. Send Email Alert (if email exists)
     let emailSent = false;
     if (studentData.email) {
       try {
         const parsedName = parseStudentName(studentData.name);
         const firstName = parsedName.firstName || studentData.name;
-        const html = getPaymentReminderEmailTemplate(firstName, mockInstallment);
+        const html = getPaymentReminderEmailTemplate(firstName, displayInstallment);
 
         await sendEmail({
           to: studentData.email,
-          subject: `🧪 Test Payment Reminder - ${mockInstallment.description}`,
+          subject: `🧪 Test Payment Reminder - ${displayInstallment.description}`,
           text: message,
           html: html
         });
@@ -81,8 +90,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      message: `Test notification created and ${emailSent ? 'email sent' : 'no email sent (email missing)'}`,
-      dueDateIdentifier: targetDateStr
+      message: targetInstallment 
+        ? `Test sent using your next installment: ${targetInstallment.description}` 
+        : `Test sent using mock data (all your installments are paid!)`,
+      installment: displayInstallment
     });
 
   } catch (error: any) {

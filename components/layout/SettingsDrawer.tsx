@@ -107,7 +107,8 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
       const data = await res.json();
       
       if (data.success) {
-        toast.success(`Test sent! Due Date Identifier: ${data.dueDateIdentifier}`, { id: toastId });
+        const detail = data.installment?.description || 'Test Alert';
+        toast.success(`Success! Sent reminder for: ${detail}`, { id: toastId });
       } else {
         toast.error(data.error || 'Failed to send test reminder', { id: toastId });
       }
