@@ -18,7 +18,14 @@ import {
   Heart,
   MoreVertical,
   ExternalLink,
-  BarChart2
+  BarChart2,
+  ShieldAlert,
+  ShieldCheck,
+  CheckCircle,
+  AlertTriangle,
+  GraduationCap,
+  HeartHandshake,
+  Info
 } from 'lucide-react';
 import Link from 'next/link';
 import Skeleton from '@/components/ui/Skeleton';
@@ -48,6 +55,7 @@ export default function PostPage() {
   const [newComment, setNewComment] = useState('');
   const [commenting, setCommenting] = useState(false);
   const [reportingComment, setReportingComment] = useState<string | null>(null);
+  const [commentToReport, setCommentToReport] = useState<string | null>(null);
   const [commentToDelete, setCommentToDelete] = useState<{postId: string, commentId: string} | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [reactors, setReactors] = useState<{id: string, name: string}[] | null>(null);
@@ -517,7 +525,7 @@ export default function PostPage() {
                               </button>
                             ) : (
                               <button 
-                                onClick={() => handleReportComment(comment.id)}
+                                onClick={() => setCommentToReport(comment.id)}
                                 disabled={reportingComment === comment.id}
                                 className={`p-1 rounded-md transition-colors ${reportingComment === comment.id ? 'text-blue-500 animate-pulse' : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50'}`}
                                 title="Report comment"
@@ -653,6 +661,81 @@ export default function PostPage() {
             >
                 Cancel
             </button>
+        </div>
+      </Modal>
+
+      {/* Report Confirmation & Guidelines Modal */}
+      <Modal 
+        isOpen={!!commentToReport} 
+        onClose={() => setCommentToReport(null)}
+        maxWidth="max-w-md"
+        className="p-0 overflow-hidden"
+      >
+        <div className="bg-white">
+          {/* Modal Header */}
+          <div className="bg-slate-900 p-6 text-white">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-10 w-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                <ShieldAlert className="h-6 w-6 text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">Report to Aegis</h3>
+                <p className="text-xs text-slate-400 font-medium">Review guidelines before reporting</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+            <div className="bg-blue-50/50 rounded-2xl p-4 border border-blue-100/50 flex gap-3">
+              <Info className="h-5 w-5 text-blue-600 shrink-0" />
+              <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                Aegis will review the reported comment based on our <span className="font-bold">Community Guidelines</span>. Excessive false reporting may result in account restrictions.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Guidelines for Review</h4>
+              
+              <div className="grid gap-4">
+                {[
+                  { icon: <GraduationCap className="h-4 w-4 text-blue-500" />, title: "Professionalism", desc: "No offensive content or excessive slang." },
+                  { icon: <HeartHandshake className="h-4 w-4 text-rose-500" />, title: "Peer Support", desc: "Is it helpful or supportive?" },
+                  { icon: <AlertTriangle className="h-4 w-4 text-amber-500" />, title: "No Bullying", desc: "Zero tolerance for harassment or shaming." },
+                  { icon: <ShieldCheck className="h-4 w-4 text-green-500" />, title: "Privacy", desc: "No personal info should be shared." }
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
+                      {item.icon}
+                    </div>
+                    <div>
+                      <h5 className="text-xs font-bold text-slate-900">{item.title}</h5>
+                      <p className="text-[10px] text-slate-500 font-medium leading-tight">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 pt-0 flex flex-col gap-2">
+            <button 
+              onClick={() => {
+                const cId = commentToReport;
+                setCommentToReport(null);
+                if (cId) handleReportComment(cId);
+              }}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center justify-center gap-2"
+            >
+              <CheckCircle className="h-4 w-4" />
+              Confirm Violation
+            </button>
+            <button 
+              onClick={() => setCommentToReport(null)}
+              className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-slate-500 text-xs font-bold uppercase tracking-widest rounded-xl transition-all"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </Modal>
     </div>

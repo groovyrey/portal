@@ -37,14 +37,22 @@ export async function POST(req: NextRequest) {
         const $result = result.$;
         const finalUrl = result.finalUrl;
 
-        const errorText = $result('#lblError, #lblMessage, .text-danger').text().trim();
-        const successText = $result('.text-success, #lblSuccess, #lblMessage').text().trim();
+        const errorText = $result('#lblError, #lblMessage, .text-danger, .error-message, .ErrorMessageText').text().trim();
+        const successText = $result('.text-success, #lblSuccess, #lblMessage, .success-message').text().trim();
+
+        console.log('Change Password Debug:', {
+            finalUrl,
+            errorText,
+            successText,
+            hasSuccessKeywords: rawHtml.toLowerCase().includes('successfully changed') || rawHtml.toLowerCase().includes('password changed'),
+            formIsGone: $result('#otbPasswordChangeTable_1').length === 0
+        });
 
         const hasSuccessText = 
             rawHtml.toLowerCase().includes('successfully changed') || 
             rawHtml.toLowerCase().includes('password changed') || 
             rawHtml.includes('Success') || 
-            (successText && !errorText);
+            (successText && !errorText && !rawHtml.includes('otbPasswordChangeTable_1'));
 
         const redirectedToLogin = finalUrl.toLowerCase().includes('login.aspx') || rawHtml.includes('otbUserID');
         const redirectedToMain = finalUrl.toLowerCase().includes('main.aspx') || rawHtml.includes('otbMainTable') || rawHtml.includes('id="otbMain"');
@@ -69,7 +77,8 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ 
             success: false, 
-            error: errorText || 'Failed to change password. Please verify your current password.'
+            error: errorText || 'Failed to change password. Please verify your current password.',
+            _debug_html: rawHtml
         }, { status: 400 });
 
     } catch (error: any) {

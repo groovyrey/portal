@@ -56,6 +56,15 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
   }, [queryClient, studentId]);
 
   useEffect(() => {
+    // Only initialize Ably if we have a studentId (logged in)
+    if (!studentId) {
+      if (ablyRef.current) {
+        ablyRef.current.close();
+        ablyRef.current = null;
+      }
+      return;
+    }
+
     // Initialize Ably once
     if (!ablyRef.current) {
       ablyRef.current = new Ably.Realtime({ 
@@ -65,10 +74,7 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
 
       ablyRef.current.connection.on('connected', () => {
         console.log('Ably Connected');
-        toast.success('Real-time connection established', {
-          description: 'You will receive live updates from the community.',
-          duration: 3000,
-        });
+        // Toast removed as requested
       });
 
       ablyRef.current.connection.on('failed', () => {

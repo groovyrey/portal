@@ -9,6 +9,9 @@ export default function VersionChecker() {
   const [checking, setChecking] = useState(false);
 
   useEffect(() => {
+    // Immediate check on mount to wake up the DB (via /api/version)
+    checkVersion();
+
     // Initial check after 5 seconds
     const initialTimer = setTimeout(() => {
       checkVersion();

@@ -1,17 +1,38 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Lock, ShieldCheck, AlertCircle, KeyRound, CheckCircle2, Loader2, Info } from 'lucide-react';
+import { 
+  Lock, 
+  ShieldCheck, 
+  AlertCircle, 
+  KeyRound, 
+  CheckCircle2, 
+  Loader2, 
+  Info, 
+  Eye, 
+  EyeOff,
+  Code,
+  Copy,
+  ChevronDown,
+  Terminal
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function SecuritySettings() {
+  const queryClient = useQueryClient();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debugHtml, setDebugHtml] = useState<string | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
   const [success, setSuccess] = useState(false);
   const [strength, setStrength] = useState({ score: 0, label: 'Very Weak', color: 'bg-slate-200' });
   const router = useRouter();
@@ -30,7 +51,10 @@ export default function SecuritySettings() {
     if (pass.length >= 8) score++;
     if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) score++;
     if (/\d/.test(pass)) score++;
-    if (/[^A-Za-z0-9]/.test(pass)) score++;
+    
+    // Note: Special characters are NOT allowed by the school portal
+    const hasSpecial = /[^A-Za-z0-9]/.test(pass);
+    if (!hasSpecial && pass.length >= 6) score++;
 
     const results = [
       { label: 'Very Weak', color: 'bg-red-500' },
@@ -47,10 +71,17 @@ export default function SecuritySettings() {
     e.preventDefault();
     setError(null);
     setSuccess(false);
+    setDebugHtml(null);
 
     if (newPassword !== confirmPassword) {
       toast.error("New passwords do not match.");
       setError("New passwords do not match.");
+      return;
+    }
+
+    if (/[^A-Za-z0-9]/.test(newPassword)) {
+      toast.error("Special characters are not allowed by the school portal.");
+      setError("Please use only letters and numbers (no @, #, !, etc.).");
       return;
     }
 
@@ -76,6 +107,11 @@ export default function SecuritySettings() {
         setSuccess(true);
         toast.success('Password updated successfully!', { id: updateToast });
         
+        // Immediately clear cache and local storage
+        queryClient.setQueryData(['student-data'], null);
+        queryClient.invalidateQueries({ queryKey: ['student-data'] });
+        queryClient.invalidateQueries({ queryKey: ['student'] });
+        
         localStorage.removeItem('student_data');
         window.dispatchEvent(new Event('local-storage-update'));
 
@@ -84,11 +120,14 @@ export default function SecuritySettings() {
         setConfirmPassword('');
         
         setTimeout(() => {
-            router.push('/');
+            window.location.href = '/';
         }, 2000);
       } else {
         const msg = data.error || 'Failed to update password.';
         setError(msg);
+        if (data._debug_html) {
+          setDebugHtml(data._debug_html);
+        }
         toast.error(msg, { id: updateToast });
       }
     } catch (err) {
@@ -120,13 +159,20 @@ export default function SecuritySettings() {
         <div className="relative">
           <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
-            type="password"
+            type={showCurrentPassword ? "text" : "password"}
             required
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all"
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all"
             placeholder="Enter current password"
           />
+          <button
+            type="button"
+            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
         </div>
       </div>
 
@@ -135,13 +181,20 @@ export default function SecuritySettings() {
         <div className="relative">
           <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
-            type="password"
+            type={showNewPassword ? "text" : "password"}
             required
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all"
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all"
             placeholder="Min 8 characters recommended"
           />
+          <button
+            type="button"
+            onClick={() => setShowNewPassword(!showNewPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
         </div>
 
         {/* Password Strength Indicator */}
@@ -166,7 +219,7 @@ export default function SecuritySettings() {
           </div>
           <p className="mt-2 text-[10px] text-slate-400 font-medium leading-relaxed flex items-start gap-1.5">
             <Info className="h-3 w-3 shrink-0 mt-0.5 opacity-60" />
-            Use 8+ characters with mixed case, numbers, and symbols for best security.
+            Use 8+ characters with mixed case and numbers. <span className="text-red-500 font-bold">Special characters (@, #, !, etc.) are NOT allowed.</span>
           </p>
         </div>
       </div>
@@ -176,13 +229,20 @@ export default function SecuritySettings() {
         <div className="relative">
           <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
-            type="password"
+            type={showConfirmPassword ? "text" : "password"}
             required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all"
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all"
             placeholder="Repeat new password"
           />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
         </div>
       </div>
 
@@ -207,6 +267,48 @@ export default function SecuritySettings() {
           'Update Password'
         )}
       </button>
+
+      {/* Diagnostic Area */}
+      <AnimatePresence>
+        {debugHtml && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8 pt-8 border-t border-slate-100"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-slate-500">
+                <Terminal className="h-4 w-4" />
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">Diagnostic Data</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(debugHtml);
+                  toast.success('Diagnostic data copied to clipboard');
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors"
+              >
+                <Copy className="h-3 w-3" />
+                Copy HTML
+              </button>
+            </div>
+            
+            <p className="text-[10px] text-slate-400 font-medium mb-3 leading-relaxed">
+              The school portal returned the following response. Copy this data and share it with support if the issue persists.
+            </p>
+            
+            <div className="relative group">
+              <textarea
+                readOnly
+                value={debugHtml}
+                className="w-full h-48 bg-slate-900 text-slate-300 text-[10px] font-mono p-4 rounded-xl border border-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 resize-none custom-scrollbar"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent pointer-events-none rounded-xl" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </form>
   );
 }
