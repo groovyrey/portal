@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
-import { Send, User, MessageSquare, Loader2, PenLine, Eye, MoreVertical, Trash2, Heart, X, Plus, BarChart2, ShieldAlert, Lock as LockIcon } from 'lucide-react';
+import { Send, User, MessageSquare, Loader2, PenLine, Eye, MoreVertical, Trash2, Heart, X, Plus, BarChart2, ShieldAlert, Lock as LockIcon, Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { CommunityPost, Student, CommunityComment } from '@/types';
 import Link from 'next/link';
 import Drawer from '@/components/layout/Drawer';
@@ -35,10 +35,24 @@ export default function CommunityPage() {
   const [reviewResult, setReviewResult] = useState<any>(null);
   const [reviewError, setReviewError] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedType, setSelectedType] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
   const [student, setStudent] = useState<Student | null>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
   const topics = ['All', 'Academics', 'Campus Life', 'Career', 'Well-being', 'General'];
+  const postTypes = [
+    { id: 'all', label: 'All Content' },
+    { id: 'posts', label: 'Posts' },
+    { id: 'polls', label: 'Polls' }
+  ];
+  const sortOptions = [
+    { id: 'newest', label: 'Newest' },
+    { id: 'popular', label: 'Most Liked' },
+    { id: 'commented', label: 'Most Commented' }
+  ];
 
   const [view, setView] = useState<'edit' | 'preview'>('edit');
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -50,6 +64,14 @@ export default function CommunityPage() {
   const [commentsToShow, setCommentsToShow] = useState<{[key: string]: number}>({});
   const [newComment, setNewComment] = useState('');
   const [commenting, setCommenting] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     const checkStudent = () => {
@@ -98,9 +120,15 @@ export default function CommunityPage() {
   };
 
   const { data: posts = [], isLoading: loading, isError, error, refetch } = useQuery({
-    queryKey: ['community-posts'],
+    queryKey: ['community-posts', selectedTopic, debouncedSearch, selectedType, sortBy],
     queryFn: async () => {
-      const res = await fetch('/api/community');
+      const params = new URLSearchParams();
+      if (selectedTopic !== 'All') params.append('topic', selectedTopic);
+      if (debouncedSearch) params.append('search', debouncedSearch);
+      if (selectedType !== 'all') params.append('type', selectedType);
+      if (sortBy !== 'newest') params.append('sort', sortBy);
+      
+      const res = await fetch(`/api/community?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch posts');
       const data = await res.json();
       return data.success ? (data.posts as CommunityPost[]) : [];
@@ -347,9 +375,6 @@ export default function CommunityPage() {
     }
   };
 
-  const filteredPosts = selectedTopic === 'All' 
-    ? posts 
-    : posts.filter(p => (p as any).topic === selectedTopic);
 
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -368,15 +393,12 @@ export default function CommunityPage() {
               href="https://www.markdownguide.org/basic-syntax/" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:shadow-sm transition-all cursor-help group"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:shadow-sm hover:underline transition-all cursor-help group"
             >
               <ExternalLink className="h-3 w-3" />
               Markdown Help
             </a>
           </div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            {posts.length} Posts shared
-          </p>
         </div>
 
         {/* Create Post */}
@@ -412,7 +434,24 @@ export default function CommunityPage() {
               ) : (
                 <div className="w-full min-h-[120px] p-4 bg-slate-50 border border-slate-200 rounded-xl prose prose-slate prose-sm max-w-none">
                   {content.trim() ? (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        a: ({ ...props }) => (
+                          <a 
+                            {...props} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-blue-600 underline hover:text-blue-700 inline-flex items-center gap-0.5"
+                          >
+                            {props.children}
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )
+                      }}
+                    >
+                      {content}
+                    </ReactMarkdown>
                   ) : (
                     <p className="text-slate-400 italic">Nothing to preview...</p>
                   )}
@@ -516,21 +555,120 @@ export default function CommunityPage() {
           </div>
         )}
 
-        {/* Topic Filter */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
-          {topics.map((topic) => (
-            <button
-              key={topic}
-              onClick={() => setSelectedTopic(topic)}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap border transition-all ${
-                selectedTopic === topic
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20'
-                  : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              {topic}
-            </button>
-          ))}
+        {/* Search & Main Filters */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1 group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search posts, users or polls..."
+                className="w-full pl-11 pr-10 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all shadow-sm"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider border transition-all ${
+                  showFilters || selectedType !== 'all' || sortBy !== 'newest'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'
+                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 shadow-sm'
+                }`}
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                Filters
+                {(selectedType !== 'all' || sortBy !== 'newest') && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {showFilters && (
+            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xl shadow-slate-200/50 space-y-5 animate-in slide-in-from-top-2 duration-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Sort By</label>
+                  <div className="flex flex-wrap gap-2">
+                    {sortOptions.map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setSortBy(opt.id)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                          sortBy === opt.id
+                            ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/10'
+                            : 'bg-slate-50 text-slate-500 border-slate-100 hover:border-slate-300'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Content Type</label>
+                  <div className="flex flex-wrap gap-2">
+                    {postTypes.map((type) => (
+                      <button
+                        key={type.id}
+                        onClick={() => setSelectedType(type.id)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                          selectedType === type.id
+                            ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/10'
+                            : 'bg-slate-50 text-slate-500 border-slate-100 hover:border-slate-300'
+                        }`}
+                      >
+                        {type.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              {(selectedType !== 'all' || sortBy !== 'newest' || searchQuery || selectedTopic !== 'All') && (
+                <div className="pt-4 border-t border-slate-50 flex justify-end">
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedTopic('All');
+                      setSelectedType('all');
+                      setSortBy('newest');
+                    }}
+                    className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-600 px-3 py-1 rounded-lg hover:bg-red-50 transition-colors"
+                  >
+                    Reset All Filters
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Topic Chips */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
+            {topics.map((topic) => (
+              <button
+                key={topic}
+                onClick={() => setSelectedTopic(topic)}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap border transition-all ${
+                  selectedTopic === topic
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/10'
+                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                {topic}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Feed */}
@@ -569,14 +707,26 @@ export default function CommunityPage() {
                 Retry Fetching
               </button>
             </div>
-          ) : filteredPosts.length === 0 ? (
+          ) : posts.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 text-slate-400">
               <MessageSquare className="h-10 w-10 mx-auto mb-3 opacity-20" />
-              <p className="font-semibold text-xs uppercase tracking-wider">No posts in this topic</p>
+              <p className="font-semibold text-xs uppercase tracking-wider">No posts found</p>
+              {(searchQuery || selectedTopic !== 'All' || selectedType !== 'all') && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedTopic('All');
+                    setSelectedType('all');
+                  }}
+                  className="mt-4 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:underline"
+                >
+                  Clear all filters
+                </button>
+              )}
             </div>
           ) : (
             <>
-              {filteredPosts.slice(0, postsToShow).map((post) => (
+              {posts.slice(0, postsToShow).map((post) => (
                 <PostCard
                   key={post.id}
                   post={post}
@@ -591,7 +741,7 @@ export default function CommunityPage() {
                 />
               ))}
 
-              {filteredPosts.length > postsToShow && (
+              {posts.length > postsToShow && (
                 <button
                   onClick={() => setPostsToShow(prev => prev + 5)}
                   className="w-full py-4 bg-white border border-slate-200 rounded-2xl text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm active:scale-[0.98]"
@@ -629,7 +779,24 @@ export default function CommunityPage() {
             </div>
 
             <div className="prose prose-slate max-w-none prose-sm font-medium text-slate-700 leading-relaxed">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedPost.content}</ReactMarkdown>
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  a: ({ ...props }) => (
+                    <a 
+                      {...props} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-blue-600 underline hover:text-blue-700 inline-flex items-center gap-0.5"
+                    >
+                      {props.children}
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )
+                }}
+              >
+                {selectedPost.content}
+              </ReactMarkdown>
             </div>
 
             {selectedPost.poll && (

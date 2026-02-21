@@ -3,7 +3,7 @@
 import React, { useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Heart, MessageSquare, MoreVertical, Trash2 } from 'lucide-react';
+import { Heart, MessageSquare, MoreVertical, Trash2, ExternalLink } from 'lucide-react';
 import { CommunityPost, Student } from '@/types';
 import Link from 'next/link';
 import { obfuscateId } from '@/lib/utils';
@@ -44,7 +44,7 @@ export default function PostCard({
   isProfileView = false
 }: PostCardProps) {
   const isLiked = (post.likes || []).includes(student?.id || '');
-  const topic = (post as any).topic || 'General';
+  const topic = post.topic || 'General';
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -102,7 +102,7 @@ export default function PostCard({
               <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-tighter ${getTopicStyle(topic)}`}>
                 {topic}
               </span>
-              {(post as any).isUnreviewed && (
+              {post.isUnreviewed && (
                 <span className="bg-amber-50 text-amber-600 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-100 uppercase tracking-tighter">
                   Pending AI Review
                 </span>
@@ -139,7 +139,25 @@ export default function PostCard({
       </div>
       
       <div className="prose prose-slate max-w-none prose-sm font-medium text-slate-700 leading-relaxed mb-4 line-clamp-3">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
+        <ReactMarkdown 
+          remarkPlugins={[remarkGfm]}
+          components={{
+            a: ({ ...props }) => (
+              <a 
+                {...props} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-blue-600 underline hover:text-blue-700 inline-flex items-center gap-0.5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {props.children}
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )
+          }}
+        >
+          {post.content}
+        </ReactMarkdown>
       </div>
 
       {post.poll && (

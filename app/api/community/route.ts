@@ -9,6 +9,10 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const postIdStr = searchParams.get('postId');
     const userIdFilter = searchParams.get('userId');
+    const topicFilter = searchParams.get('topic');
+    const searchFilter = searchParams.get('search');
+    const typeFilter = searchParams.get('type');
+    const sortFilter = searchParams.get('sort') || 'newest';
 
     if (postIdStr) {
       const postId = parseInt(postIdStr, 10);
@@ -36,12 +40,43 @@ export async function GET(req: NextRequest) {
     `;
     
     const queryParams: any[] = [];
+    const whereConditions: string[] = [];
+
     if (userIdFilter) {
-      queryStr += ` WHERE p.user_id = $1`;
+      whereConditions.push(`p.user_id = $${queryParams.length + 1}`);
       queryParams.push(userIdFilter);
     }
+
+    if (topicFilter && topicFilter !== 'All') {
+      whereConditions.push(`p.topic = $${queryParams.length + 1}`);
+      queryParams.push(topicFilter);
+    }
+
+    if (searchFilter) {
+      whereConditions.push(`(p.content ILIKE $${queryParams.length + 1} OR p.user_name ILIKE $${queryParams.length + 1})`);
+      queryParams.push(`%${searchFilter}%`);
+    }
+
+    if (typeFilter === 'polls') {
+      whereConditions.push(`p.poll_question IS NOT NULL`);
+    } else if (typeFilter === 'posts') {
+      whereConditions.push(`p.poll_question IS NULL`);
+    }
+
+    if (whereConditions.length > 0) {
+      queryStr += ` WHERE ` + whereConditions.join(' AND ');
+    }
     
-    queryStr += ` ORDER BY p.created_at DESC LIMIT 50`;
+    // Sorting
+    if (sortFilter === 'popular') {
+      queryStr += ` ORDER BY "likeCount" DESC, p.created_at DESC`;
+    } else if (sortFilter === 'commented') {
+      queryStr += ` ORDER BY "commentCount" DESC, p.created_at DESC`;
+    } else {
+      queryStr += ` ORDER BY p.created_at DESC`;
+    }
+
+    queryStr += ` LIMIT 50`;
 
     const postsRes = await query(queryStr, queryParams);
 

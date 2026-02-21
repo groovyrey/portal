@@ -76,6 +76,8 @@ export interface CommunityPost {
   userId: string;
   userName: string;
   content: string;
+  topic?: string;
+  isUnreviewed?: boolean;
   createdAt: any;
   likes?: string[];
   commentCount?: number;
