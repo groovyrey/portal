@@ -43,7 +43,14 @@ function CommunityContent() {
   const queryClient = useQueryClient();
   const { setActivePostId } = useRealtime();
 
-  const [postsToShow, setPostsToShow] = useState(5);
+  // Read from URL Search Params
+  const selectedTopic = searchParams.get('topic') || 'All';
+  const searchQuery = searchParams.get('search') || '';
+  const selectedType = searchParams.get('type') || 'all';
+  const sortBy = searchParams.get('sort') || 'newest';
+  const limit = parseInt(searchParams.get('limit') || '5', 10);
+
+  const [postsToShow, setPostsToShow] = useState(limit);
   const [content, setContent] = useState('');
   const [showPollEditor, setShowPollEditor] = useState(false);
   const [pollQuestion, setPollQuestion] = useState('');
@@ -54,28 +61,32 @@ function CommunityContent() {
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [reviewResult, setReviewResult] = useState<any>(null);
   const [reviewError, setReviewError] = useState(false);
-
-  // Read from URL Search Params
-  const selectedTopic = searchParams.get('topic') || 'All';
-  const searchQuery = searchParams.get('search') || '';
-  const selectedType = searchParams.get('type') || 'all';
-  const sortBy = searchParams.get('sort') || 'newest';
+  
+  const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
 
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [student, setStudent] = useState<Student | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   const updateSearchParams = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === 'All' || value === 'all' || (key === 'sort' && value === 'newest')) {
+      if (value === null || value === 'All' || value === 'all' || (key === 'sort' && value === 'newest') || (key === 'limit' && value === '5')) {
         params.delete(key);
       } else {
         params.set(key, value);
       }
     });
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  useEffect(() => {
+    setPostsToShow(limit);
+  }, [limit]);
+
+  const handleLoadMore = () => {
+    const nextLimit = postsToShow + 5;
+    updateSearchParams({ limit: nextLimit.toString() });
   };
 
   const topics = ['All', 'Academics', 'Campus Life', 'Career', 'Well-being', 'General'];
@@ -153,29 +164,6 @@ function CommunityContent() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!postToDelete) return;
-    const postId = postToDelete;
-    setPostToDelete(null);
-    const deleteToast = toast.loading('Deleting post...');
-    try {
-      const res = await fetch('/api/community', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success('Post deleted', { id: deleteToast });
-        queryClient.invalidateQueries({ queryKey: ['community-posts'] });
-      } else {
-        toast.error(data.error || 'Failed to delete', { id: deleteToast });
-      }
-    } catch (err) {
-      toast.error('Network error', { id: deleteToast });
-    }
-  };
-
   const handlePost = async (e: React.FormEvent) => {
     e.preventDefault();
     if ((!content.trim() && !pollQuestion.trim()) || posting) return;
@@ -239,6 +227,7 @@ function CommunityContent() {
         setPollQuestion('');
         setPollOptions(['', '']);
         setShowPollEditor(false);
+        setActiveTab('write');
         queryClient.invalidateQueries({ queryKey: ['community-posts'] });
         if (!isUnreviewed) {
           setShowReviewModal(false);
@@ -274,44 +263,86 @@ function CommunityContent() {
         </div>
 
         {student ? (
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xl shadow-slate-200/40">
-            <form onSubmit={handlePost} className="space-y-4">
+          <div className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-200/40 transition-all focus-within:ring-2 focus-within:ring-blue-600/10 focus-within:border-blue-600/30">
+            <div className="flex border-b border-slate-100">
+              <button 
+                type="button" 
+                onClick={() => setActiveTab('write')}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'write' ? 'text-blue-600 bg-blue-50/50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+              >
+                Write
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setActiveTab('preview')}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'preview' ? 'text-blue-600 bg-blue-50/50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+              >
+                Preview
+              </button>
+            </div>
+            
+            <form onSubmit={handlePost} className="p-6 space-y-4">
               <div className="flex gap-4">
                 <div className="h-10 w-10 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg shadow-slate-900/10">
                   {student.name.charAt(0)}
                 </div>
-                <div className="flex-1 space-y-3">
-                  <textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="Share something with the community..."
-                    className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium placeholder:text-slate-400 resize-none min-h-[60px]"
-                  />
-                  {showPollEditor && (
-                    <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Create Poll</label>
-                        <button type="button" onClick={() => setShowPollEditor(false)} className="text-slate-400 hover:text-red-500"><X className="h-4 w-4" /></button>
-                      </div>
-                      <input value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)} placeholder="What's your question?" className="w-full bg-white border-slate-200 rounded-xl text-sm font-bold focus:ring-blue-600 focus:border-blue-600" />
-                      <div className="space-y-2">
-                        {pollOptions.map((opt, i) => (
-                          <input key={i} value={opt} onChange={(e) => { const n = [...pollOptions]; n[i] = e.target.value; setPollOptions(n); }} placeholder={`Option ${i+1}`} className="w-full bg-white border-slate-200 rounded-xl text-xs font-semibold focus:ring-blue-600 focus:border-blue-600" />
-                        ))}
-                        {pollOptions.length < 5 && (
-                          <button type="button" onClick={() => setPollOptions([...pollOptions, ''])} className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline px-1">+ Add Option</button>
-                        )}
-                      </div>
+                <div className="flex-1">
+                  {activeTab === 'write' ? (
+                    <div className="space-y-3">
+                      <textarea
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        placeholder="Share something with the community... (Markdown supported)"
+                        className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium placeholder:text-slate-400 resize-none min-h-[100px] outline-none"
+                      />
+                      {showPollEditor && (
+                        <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Create Poll</label>
+                            <button type="button" onClick={() => setShowPollEditor(false)} className="text-slate-400 hover:text-red-500"><X className="h-4 w-4" /></button>
+                          </div>
+                          <input value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)} placeholder="What's your question?" className="w-full bg-white border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 outline-none transition-all" />
+                          <div className="space-y-2">
+                            {pollOptions.map((opt, i) => (
+                              <input key={i} value={opt} onChange={(e) => { const n = [...pollOptions]; n[i] = e.target.value; setPollOptions(n); }} placeholder={`Option ${i+1}`} className="w-full bg-white border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 outline-none transition-all" />
+                            ))}
+                            {pollOptions.length < 5 && (
+                              <button type="button" onClick={() => setPollOptions([...pollOptions, ''])} className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline px-1">+ Add Option</button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="min-h-[100px] prose prose-slate prose-sm max-w-none">
+                      {content.trim() ? (
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                      ) : (
+                        <p className="text-slate-300 italic">Nothing to preview yet...</p>
+                      )}
+                      {showPollEditor && pollQuestion.trim() && (
+                        <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 not-prose">
+                          <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Poll Preview</p>
+                          <p className="text-sm font-bold text-slate-900 mb-3">{pollQuestion}</p>
+                          <div className="space-y-2">
+                            {pollOptions.filter(o => o.trim()).map((opt, i) => (
+                              <div key={i} className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 bg-white">
+                                {opt}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-slate-50">
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => setShowPollEditor(!showPollEditor)} className={`p-2 rounded-xl transition-all ${showPollEditor ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-50'}`}><BarChart2 className="h-5 w-5" /></button>
-                  <button type="button" className="p-2 rounded-xl text-slate-400 hover:bg-slate-50"><PenLine className="h-5 w-5" /></button>
+                  <button type="button" onClick={() => setShowPollEditor(!showPollEditor)} className={`p-2 rounded-xl transition-all ${showPollEditor ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-400 hover:bg-slate-50'}`} title="Add Poll"><BarChart2 className="h-5 w-5" /></button>
+                  <button type="button" className="p-2 rounded-xl text-slate-400 hover:bg-slate-50" title="Formatting help"><MessageSquare className="h-5 w-5" /></button>
                 </div>
-                <button type="submit" disabled={(!content.trim() && !pollQuestion.trim()) || posting} className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center gap-2">
+                <button type="submit" disabled={(!content.trim() && !pollQuestion.trim()) || posting} className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-400 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center gap-2">
                   {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   Post
                 </button>
@@ -354,7 +385,7 @@ function CommunityContent() {
               </div>
               {(selectedType !== 'all' || sortBy !== 'newest' || searchQuery || selectedTopic !== 'All') && (
                 <div className="pt-4 border-t border-slate-50 flex justify-end">
-                  <button onClick={() => updateSearchParams({ search: null, topic: null, type: null, sort: null })} className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-600 px-3 py-1 rounded-lg hover:bg-red-50 transition-colors">Reset All Filters</button>
+                  <button onClick={() => updateSearchParams({ search: null, topic: null, type: null, sort: null, limit: null })} className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-600 px-3 py-1 rounded-lg hover:bg-red-50 transition-colors">Reset All Filters</button>
                 </div>
               )}
             </div>
@@ -395,30 +426,17 @@ function CommunityContent() {
                   student={student}
                   onLike={handleLike}
                   onVote={handleVote}
-                  onDelete={setPostToDelete}
                   onOpen={openPostModal}
                   onFetchReactors={() => {}}
-                  activeMenu={null}
-                  setActiveMenu={() => {}}
                 />
               ))}
               {posts.length > postsToShow && (
-                <button onClick={() => setPostsToShow(prev => prev + 5)} className="w-full py-4 bg-white border border-slate-200 rounded-2xl text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm active:scale-[0.98]">Load More Activity</button>
+                <button onClick={handleLoadMore} className="w-full py-4 bg-white border border-slate-200 rounded-2xl text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm active:scale-[0.98]">Load More Activity</button>
               )}
             </>
           )}
         </div>
       </div>
-
-      <Modal isOpen={!!postToDelete} onClose={() => setPostToDelete(null)} maxWidth="max-w-xs" className="p-6 text-center">
-        <div className="h-12 w-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4"><Trash2 className="h-6 w-6" /></div>
-        <h3 className="text-base font-bold text-slate-900 mb-1">Delete Post?</h3>
-        <p className="text-xs text-slate-500 font-medium mb-6">This action cannot be undone. Are you sure you want to remove this post?</p>
-        <div className="flex flex-col gap-2">
-            <button onClick={handleDelete} className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-colors shadow-lg shadow-red-600/10">Confirm Delete</button>
-            <button onClick={() => setPostToDelete(null)} className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-xl transition-colors">Cancel</button>
-        </div>
-      </Modal>
 
       <PostReviewModal isOpen={showReviewModal} />
       <PostReviewResultModal isOpen={showResultModal} onClose={() => setShowResultModal(false)} result={reviewResult} isError={reviewError} />

@@ -3,7 +3,7 @@
 import React, { useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Heart, MessageSquare, MoreVertical, Trash2, ExternalLink } from 'lucide-react';
+import { Heart, MessageSquare, ExternalLink } from 'lucide-react';
 import { CommunityPost, Student } from '@/types';
 import Link from 'next/link';
 import { obfuscateId } from '@/lib/utils';
@@ -13,11 +13,8 @@ interface PostCardProps {
   student: Student | null;
   onLike: (postId: string, isLiked: boolean) => void;
   onVote: (postId: string, optionIndex: number) => void;
-  onDelete: (postId: string) => void;
   onOpen: (post: CommunityPost) => void;
   onFetchReactors: (postId: string) => void;
-  activeMenu: string | null;
-  setActiveMenu: (id: string | null) => void;
   isProfileView?: boolean;
 }
 
@@ -36,11 +33,8 @@ export default function PostCard({
   student,
   onLike,
   onVote,
-  onDelete,
   onOpen,
   onFetchReactors,
-  activeMenu,
-  setActiveMenu,
   isProfileView = false
 }: PostCardProps) {
   const isLiked = (post.likes || []).includes(student?.id || '');
@@ -110,32 +104,6 @@ export default function PostCard({
             </div>
           </div>
         </div>
-
-        {student?.id === post.userId && (
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <button 
-              onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}
-              className="p-1.5 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition-colors"
-            >
-              <MoreVertical className="h-4 w-4" />
-            </button>
-
-            {activeMenu === post.id && (
-              <div className="absolute right-0 mt-1 w-40 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-50">
-                  <button 
-                    onClick={() => {
-                      onDelete(post.id);
-                      setActiveMenu(null);
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete Post
-                  </button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
       
       <div className="prose prose-slate max-w-none prose-sm font-medium text-slate-700 leading-relaxed mb-4 line-clamp-3">

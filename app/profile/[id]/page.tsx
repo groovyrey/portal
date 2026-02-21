@@ -43,8 +43,6 @@ function ProfileContent() {
   });
   const [loading, setLoading] = useState(true);
   const [isPublicView, setIsPublicView] = useState(false);
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   const { data: posts = [], isLoading: loadingPosts } = useQuery({
     queryKey: ['user-posts', profileId],
@@ -123,10 +121,6 @@ function ProfileContent() {
     };
 
     fetchProfile();
-    
-    const handleClickOutside = () => setActiveMenu(null);
-    window.addEventListener('click', handleClickOutside);
-    return () => window.removeEventListener('click', handleClickOutside);
   }, [profileId, currentUserData, isUserLoading]);
 
   const handleLike = async (postId: string, isLiked: boolean) => {
@@ -156,29 +150,6 @@ function ProfileContent() {
       queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
     } catch (err) {
       toast.error('Failed to cast vote');
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!postToDelete) return;
-    const postId = postToDelete;
-    setPostToDelete(null);
-    const deleteToast = toast.loading('Deleting post...');
-    try {
-      const res = await fetch('/api/community', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success('Post deleted', { id: deleteToast });
-        queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
-      } else {
-        toast.error(data.error || 'Failed to delete', { id: deleteToast });
-      }
-    } catch (err) {
-      toast.error('Network error', { id: deleteToast });
     }
   };
 
@@ -302,11 +273,8 @@ function ProfileContent() {
                     student={currentUserData}
                     onLike={handleLike}
                     onVote={handleVote}
-                    onDelete={setPostToDelete}
                     onOpen={openPostModal}
                     onFetchReactors={() => {}}
-                    activeMenu={null}
-                    setActiveMenu={() => {}}
                     isProfileView={true}
                   />
                 ))}
@@ -321,23 +289,6 @@ function ProfileContent() {
           </div>
         </div>
       </div>
-
-      <Modal 
-        isOpen={!!postToDelete} 
-        onClose={() => setPostToDelete(null)}
-        maxWidth="max-w-xs"
-        className="p-6 text-center"
-      >
-        <div className="h-12 w-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="h-6 w-6" />
-        </div>
-        <h3 className="text-base font-bold text-slate-900 mb-1">Delete Post?</h3>
-        <p className="text-xs text-slate-500 font-medium mb-6">This action cannot be undone. Are you sure you want to remove this post?</p>
-        <div className="flex flex-col gap-2">
-            <button onClick={handleDelete} className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-colors shadow-lg shadow-red-600/10">Confirm Delete</button>
-            <button onClick={() => setPostToDelete(null)} className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-xl transition-colors">Cancel</button>
-        </div>
-      </Modal>
     </div>
   );
 }

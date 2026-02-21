@@ -1,24 +1,41 @@
 'use client';
 
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { 
   ArrowLeft, 
   Loader2, 
   Send, 
   Trash2, 
   Flag,
-  MessageSquare
+  MessageSquare,
+  Heart,
+  MoreVertical,
+  ExternalLink,
+  BarChart2
 } from 'lucide-react';
 import Link from 'next/link';
-import PostCard from '@/components/community/PostCard';
 import Skeleton from '@/components/ui/Skeleton';
 import Modal from '@/components/ui/Modal';
 import { CommunityPost, Student, CommunityComment } from '@/types';
 import { obfuscateId, deobfuscateId } from '@/lib/utils';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
+
+const getTopicStyle = (topic: string) => {
+  switch (topic) {
+    case 'Academics': return 'bg-blue-50 text-blue-600 border-blue-100';
+    case 'Campus Life': return 'bg-purple-50 text-purple-600 border-purple-100';
+    case 'Career': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+    case 'Well-being': return 'bg-rose-50 text-rose-600 border-rose-100';
+    default: return 'bg-slate-50 text-slate-600 border-slate-100';
+  }
+};
 
 export default function PostPage() {
   const params = useParams();
@@ -65,15 +82,17 @@ export default function PostPage() {
     enabled: !!postId,
   });
 
-  const handleLike = async (id: string, isLiked: boolean) => {
+  const isLiked = post && (post.likes || []).includes(student?.id || '');
+
+  const handleLike = async (id: string, currentlyLiked: boolean) => {
     if (!student) return;
     const previousPost = queryClient.getQueryData(['post', id]);
     
     // Optimistic update
     queryClient.setQueryData(['post', id], (old: any) => ({
       ...old,
-      likes: isLiked 
-        ? old.likes.filter((uid: string) => uid !== student.id)
+      likes: currentlyLiked 
+        ? (old.likes || []).filter((uid: string) => uid !== student.id)
         : [...(old.likes || []), student.id]
     }));
 
@@ -81,7 +100,7 @@ export default function PostPage() {
       const res = await fetch('/api/community', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId: id, action: isLiked ? 'unlike' : 'like' })
+        body: JSON.stringify({ postId: id, action: currentlyLiked ? 'unlike' : 'like' })
       });
       if (!res.ok) throw new Error();
     } catch (e) {
@@ -256,38 +275,185 @@ export default function PostPage() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto p-4 space-y-6">
+      <div className="max-w-2xl mx-auto p-4 space-y-8">
         {loadingPost ? (
-          <div className="bg-white rounded-2xl p-6 border border-slate-200 space-y-4">
+          <div className="bg-transparent p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <Skeleton className="h-9 w-9" variant="circular" />
+              <Skeleton className="h-10 w-10 rounded-2xl" />
               <div className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-48" />
               </div>
             </div>
             <Skeleton className="h-20 w-full" />
-            <div className="flex gap-4 pt-4 border-t border-slate-50">
-              <Skeleton className="h-8 w-16" />
-              <Skeleton className="h-8 w-16" />
-            </div>
           </div>
         ) : post && (
-          <PostCard 
-            post={post}
-            student={student}
-            onLike={handleLike}
-            onVote={handleVote}
-            onDelete={setPostToDelete}
-            onOpen={() => {}} // Already on post page
-            onFetchReactors={fetchReactors}
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-          />
+          <div className="bg-transparent space-y-6">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-slate-900/10">
+                  {post.userName.charAt(0)}
+                </div>
+                <div>
+                  <Link href={`/profile/${obfuscateId(post.userId)}`} className="block">
+                    <h2 className="text-base font-bold text-slate-900 hover:text-blue-600 transition-colors">{post.userName}</h2>
+                  </Link>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
+                      {new Date(post.createdAt).toLocaleDateString()}
+                    </p>
+                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-tighter ${getTopicStyle(post.topic || 'General')}`}>
+                      {post.topic || 'General'}
+                    </span>
+                    {post.isUnreviewed && (
+                      <span className="bg-amber-50 text-amber-600 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-100 uppercase tracking-tighter">
+                        Pending AI Review
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {student?.id === post.userId && (
+                <div className="relative">
+                  <button 
+                    onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}
+                    className="p-2 rounded-xl hover:bg-white border border-transparent hover:border-slate-100 text-slate-400 hover:text-slate-600 transition-all shadow-sm"
+                  >
+                    <MoreVertical className="h-5 w-5" />
+                  </button>
+                  {activeMenu === post.id && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in duration-200">
+                      <button 
+                        onClick={() => {
+                          setPostToDelete(post.id);
+                          setActiveMenu(null);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete Post
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="prose prose-slate max-w-none prose-sm sm:prose-base font-medium text-slate-700 leading-relaxed px-1">
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  a: ({ ...props }) => (
+                    <a 
+                      {...props} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-blue-600 underline hover:text-blue-700 inline-flex items-center gap-0.5"
+                    >
+                      {props.children}
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  )
+                }}
+              >
+                {post.content}
+              </ReactMarkdown>
+            </div>
+
+            {post.poll && (
+              <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <BarChart2 className="h-3.5 w-3.5 text-blue-600" />
+                  </div>
+                  <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Community Poll</h5>
+                </div>
+                <h4 className="text-base font-bold text-slate-900">{post.poll.question}</h4>
+                <div className="space-y-2">
+                  {post.poll.options.map((option, idx) => {
+                    const totalVotes = post.poll?.options.reduce((acc, curr) => acc + curr.votes.length, 0) || 0;
+                    const percentage = totalVotes > 0 ? Math.round((option.votes.length / totalVotes) * 100) : 0;
+                    const hasVoted = post.poll?.options.some(opt => opt.votes.includes(student?.id || ''));
+                    const isSelected = option.votes.includes(student?.id || '');
+
+                    return (
+                      <button
+                        key={idx}
+                        disabled={!student || hasVoted}
+                        onClick={() => handleVote(post.id, idx)}
+                        className={`w-full relative h-12 rounded-2xl overflow-hidden border transition-all ${
+                          hasVoted 
+                            ? isSelected ? 'border-blue-200 bg-blue-50/50' : 'border-slate-50 bg-slate-50/30'
+                            : !student ? 'border-slate-100 bg-slate-50/50 cursor-not-allowed' : 'border-slate-200 bg-white hover:border-blue-600/30 active:scale-[0.99]'
+                        }`}
+                      >
+                        {hasVoted && (
+                          <div 
+                            className={`absolute inset-y-0 left-0 transition-all duration-1000 ${isSelected ? 'bg-blue-600/10' : 'bg-slate-200/20'}`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        )}
+                        <div className="absolute inset-0 px-5 flex items-center justify-between">
+                          <span className={`text-sm font-bold ${isSelected ? 'text-blue-700' : 'text-slate-700'}`}>
+                            {option.text}
+                          </span>
+                          {hasVoted && (
+                            <span className="text-[10px] font-black text-slate-400">
+                              {percentage}%
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between pt-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    {post.poll.options.reduce((acc, curr) => acc + curr.votes.length, 0)} Total Votes
+                  </p>
+                  {student && post.poll.options.some(opt => opt.votes.includes(student.id)) && (
+                    <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Voted</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-6 py-4 px-1 border-y border-slate-100">
+                <button 
+                    onClick={() => handleLike(post.id, isLiked || false)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      fetchReactors(post.id);
+                    }}
+                    disabled={!student}
+                    className={`flex items-center gap-2.5 px-4 py-2 rounded-2xl transition-all
+                        ${isLiked 
+                            ? 'bg-red-50 text-red-600 shadow-lg shadow-red-600/5' 
+                            : !student 
+                              ? 'bg-slate-50 text-slate-300 cursor-not-allowed'
+                              : 'bg-white border border-slate-100 text-slate-500 hover:bg-slate-50 hover:border-slate-200 shadow-sm'}`}
+                >
+                    <Heart 
+                        className={`h-4 w-4 ${ isLiked ? 'fill-current' : ''}`} 
+                    />
+                    <span className="text-xs font-black uppercase tracking-widest">
+                        {(post.likes || []).length}
+                    </span>
+                </button>
+
+                <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-white border border-slate-100 text-slate-500 shadow-sm">
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="text-xs font-black uppercase tracking-widest">
+                        {post.commentCount || 0}
+                    </span>
+                </div>
+            </div>
+          </div>
         )}
 
         {/* Comments Section */}
-        <div className="space-y-4">
+        <div className="space-y-4 pt-4">
           <div className="flex items-center gap-2 px-2">
             <MessageSquare className="h-4 w-4 text-slate-400" />
             <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">
@@ -295,7 +461,7 @@ export default function PostPage() {
             </h3>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div className="bg-transparent overflow-hidden">
             {loadingComments ? (
               <div className="p-6 space-y-6">
                 {[1, 2, 3].map(i => (
@@ -309,7 +475,7 @@ export default function PostPage() {
                 ))}
               </div>
             ) : comments.length === 0 ? (
-              <div className="p-12 text-center">
+              <div className="p-12 text-center bg-white rounded-2xl border border-slate-200">
                 <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-300">
                   <MessageSquare className="h-6 w-6" />
                 </div>
@@ -317,16 +483,16 @@ export default function PostPage() {
                 <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-tight">Be the first to share your thoughts</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-50">
+              <div className="space-y-2">
                 {comments.map((comment, idx) => {
                   const isMe = student && comment.userId === student.id;
                   return (
-                    <div key={comment.id} className="p-6 flex gap-4 items-start group">
+                    <div key={comment.id} className="p-4 sm:p-6 flex gap-4 items-start group hover:bg-slate-100/50 rounded-2xl transition-all">
                       <Link 
                         href={`/profile/${obfuscateId(comment.userId)}`}
                         className="shrink-0"
                       >
-                        <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs">
+                        <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs group-hover:bg-white transition-colors">
                           {comment.userName.charAt(0)}
                         </div>
                       </Link>
@@ -344,7 +510,7 @@ export default function PostPage() {
                             {isMe ? (
                               <button 
                                 onClick={() => setCommentToDelete({ postId: postId, commentId: comment.id })}
-                                className="p-1 rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                className="p-1 rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
                                 title="Delete comment"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -353,7 +519,7 @@ export default function PostPage() {
                               <button 
                                 onClick={() => handleReportComment(comment.id)}
                                 disabled={reportingComment === comment.id}
-                                className={`p-1 rounded-md transition-colors ${reportingComment === comment.id ? 'text-blue-500 animate-pulse' : 'text-slate-300 hover:text-amber-500 hover:bg-amber-50'}`}
+                                className={`p-1 rounded-md transition-colors opacity-0 group-hover:opacity-100 ${reportingComment === comment.id ? 'text-blue-500 animate-pulse' : 'text-slate-300 hover:text-amber-500 hover:bg-amber-50'}`}
                                 title="Report comment"
                               >
                                 <Flag className="h-3.5 w-3.5" />
