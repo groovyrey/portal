@@ -18,7 +18,8 @@ import {
   BellOff,
   ChevronRight,
   Sparkles,
-  Loader2
+  Loader2,
+  CreditCard
 } from 'lucide-react';
 import Drawer from './Drawer';
 import SecuritySettings from '@/components/dashboard/SecuritySettings';
@@ -38,7 +39,9 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
   const { student } = useStudent();
   const [appNotifsEnabled, setAppNotifsEnabled] = useState(true);
   const [classRemindersEnabled, setClassRemindersEnabled] = useState(true);
+  const [paymentRemindersEnabled, setPaymentRemindersEnabled] = useState(true);
   const [isSendingTest, setIsSendingTest] = useState(false);
+  const [isSendingPaymentTest, setIsSendingPaymentTest] = useState(false);
 
   useEffect(() => {
     if (student?.settings?.notifications !== undefined) {
@@ -46,6 +49,9 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
     }
     if (student?.settings?.classReminders !== undefined) {
       setClassRemindersEnabled(student.settings.classReminders);
+    }
+    if (student?.settings?.paymentReminders !== undefined) {
+      setPaymentRemindersEnabled(student.settings.paymentReminders);
     }
   }, [student]);
 
@@ -59,6 +65,12 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
     if (!student || !updateSettings) return;
     setClassRemindersEnabled(enabled);
     await updateSettings({ ...student.settings, classReminders: enabled });
+  };
+
+  const handlePaymentReminderToggle = async (enabled: boolean) => {
+    if (!student || !updateSettings) return;
+    setPaymentRemindersEnabled(enabled);
+    await updateSettings({ ...student.settings, paymentReminders: enabled });
   };
 
   const sendTestEmail = async () => {
@@ -83,6 +95,26 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
       toast.error('Network error. Failed to reach the server.', { id: toastId });
     } finally {
       setIsSendingTest(false);
+    }
+  };
+
+  const sendPaymentTest = async () => {
+    setIsSendingPaymentTest(true);
+    const toastId = toast.loading('Sending test payment reminder...');
+
+    try {
+      const res = await fetch('/api/student/test-payment-reminder', { method: 'POST' });
+      const data = await res.json();
+      
+      if (data.success) {
+        toast.success(`Test sent! Due Date Identifier: ${data.dueDateIdentifier}`, { id: toastId });
+      } else {
+        toast.error(data.error || 'Failed to send test reminder', { id: toastId });
+      }
+    } catch (err) {
+      toast.error('Network error. Failed to reach the server.', { id: toastId });
+    } finally {
+      setIsSendingPaymentTest(false);
     }
   };
 
@@ -203,10 +235,17 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                     enabled={classRemindersEnabled}
                     onToggle={handleClassReminderToggle}
                   />
+                  <SettingsToggle 
+                    icon={<CreditCard className="text-emerald-500" />} 
+                    title="Payment Reminders" 
+                    description="Alerts for installments due in 5 days"
+                    enabled={paymentRemindersEnabled}
+                    onToggle={handlePaymentReminderToggle}
+                  />
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100">
+              <div className="pt-4 border-t border-slate-100 space-y-3">
                 <button
                   onClick={sendTestEmail}
                   disabled={isSendingTest || !student?.email}
@@ -219,6 +258,20 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                   )}
                   {isSendingTest ? 'Sending Test...' : 'Send Test Email'}
                 </button>
+
+                <button
+                  onClick={sendPaymentTest}
+                  disabled={isSendingPaymentTest}
+                  className="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 text-slate-800 p-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group"
+                >
+                  {isSendingPaymentTest ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CreditCard className="h-4 w-4 group-hover:scale-110 transition-transform text-emerald-500" />
+                  )}
+                  {isSendingPaymentTest ? 'Sending Alert...' : 'Test Payment Alert'}
+                </button>
+
                 {!student?.email && (
                   <p className="mt-2 text-[10px] text-rose-500 text-center font-bold">
                     No email address found. Please sync your data first.

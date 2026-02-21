@@ -5,7 +5,7 @@
       "schedule": "0 22 * * *"
     },
     {
-      "path": "/api/cron/portal-health",
+      "path": "/api/cron/payment-reminder",
       "schedule": "0 0 * * *"
     }
   ]

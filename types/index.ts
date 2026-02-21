@@ -136,6 +136,7 @@ export interface Student {
     showAcademicInfo: boolean;
     showStudentId?: boolean;
     classReminders?: boolean;
+    paymentReminders?: boolean;
   };
 }
 
