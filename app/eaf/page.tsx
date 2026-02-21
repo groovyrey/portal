@@ -84,7 +84,7 @@ export default function EAFPage() {
             </p>
             <button
               onClick={fetchEAF}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-blue-200 flex items-center gap-2 active:scale-95 group"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-blue-200 flex items-center gap-2 active:opacity-70 group"
             >
               <Download className="h-5 w-5 group-hover:translate-y-0.5 transition-transform" />
               Load Document

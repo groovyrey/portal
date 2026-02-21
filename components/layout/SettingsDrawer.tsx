@@ -75,7 +75,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                       <img 
                           src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student!.name)}&background=f8fafc&color=334155&size=256&bold=true`}
                           alt={student!.name}
-                          className="w-full h-full rounded-xl object-cover transform group-hover:scale-110 transition duration-500"
+                          className="w-full h-full rounded-xl object-cover group-hover:opacity-80 transition duration-500"
                       />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -139,7 +139,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
         return (
           <div className="space-y-8 pb-8">
             <div className="flex items-center gap-4 p-5 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden relative group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition duration-700 opacity-50"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 group-hover:opacity-80 transition duration-700 opacity-50"></div>
               <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 p-4 shadow-sm shrink-0 flex items-center justify-center relative z-10">
                 <Bell className="h-full w-full text-blue-600" />
               </div>
@@ -283,7 +283,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
 function DrawerInfoItem({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string }) {
   return (
     <div className="group flex items-start gap-4 p-2 -ml-2 rounded-2xl hover:bg-slate-50 transition-colors duration-300">
-      <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shrink-0 border border-slate-100 text-slate-400 shadow-sm group-hover:text-blue-600 group-hover:scale-110 transition-all duration-300">
+      <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shrink-0 border border-slate-100 text-slate-400 shadow-sm group-hover:text-blue-600 group-hover:shadow-md transition-all duration-300">
         {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 18 }) : icon}
       </div>
       <div className="min-w-0">

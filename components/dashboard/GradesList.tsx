@@ -83,7 +83,7 @@ export default function GradesList({ reports }: GradesListProps) {
                 onClick={() => handleOpenReport(report.href, report.text)}
                 className={`flex items-center justify-between p-4 rounded-xl text-xs font-bold transition-all border outline-none ${
                   isActive
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-md scale-[1.02]'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-lg'
                     : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200 hover:border-blue-200'
                 }`}
               >

@@ -22,7 +22,7 @@ export default function UnauthorizedPage() {
       <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
         <Link 
           href="/" 
-          className="flex-1 bg-slate-900 text-white font-bold py-3 px-6 rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95 text-sm"
+          className="flex-1 bg-slate-900 text-white font-bold py-3 px-6 rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:opacity-70 text-sm"
         >
           Sign In Now
         </Link>

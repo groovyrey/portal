@@ -177,7 +177,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                               className={`
                                 w-full h-full rounded-lg p-1.5 flex flex-col items-center justify-center text-center
                                 transition-all border ${getSubjectColor(classToRender.subject)}
-                                shadow-sm hover:shadow-md active:scale-[0.98] overflow-hidden
+                                shadow-sm hover:shadow-md active:opacity-70 overflow-hidden
                               `}
                             >
                               <span className="text-[10px] font-black leading-tight truncate w-full">

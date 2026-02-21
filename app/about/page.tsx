@@ -75,14 +75,14 @@ export default function AboutPage() {
               <div className="flex flex-wrap gap-4">
                 <Link 
                   href="/" 
-                  className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:scale-95"
+                  className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:opacity-70"
                 >
                   Get Started
                   <ArrowRight size={18} />
                 </Link>
                 <Link 
                   href="/docs" 
-                  className="px-8 py-4 bg-white border border-slate-200 text-slate-900 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-all active:scale-95"
+                  className="px-8 py-4 bg-white border border-slate-200 text-slate-900 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-all active:opacity-70"
                 >
                   Documentation
                 </Link>
@@ -90,8 +90,8 @@ export default function AboutPage() {
             </motion.div>
             
             <motion.div 
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
               className="relative aspect-square flex items-center justify-center"
             >
@@ -170,8 +170,8 @@ export default function AboutPage() {
           </motion.div>
 
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="relative"
           >
@@ -319,8 +319,8 @@ export default function AboutPage() {
       {/* Final CTA */}
       <section className="py-24 max-w-7xl mx-auto px-6 text-center">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="bg-blue-600 rounded-[3rem] p-12 md:p-20 text-white relative overflow-hidden"
         >
@@ -330,13 +330,13 @@ export default function AboutPage() {
             <div className="flex flex-wrap justify-center gap-6">
               <Link 
                 href="/" 
-                className="px-10 py-5 bg-white text-blue-600 rounded-2xl font-black text-lg hover:scale-105 transition-all shadow-xl active:scale-95"
+                className="px-10 py-5 bg-white text-blue-600 rounded-2xl font-black text-lg hover:opacity-90 transition-all shadow-xl active:opacity-70"
               >
                 Launch Hub
               </Link>
               <Link 
                 href="/disclaimer" 
-                className="px-10 py-5 bg-blue-700/50 backdrop-blur-sm text-white border border-blue-400/30 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all active:scale-95 flex items-center gap-2"
+                className="px-10 py-5 bg-blue-700/50 backdrop-blur-sm text-white border border-blue-400/30 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all active:opacity-70 flex items-center gap-2"
               >
                 View Disclaimer
                 <ExternalLink size={20} />

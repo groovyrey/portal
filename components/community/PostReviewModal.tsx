@@ -105,8 +105,8 @@ export default function PostReviewModal({ isOpen }: PostReviewModalProps) {
                 <div className="relative z-10 flex items-center justify-center shrink-0 mt-1">
                   {isCompleted ? (
                     <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
                       className="h-9 w-9 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-green-500/20"
                     >
                       <CheckCircle2 className="h-5 w-5" />

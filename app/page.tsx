@@ -138,7 +138,7 @@ export default function Home() {
 
               <Link 
                 href="/accounts" 
-                className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-200 hover:shadow-blue-200 active:scale-95 group/btn"
+                className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-200 hover:shadow-blue-200 active:opacity-70 group/btn"
               >
                 View Account Ledger
                 <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />

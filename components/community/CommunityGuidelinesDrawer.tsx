@@ -58,8 +58,7 @@ export default function CommunityGuidelinesDrawer({ isOpen, onClose }: Community
         <div className="space-y-6">
           {GUIDELINES.map((item, idx) => (
             <div key={idx} className="flex gap-4 group">
-              <div className="shrink-0 h-10 w-10 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
-                {item.icon}
+                                <div className="shrink-0 h-10 w-10 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center group-hover:opacity-80 transition-opacity">                {item.icon}
               </div>
               <div>
                 <h4 className="text-sm font-bold text-slate-900 mb-1">{item.title}</h4>

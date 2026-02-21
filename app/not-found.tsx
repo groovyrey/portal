@@ -29,7 +29,7 @@ export default function NotFound() {
         <div className="grid gap-3">
           <Link 
             href="/"
-            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-widest py-4 rounded-2xl transition-all shadow-lg shadow-blue-600/20 active:scale-[0.98]"
+            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-widest py-4 rounded-2xl transition-all shadow-lg shadow-blue-600/20 active:opacity-70"
           >
             <Home className="h-4 w-4" />
             Back to Dashboard
@@ -38,14 +38,14 @@ export default function NotFound() {
           <div className="grid grid-cols-2 gap-3">
             <button 
               onClick={() => window.history.back()}
-              className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold text-[10px] uppercase tracking-widest py-3.5 rounded-2xl hover:bg-slate-50 transition-all active:scale-[0.98]"
+              className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold text-[10px] uppercase tracking-widest py-3.5 rounded-2xl hover:bg-slate-50 transition-all active:opacity-70"
             >
               <ArrowLeft className="h-3 w-3" />
               Go Back
             </button>
             <Link 
               href="/community"
-              className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold text-[10px] uppercase tracking-widest py-3.5 rounded-2xl hover:bg-slate-50 transition-all active:scale-[0.98]"
+              className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold text-[10px] uppercase tracking-widest py-3.5 rounded-2xl hover:bg-slate-50 transition-all active:opacity-70"
             >
               <MessageSquare className="h-3 w-3" />
               Help

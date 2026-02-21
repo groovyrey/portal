@@ -342,7 +342,7 @@ function CommunityContent() {
                   <button type="button" onClick={() => setShowPollEditor(!showPollEditor)} className={`p-2 rounded-xl transition-all ${showPollEditor ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-400 hover:bg-slate-50'}`} title="Add Poll"><BarChart2 className="h-5 w-5" /></button>
                   <button type="button" className="p-2 rounded-xl text-slate-400 hover:bg-slate-50" title="Formatting help"><MessageSquare className="h-5 w-5" /></button>
                 </div>
-                <button type="submit" disabled={(!content.trim() && !pollQuestion.trim()) || posting} className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-400 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center gap-2">
+                <button type="submit" disabled={(!content.trim() && !pollQuestion.trim()) || posting} className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-400 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:opacity-70 flex items-center gap-2">
                   {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   Post
                 </button>
@@ -354,7 +354,7 @@ function CommunityContent() {
             <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto"><User className="h-8 w-8 text-slate-300" /></div>
             <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Ready to join in?</h2>
             <p className="text-xs text-slate-500 font-medium mb-6">Join our student community to share posts, vote on polls, and join discussions.</p>
-            <Link href="/" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-200 active:scale-95">Sign In Now</Link>
+            <Link href="/" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-200 active:opacity-70">Sign In Now</Link>
           </div>
         )}
 
@@ -431,7 +431,7 @@ function CommunityContent() {
                 />
               ))}
               {posts.length > postsToShow && (
-                <button onClick={handleLoadMore} className="w-full py-4 bg-white border border-slate-200 rounded-2xl text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm active:scale-[0.98]">Load More Activity</button>
+                <button onClick={handleLoadMore} className="w-full py-4 bg-white border border-slate-200 rounded-2xl text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm active:opacity-70">Load More Activity</button>
               )}
             </>
           )}

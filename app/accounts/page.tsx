@@ -87,7 +87,7 @@ export default function AccountsPage() {
         <div className="flex gap-4">
           <Link 
             href="/" 
-            className="px-8 py-3 bg-blue-600 text-white font-black rounded-xl shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all text-xs uppercase tracking-widest active:scale-95"
+            className="px-8 py-3 bg-blue-600 text-white font-black rounded-xl shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all text-xs uppercase tracking-widest active:opacity-70"
           >
             Return Home
           </Link>
@@ -150,7 +150,7 @@ export default function AccountsPage() {
             <button
               onClick={handleManualRefresh}
               disabled={isFetching}
-              className={`p-2.5 rounded-2xl bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50/50 transition-all shadow-sm active:scale-95 ${isFetching ? 'cursor-not-allowed opacity-50' : ''}`}
+              className={`p-2.5 rounded-2xl bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50/50 transition-all shadow-sm active:opacity-70 ${isFetching ? 'cursor-not-allowed opacity-50' : ''}`}
               title="Manual Sync"
             >
               <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />

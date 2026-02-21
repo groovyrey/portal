@@ -393,7 +393,7 @@ export default function PostPage() {
                         className={`w-full relative h-12 rounded-2xl overflow-hidden border transition-all ${
                           hasVoted 
                             ? isSelected ? 'border-blue-200 bg-blue-50/50' : 'border-slate-50 bg-slate-50/30'
-                            : !student ? 'border-slate-100 bg-slate-50/50 cursor-not-allowed' : 'border-slate-200 bg-white hover:border-blue-600/30 active:scale-[0.99]'
+                            : !student ? 'border-slate-100 bg-slate-50/50 cursor-not-allowed' : 'border-slate-200 bg-white hover:border-blue-600/30 active:opacity-70'
                         }`}
                       >
                         {hasVoted && (
@@ -563,7 +563,7 @@ export default function PostPage() {
             <button
               disabled={!newComment.trim() || commenting}
               onClick={handleComment}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white p-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-95"
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white p-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/20 active:opacity-70"
             >
               {commenting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
@@ -724,7 +724,7 @@ export default function PostPage() {
                 setCommentToReport(null);
                 if (cId) handleReportComment(cId);
               }}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/20 active:opacity-70 flex items-center justify-center gap-2"
             >
               <CheckCircle className="h-4 w-4" />
               Confirm Violation

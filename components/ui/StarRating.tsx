@@ -85,7 +85,7 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
             <button
               key={star}
               type="button"
-              className="focus:outline-none transition-transform active:scale-90"
+              className="focus:outline-none transition-all active:opacity-70"
               onClick={() => setRating(star)}
               onMouseEnter={() => setHover(star)}
               onMouseLeave={() => setHover(0)}
