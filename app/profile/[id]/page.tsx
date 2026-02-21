@@ -26,14 +26,18 @@ import Modal from '@/components/ui/Modal';
 import { toast } from 'sonner';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useStudent } from '@/lib/hooks';
+import { useRealtime } from '@/components/shared/RealtimeProvider';
 import Skeleton from '@/components/ui/Skeleton';
 
 function ProfileContent() {
   const queryClient = useQueryClient();
   const { student: currentUserData, isLoading: isUserLoading } = useStudent();
+  const { onlineUsers } = useRealtime();
   const params = useParams();
   const router = useRouter();
   const profileId = deobfuscateId(params.id as string);
+  
+  const isOnline = profileId ? onlineUsers.has(profileId) : false;
   
   const [student, setStudent] = useState<Student | null>(() => {
     if (currentUserData && profileId === currentUserData.id) {
@@ -214,6 +218,10 @@ function ProfileContent() {
                   <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
                     <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                     Verified Student
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
+                    <span className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+                    {isOnline ? 'Online' : 'Offline'}
                   </div>
                 </div>
               </div>

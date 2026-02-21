@@ -510,7 +510,7 @@ export default function PostPage() {
                             {isMe ? (
                               <button 
                                 onClick={() => setCommentToDelete({ postId: postId, commentId: comment.id })}
-                                className="p-1 rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                                className="p-1 rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
                                 title="Delete comment"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -519,7 +519,7 @@ export default function PostPage() {
                               <button 
                                 onClick={() => handleReportComment(comment.id)}
                                 disabled={reportingComment === comment.id}
-                                className={`p-1 rounded-md transition-colors opacity-0 group-hover:opacity-100 ${reportingComment === comment.id ? 'text-blue-500 animate-pulse' : 'text-slate-300 hover:text-amber-500 hover:bg-amber-50'}`}
+                                className={`p-1 rounded-md transition-colors ${reportingComment === comment.id ? 'text-blue-500 animate-pulse' : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50'}`}
                                 title="Report comment"
                               >
                                 <Flag className="h-3.5 w-3.5" />

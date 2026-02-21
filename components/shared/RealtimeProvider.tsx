@@ -6,9 +6,14 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
 
-const RealtimeContext = createContext<{ activePostId: string | null; setActivePostId: (id: string | null) => void }>({
+const RealtimeContext = createContext<{ 
+  activePostId: string | null; 
+  setActivePostId: (id: string | null) => void;
+  onlineUsers: Set<string>;
+}>({
   activePostId: null,
   setActivePostId: () => {},
+  onlineUsers: new Set(),
 });
 
 export const useRealtime = () => useContext(RealtimeContext);
@@ -18,6 +23,7 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
   const pathname = usePathname();
   const [activePostId, setActivePostId] = useState<string | null>(null);
   const [studentId, setStudentId] = useState<string | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const ablyRef = useRef<Ably.Realtime | null>(null);
 
   useEffect(() => {
@@ -133,9 +139,31 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
     communityChannel.subscribe('update', onUpdate);
     if (studentChannel) studentChannel.subscribe('update', onStudentUpdate);
 
+    // Presence logic
+    if (studentId) {
+      communityChannel.presence.enter();
+    }
+
+    const updatePresence = async () => {
+      try {
+        const members = await communityChannel.presence.get();
+        const clientIds = members
+          .filter(m => m.clientId && m.clientId !== 'anonymous')
+          .map(m => m.clientId!);
+        setOnlineUsers(new Set(clientIds));
+      } catch (err) {
+        console.error('Failed to fetch presence:', err);
+      }
+    };
+
+    communityChannel.presence.subscribe(['enter', 'leave', 'present'], updatePresence);
+    updatePresence();
+
     return () => {
       communityChannel.unsubscribe('update', onUpdate);
       if (studentChannel) studentChannel.unsubscribe('update', onStudentUpdate);
+      communityChannel.presence.unsubscribe(['enter', 'leave', 'present'], updatePresence);
+      if (studentId) communityChannel.presence.leave();
     };
   }, [queryClient, studentId, activePostId]);
 
@@ -149,7 +177,7 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
   }, []);
 
   return (
-    <RealtimeContext.Provider value={{ activePostId, setActivePostId }}>
+    <RealtimeContext.Provider value={{ activePostId, setActivePostId, onlineUsers }}>
       {children}
     </RealtimeContext.Provider>
   );
