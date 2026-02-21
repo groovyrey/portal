@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     await sendEmail({
       to: studentData.email,
       subject: "🧪 Test Notification - LCC Hub",
-      text: "This is a test notification from LCC Hub. Your email service is working correctly!",
+      text: "This is a test notification from LCC Hub. Your email service is working correctly! You can manage these reminders in Settings > Notifications.",
       html: html
     });
 

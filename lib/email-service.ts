@@ -87,8 +87,10 @@ export function getScheduleEmailTemplate(name: string, classes: any[]) {
           <a href="${process.env.NEXT_PUBLIC_APP_URL || '#'}" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Open LCC Hub</a>
         </div>
       </div>
-      <div style="background-color: #f7fafc; padding: 16px; text-align: center; font-size: 11px; color: #a0aec0;">
-        You're receiving this because you enabled notifications on LCC Hub.<br>
+      <div style="background-color: #f7fafc; padding: 20px; text-align: center; font-size: 11px; color: #a0aec0; line-height: 1.6;">
+        You're receiving this because Daily Class Reminders are enabled on your account.<br>
+        <strong>Tip:</strong> You can turn these off anytime in <strong>Settings > Notifications</strong>.<br>
+        <br>
         &copy; ${new Date().getFullYear()} LCC Hub System Reference.
       </div>
     </div>

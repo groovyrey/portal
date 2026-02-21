@@ -78,8 +78,8 @@ export async function GET(req: NextRequest) {
         const firstClass = sortedClasses[0];
         
         const message = todaysClasses.length === 1 
-          ? `You have one class today: ${firstClass.description} at ${firstClass.time.split(' ').slice(1).join(' ')}.`
-          : `You have ${todaysClasses.length} classes today starting with ${firstClass.description} at ${firstClass.time.split(' ').slice(1).join(' ')}.`;
+          ? `You have one class today: ${firstClass.description} at ${firstClass.time.split(' ').slice(1).join(' ')}. You can manage these reminders in Settings.`
+          : `You have ${todaysClasses.length} classes today starting with ${firstClass.description} at ${firstClass.time.split(' ').slice(1).join(' ')}. Manage reminders in Settings.`;
 
         // 5. Create in-app notification & Real-time alert
         await createNotification({
