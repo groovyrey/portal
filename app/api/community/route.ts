@@ -18,15 +18,56 @@ export async function GET(req: NextRequest) {
       const postId = parseInt(postIdStr, 10);
       if (isNaN(postId)) return NextResponse.json({ error: 'Invalid post ID' }, { status: 400 });
 
-      // Fetch names of students who liked this specific post
-      const likesRes = await query(`
-        SELECT s.id, s.name 
-        FROM community_post_likes l
-        JOIN students s ON l.user_id = s.id
-        WHERE l.post_id = $1
+      // Fetch the single post with like count and comment count
+      const postRes = await query(`
+        SELECT 
+          p.*,
+          (SELECT COUNT(*) FROM community_post_likes WHERE post_id = p.id) as "likeCount",
+          (SELECT COUNT(*) FROM community_comments WHERE post_id = p.id) as "commentCount",
+          (SELECT json_agg(user_id) FROM community_post_likes WHERE post_id = p.id) as likes
+        FROM community_posts p
+        WHERE p.id = $1
       `, [postId]);
 
-      return NextResponse.json({ success: true, reactors: likesRes.rows });
+      if (postRes.rows.length === 0) {
+        return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+      }
+
+      const post = postRes.rows[0];
+      let poll = null;
+      if (post.poll_question) {
+        const optionsRes = await query(`
+          SELECT 
+            o.id, 
+            o.option_text as text,
+            (SELECT json_agg(user_id) FROM community_poll_votes WHERE option_id = o.id) as votes
+          FROM community_poll_options o
+          WHERE o.post_id = $1
+        `, [post.id]);
+
+        poll = {
+          question: post.poll_question,
+          options: optionsRes.rows.map(opt => ({
+            ...opt,
+            votes: opt.votes || []
+          }))
+        };
+      }
+
+      const postData = {
+        id: post.id.toString(),
+        userId: post.user_id,
+        userName: post.user_name,
+        content: post.content,
+        topic: post.topic,
+        isUnreviewed: post.is_unreviewed,
+        createdAt: post.created_at.toISOString(),
+        likes: post.likes || [],
+        commentCount: parseInt(post.commentCount, 10),
+        poll
+      };
+
+      return NextResponse.json({ success: true, post: postData });
     }
 
     // Fetch posts with like count and comment count
@@ -176,9 +217,9 @@ export async function POST(req: NextRequest) {
     notifyAllStudents({
       excludeUserId: userId,
       title: 'New Community Post',
-      message: `${senderName} just posted in Community: "${content?.substring(0, 50) || 'New Poll'}..."`,
+      message: `${senderName} just posted in Community: "${content?.substring(0, 30) || 'New Poll'}..."`,
       type: 'info',
-      link: '/community'
+      link: `/post/${postId}`
     }).catch(e => console.error('Background notification error:', e));
 
     // Notify all clients of new post (Real-time community update)

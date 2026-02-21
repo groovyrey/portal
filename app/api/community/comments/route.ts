@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
           title: 'New Comment',
           message: `${userName || 'A student'} commented on "${postPreview}...": "${content.substring(0, 50)}..."`,
           type: 'info',
-          link: '/community'
+          link: `/post/${postId}`
         }).catch(e => console.error('Comment notification error:', e));
       }
     }
