@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
@@ -36,7 +36,7 @@ import { ExternalLink } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
 
-export default function CommunityPage() {
+function CommunityContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -424,5 +424,36 @@ export default function CommunityPage() {
       <PostReviewResultModal isOpen={showResultModal} onClose={() => setShowResultModal(false)} result={reviewResult} isError={reviewError} />
       <CommunityGuidelinesDrawer isOpen={showGuidelines} onClose={() => setShowGuidelines(false)} />
     </div>
+  );
+}
+
+export default function CommunityPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 p-4">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="flex items-center justify-between mb-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+          <div className="bg-white rounded-3xl p-6 border border-slate-200">
+            <div className="flex gap-4">
+              <Skeleton className="h-10 w-10 rounded-2xl" />
+              <Skeleton className="h-20 flex-1" />
+            </div>
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white rounded-2xl p-6 border border-slate-200 space-y-4">
+                <div className="flex items-center gap-3"><Skeleton className="h-9 w-9 rounded-lg" /><div className="space-y-2 flex-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div></div>
+                <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-2/3" /></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    }>
+      <CommunityContent />
+    </Suspense>
   );
 }
