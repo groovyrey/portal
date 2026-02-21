@@ -1,5 +1,6 @@
 export interface ScheduleItem {
-  subject: string;
+  subject: string; // The subject code/name from the portal
+  description: string; // The descriptive name of the subject
   section: string;
   units: string;
   time: string;
@@ -134,6 +135,7 @@ export interface Student {
     isPublic: boolean;
     showAcademicInfo: boolean;
     showStudentId?: boolean;
+    classReminders?: boolean;
   };
 }
 

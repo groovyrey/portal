@@ -56,9 +56,7 @@ export default function DevPage() {
         { method: "POST", path: "/api/community/comments/report", params: "commentId", desc: "Triggers Aegis review on existing comment content." },
         { method: "POST", path: "/api/ably/auth", params: "clientId", desc: "Ably Realtime token issuance for WebSockets." },
         { method: "GET", path: "/api/version", params: "None", desc: "System version checker for critical updates." },
-        { method: "GET", path: "/api/ratings", params: "None", desc: "Fetches aggregate system feedback scores." },
-        { method: "POST", path: "/api/setup-notifications", params: "vapidKey", desc: "Registers browser VAPID credentials." },
-        { method: "POST", path: "/api/push-subscription", params: "subscription", desc: "Saves Web Push subscription to Firestore." }
+        { method: "GET", path: "/api/ratings", params: "None", desc: "Fetches aggregate system feedback scores." }
       ]
     }
   ];
@@ -86,8 +84,8 @@ export default function DevPage() {
     },
     { 
       name: "notification-service.ts", 
-      methods: ["createNotification", "notifyAllStudents", "sendWebPush"], 
-      desc: "System-wide alert dispatcher using Firestore and FCM." 
+      methods: ["createNotification", "notifyAllStudents"], 
+      desc: "System-wide alert dispatcher using Firestore and Ably real-time updates." 
     },
     { 
       name: "realtime.ts", 
@@ -234,7 +232,7 @@ export default function DevPage() {
               { step: "02 / PARSE", icon: <Search size={14} />, desc: "Cheerio extracts structured JSON from legacy HTML tables." },
               { step: "03 / ENCRYPT", icon: <Shield size={14} />, desc: "Sensitive data & sessions secured via AES-256-CBC." },
               { step: "04 / SYNC", icon: <Database size={14} />, desc: "SyncService writes to Firestore & mirrors to Postgres." },
-              { step: "05 / PUSH", icon: <Zap size={14} />, desc: "Realtime updates pushed via Ably & FCM Web Push." }
+              { step: "05 / REALTIME", icon: <Zap size={14} />, desc: "Updates broadcasted instantly via Ably WebSockets." }
             ].map((s, i) => (
               <div key={i} className="min-w-[180px] bg-white border border-slate-200 p-4 rounded-md space-y-3 relative group hover:border-blue-500/30 transition-all">
                 <div className="flex items-center justify-between">

@@ -1,6 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getMessaging, Messaging } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,7 +13,6 @@ const firebaseConfig = {
 
 // Initialize Firebase with safety check
 let db: any;
-let messaging: Messaging | null = null;
 
 try {
   const dbId = process.env.FIREBASE_DATABASE_ID || '(default)';
@@ -26,11 +24,8 @@ try {
   // App for Firestore (lccportal)
   const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
   db = dbId === '(default)' ? getFirestore(app) : getFirestore(app, dbId);
-
-  // Messaging is disabled for now
-  messaging = null;
 } catch (error) {
   console.error('Failed to initialize Firebase:', error);
 }
 
-export { db, messaging };
+export { db };

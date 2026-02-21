@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
           schedule,
           offeredSubjects,
           availableReports: reportLinks,
-          settings: settings || { notifications: true, isPublic: true, showAcademicInfo: true },
+          settings: settings || { notifications: true, isPublic: true, showAcademicInfo: true, classReminders: true },
           financials: mergedFinancials,
           // Diagnostic raw data for the specific account page
           _debug_accounts_html: accountsRes.data

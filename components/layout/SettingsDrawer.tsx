@@ -17,12 +17,13 @@ import {
   Info,
   BellOff,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import Drawer from './Drawer';
 import SecuritySettings from '@/components/dashboard/SecuritySettings';
 import StarRating from '@/components/ui/StarRating';
-import { usePushNotifications, useStudent } from '@/lib/hooks';
+import { useStudent } from '@/lib/hooks';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -35,12 +36,16 @@ interface SettingsDrawerProps {
 
 export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }: SettingsDrawerProps) {
   const { student } = useStudent();
-  const { isSupported, isSubscribed, subscribe, unsubscribe } = usePushNotifications();
   const [appNotifsEnabled, setAppNotifsEnabled] = useState(true);
+  const [classRemindersEnabled, setClassRemindersEnabled] = useState(true);
+  const [isSendingTest, setIsSendingTest] = useState(false);
 
   useEffect(() => {
     if (student?.settings?.notifications !== undefined) {
       setAppNotifsEnabled(student.settings.notifications);
+    }
+    if (student?.settings?.classReminders !== undefined) {
+      setClassRemindersEnabled(student.settings.classReminders);
     }
   }, [student]);
 
@@ -48,6 +53,37 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
     if (!student || !updateSettings) return;
     setAppNotifsEnabled(enabled);
     await updateSettings({ ...student.settings, notifications: enabled });
+  };
+
+  const handleClassReminderToggle = async (enabled: boolean) => {
+    if (!student || !updateSettings) return;
+    setClassRemindersEnabled(enabled);
+    await updateSettings({ ...student.settings, classReminders: enabled });
+  };
+
+  const sendTestEmail = async () => {
+    if (!student?.email) {
+      toast.error('No email found in your profile. Please sync your data.');
+      return;
+    }
+
+    setIsSendingTest(true);
+    const toastId = toast.loading(`Sending test email to ${student.email}...`);
+
+    try {
+      const res = await fetch('/api/student/test-email', { method: 'POST' });
+      const data = await res.json();
+      
+      if (data.success) {
+        toast.success('Test email sent! Please check your inbox (and spam folder).', { id: toastId });
+      } else {
+        toast.error(data.error || 'Failed to send test email', { id: toastId });
+      }
+    } catch (err) {
+      toast.error('Network error. Failed to reach the server.', { id: toastId });
+    } finally {
+      setIsSendingTest(false);
+    }
   };
 
   const getTitle = () => {
@@ -152,57 +188,46 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
             <div className="space-y-5">
               <div>
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">General Updates</label>
-                <SettingsToggle 
-                  icon={<Bell className="text-amber-500" />} 
-                  title="App Notifications" 
-                  description="Receive alerts for grades and activities"
-                  enabled={appNotifsEnabled}
-                  onToggle={handleAppNotifToggle}
-                />
+                <div className="space-y-3">
+                  <SettingsToggle 
+                    icon={<Bell className="text-amber-500" />} 
+                    title="App Notifications" 
+                    description="Receive alerts for grades and activities"
+                    enabled={appNotifsEnabled}
+                    onToggle={handleAppNotifToggle}
+                  />
+                  <SettingsToggle 
+                    icon={<Calendar className="text-blue-500" />} 
+                    title="Daily Class Reminders" 
+                    description="Get notified about your schedule every morning"
+                    enabled={classRemindersEnabled}
+                    onToggle={handleClassReminderToggle}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Browser Notifications</label>
-                {!isSupported ? (
-                  <div className="flex items-center gap-3 p-5 bg-amber-50 text-amber-700 rounded-2xl border border-amber-100 shadow-sm">
-                    <div className="p-3 bg-white rounded-xl shadow-sm">
-                      <Info className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-black">Not Supported</p>
-                      <p className="text-[11px] opacity-80 font-bold">Your current browser doesn't support push notifications.</p>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={isSubscribed ? unsubscribe : subscribe}
-                    className={`group w-full flex items-center justify-between p-5 rounded-2xl border transition-all duration-300 ${
-                      isSubscribed 
-                        ? 'bg-blue-600 border-blue-700 text-white shadow-lg shadow-blue-200 ring-4 ring-blue-50/20' 
-                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 shadow-sm'
-                    }`}
-                  >
-                    <div className="flex items-center gap-4 text-left">
-                      <div className={`p-3 rounded-xl transition-colors duration-300 ${isSubscribed ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600'}`}>
-                        {isSubscribed ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
-                      </div>
-                      <div>
-                        <p className={`text-sm font-black leading-tight ${isSubscribed ? 'text-white' : 'text-slate-900'}`}>
-                          {isSubscribed ? 'Web Push Active' : 'Web Push Off'}
-                        </p>
-                        <p className={`text-[11px] font-bold mt-1 ${isSubscribed ? 'text-blue-100' : 'text-slate-500'}`}>
-                          {isSubscribed ? 'You will receive real-time alerts' : 'Tap to enable browser alerts'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className={`w-12 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isSubscribed ? 'bg-white/30' : 'bg-slate-200 group-hover:bg-slate-300'}`}>
-                      <motion.div 
-                        animate={{ x: isSubscribed ? 24 : 4 }}
-                        className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md"
-                      />
-                    </div>
-                  </button>
+              <div className="pt-4 border-t border-slate-100">
+                <button
+                  onClick={sendTestEmail}
+                  disabled={isSendingTest || !student?.email}
+                  className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white p-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg shadow-slate-200 hover:shadow-blue-100 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group"
+                >
+                  {isSendingTest ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="h-4 w-4 group-hover:rotate-12 transition-transform" />
+                  )}
+                  {isSendingTest ? 'Sending Test...' : 'Send Test Email'}
+                </button>
+                {!student?.email && (
+                  <p className="mt-2 text-[10px] text-rose-500 text-center font-bold">
+                    No email address found. Please sync your data first.
+                  </p>
                 )}
+                <p className="mt-4 text-[10px] text-slate-400 text-center leading-relaxed font-medium">
+                  Test email will be sent to <strong>{student?.email || 'no email'}</strong>.<br/>
+                  Check your inbox and spam folder.
+                </p>
               </div>
             </div>
 

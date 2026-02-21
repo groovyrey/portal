@@ -123,17 +123,17 @@ export default function ArchDocsPage() {
                 <div className="bg-white/20 p-2 rounded-xl">
                   <BellRing className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-bold">Real-time Pub/Sub</h3>
+                <h3 className="text-lg font-bold">Instant Real-time Alerts</h3>
               </div>
               <p className="text-sm text-blue-100 leading-relaxed mb-6">
-                Powered by <strong>Ably Realtime</strong>, the portal maintains a WebSocket connection for instant interactivity. Notifications and community updates are pushed across two primary channel patterns:
+                Powered by <strong>Ably Realtime</strong>, the portal maintains a high-performance WebSocket connection for instant synchronization. Updates are broadcasted across two primary channel patterns:
               </p>
               <ul className="text-xs space-y-3 font-bold">
                 <li className="flex items-center gap-3 bg-white/10 p-2 rounded-lg">
-                  <span className="text-blue-200">Global:</span> community
+                  <span className="text-blue-200">Community Feed:</span> community
                 </li>
                 <li className="flex items-center gap-3 bg-white/10 p-2 rounded-lg">
-                  <span className="text-blue-200">Private:</span> notifications:&#123;userId&#125;
+                  <span className="text-blue-200">Personal Inbox:</span> student-&#123;userId&#125;
                 </li>
               </ul>
             </div>
