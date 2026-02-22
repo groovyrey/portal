@@ -297,11 +297,27 @@ export async function PATCH(req: NextRequest) {
         VALUES ($1, $2)
         ON CONFLICT DO NOTHING
       `, [postId, userId]);
+
+      await publishUpdate('community', { 
+        type: 'LIKE_UPDATE', 
+        postId, 
+        userId, 
+        isLiked: true 
+      });
+
     } else if (action === 'unlike') {
       await query(`
         DELETE FROM community_post_likes
         WHERE post_id = $1 AND user_id = $2
       `, [postId, userId]);
+
+      await publishUpdate('community', { 
+        type: 'LIKE_UPDATE', 
+        postId, 
+        userId, 
+        isLiked: false 
+      });
+
     } else if (action === 'vote') {
       // Find the option ID if not provided by index
       let targetOptionId = optionId;
@@ -333,10 +349,14 @@ export async function PATCH(req: NextRequest) {
         INSERT INTO community_poll_votes (option_id, user_id)
         VALUES ($1, $2)
       `, [targetOptionId, userId]);
-    }
 
-    // Notify all clients of post interaction
-    await publishUpdate('community', { type: 'POST_UPDATED', postId });
+      await publishUpdate('community', { 
+        type: 'VOTE_UPDATE', 
+        postId, 
+        optionId: targetOptionId, 
+        userId 
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

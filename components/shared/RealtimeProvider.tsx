@@ -94,8 +94,75 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
     const studentChannel = studentId ? ably.channels.get(`student-${studentId}`) : null;
 
     const onUpdate = (message: any) => {
-      const { type, postId, userName } = message.data;
+      const { type, postId, userName, userId, isLiked, optionId } = message.data;
       
+      if (type === 'LIKE_UPDATE') {
+        const updater = (old: any) => {
+           if (!old || !Array.isArray(old)) return old;
+           return old.map((post: any) => {
+             if (post.id === postId.toString()) {
+               const currentLikes = post.likes || [];
+               const newLikes = isLiked 
+                 ? [...new Set([...currentLikes, userId])]
+                 : currentLikes.filter((id: string) => id !== userId);
+               return { ...post, likes: newLikes };
+             }
+             return post;
+           });
+        };
+
+        queryClient.setQueriesData({ queryKey: ['community-posts'] }, updater);
+        queryClient.setQueriesData({ queryKey: ['user-posts'] }, updater);
+        
+        if (activePostId === postId.toString()) {
+            queryClient.setQueryData(['post', postId.toString()], (old: any) => {
+                if (!old) return old;
+                 const currentLikes = old.likes || [];
+                 const newLikes = isLiked 
+                   ? [...new Set([...currentLikes, userId])]
+                   : currentLikes.filter((id: string) => id !== userId);
+                 return { ...old, likes: newLikes };
+            });
+        }
+        return;
+      }
+
+      if (type === 'VOTE_UPDATE') {
+           const updater = (old: any) => {
+             if (!old || !Array.isArray(old)) return old;
+             return old.map((post: any) => {
+               if (post.id === postId.toString() && post.poll) {
+                 const newOptions = post.poll.options.map((opt: any) => {
+                    if (opt.id === optionId) {
+                        return { ...opt, votes: [...new Set([...(opt.votes || []), userId])] };
+                    }
+                    return opt;
+                 });
+                 return { ...post, poll: { ...post.poll, options: newOptions } };
+               }
+               return post;
+             });
+           };
+
+           queryClient.setQueriesData({ queryKey: ['community-posts'] }, updater);
+           queryClient.setQueriesData({ queryKey: ['user-posts'] }, updater);
+           
+            if (activePostId === postId.toString()) {
+                queryClient.setQueryData(['post', postId.toString()], (old: any) => {
+                    if (!old || !old.poll) return old;
+                     const newOptions = old.poll.options.map((opt: any) => {
+                        if (opt.id === optionId) {
+                            return { ...opt, votes: [...new Set([...(opt.votes || []), userId])] };
+                        }
+                        return opt;
+                     });
+                     return { ...old, poll: { ...old.poll, options: newOptions } };
+                });
+            }
+           return;
+      }
+
+      // Default behavior for other events
       queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       queryClient.invalidateQueries({ queryKey: ['user-posts'] });
 
