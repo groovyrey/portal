@@ -144,6 +144,7 @@ function CommunityContent() {
       });
       if (!res.ok) throw new Error();
       queryClient.invalidateQueries({ queryKey: ['community-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
     } catch (err) {
       toast.error('Failed to update reaction');
     }
@@ -159,6 +160,7 @@ function CommunityContent() {
       });
       if (!res.ok) throw new Error();
       queryClient.invalidateQueries({ queryKey: ['community-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
     } catch (err) {
       toast.error('Failed to cast vote');
     }

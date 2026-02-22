@@ -137,6 +137,7 @@ function ProfileContent() {
       });
       if (!res.ok) throw new Error();
       queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
     } catch (err) {
       toast.error('Failed to update reaction');
     }
@@ -152,6 +153,7 @@ function ProfileContent() {
       });
       if (!res.ok) throw new Error();
       queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
     } catch (err) {
       toast.error('Failed to cast vote');
     }

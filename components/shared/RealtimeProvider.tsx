@@ -114,16 +114,14 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
         queryClient.setQueriesData({ queryKey: ['community-posts'] }, updater);
         queryClient.setQueriesData({ queryKey: ['user-posts'] }, updater);
         
-        if (activePostId === postId.toString()) {
-            queryClient.setQueryData(['post', postId.toString()], (old: any) => {
-                if (!old) return old;
-                 const currentLikes = old.likes || [];
-                 const newLikes = isLiked 
-                   ? [...new Set([...currentLikes, userId])]
-                   : currentLikes.filter((id: string) => id !== userId);
-                 return { ...old, likes: newLikes };
-            });
-        }
+        queryClient.setQueryData(['post', postId.toString()], (old: any) => {
+            if (!old) return undefined;
+             const currentLikes = old.likes || [];
+             const newLikes = isLiked 
+               ? [...new Set([...currentLikes, userId])]
+               : currentLikes.filter((id: string) => id !== userId);
+             return { ...old, likes: newLikes };
+        });
         return;
       }
 
@@ -147,18 +145,16 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
            queryClient.setQueriesData({ queryKey: ['community-posts'] }, updater);
            queryClient.setQueriesData({ queryKey: ['user-posts'] }, updater);
            
-            if (activePostId === postId.toString()) {
-                queryClient.setQueryData(['post', postId.toString()], (old: any) => {
-                    if (!old || !old.poll) return old;
-                     const newOptions = old.poll.options.map((opt: any) => {
-                        if (opt.id === optionId) {
-                            return { ...opt, votes: [...new Set([...(opt.votes || []), userId])] };
-                        }
-                        return opt;
-                     });
-                     return { ...old, poll: { ...old.poll, options: newOptions } };
-                });
-            }
+            queryClient.setQueryData(['post', postId.toString()], (old: any) => {
+                if (!old || !old.poll) return undefined;
+                 const newOptions = old.poll.options.map((opt: any) => {
+                    if (opt.id === optionId) {
+                        return { ...opt, votes: [...new Set([...(opt.votes || []), userId])] };
+                    }
+                    return opt;
+                 });
+                 return { ...old, poll: { ...old.poll, options: newOptions } };
+            });
            return;
       }
 
