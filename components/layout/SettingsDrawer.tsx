@@ -40,8 +40,6 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
   const [appNotifsEnabled, setAppNotifsEnabled] = useState(true);
   const [classRemindersEnabled, setClassRemindersEnabled] = useState(true);
   const [paymentRemindersEnabled, setPaymentRemindersEnabled] = useState(true);
-  const [isSendingTest, setIsSendingTest] = useState(false);
-  const [isSendingPaymentTest, setIsSendingPaymentTest] = useState(false);
 
   useEffect(() => {
     if (student?.settings?.notifications !== undefined) {
@@ -71,52 +69,6 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
     if (!student || !updateSettings) return;
     setPaymentRemindersEnabled(enabled);
     await updateSettings({ ...student.settings, paymentReminders: enabled });
-  };
-
-  const sendTestEmail = async () => {
-    if (!student?.email) {
-      toast.error('No email found in your profile. Please sync your data.');
-      return;
-    }
-
-    setIsSendingTest(true);
-    const toastId = toast.loading(`Sending test email to ${student.email}...`);
-
-    try {
-      const res = await fetch('/api/student/test-email', { method: 'POST' });
-      const data = await res.json();
-      
-      if (data.success) {
-        toast.success('Test email sent! Please check your inbox (and spam folder).', { id: toastId });
-      } else {
-        toast.error(data.error || 'Failed to send test email', { id: toastId });
-      }
-    } catch (err) {
-      toast.error('Network error. Failed to reach the server.', { id: toastId });
-    } finally {
-      setIsSendingTest(false);
-    }
-  };
-
-  const sendPaymentTest = async () => {
-    setIsSendingPaymentTest(true);
-    const toastId = toast.loading('Sending test payment reminder...');
-
-    try {
-      const res = await fetch('/api/student/test-payment-reminder', { method: 'POST' });
-      const data = await res.json();
-      
-      if (data.success) {
-        const detail = data.installment?.description || 'Test Alert';
-        toast.success(`Success! Sent reminder for: ${detail}`, { id: toastId });
-      } else {
-        toast.error(data.error || 'Failed to send test reminder', { id: toastId });
-      }
-    } catch (err) {
-      toast.error('Network error. Failed to reach the server.', { id: toastId });
-    } finally {
-      setIsSendingPaymentTest(false);
-    }
   };
 
   const getTitle = () => {
@@ -244,44 +196,6 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                     onToggle={handlePaymentReminderToggle}
                   />
                 </div>
-              </div>
-
-              <div className="pt-4 border-t border-slate-100 space-y-3">
-                <button
-                  onClick={sendTestEmail}
-                  disabled={isSendingTest || !student?.email}
-                  className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white p-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg shadow-slate-200 hover:shadow-blue-100 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group"
-                >
-                  {isSendingTest ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Mail className="h-4 w-4 group-hover:rotate-12 transition-transform" />
-                  )}
-                  {isSendingTest ? 'Sending Test...' : 'Send Test Email'}
-                </button>
-
-                <button
-                  onClick={sendPaymentTest}
-                  disabled={isSendingPaymentTest}
-                  className="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 text-slate-800 p-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group"
-                >
-                  {isSendingPaymentTest ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <CreditCard className="h-4 w-4 group-hover:scale-110 transition-transform text-emerald-500" />
-                  )}
-                  {isSendingPaymentTest ? 'Sending Alert...' : 'Test Payment Alert'}
-                </button>
-
-                {!student?.email && (
-                  <p className="mt-2 text-[10px] text-rose-500 text-center font-bold">
-                    No email address found. Please sync your data first.
-                  </p>
-                )}
-                <p className="mt-4 text-[10px] text-slate-400 text-center leading-relaxed font-medium">
-                  Test email will be sent to <strong>{student?.email || 'no email'}</strong>.<br/>
-                  Check your inbox and spam folder.
-                </p>
               </div>
             </div>
 
