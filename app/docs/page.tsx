@@ -15,7 +15,7 @@ const DocsPage: React.FC = () => {
             Documentation
           </h1>
           <p className="text-xl text-slate-500 max-w-2xl leading-relaxed">
-            A comprehensive guide to the unofficial LCC Hub—designed for speed, security, and a better academic experience.
+            A simple guide to LCC Hub—built for speed, security, and a better school experience.
           </p>
         </header>
 
@@ -31,13 +31,13 @@ const DocsPage: React.FC = () => {
             
             <div className="grid gap-6">
               <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-                <h3 className="text-lg font-bold mb-3 text-slate-800">Authentication</h3>
+                <h3 className="text-lg font-bold mb-3 text-slate-800">Logging In</h3>
                 <p className="text-slate-600 leading-relaxed mb-4">
-                  Log in using your official school credentials. Our system acts as a secure bridge, fetching your data in real-time without storing sensitive login information on our servers.
+                  Log in with your official school account. Our system connects securely to the school and gets your info without saving your password on our servers.
                 </p>
                 <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100/50">
                   <p className="text-sm text-blue-700 font-medium">
-                    Note: If you've recently changed your password on the official portal, it may take a few minutes for the changes to propagate here.
+                    Note: If you just changed your school password, it might take a few minutes for it to work here.
                   </p>
                 </div>
               </div>
@@ -45,19 +45,19 @@ const DocsPage: React.FC = () => {
               <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                 <h3 className="text-lg font-bold mb-3 text-slate-800">The Dashboard</h3>
                 <p className="text-slate-600 leading-relaxed">
-                  Upon entry, you'll see a unified view of your academic profile. This includes your current GPA, a quick look at your next class, and any outstanding balances.
+                  When you log in, you'll see everything in one place. Your GPA, your next class, and any fees you need to pay are all on your main screen.
                 </p>
               </div>
             </div>
           </section>
 
-          {/* Section: Core Features */}
+          {/* Section: App Features */}
           <section>
             <div className="flex items-center gap-3 mb-8">
               <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
                 <span className="text-sm font-bold">02</span>
               </div>
-              <h2 className="text-2xl font-bold tracking-tight">Core Features</h2>
+              <h2 className="text-2xl font-bold tracking-tight">App Features</h2>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -65,9 +65,9 @@ const DocsPage: React.FC = () => {
                 <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center mb-4 text-indigo-600">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                 </div>
-                <h3 className="font-bold mb-2">Grade Monitoring</h3>
+                <h3 className="font-bold mb-2">Grade Tracking</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">
-                  Digitized grade sheets for all semesters. Includes automatic GPA calculation and performance tracking across your academic history.
+                  Check your grades from all semesters. The app calculates your GPA automatically and shows your progress.
                 </p>
               </div>
               
@@ -77,7 +77,7 @@ const DocsPage: React.FC = () => {
                 </div>
                 <h3 className="font-bold mb-2">Smart Schedule</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">
-                  A dynamic weekly calendar showing your subjects, room numbers, and faculty names. Optimized for both mobile and desktop views.
+                  A weekly calendar with your subjects, room numbers, and teachers. Easy to read on your phone or computer.
                 </p>
               </div>
 
@@ -85,9 +85,9 @@ const DocsPage: React.FC = () => {
                 <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mb-4 text-emerald-600">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                 </div>
-                <h3 className="font-bold mb-2">Financial Ledger</h3>
+                <h3 className="font-bold mb-2">School Fees</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">
-                  Real-time synchronization with the school's billing system. Track your tuition fees, payment history, and upcoming due dates effortlessly.
+                  See your balance and payments in real-time. Track your tuition and upcoming due dates easily.
                 </p>
               </div>
 
@@ -95,9 +95,9 @@ const DocsPage: React.FC = () => {
                 <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mb-4 text-orange-600">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                 </div>
-                <h3 className="font-bold mb-2">Subject Explorer</h3>
+                <h3 className="font-bold mb-2">Subject Search</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">
-                  Browse through all offered subjects for the current semester. View course descriptions, units, and check for prerequisite requirements.
+                  Look through all subjects offered this semester. View descriptions, units, and requirements.
                 </p>
               </div>
 
@@ -107,7 +107,7 @@ const DocsPage: React.FC = () => {
                 </div>
                 <h3 className="font-bold mb-2">Student Community</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">
-                  Connect with fellow students through our integrated community forum. Share thoughts, ask questions, and participate in campus-wide polls.
+                  Talk with other students in the forum. Share ideas, ask questions, and vote in school polls.
                 </p>
               </div>
 
@@ -115,9 +115,9 @@ const DocsPage: React.FC = () => {
                 <div className="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center mb-4 text-violet-600">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
                 </div>
-                <h3 className="font-bold mb-2">AI Academic Assistant</h3>
+                <h3 className="font-bold mb-2">AI School Helper</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">
-                  An intelligent companion powered by Gemini. Ask questions about your grades, schedule, or general academic inquiries for instant, data-driven answers.
+                  Ask the AI about your grades, schedule, or school info for instant answers.
                 </p>
               </div>
 
@@ -125,43 +125,43 @@ const DocsPage: React.FC = () => {
                 <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-4 text-blue-600">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 </div>
-                <h3 className="font-bold mb-2">Real-time Notifications</h3>
+                <h3 className="font-bold mb-2">Live Notifications</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">
-                  Stay updated with a centralized notification system. Get alerted when someone comments on your posts or when new community activity occurs.
+                  Stay updated with instant alerts. Know right away when someone comments or when there's new activity.
                 </p>
               </div>
             </div>
           </section>
 
-          {/* Section: Security Details */}
+          {/* Section: Security Rules */}
           <section>
             <div className="flex items-center gap-3 mb-8">
               <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-white shadow-lg shadow-slate-200">
                 <span className="text-sm font-bold">03</span>
               </div>
-              <h2 className="text-2xl font-bold tracking-tight">Security Protocol</h2>
+              <h2 className="text-2xl font-bold tracking-tight">Security Rules</h2>
             </div>
 
             <div className="bg-slate-900 text-slate-300 rounded-3xl p-10 shadow-2xl">
               <div className="grid md:grid-cols-2 gap-12">
                 <div>
-                  <h3 className="text-white font-bold text-lg mb-4">Encryption Standard</h3>
+                  <h3 className="text-white font-bold text-lg mb-4">Strong Encryption</h3>
                   <p className="text-sm leading-relaxed mb-6">
-                    We utilize AES-256-CBC encryption for all session-related data. This ensures that your academic information remains private and inaccessible to unauthorized parties.
+                    We use strong AES-256 encryption for your data. This ensures your school info stays private and safe.
                   </p>
-                  <h3 className="text-white font-bold text-lg mb-4">Zero-Persistence Policy</h3>
+                  <h3 className="text-white font-bold text-lg mb-4">No Saved Passwords</h3>
                   <p className="text-sm leading-relaxed">
-                    Your password is never written to disk. It exists only in memory during the authentication handshake and is purged immediately after a secure session is established.
+                    We never save your password. It's only used to log you in once and is removed from the system immediately after.
                   </p>
                 </div>
                 <div className="space-y-6">
                   <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
-                    <h4 className="text-white font-semibold text-sm mb-1">HttpOnly Cookies</h4>
-                    <p className="text-xs text-slate-400">Protects against XSS attacks by preventing client-side scripts from accessing session tokens.</p>
+                    <h4 className="text-white font-semibold text-sm mb-1">Secure Sessions</h4>
+                    <p className="text-xs text-slate-400">Protects your login session from hackers using secure browser settings.</p>
                   </div>
                   <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
-                    <h4 className="text-white font-semibold text-sm mb-1">CSRF Protection</h4>
-                    <p className="text-xs text-slate-400">Security tokens are implemented on all state-changing requests to prevent cross-site request forgery.</p>
+                    <h4 className="text-white font-semibold text-sm mb-1">Action Protection</h4>
+                    <p className="text-xs text-slate-400">Security checks on all actions to prevent unauthorized requests.</p>
                   </div>
                 </div>
               </div>

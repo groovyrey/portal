@@ -2,8 +2,9 @@
 
 import { ScheduleItem, ProspectusSubject } from '@/types';
 import { useState, useMemo, useEffect } from 'react';
-import { X, MapPin, Clock, Hash, BookOpen, Info, Calendar } from 'lucide-react';
+import { X, MapPin, Clock, Hash, BookOpen, Info, Calendar, ArrowRight } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
+import { useRouter } from 'next/navigation';
 
 interface ScheduleTableProps {
   schedule: ScheduleItem[];
@@ -29,6 +30,7 @@ const SUBJECT_COLORS = [
 ];
 
 export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTableProps) {
+  const router = useRouter();
   const [selectedItem, setSelectedItem] = useState<ScheduleItem | null>(null);
 
   const getSubjectCode = (subject: string) => {
@@ -269,12 +271,24 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                 </div>
               </div>
 
-              <button 
-                onClick={() => setSelectedItem(null)}
-                className="w-full mt-4 py-3 bg-slate-900 text-white text-xs font-bold uppercase tracking-widest rounded-2xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20"
-              >
-                Close Details
-              </button>
+              <div className="flex flex-col gap-3 pt-4">
+                <button 
+                  onClick={() => {
+                    const code = getSubjectCode(selectedItem.subject);
+                    router.push(`/subjects/${encodeURIComponent(code)}`);
+                  }}
+                  className="w-full py-3 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2 group"
+                >
+                  View Catalog Info
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+                <button 
+                  onClick={() => setSelectedItem(null)}
+                  className="w-full py-3 bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition-colors"
+                >
+                  Close Details
+                </button>
+              </div>
             </div>
           </div>
         )}

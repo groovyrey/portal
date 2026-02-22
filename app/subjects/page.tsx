@@ -3,13 +3,16 @@
 import { useState, useEffect } from 'react';
 import { Student } from '../../types';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Search, X } from 'lucide-react';
+import { Search, X, ChevronRight, BookOpen } from 'lucide-react';
 import LottieAnimation from '@/components/ui/LottieAnimation';
 import Skeleton from '@/components/ui/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import PageHeader from '@/components/shared/PageHeader';
 
-export default function OfferedSubjectsPage() {
+export default function SubjectsPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [isInitialized, setIsInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,7 +23,6 @@ export default function OfferedSubjectsPage() {
       const response = await fetch('/api/student/me');
       const result = await response.json();
       if (response.ok && result.success && result.data) {
-        // Still sync to localStorage for dashboard's optimistic UI if needed
         localStorage.setItem('student_data', JSON.stringify(result.data));
         return result.data as Student;
       }
@@ -93,6 +95,8 @@ export default function OfferedSubjectsPage() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+        <PageHeader />
+        
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div className="relative flex-1 max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -147,20 +151,24 @@ export default function OfferedSubjectsPage() {
                   <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Code</th>
                   <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description</th>
                   <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Units</th>
-                  <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Pre-requisite</th>
+                  <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredSubjects.length > 0 ? (
                   filteredSubjects.map((sub, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                    <tr 
+                      key={idx} 
+                      onClick={() => router.push(`/subjects/${encodeURIComponent(sub.code)}`)}
+                      className="hover:bg-blue-50/30 transition-all cursor-pointer group"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-[10px] font-bold text-slate-500 font-mono bg-slate-100 px-2 py-1 rounded">
+                        <span className="text-[10px] font-bold text-slate-500 font-mono bg-slate-100 px-2 py-1 rounded group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                           {sub.code}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-sm font-semibold text-slate-700 leading-tight uppercase">{sub.description}</p>
+                        <p className="text-sm font-semibold text-slate-700 leading-tight uppercase group-hover:text-blue-900 transition-colors">{sub.description}</p>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className="text-xs font-bold text-slate-600">
@@ -168,9 +176,11 @@ export default function OfferedSubjectsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <span className={`text-[10px] font-bold uppercase tracking-tight ${sub.preReq ? 'text-slate-500' : 'text-slate-300'}`}>
-                          {sub.preReq || 'None'}
-                        </span>
+                        <div className="flex justify-end">
+                          <div className="h-8 w-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all">
+                            <ChevronRight size={14} />
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   ))

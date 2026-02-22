@@ -7,7 +7,7 @@ const protectedRoutes = [
   '/settings',
   '/assistant',
   '/accounts',
-  '/offered-subjects',
+  '/subjects',
   '/community',
   '/profile', // Base profile path should be protected
   '/api/student/me',

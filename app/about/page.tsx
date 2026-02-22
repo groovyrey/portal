@@ -67,10 +67,10 @@ export default function AboutPage() {
                 <span>Next-Gen Student Portal</span>
               </div>
               <h1 className="text-5xl md:text-7xl font-black text-slate-900 leading-[1.1] mb-6">
-                The Student Experience, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Reimagined.</span>
+                A Better Way to Manage Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">School Life.</span>
               </h1>
               <p className="text-xl text-slate-600 leading-relaxed mb-8 max-w-lg">
-                LCC Hub is more than just a dashboard. It's a modern, AI-powered ecosystem designed to simplify your academic life and keep you connected.
+                LCC Hub is more than just a dashboard. It's a modern, AI-powered tool built to make your academic life easier and keep you connected.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link 
@@ -145,18 +145,18 @@ export default function AboutPage() {
             <div>
               <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
                 <span className="w-12 h-1 px-0 bg-blue-600 inline-block" />
-                Our Mission
+                Our Goal
               </h2>
               <p className="text-lg text-slate-600 leading-relaxed">
-                We're on a mission to modernize the educational experience. LCC Hub was born from the belief that students deserve professional-grade tools that work as fast as they do. We've combined data accessibility with community-driven features to create the ultimate student companion.
+                We're here to make school tools better. LCC Hub was made because students deserve tools that are as fast as they are. We've combined easy access to your data with helpful community features to create the best student companion.
               </p>
             </div>
             
             <div className="grid gap-4">
               {[
-                { title: 'Simplicity First', desc: 'No more confusing legacy menus. Just the data you need.' },
-                { title: 'Privacy Focused', desc: 'Your data is yours. We use high-grade encryption for everything.' },
-                { title: 'Student Built', desc: 'Designed by students who understand the struggle of portal navigation.' }
+                { title: 'Simple & Fast', desc: 'A modern interface for the portal. Just the info you need, right away.' },
+                { title: 'Privacy First', desc: 'Your data is yours. We use strong encryption to keep everything safe.' },
+                { title: 'Made by Students', desc: 'Built by students who know how hard it can be to use the school portal.' }
               ].map((item, i) => (
                 <div key={i} className="flex gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
                   <CheckCircle2 className="h-6 w-6 text-blue-600 shrink-0" />
@@ -207,8 +207,8 @@ export default function AboutPage() {
         
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-20">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">Powerful Capabilities</h2>
-            <p className="text-slate-400">Everything you need to stay on top of your academic life, powered by cutting-edge technology.</p>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">Cool Features</h2>
+            <p className="text-slate-400">Everything you need to keep up with your school work, built with the best tools.</p>
           </div>
 
           <motion.div 
@@ -221,38 +221,38 @@ export default function AboutPage() {
             {[
               { 
                 icon: Zap, 
-                title: 'Instant Sync', 
-                desc: 'LCC Hub acts as a Headless Browser Wrapper, fetching your real-time data on demand from official sources.',
+                title: 'Live Sync', 
+                desc: 'LCC Hub fetches your data in real-time straight from the official school portal.',
                 color: 'blue'
               },
               { 
                 icon: Cpu, 
                 title: 'Portal AI', 
-                desc: 'Your personal academic assistant. Ask questions about your grades, schedules, or school policies.',
+                desc: 'Your personal school helper. Ask about your grades, schedule, or school info.',
                 color: 'indigo'
               },
               { 
                 icon: ShieldCheck, 
-                title: 'Aegis AI Reviewer', 
-                desc: 'Our intelligent moderation engine that provides real-time "Growth Tips" and "Safety Scores" for every community post, fostering a professional yet supportive student environment.',
+                title: 'Smart Reviewer', 
+                desc: 'Our AI reviews community posts to keep things friendly and helpful for everyone.',
                 color: 'emerald'
               },
               { 
                 icon: MessageSquare, 
-                title: 'Topic-Based Feed', 
-                desc: 'Organized discussions across Academics, Career, and campus life. Stay informed, stay involved.',
+                title: 'Chat Feed', 
+                desc: 'Join discussions about classes, careers, and campus life.',
                 color: 'amber'
               },
               { 
                 icon: Code2, 
-                title: 'Modern Tech', 
-                desc: 'Built with Next.js 15, Tailwind CSS, and Framer Motion for a fluid, app-like experience.',
+                title: 'Fast & Modern', 
+                desc: 'Built with the latest tools for a fast and smooth experience.',
                 color: 'rose'
               },
               { 
                 icon: Star, 
-                title: 'Community Driven', 
-                desc: 'Built based on student feedback. We evolve as your needs change throughout the semester.',
+                title: 'Student Voice', 
+                desc: 'We build what you need. LCC Hub grows based on your feedback.',
                 color: 'purple'
               }
             ].map((feature, i) => (

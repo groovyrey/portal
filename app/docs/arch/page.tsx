@@ -32,13 +32,13 @@ export default function ArchDocsPage() {
             <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-200">
               <Code2 className="h-6 w-6" />
             </div>
-            <span className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">Technical Brief</span>
+            <span className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">Technical Summary</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-6">
             System Architecture
           </h1>
           <p className="text-lg text-slate-500 max-w-2xl leading-relaxed font-medium">
-            An in-depth look at the v1.2.0-BETA engineering behind LCC Hub—a high-performance, hybrid-cloud student portal.
+            A look at the v1.2.0-BETA tech behind LCC Hub—a fast, modern student portal.
           </p>
         </header>
 
@@ -61,53 +61,53 @@ export default function ArchDocsPage() {
             </div>
           </section>
 
-          {/* Hybrid Database Layer */}
+          {/* How We Store Data */}
           <section className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
             <div className="p-8 border-b border-slate-100 bg-slate-50/50">
               <h2 className="text-xl font-bold flex items-center gap-3">
                 <Database className="h-5 w-5 text-blue-600" />
-                Hybrid Database Architecture
+                How We Store Data
               </h2>
             </div>
             <div className="p-8 grid md:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <h3 className="text-sm font-black uppercase tracking-widest text-blue-600">PostgreSQL (Relational)</h3>
                 <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                  Managed via <strong>AWS RDS</strong> with OIDC-based IAM authentication. Stores high-integrity, relational data:
+                  Securely stored using <strong>Amazon Web Services (AWS)</strong>. Stores important info like:
                 </p>
                 <ul className="text-xs space-y-2 text-slate-600 font-bold">
                   <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> Community Posts & Comments</li>
                   <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> Post Likes & Poll Votes</li>
-                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> Persistent Notification Logs</li>
-                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> Verified Student Directory</li>
+                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> Notifications History</li>
+                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> Student Directory</li>
                 </ul>
               </div>
               <div className="space-y-4">
                 <h3 className="text-sm font-black uppercase tracking-widest text-orange-600">Firebase Firestore (NoSQL)</h3>
                 <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                  Used for document-based, high-frequency synchronization and transient session storage:
+                  Used for quick updates and temporary login sessions:
                 </p>
                 <ul className="text-xs space-y-2 text-slate-600 font-bold">
-                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> Encrypted Portal Session Jars</li>
-                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> Scraped Academic Records</li>
+                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> Secure Login Sessions</li>
+                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> Saved School Records</li>
                   <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> Class Schedules & Financials</li>
-                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> Grade Ledger Cache</li>
+                  <li className="flex items-center gap-2"><ArrowRight className="h-3 w-3" /> Saved Grade History</li>
                 </ul>
               </div>
             </div>
           </section>
 
-          {/* Real-time Infrastructure */}
+          {/* Fast Login System */}
           <section className="grid md:grid-cols-2 gap-8">
             <div className="bg-slate-900 rounded-3xl p-8 text-white">
               <div className="flex items-center gap-3 mb-6">
                 <div className="bg-purple-600 p-2 rounded-xl">
                   <Workflow className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-bold">Ghost Session Proxy</h3>
+                <h3 className="text-lg font-bold">Fast Login System</h3>
               </div>
               <p className="text-sm text-slate-400 leading-relaxed mb-6">
-                Our proprietary <strong>Session Proxy</strong> rehydrates legacy portal cookies from encrypted Firestore records. This bypasses the expensive login handshake, reducing subsequent scrape times by up to <strong>90%</strong>.
+                Our <strong>Session Proxy</strong> reuses your existing login info. This skips the slow login process and makes the app load your data up to <strong>90% faster</strong>.
               </p>
               <div className="font-mono text-[10px] p-4 bg-white/5 rounded-xl border border-white/10 text-purple-300">
                 <code>
@@ -123,10 +123,10 @@ export default function ArchDocsPage() {
                 <div className="bg-white/20 p-2 rounded-xl">
                   <BellRing className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-bold">Instant Real-time Alerts</h3>
+                <h3 className="text-lg font-bold">Live Notifications</h3>
               </div>
               <p className="text-sm text-blue-100 leading-relaxed mb-6">
-                Powered by <strong>Ably Realtime</strong>, the portal maintains a high-performance WebSocket connection for instant synchronization. Updates are broadcasted across two primary channel patterns:
+                Using <strong>Ably Realtime</strong>, the app keeps a fast, live connection for instant updates. Info is sent through two main ways:
               </p>
               <ul className="text-xs space-y-3 font-bold">
                 <li className="flex items-center gap-3 bg-white/10 p-2 rounded-lg">
@@ -139,7 +139,7 @@ export default function ArchDocsPage() {
             </div>
           </section>
 
-          {/* AI Intelligence Layer */}
+          {/* AI School Helper */}
           <section className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
             <div className="flex flex-col md:flex-row gap-8 items-center">
               <div className="shrink-0">
@@ -148,43 +148,43 @@ export default function ArchDocsPage() {
                 </div>
               </div>
               <div className="flex-1 space-y-4 text-center md:text-left">
-                <h3 className="text-xl font-bold">AI Intelligence Layer</h3>
+                <h3 className="text-xl font-bold">AI School Helper</h3>
                 <p className="text-sm text-slate-500 leading-relaxed font-medium">
-                  The Portal Assistant utilizes <strong>Gemini 1.5 Pro</strong> (or Gemma 3) with a dynamically injected context window. Each inference call is primed with a comprehensive student snapshot including current GPA, full grade ledger, and up-to-the-minute financial status.
+                  The Portal Assistant uses <strong>Gemini 1.5 Pro</strong>. The AI gets a quick look at your current grades and status to help you better with instant answers.
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                  <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">Context Injected</span>
-                  <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">Streamed Inference</span>
-                  <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">Edge Optimized</span>
+                  <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">Smart Context</span>
+                  <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">Live AI Answers</span>
+                  <span className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">Built for Speed</span>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Security & Encryption */}
+          {/* Security Rules */}
           <section>
             <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-8 flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              Security Protocol
+              Security Rules
             </h2>
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-6">
                 <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
                   <h3 className="font-bold mb-3 flex items-center gap-2">
                     <Lock className="h-4 w-4 text-blue-600" />
-                    Zero-Persistence Auth
+                    Secure Login (No Passwords Saved)
                   </h3>
                   <p className="text-sm text-slate-500 leading-relaxed">
-                    Raw passwords never touch our database. Authentication is performed directly against the school's legacy backend, and only an encrypted session jar is persisted in Firestore using <strong>AES-256-CBC</strong>.
+                    We never save your passwords. You log in directly to the school's system, and we only save a secure, encrypted session to keep you logged in.
                   </p>
                 </div>
                 <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
                   <h3 className="font-bold mb-3 flex items-center gap-2">
                     <Server className="h-4 w-4 text-purple-600" />
-                    HttpOnly Tokenization
+                    Secure Session Tokens
                   </h3>
                   <p className="text-sm text-slate-500 leading-relaxed">
-                    Client sessions are managed via <strong>HttpOnly, Secure, SameSite=Lax</strong> cookies. This prevents XSS-based session hijacking and ensures tokens are only transmitted over HTTPS.
+                    Your session is protected by secure browser settings. This stops hackers from stealing your session and ensures your data stays safe.
                   </p>
                 </div>
               </div>
@@ -193,7 +193,7 @@ export default function ArchDocsPage() {
                 <div className="absolute top-0 right-0 p-8 opacity-10">
                     <ShieldCheck size={120} />
                 </div>
-                <h3 className="text-lg font-bold mb-6 relative z-10">Encryption Standard</h3>
+                <h3 className="text-lg font-bold mb-6 relative z-10">Security & Encryption</h3>
                 <div className="space-y-4 relative z-10">
                     <div className="font-mono text-[10px] p-4 bg-white/5 rounded-xl border border-white/10 text-emerald-400">
                         <code>
@@ -203,7 +203,7 @@ export default function ArchDocsPage() {
                         </code>
                     </div>
                     <p className="text-xs text-slate-400 leading-relaxed">
-                        Data integrity is guaranteed through unique IV salts for every encryption operation, ensuring that identical inputs result in non-repeating ciphertexts.
+                        Your data is kept safe with strong encryption. Your info is scrambled differently every time for extra safety.
                     </p>
                 </div>
               </div>

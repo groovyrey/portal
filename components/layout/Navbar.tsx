@@ -166,7 +166,7 @@ export default function Navbar() {
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
     { name: 'Profile', href: studentId ? `/profile/${obfuscateId(studentId)}` : '/profile', icon: UserIcon },
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
-    { name: 'Subjects', href: '/offered-subjects', icon: BookOpen },
+    { name: 'Subjects', href: '/subjects', icon: BookOpen },
     { name: 'Community', href: '/community', icon: MessageSquare },
     { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
@@ -185,7 +185,7 @@ export default function Navbar() {
 
   const desktopMore = isLoggedIn ? [
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
-    { name: 'Subjects', href: '/offered-subjects', icon: BookOpen },
+    { name: 'Subjects', href: '/subjects', icon: BookOpen },
     { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'About', href: '/about', icon: Info },
