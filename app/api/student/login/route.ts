@@ -33,13 +33,25 @@ export async function POST(req: NextRequest) {
     }
 
     // --- SESSION MANAGEMENT ---
-    const { client, jar, isNew } = await getSessionClient(userId);
+    const { client, jar, isNew, isLocked, consecutiveFailures } = await getSessionClient(userId);
+
+    // Stop if account is in cooldown to prevent further lockout risk
+    if (isLocked && (consecutiveFailures || 0) >= 3) {
+      return NextResponse.json({ 
+        success: false, 
+        error: `Login is temporarily disabled due to multiple failed attempts. Please wait 15-30 minutes and try again.` 
+      }, { status: 429 });
+    }
+
     const baseUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}`;
     let loginRes;
 
-    if (!isNew) {
+    if (!isNew && !isLocked) {
       loginRes = await client.get(baseUrl);
     } else {
+      // Acquire refresh lock to ensure no other process (like background sync) tries to log in simultaneously
+      await import('@/lib/session-proxy').then(m => m.acquireRefreshLock(userId));
+
       const initRes = await client.get(baseUrl);
       const finalInitUrl = initRes.request.res.responseUrl || baseUrl;
       const $init = cheerio.load(initRes.data);
@@ -67,7 +79,25 @@ export async function POST(req: NextRequest) {
           'Origin': 'https://premium.schoolista.com'
         },
       });
-      await saveSession(userId, jar);
+
+      const $dashboard = cheerio.load(loginRes.data);
+      const hasLoginButton = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
+      
+      // Save session with success/failure status
+      await saveSession(userId, jar, !hasLoginButton);
+      
+      if (hasLoginButton) {
+        const portalError = 
+          $dashboard('#lblError').text().trim() || 
+          $dashboard('#lblMessage').text().trim() || 
+          $dashboard('.error-message').text().trim() ||
+          $dashboard('.text-danger').text().trim();
+        
+        return NextResponse.json({ 
+          success: false, 
+          error: portalError || 'Invalid Student ID or Password.' 
+        }, { status: 401 });
+      }
     }
 
     const $dashboard = cheerio.load(loginRes.data);
@@ -137,7 +167,7 @@ export async function POST(req: NextRequest) {
           schedule,
           offeredSubjects,
           availableReports: reportLinks,
-          settings: settings || { notifications: true, isPublic: true, showAcademicInfo: true, classReminders: true },
+          settings: settings || { notifications: true, isPublic: true, showAcademicInfo: true, classReminders: true, paymentReminders: true },
           financials: mergedFinancials,
           // Diagnostic raw data for the specific account page
           _debug_accounts_html: accountsRes.data

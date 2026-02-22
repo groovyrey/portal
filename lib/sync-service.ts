@@ -15,7 +15,18 @@ export class SyncService {
     const studentRef = doc(db, 'students', this.userId);
     const existingStudentDoc = await getDoc(studentRef);
     const isNewUser = !existingStudentDoc.exists();
-    const existingSettings = existingStudentDoc.exists() ? existingStudentDoc.data().settings : null;
+    
+    // Explicitly set default settings for new users or if missing
+    let settings = existingStudentDoc.exists() ? (existingStudentDoc.data().settings || null) : null;
+    if (!settings) {
+        settings = { 
+            notifications: true, 
+            isPublic: true, 
+            showAcademicInfo: true, 
+            classReminders: true,
+            paymentReminders: true
+        };
+    }
 
     await setDoc(studentRef, {
       name: info.name,
@@ -27,10 +38,11 @@ export class SyncService {
       address: info.address,
       mobile: info.mobile,
       enrollment_date: info.enrollmentDate,
+      settings,
       updated_at: serverTimestamp()
     }, { merge: true });
 
-    return { isNewUser, settings: existingSettings };
+    return { isNewUser, settings };
   }
 
   async syncFinancials(financials: ScrapedFinancials) {

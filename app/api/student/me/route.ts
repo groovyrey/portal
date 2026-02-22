@@ -73,7 +73,13 @@ export async function GET(req: NextRequest) {
  * Background Synchronization Function
  */
 async function backgroundSync(userId: string, password: string) {
-  const { client, jar } = await getSessionClient(userId);
+  const { client, jar, isLocked, consecutiveFailures } = await getSessionClient(userId);
+  
+  if (isLocked) {
+      console.log(`[AutoSync] Skipping for ${userId}: Session is locked or in cooldown.`);
+      return;
+  }
+
   const scraper = new ScraperService(client, userId);
   const syncer = new SyncService(userId);
 
@@ -83,7 +89,15 @@ async function backgroundSync(userId: string, password: string) {
   
   const hasLoginButton = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
   if (hasLoginButton) {
-      // Manual re-login if session expired
+      if ((consecutiveFailures || 0) >= 3) {
+          console.warn(`[AutoSync] Aborting login for ${userId}: Too many consecutive failures.`);
+          return;
+      }
+
+      console.log(`[AutoSync] Re-logging in for ${userId}...`);
+      const { acquireRefreshLock, saveSession } = await import('@/lib/session-proxy');
+      await acquireRefreshLock(userId);
+
       const initRes = await client.get(`https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}`);
       const finalInitUrl = initRes.request.res.responseUrl || initRes.config.url;
       const $init = cheerio.load(initRes.data);
@@ -109,6 +123,14 @@ async function backgroundSync(userId: string, password: string) {
           },
       });
       $dashboard = cheerio.load(loginRes.data);
+      const stillHasLogin = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
+      
+      await saveSession(userId, jar, !stillHasLogin);
+      
+      if (stillHasLogin) {
+          console.error(`[AutoSync] Re-login failed for ${userId}. Aborting sync.`);
+          return;
+      }
   }
 
   const { periodCode, dashboardUrl } = await scraper.fetchDashboard();

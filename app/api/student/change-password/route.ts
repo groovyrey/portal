@@ -23,13 +23,33 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
         }
 
-        const { client, jar, isNew } = await getSessionClient(userId);
+        const { client, jar, isNew, isLocked, consecutiveFailures } = await getSessionClient(userId);
+        
+        if (isLocked) {
+            return NextResponse.json({ 
+                error: 'Session is currently busy or in cooldown. Please wait a moment.' 
+            }, { status: 429 });
+        }
+
         const scraper = new ScraperService(client, userId);
 
         // Ensure session is established
         if (isNew) {
-            await scraper.forceLogin(savedPassword);
-            await saveSession(userId, jar);
+            if ((consecutiveFailures || 0) >= 3) {
+                return NextResponse.json({ error: 'Too many failed login attempts. Please try manual login.' }, { status: 401 });
+            }
+
+            const { acquireRefreshLock, saveSession } = await import('@/lib/session-proxy');
+            await acquireRefreshLock(userId);
+            
+            const loginRes = await scraper.forceLogin(savedPassword);
+            const hasLoginButton = loginRes.$('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
+            
+            await saveSession(userId, jar, !hasLoginButton);
+            
+            if (hasLoginButton) {
+                return NextResponse.json({ error: 'Auto-login failed. Please verify your portal credentials.' }, { status: 401 });
+            }
         }
 
         const result = await scraper.changePassword(currentPassword, newPassword);

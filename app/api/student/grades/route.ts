@@ -33,14 +33,34 @@ export async function POST(req: NextRequest) {
 
     await initDatabase();
 
-    const { client, jar, isNew } = await getSessionClient(userId);
+    const { client, jar, isNew, isLocked, consecutiveFailures } = await getSessionClient(userId);
+    
+    if (isLocked) {
+      return NextResponse.json({ 
+        error: 'Session is currently busy or in cooldown. Please wait a moment.' 
+      }, { status: 429 });
+    }
+
     const scraper = new ScraperService(client, userId);
     const { dashboardUrl } = await scraper.fetchDashboard();
 
     if (isNew) {
+      if ((consecutiveFailures || 0) >= 3) {
+        return NextResponse.json({ error: 'Too many failed login attempts. Please try manual login.' }, { status: 401 });
+      }
+
       debugLog += `Ghost Session New: Performing login...\n`;
-      await scraper.forceLogin(password);
-      await saveSession(userId, jar);
+      const { acquireRefreshLock, saveSession } = await import('@/lib/session-proxy');
+      await acquireRefreshLock(userId);
+      
+      const loginRes = await scraper.forceLogin(password);
+      const hasLoginButton = loginRes.$('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
+      
+      await saveSession(userId, jar, !hasLoginButton);
+      
+      if (hasLoginButton) {
+        return NextResponse.json({ error: 'Portal session expired and auto-login failed.' }, { status: 401 });
+      }
     } else {
       debugLog += `Ghost Session Active: Bypassing login handshake.\n`;
     }
