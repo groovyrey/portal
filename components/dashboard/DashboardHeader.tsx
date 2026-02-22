@@ -6,10 +6,9 @@ import { motion } from 'framer-motion';
 
 interface DashboardHeaderProps {
   student: Student;
-  onLogout: () => void;
 }
 
-export default function DashboardHeader({ student, onLogout }: DashboardHeaderProps) {
+export default function DashboardHeader({ student }: DashboardHeaderProps) {
   return (
     <div className="mb-8">
       {/* Top Bar */}
@@ -23,14 +22,6 @@ export default function DashboardHeader({ student, onLogout }: DashboardHeaderPr
             <p className="text-xs text-slate-500 font-medium">Academic Management</p>
           </div>
         </div>
-
-        <button
-          onClick={onLogout}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-slate-200"
-        >
-          <LogOut className="h-4 w-4" />
-          Sign Out
-        </button>
       </div>
 
       {/* Profile Summary */}

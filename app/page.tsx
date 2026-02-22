@@ -112,7 +112,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-        <DashboardHeader student={student} onLogout={handleLogout} />
+        <DashboardHeader student={student} />
         
         <div className="max-w-4xl mx-auto space-y-8">
           {student.financials && (

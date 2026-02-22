@@ -11,7 +11,6 @@ import {
   ShieldCheck, 
   AlertCircle 
 } from 'lucide-react';
-import PageHeader from '@/components/shared/PageHeader';
 import Skeleton from '@/components/ui/Skeleton';
 import Link from 'next/link';
 

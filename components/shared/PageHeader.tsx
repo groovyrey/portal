@@ -33,9 +33,10 @@ interface PageHeaderProps {
   title?: string;
   description?: string;
   icon?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
-export default function PageHeader({ title: propsTitle, description, icon: propsIcon }: PageHeaderProps) {
+export default function PageHeader({ title: propsTitle, description, icon: propsIcon, children }: PageHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isRestricted, setIsRestricted] = React.useState(false);
@@ -93,6 +94,11 @@ export default function PageHeader({ title: propsTitle, description, icon: props
             )}
           </div>
         </div>
+        {children && (
+          <div className="flex items-center gap-2">
+            {children}
+          </div>
+        )}
       </div>
     </div>
   );

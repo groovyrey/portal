@@ -9,7 +9,6 @@ import { Search, X, ChevronRight, BookOpen } from 'lucide-react';
 import LottieAnimation from '@/components/ui/LottieAnimation';
 import Skeleton from '@/components/ui/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import PageHeader from '@/components/shared/PageHeader';
 
 export default function SubjectsPage() {
   const router = useRouter();
@@ -95,7 +94,6 @@ export default function SubjectsPage() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-        <PageHeader />
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div className="relative flex-1 max-w-md">

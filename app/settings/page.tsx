@@ -168,7 +168,7 @@ export default function SettingsPage() {
               <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center border border-red-100">
                 <LogOut className="h-5 w-5" />
               </div>
-              <span>Sign Out of Account</span>
+              <span>Sign Out</span>
             </div>
             <ChevronRight className="h-5 w-5 opacity-50 group-hover:opacity-100 transition-opacity" />
           </button>

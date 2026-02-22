@@ -8,6 +8,7 @@ import { ScraperService } from '@/lib/scraper-service';
 import { SyncService } from '@/lib/sync-service';
 import { publishUpdate } from '@/lib/realtime';
 import * as cheerio from 'cheerio';
+import { waitUntil } from '@vercel/functions';
 
 const AUTO_SYNC_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -49,11 +50,10 @@ export async function GET(req: NextRequest) {
 
         if (isStale) {
           console.log(`Data for ${userId} is stale. Triggering background sync...`);
-          // Trigger background sync (non-blocking)
-          // We don't use 'await' here to return the response immediately
-          backgroundSync(userId, password).catch(err => {
+          // Trigger background sync (non-blocking) using Vercel waitUntil
+          waitUntil(backgroundSync(userId, password).catch(err => {
             console.error('Background sync failed:', err);
-          });
+          }));
         }
 
         return NextResponse.json({ success: true, data: studentData });
@@ -98,37 +98,19 @@ async function backgroundSync(userId: string, password: string) {
       const { acquireRefreshLock, saveSession } = await import('@/lib/session-proxy');
       await acquireRefreshLock(userId);
 
-      const initRes = await client.get(`https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}`);
-      const finalInitUrl = initRes.request.res.responseUrl || initRes.config.url;
-      const $init = cheerio.load(initRes.data);
-
-      const formData: any = {};
-      $init('input[type="hidden"]').each((_, el) => {
-          const name = $init(el).attr('name');
-          if (name) formData[name] = $init(el).val() || '';
-      });
-      formData.otbUserID = userId;
-      formData.otbPassword = password;
-      formData.obtnLogin = 'LOGIN';
-
-      const loginForm = $init('#Login').length ? $init('#Login') : $init('form').first();
-      const loginAction = loginForm.attr('action') || './LCC.Login.aspx';
-      const loginUrl = new URL(loginAction, finalInitUrl || "").toString();
-
-      const loginRes = await client.post(loginUrl, new URLSearchParams(formData).toString(), {
-          headers: { 
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'Referer': finalInitUrl || "",
-              'Origin': 'https://premium.schoolista.com'
-          },
-      });
-      $dashboard = cheerio.load(loginRes.data);
+      const loginRes = await scraper.forceLogin(password);
+      $dashboard = loginRes.$;
       const stillHasLogin = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
       
       await saveSession(userId, jar, !stillHasLogin);
       
       if (stillHasLogin) {
-          console.error(`[AutoSync] Re-login failed for ${userId}. Aborting sync.`);
+          const portalError = 
+            $dashboard('#lblError').text().trim() || 
+            $dashboard('#lblMessage').text().trim() || 
+            $dashboard('.error-message').text().trim() ||
+            $dashboard('.text-danger').text().trim();
+          console.error(`[AutoSync] Re-login failed for ${userId}: ${portalError || "No portal error shown"}. Aborting sync.`);
           return;
       }
   }
