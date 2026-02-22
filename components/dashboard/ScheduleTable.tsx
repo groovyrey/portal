@@ -187,7 +187,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                               </span>
                               {duration > 1 && (
                                 <span className="text-[8px] font-bold opacity-60 mt-0.5 truncate w-full">
-                                  {classToRender.room}
+                                  {classToRender.room || '?'}
                                 </span>
                               )}
                             </button>
@@ -216,15 +216,15 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
             <div className={`p-6 ${getSubjectColor(selectedItem.subject)} border-b border-black/5`}>
               <div className="flex justify-between items-start mb-4">
                 <div className="px-2 py-1 bg-white/40 rounded-lg text-[10px] font-black uppercase tracking-wider">
-                  {selectedItem.section}
+                  {selectedItem.section || '?'}
                 </div>
               </div>
               <h3 className="text-lg font-black leading-tight mb-2 uppercase tracking-tight">
-                {getSubjectName(selectedItem.subject)}
+                {getSubjectName(selectedItem.subject) || '?'}
               </h3>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
-                  {getSubjectCode(selectedItem.subject)}
+                  {getSubjectCode(selectedItem.subject) || '?'}
                 </span>
               </div>
             </div>
@@ -236,7 +236,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Time Schedule</p>
-                  <p className="text-sm font-bold text-slate-700">{selectedItem.time}</p>
+                  <p className="text-sm font-bold text-slate-700">{selectedItem.time || '?'}</p>
                 </div>
               </div>
 
@@ -246,7 +246,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Room / Facility</p>
-                  <p className="text-sm font-bold text-slate-700">{selectedItem.room}</p>
+                  <p className="text-sm font-bold text-slate-700">{selectedItem.room || '?'}</p>
                 </div>
               </div>
 
@@ -257,7 +257,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                   </div>
                   <div>
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Units</p>
-                    <p className="text-xs font-bold text-slate-700">{selectedItem.units} Units</p>
+                    <p className="text-xs font-bold text-slate-700">{selectedItem.units || '?'} Units</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -266,7 +266,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                   </div>
                   <div>
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Section</p>
-                    <p className="text-xs font-bold text-slate-700">{selectedItem.section}</p>
+                    <p className="text-xs font-bold text-slate-700">{selectedItem.section || '?'}</p>
                   </div>
                 </div>
               </div>

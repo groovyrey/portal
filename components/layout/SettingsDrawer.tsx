@@ -100,10 +100,10 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                       />
                   </div>
                   <div className="flex-1 min-w-0">
-                      <h3 className="font-black text-xl text-slate-900 tracking-tight truncate">{student!.name}</h3>
+                      <h3 className="font-black text-xl text-slate-900 tracking-tight break-words">{student?.name || '?'}</h3>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="px-2 py-0.5 bg-blue-50 text-[10px] font-bold text-blue-600 rounded-md border border-blue-100 uppercase tracking-tighter">Student ID</span>
-                        <p className="text-xs text-slate-400 font-mono font-bold">{student!.id}</p>
+                        <p className="text-xs text-slate-400 font-mono font-bold">{student?.id || '?'}</p>
                       </div>
                   </div>
               </div>
@@ -281,7 +281,7 @@ function DrawerInfoItem({ icon, label, value }: { icon: React.ReactNode, label: 
       </div>
       <div className="min-w-0">
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-slate-500 transition-colors">{label}</p>
-        <p className="text-sm font-bold text-slate-800 truncate">{value || 'Not Specified'}</p>
+        <p className="text-sm font-bold text-slate-800 break-words">{value || '?'}</p>
       </div>
     </div>
   );

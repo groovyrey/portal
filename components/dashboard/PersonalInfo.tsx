@@ -53,7 +53,7 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
               </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{detail.label}</p>
-                <p className="text-sm font-medium text-slate-700">{detail.value || 'Not provided'}</p>
+                <p className="text-sm font-medium text-slate-700 break-words">{detail.value || '?'}</p>
               </div>
             </div>
           ))}

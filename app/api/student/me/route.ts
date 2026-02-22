@@ -47,13 +47,18 @@ export async function GET(req: NextRequest) {
         // Check if data is stale
         const lastUpdate = studentData.updated_at?.toDate ? studentData.updated_at.toDate() : new Date(studentData.updated_at || 0);
         const isStale = (Date.now() - lastUpdate.getTime()) > AUTO_SYNC_THRESHOLD_MS;
+        const host = req.headers.get('host') || '';
 
         if (isStale) {
-          console.log(`Data for ${userId} is stale. Triggering background sync...`);
-          // Trigger background sync (non-blocking) using Vercel waitUntil
-          waitUntil(backgroundSync(userId, password).catch(err => {
-            console.error('Background sync failed:', err);
-          }));
+          if (host.includes('localhost')) {
+             console.log(`[AutoSync] Skipped for ${userId}: Running on localhost.`);
+          } else {
+             console.log(`Data for ${userId} is stale. Triggering background sync...`);
+             // Trigger background sync (non-blocking) using Vercel waitUntil
+             waitUntil(backgroundSync(userId, password).catch(err => {
+               console.error('Background sync failed:', err);
+             }));
+          }
         }
 
         return NextResponse.json({ success: true, data: studentData });

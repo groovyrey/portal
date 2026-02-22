@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import { getStudentSchedule } from '@/lib/data-service';
 import { createNotification } from '@/lib/notification-service';
 import { sendEmail, getScheduleEmailTemplate } from '@/lib/email-service';
@@ -112,6 +112,18 @@ export async function GET(req: NextRequest) {
         }
       }
     }
+
+    // 7. Log the run in Firestore
+    const dateStr = phTime.toISOString().split('T')[0]; // YYYY-MM-DD
+    await setDoc(doc(db, 'cron_runs', `daily-schedule_${dateStr}`), {
+      jobId: 'daily-schedule',
+      status: 'success',
+      lastRun: new Date().toISOString(),
+      processed: studentsSnap.size,
+      notified: notificationCount,
+      emailed: emailCount,
+      day: todayCode
+    });
 
     return NextResponse.json({ 
       success: true, 

@@ -40,12 +40,12 @@ export default function DashboardHeader({ student }: DashboardHeaderProps) {
             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
               {student.parsedName 
                 ? `${student.parsedName.firstName} ${student.parsedName.lastName}`
-                : student.name}
+                : (student.name || '?')}
             </h2>
             
             <div className="flex items-center gap-2 mt-2 text-slate-500">
               <GraduationCap className="h-4 w-4 text-blue-600" />
-              <p className="text-sm font-medium">{student.course}</p>
+              <p className="text-sm font-medium">{student.course || '?'}</p>
             </div>
           </div>
 
@@ -54,7 +54,7 @@ export default function DashboardHeader({ student }: DashboardHeaderProps) {
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Year Level</span>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg">
                 <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                <span className="text-sm font-semibold text-slate-700">{student.yearLevel}</span>
+                <span className="text-sm font-semibold text-slate-700">{student.yearLevel || '?'}</span>
               </div>
             </div>
 
@@ -62,7 +62,7 @@ export default function DashboardHeader({ student }: DashboardHeaderProps) {
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Semester</span>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg">
                 <UserCheck className="h-3.5 w-3.5 text-slate-400" />
-                <span className="text-sm font-semibold text-slate-700">{student.semester}</span>
+                <span className="text-sm font-semibold text-slate-700">{student.semester || '?'}</span>
               </div>
             </div>
           </div>

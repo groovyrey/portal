@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
 import { createNotification } from '@/lib/notification-service';
 import { sendEmail, getPaymentReminderEmailTemplate } from '@/lib/email-service';
 import { parseStudentName } from '@/lib/utils';
@@ -96,6 +96,18 @@ export async function GET(req: NextRequest) {
         }
       }
     }
+
+    // 8. Log the run in Firestore
+    const runDateStr = phTime.toISOString().split('T')[0]; // YYYY-MM-DD
+    await setDoc(doc(db, 'cron_runs', `payment-reminder_${runDateStr}`), {
+      jobId: 'payment-reminder',
+      status: 'success',
+      lastRun: new Date().toISOString(),
+      processed: studentsSnap.size,
+      notified: notificationCount,
+      emailed: emailCount,
+      targetDate: targetDateStr
+    });
 
     return NextResponse.json({ 
       success: true, 

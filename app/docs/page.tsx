@@ -205,7 +205,6 @@ const DocsPage: React.FC = () => {
             &copy; {new Date().getFullYear()} LCC Hub — Unofficial Documentation
           </p>
           <div className="flex gap-6">
-            <Link href="/docs/arch" className="text-sm text-slate-400 hover:text-blue-600 transition-colors">Technical Deep Dive</Link>
             <a href="/disclaimer" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">Disclaimer</a>
             <a href="/" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">Home</a>
           </div>

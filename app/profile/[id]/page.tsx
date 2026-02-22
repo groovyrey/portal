@@ -4,7 +4,6 @@ import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { Student, CommunityPost } from '@/types';
 import { 
   GraduationCap, 
-  ShieldCheck,
   IdCard,
   Loader2,
   Lock,
@@ -212,15 +211,11 @@ function ProfileContent() {
 
             <div className="flex-1 text-center sm:text-left space-y-4 pt-2">
               <div className="space-y-1">
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight">{student.name}</h1>
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight">{student.name || '?'}</h1>
                 <div className="flex items-center justify-center sm:justify-start gap-3">
                   <span className="text-xs font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
-                    {student.id}
+                    {student.id || '?'}
                   </span>
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
-                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                    Verified Student
-                  </div>
                   <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
                     <span className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
                     {isOnline ? 'Online' : 'Offline'}
@@ -232,10 +227,10 @@ function ProfileContent() {
                 <div className="flex flex-wrap justify-center sm:justify-start gap-2">
                   <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
                     <GraduationCap className="h-4 w-4 text-slate-400" />
-                    <span className="text-xs font-bold text-slate-600 tracking-tight">{student.course}</span>
+                    <span className="text-xs font-bold text-slate-600 tracking-tight">{student.course || '?'}</span>
                   </div>
                   <div className="bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-                    <span className="text-xs font-bold text-slate-600 tracking-tight">Year {student.yearLevel} • Sem {student.semester}</span>
+                    <span className="text-xs font-bold text-slate-600 tracking-tight">Year {student.yearLevel || '?'} • Sem {student.semester || '?'}</span>
                   </div>
                 </div>
               )}

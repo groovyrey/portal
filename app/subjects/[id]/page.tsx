@@ -5,14 +5,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { useStudentQuery } from '@/lib/hooks';
 import { 
   ArrowLeft, 
-  Book, 
-  Clock, 
-  Layers, 
   ShieldCheck, 
   AlertCircle 
 } from 'lucide-react';
 import Skeleton from '@/components/ui/Skeleton';
-import Link from 'next/link';
 
 export default function SubjectDetailPage() {
   const { id } = useParams();
@@ -63,100 +59,52 @@ export default function SubjectDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-20">
-      <main className="max-w-3xl mx-auto px-6 py-8 animate-fade-in">
+      <main className="max-w-2xl mx-auto px-6 py-8 animate-fade-in">
         <button 
           onClick={() => router.push('/subjects')}
           className="mb-8 flex items-center gap-2 text-slate-500 hover:text-slate-900 font-bold text-xs uppercase tracking-widest transition-colors group"
         >
-          <div className="h-8 w-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center group-hover:border-blue-200 group-hover:text-blue-600 transition-all">
-            <ArrowLeft size={16} />
-          </div>
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           Back to Listing
         </button>
 
-        <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden mb-8">
-          <div className="p-8 md:p-12 border-b border-slate-100 bg-gradient-to-br from-white to-slate-50/50">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider mb-6">
-              <Book size={12} />
-              <span>Subject Detail</span>
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-6">
+          <div className="p-8 md:p-10 border-b border-slate-100">
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <span className="px-2.5 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black font-mono tracking-wider">
+                {subject.code}
+              </span>
+              <span className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                {parseFloat(subject.units).toFixed(1)} Units
+              </span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-black text-slate-900 leading-tight uppercase mb-4">
+            <h1 className="text-2xl md:text-3xl font-black text-slate-900 leading-tight uppercase">
               {subject.description}
             </h1>
-            <div className="flex flex-wrap gap-3">
-              <div className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold font-mono">
-                {subject.code}
-              </div>
-              <div className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold">
-                {parseFloat(subject.units).toFixed(1)} Units
-              </div>
-            </div>
           </div>
 
-          <div className="p-8 md:p-12 space-y-12">
+          <div className="p-8 md:p-10 space-y-10">
             <section>
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                <Layers size={14} className="text-blue-600" />
-                Academic Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Subject Code</p>
-                  <p className="text-lg font-black text-slate-900 font-mono">{subject.code}</p>
-                </div>
-                <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Credit Units</p>
-                  <p className="text-lg font-black text-slate-900">{parseFloat(subject.units).toFixed(1)}</p>
-                </div>
-              </div>
-            </section>
-
-            <section>
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                <ShieldCheck size={14} className="text-emerald-600" />
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                <ShieldCheck size={14} className="text-blue-600" />
                 Prerequisites
               </h3>
-              <div className="p-8 rounded-[2rem] bg-emerald-50/30 border border-emerald-100/50">
+              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
                 {subject.preReq ? (
-                  <div>
-                    <p className="text-sm font-bold text-slate-700 leading-relaxed mb-4">
-                      This subject requires completion of the following:
-                    </p>
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-emerald-100 text-emerald-700 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm">
-                      {subject.preReq}
-                    </div>
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-tight">Required Subjects</p>
+                    <p className="text-sm font-black text-slate-900">{subject.preReq}</p>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-4 text-emerald-700">
-                    <div className="h-10 w-10 rounded-2xl bg-emerald-100 flex items-center justify-center shrink-0">
-                      <ShieldCheck size={20} />
+                  <div className="flex items-center gap-3 text-slate-500">
+                    <div className="h-8 w-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0">
+                      <ShieldCheck size={16} className="text-slate-300" />
                     </div>
-                    <div>
-                      <p className="font-bold text-sm text-emerald-900">No Prerequisite</p>
-                      <p className="text-xs text-emerald-600 font-medium opacity-80">This subject can be taken without any prior requirements.</p>
-                    </div>
+                    <p className="text-xs font-bold uppercase tracking-tight">No Prerequisite Required</p>
                   </div>
                 )}
               </div>
             </section>
-          </div>
-        </div>
-
-        <div className="bg-blue-600 rounded-[2rem] p-8 md:p-12 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-12 opacity-10">
-            <Book size={120} />
-          </div>
-          <div className="relative z-10">
-            <h3 className="text-xl font-black mb-4">Need more details?</h3>
-            <p className="text-blue-100 text-sm font-medium mb-8 max-w-md leading-relaxed">
-              For information regarding schedules, professors, and sections, please refer to the official enrollment dashboard or consult your department.
-            </p>
-            <Link 
-              href="/" 
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-xl font-bold text-sm hover:opacity-90 transition-all active:opacity-70"
-            >
-              Go to Dashboard
-            </Link>
           </div>
         </div>
       </main>

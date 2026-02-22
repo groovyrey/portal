@@ -265,7 +265,7 @@ function CommunityContent() {
         </div>
 
         {student ? (
-          <div className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-200/40 transition-all focus-within:ring-2 focus-within:ring-blue-600/10 focus-within:border-blue-600/30">
+          <div className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-200/40 transition-all focus-within:ring-2 focus-within:ring-blue-600/10 focus-within:border-blue-600/30 animate-in fade-in duration-700">
             <div className="flex border-b border-slate-100">
               <button 
                 type="button" 
