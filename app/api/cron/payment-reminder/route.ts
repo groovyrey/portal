@@ -37,63 +37,69 @@ export async function GET(req: NextRequest) {
     const studentsSnap = await getDocs(collection(db, 'students'));
     let notificationCount = 0;
     let emailCount = 0;
+    let failureCount = 0;
 
     for (const studentDoc of studentsSnap.docs) {
-      const userId = studentDoc.id;
-      const studentData = studentDoc.data();
+      try {
+        const userId = studentDoc.id;
+        const studentData = studentDoc.data();
 
-      // 4. Fetch financial data for this student
-      const financialSnap = await getDoc(doc(db, 'financials', userId));
-      if (!financialSnap.exists()) continue;
+        // 4. Fetch financial data for this student
+        const financialSnap = await getDoc(doc(db, 'financials', userId));
+        if (!financialSnap.exists()) continue;
 
-      const financialData = financialSnap.data();
-      const installments = financialData.details?.installments || [];
+        const financialData = financialSnap.data();
+        const installments = financialData.details?.installments || [];
 
-      // 5. Check for due installments
-      const dueInstallment = installments.find((inst: any) => {
-        // Normalize date (some might have different separators or spaces)
-        const instDate = inst.dueDate?.replace(/-/g, '/').trim();
-        const isOutstanding = inst.outstanding && inst.outstanding !== "0.00" && inst.outstanding !== "0";
-        
-        return instDate === targetDateStr && isOutstanding;
-      });
-
-      if (dueInstallment) {
-        // --- Respect User Settings ---
-        const isEnabled = studentData.settings?.paymentReminders !== false;
-        if (!isEnabled) continue;
-
-        const message = `Friendly reminder: Your ${dueInstallment.description} of ₱${dueInstallment.outstanding} is due in 5 days (${dueInstallment.dueDate}).`;
-
-        // 6. Create in-app notification & Real-time alert
-        await createNotification({
-          userId,
-          title: "Payment Reminder 💳",
-          message,
-          type: 'warning',
-          link: '/accounts' 
+        // 5. Check for due installments
+        const dueInstallment = installments.find((inst: any) => {
+          // Normalize date (some might have different separators or spaces)
+          const instDate = inst.dueDate?.replace(/-/g, '/').trim();
+          const isOutstanding = inst.outstanding && inst.outstanding !== "0.00" && inst.outstanding !== "0";
+          
+          return instDate === targetDateStr && isOutstanding;
         });
-        
-        notificationCount++;
 
-        // 7. Send Email Alert (if enabled and email exists)
-        if (studentData.email && studentData.settings?.notifications !== false) {
-          try {
-            const parsedName = parseStudentName(studentData.name);
-            const firstName = parsedName.firstName || studentData.name;
-            const html = getPaymentReminderEmailTemplate(firstName, dueInstallment);
+        if (dueInstallment) {
+          // --- Respect User Settings ---
+          const isEnabled = studentData.settings?.paymentReminders !== false;
+          if (!isEnabled) continue;
 
-            await sendEmail({
-              to: studentData.email,
-              subject: `💳 Payment Reminder - ${dueInstallment.description}`,
-              text: message,
-              html: html
-            });
-            emailCount++;
-          } catch (e: any) {
-            console.error(`Failed to send email to ${studentData.email}:`, e.message);
+          const message = `Friendly reminder: Your ${dueInstallment.description} of ₱${dueInstallment.outstanding} is due in 5 days (${dueInstallment.dueDate}).`;
+
+          // 6. Create in-app notification & Real-time alert
+          await createNotification({
+            userId,
+            title: "Payment Reminder 💳",
+            message,
+            type: 'warning',
+            link: '/accounts' 
+          });
+          
+          notificationCount++;
+
+          // 7. Send Email Alert (if enabled and email exists)
+          if (studentData.email && studentData.settings?.notifications !== false) {
+            try {
+              const parsedName = parseStudentName(studentData.name);
+              const firstName = parsedName.firstName || studentData.name;
+              const html = getPaymentReminderEmailTemplate(firstName, dueInstallment);
+
+              await sendEmail({
+                to: studentData.email,
+                subject: `💳 Payment Reminder - ${dueInstallment.description}`,
+                text: message,
+                html: html
+              });
+              emailCount++;
+            } catch (e: any) {
+              console.error(`Failed to send email to ${studentData.email}:`, e.message);
+            }
           }
         }
+      } catch (err) {
+        console.error(`Failed to process payment reminder for student ${studentDoc.id}:`, err);
+        failureCount++;
       }
     }
 
@@ -106,6 +112,7 @@ export async function GET(req: NextRequest) {
       processed: studentsSnap.size,
       notified: notificationCount,
       emailed: emailCount,
+      failures: failureCount,
       targetDate: targetDateStr
     });
 
@@ -114,6 +121,7 @@ export async function GET(req: NextRequest) {
       processed: studentsSnap.size, 
       notified: notificationCount,
       emailed: emailCount,
+      failures: failureCount,
       targetDate: targetDateStr
     });
 
