@@ -211,16 +211,31 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <h4 className={`text-sm font-bold truncate pr-8 ${
+                    <div className="flex items-start justify-between gap-3 mb-1">
+                      <h4 className={`text-sm font-bold truncate ${
                         notif.isRead ? 'text-slate-700' : 'text-slate-900'
                       }`}>
                         {notif.title}
                       </h4>
-                      <span className="shrink-0 text-[10px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
-                        <Clock className="h-2.5 w-2.5" />
-                        {getTimeAgo(notif.createdAt)}
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
+                          <Clock className="h-2.5 w-2.5" />
+                          {getTimeAgo(notif.createdAt)}
+                        </span>
+                        {!notif.isRead && (
+                          <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.4)]"></div>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteNotification(notif.id);
+                          }}
+                          className="p-1.5 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all group-hover:opacity-100 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
+                          title="Delete notification"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
                     <p className={`text-xs leading-relaxed line-clamp-2 ${
                       notif.isRead ? 'text-slate-500' : 'text-slate-600'
@@ -242,22 +257,6 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                       </Link>
                     )}
                   </div>
-                </div>
-
-                <div className="absolute top-3 right-3 flex items-center gap-2">
-                  {!notif.isRead && (
-                    <div className="w-2 h-2 rounded-full bg-blue-600"></div>
-                  )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteNotification(notif.id);
-                    }}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100 lg:opacity-0 lg:group-hover:opacity-100 md:opacity-100"
-                    title="Delete notification"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
                 </div>
               </div>
             ))}
