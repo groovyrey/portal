@@ -236,20 +236,22 @@ export default function Navbar() {
                 <div className="flex items-center gap-1 ml-2">
                   <button
                     onClick={() => setIsNotifOpen(true)}
-                    className={`flex items-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors ${
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200 ${
                       isNotifOpen 
-                        ? 'bg-blue-50 text-blue-600' 
-                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100' 
+                        : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600 hover:shadow-sm'
                     }`}
                   >
                     {unreadCount > 0 ? (
                       <>
-                        <span className="text-[11px] font-bold">({unreadCount > 9 ? '9+' : unreadCount}|</span>
-                        <Bell className="h-4.5 w-4.5" />
-                        <span className="text-[11px] font-bold">)</span>
+                        <span className="text-xs font-bold tabular-nums">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                        <div className={`w-px h-3 ${isNotifOpen ? 'bg-white/30' : 'bg-slate-200'}`} />
+                        <Bell className="h-4 w-4" />
                       </>
                     ) : (
-                      <Bell className="h-5 w-5" />
+                      <Bell className="h-4 w-4" />
                     )}
                   </button>
 
@@ -300,16 +302,18 @@ export default function Navbar() {
               {isLoggedIn && (
                 <button
                   onClick={() => setIsNotifOpen(true)}
-                  className="flex items-center gap-0.5 px-2 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-600 active:bg-slate-50 transition-all"
                 >
                   {unreadCount > 0 ? (
                     <>
-                      <span className="text-[11px] font-bold">({unreadCount > 9 ? '9+' : unreadCount}|</span>
-                      <Bell className="h-4.5 w-4.5" />
-                      <span className="text-[11px] font-bold">)</span>
+                      <span className="text-xs font-bold tabular-nums">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                      <div className="w-px h-3 bg-slate-200" />
+                      <Bell className="h-4 w-4" />
                     </>
                   ) : (
-                    <Bell className="h-5 w-5" />
+                    <Bell className="h-4 w-4" />
                   )}
                 </button>
               )}
