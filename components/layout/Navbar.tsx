@@ -236,17 +236,20 @@ export default function Navbar() {
                 <div className="flex items-center gap-1 ml-2">
                   <button
                     onClick={() => setIsNotifOpen(true)}
-                    className={`relative p-2 rounded-lg transition-colors ${
+                    className={`flex items-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors ${
                       isNotifOpen 
                         ? 'bg-blue-50 text-blue-600' 
                         : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
-                    <Bell className="h-5 w-5" />
-                    {unreadCount > 0 && (
-                      <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white ring-2 ring-white">
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                      </span>
+                    {unreadCount > 0 ? (
+                      <>
+                        <span className="text-[11px] font-bold">({unreadCount > 9 ? '9+' : unreadCount}|</span>
+                        <Bell className="h-4.5 w-4.5" />
+                        <span className="text-[11px] font-bold">)</span>
+                      </>
+                    ) : (
+                      <Bell className="h-5 w-5" />
                     )}
                   </button>
 
@@ -297,13 +300,16 @@ export default function Navbar() {
               {isLoggedIn && (
                 <button
                   onClick={() => setIsNotifOpen(true)}
-                  className="relative p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                  className="flex items-center gap-0.5 px-2 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                 >
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white ring-2 ring-white">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
+                  {unreadCount > 0 ? (
+                    <>
+                      <span className="text-[11px] font-bold">({unreadCount > 9 ? '9+' : unreadCount}|</span>
+                      <Bell className="h-4.5 w-4.5" />
+                      <span className="text-[11px] font-bold">)</span>
+                    </>
+                  ) : (
+                    <Bell className="h-5 w-5" />
                   )}
                 </button>
               )}

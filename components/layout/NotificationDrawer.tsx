@@ -81,6 +81,22 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
     }
   };
 
+  const deleteNotification = async (id: string) => {
+    try {
+      const res = await fetch('/api/student/notifications', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action: 'delete' }),
+      });
+      if (res.ok) {
+        setNotifications(prev => prev.filter(n => n.id !== id));
+        toast.success('Notification deleted');
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
   const clearAll = async () => {
     if (!confirm('Are you sure you want to clear all notifications?')) return;
     try {
@@ -196,7 +212,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
-                      <h4 className={`text-sm font-bold truncate ${
+                      <h4 className={`text-sm font-bold truncate pr-8 ${
                         notif.isRead ? 'text-slate-700' : 'text-slate-900'
                       }`}>
                         {notif.title}
@@ -228,9 +244,21 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                   </div>
                 </div>
 
-                {!notif.isRead && (
-                  <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-blue-600"></div>
-                )}
+                <div className="absolute top-3 right-3 flex items-center gap-2">
+                  {!notif.isRead && (
+                    <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteNotification(notif.id);
+                    }}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100 lg:opacity-0 lg:group-hover:opacity-100 md:opacity-100"
+                    title="Delete notification"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
