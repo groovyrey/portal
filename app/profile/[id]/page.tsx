@@ -11,7 +11,12 @@ import {
   Heart,
   MoreVertical,
   Trash2,
-  X
+  X,
+  ShieldCheck,
+  Award,
+  Star,
+  Shield,
+  CheckCircle2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -28,6 +33,16 @@ import { useStudent } from '@/lib/hooks';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
 import Skeleton from '@/components/ui/Skeleton';
 import BadgeDisplay from '@/components/shared/BadgeDisplay';
+import { BADGES } from '@/lib/badges';
+
+const BADGE_ICONS: Record<string, any> = {
+  ShieldCheck,
+  Award,
+  Star,
+  Shield,
+  CheckCircle2,
+  MessageSquare
+};
 
 function ProfileContent() {
   const queryClient = useQueryClient();
@@ -47,6 +62,7 @@ function ProfileContent() {
   });
   const [loading, setLoading] = useState(true);
   const [isPublicView, setIsPublicView] = useState(false);
+  const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
 
   const { data: posts = [], isLoading: loadingPosts } = useQuery({
     queryKey: ['user-posts', profileId],
@@ -224,10 +240,6 @@ function ProfileContent() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap justify-center sm:justify-start gap-3 items-center">
-                <BadgeDisplay badgeIds={student.badges} size="md" showName={true} />
-              </div>
-
               {showAcademic && (
                 <div className="flex flex-wrap justify-center sm:justify-start gap-2">
                   <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
@@ -241,6 +253,25 @@ function ProfileContent() {
               )}
             </div>
           </div>
+
+          {student.badges && student.badges.length > 0 && (
+            <div className="mt-12 pt-12 border-t border-slate-50">
+               <div className="flex items-center gap-3 mb-6">
+                <div className="h-8 w-8 rounded-xl bg-blue-50 flex items-center justify-center">
+                  <IdCard className="h-4 w-4 text-blue-600" />
+                </div>
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Badges</h3>
+              </div>
+              <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100/50">
+                <BadgeDisplay 
+                  badgeIds={student.badges} 
+                  size="lg" 
+                  showName={true} 
+                  onClick={() => setIsBadgeModalOpen(true)}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="mt-12 pt-12 border-t border-slate-50">
             <div className="flex items-center justify-between mb-8">
@@ -299,6 +330,54 @@ function ProfileContent() {
           </div>
         </div>
       </div>
+
+      {/* Badge Information Modal */}
+      <Modal
+        isOpen={isBadgeModalOpen}
+        onClose={() => setIsBadgeModalOpen(false)}
+        title={
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-50 p-2 rounded-xl text-blue-600">
+              <Award className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-black text-slate-900 uppercase tracking-tight leading-none">Badges & Achievements</h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Official Recognition</p>
+            </div>
+          </div>
+        }
+        maxWidth="max-w-md"
+      >
+        <div className="p-6 space-y-4">
+          {student.badges?.map(badgeId => {
+            const badge = BADGES[badgeId];
+            if (!badge) return null;
+            const Icon = BADGE_ICONS[badge.icon || 'Award'] || Award;
+            const colorStyles = badge.color === 'blue' 
+              ? 'bg-blue-50 text-blue-600 border-blue-100' 
+              : 'bg-slate-50 text-slate-600 border-slate-100';
+
+            return (
+              <div key={badgeId} className={`flex items-start gap-4 p-4 rounded-2xl border ${colorStyles}`}>
+                <div className={`p-3 rounded-xl ${badge.color === 'blue' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-black uppercase tracking-tight text-sm">{badge.name}</h4>
+                  <p className="text-xs font-medium opacity-80 leading-relaxed">{badge.description}</p>
+                </div>
+              </div>
+            );
+          })}
+          
+          <button
+            onClick={() => setIsBadgeModalOpen(false)}
+            className="w-full mt-4 bg-slate-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95"
+          >
+            Close
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

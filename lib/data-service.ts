@@ -42,6 +42,36 @@ export async function getStudentProfile(userId: string): Promise<Student | null>
   }
 }
 
+export async function getAllStudents(): Promise<Student[]> {
+  try {
+    const querySnap = await getDocs(collection(db, 'students'));
+    const students: Student[] = [];
+    querySnap.forEach(doc => {
+      const data = doc.data();
+      students.push({
+        id: doc.id,
+        name: data.name,
+        parsedName: parseStudentName(data.name),
+        course: data.course,
+        email: data.email,
+        address: data.address,
+        mobile: data.mobile,
+        enrollment_date: data.enrollment_date,
+        yearLevel: data.year_level,
+        semester: data.semester,
+        availableReports: data.available_reports,
+        updated_at: data.updated_at,
+        settings: data.settings,
+        badges: data.badges || []
+      });
+    });
+    return students;
+  } catch (error) {
+    console.error('Error fetching all students:', error);
+    return [];
+  }
+}
+
 export async function getStudentSchedule(userId: string): Promise<ScheduleItem[]> {
   try {
     const docSnap = await getDoc(doc(db, 'schedules', userId));

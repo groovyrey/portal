@@ -30,6 +30,10 @@ export async function GET(req: NextRequest) {
     console.log(`Running daily schedule check for day code: ${todayCode} (Local PH Time: ${phTime.toString()})`);
 
     // 3. Fetch all students from Firestore
+    const protocol = req.headers.get('x-forwarded-proto') || 'http';
+    const host = req.headers.get('host');
+    const baseUrl = `${protocol}://${host}`;
+
     const studentsSnap = await getDocs(collection(db, 'students'));
     let notificationCount = 0;
     let emailCount = 0;
@@ -107,7 +111,7 @@ export async function GET(req: NextRequest) {
             try {
               const parsedName = parseStudentName(studentData.name);
               const firstName = parsedName.firstName || studentData.name;
-              const html = getScheduleEmailTemplate(firstName, sortedClasses);
+              const html = getScheduleEmailTemplate(firstName, sortedClasses, baseUrl);
 
               await sendEmail({
                 to: recipientEmail,

@@ -48,7 +48,7 @@ export async function sendEmail({ to, subject, text, html }: SendEmailParams) {
 /**
  * Generates a clean HTML template for schedule notifications.
  */
-export function getScheduleEmailTemplate(name: string, classes: any[]) {
+export function getScheduleEmailTemplate(name: string, classes: any[], baseUrl: string) {
   const classRows = classes.map(c => `
     <tr>
       <td style="padding: 12px; border-bottom: 1px solid #edf2f7;">
@@ -84,7 +84,7 @@ export function getScheduleEmailTemplate(name: string, classes: any[]) {
           </tbody>
         </table>
         <div style="margin-top: 32px; text-align: center;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || '#'}" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Open LCC Hub</a>
+          <a href="${baseUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">Open LCC Hub</a>
         </div>
       </div>
       <div style="background-color: #f7fafc; padding: 20px; text-align: center; font-size: 11px; color: #a0aec0; line-height: 1.6;">
@@ -100,7 +100,7 @@ export function getScheduleEmailTemplate(name: string, classes: any[]) {
 /**
  * Generates a clean HTML template for payment reminders.
  */
-export function getPaymentReminderEmailTemplate(name: string, installment: any) {
+export function getPaymentReminderEmailTemplate(name: string, installment: any, baseUrl: string) {
   return `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
       <div style="background-color: #dc2626; color: white; padding: 24px; text-align: center;">
@@ -123,7 +123,7 @@ export function getPaymentReminderEmailTemplate(name: string, installment: any) 
         </p>
 
         <div style="margin-top: 32px;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || '#'}/accounts" style="background-color: #dc2626; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">View Billing Details</a>
+          <a href="${baseUrl}/accounts" style="background-color: #dc2626; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">View Billing Details</a>
         </div>
       </div>
       <div style="background-color: #f7fafc; padding: 20px; text-align: center; font-size: 11px; color: #a0aec0; line-height: 1.6;">

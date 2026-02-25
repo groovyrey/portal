@@ -9,9 +9,17 @@ export const BADGES: Record<string, Badge> = {
     color: 'blue',
     permissions: [], // No permissions yet as requested
   },
+  community_active: {
+    id: 'community_active',
+    name: 'Community Active',
+    description: 'Actively participating in the community',
+    icon: 'MessageSquare',
+    color: 'slate',
+    permissions: [],
+  },
 };
 
-export const BADGE_LIST = [BADGES.staff];
+export const BADGE_LIST = [BADGES.staff, BADGES.community_active];
 
 /**
  * Checks if a user has a specific permission based on their badges

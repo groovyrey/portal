@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { FileText, Loader2, Download, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 export default function EAFPage() {
   const [rawHtml, setRawHtml] = useState<string>('');
@@ -36,7 +37,12 @@ export default function EAFPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8"
+    >
       <main className="max-w-5xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="flex items-center gap-3">
@@ -121,6 +127,6 @@ export default function EAFPage() {
           </div>
         )}
       </main>
-    </div>
+    </motion.div>
   );
 }

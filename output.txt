@@ -1,18 +1,1 @@
-Fetch notifications error: ExpiredTokenException: Token expired: current date/time 1771817040 must be before the expiration date/time 1771804555
-    at async GET (app/api/student/notifications/route.ts:14:23)
-  12 |     const userId = sessionData.userId;
-  13 |
-> 14 |     const notifsRes = await query(`
-     |                       ^
-  15 |       SELECT * FROM notifications
-  16 |       WHERE user_id = $1
-  17 |       ORDER BY created_at DESC  {
-  : client,
-  : undefined,
-  : [Object],
-  Type: Sender,
-  Code: ExpiredTokenException,
-  Error: [Object],
-  RequestId: d443f5c3-cbae-459b-8917-27c779cda941,
-  xmlns: https://sts.amazonaws.com/doc/2011-06-15/
-}
+Error: Route "/api/admin/students/[id]/badges" used `params.id`. `params` is a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis

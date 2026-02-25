@@ -2,23 +2,26 @@
 
 import React from 'react';
 import { BADGES } from '@/lib/badges';
-import { ShieldCheck, Award, Star, Shield, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Award, Star, Shield, CheckCircle2, MessageSquare } from 'lucide-react';
+import { Avatar, AvatarGroup, Tooltip } from '@mui/material';
 
 const ICON_MAP: Record<string, any> = {
   ShieldCheck,
   Award,
   Star,
   Shield,
-  CheckCircle2
+  CheckCircle2,
+  MessageSquare
 };
 
 interface BadgeDisplayProps {
   badgeIds: string[] | undefined;
   size?: 'sm' | 'md' | 'lg';
   showName?: boolean;
+  onClick?: () => void;
 }
 
-export default function BadgeDisplay({ badgeIds, size = 'md', showName = false }: BadgeDisplayProps) {
+export default function BadgeDisplay({ badgeIds, size = 'md', showName = false, onClick }: BadgeDisplayProps) {
   if (!badgeIds || badgeIds.length === 0) return null;
 
   const userBadges = badgeIds
@@ -27,10 +30,10 @@ export default function BadgeDisplay({ badgeIds, size = 'md', showName = false }
 
   if (userBadges.length === 0) return null;
 
-  const sizeClasses = {
-    sm: 'text-[9px] px-1.5 py-0.5 gap-1',
-    md: 'text-[10px] px-2 py-1 gap-1.5',
-    lg: 'text-xs px-3 py-1.5 gap-2',
+  const sizePx = {
+    sm: 24,
+    md: 32,
+    lg: 40,
   };
 
   const iconSizeClasses = {
@@ -39,27 +42,56 @@ export default function BadgeDisplay({ badgeIds, size = 'md', showName = false }
     lg: 'h-4 w-4',
   };
 
-  return (
-    <div className="flex flex-wrap gap-2">
-      {userBadges.map((badge) => {
-        const Icon = ICON_MAP[badge.icon || 'Award'] || Award;
-        
-        // Simple color mapping
-        const colorStyles = badge.color === 'blue' 
-          ? 'bg-blue-50 text-blue-600 border-blue-100' 
-          : 'bg-slate-50 text-slate-600 border-slate-100';
+  const nameClasses = {
+    sm: 'text-[9px]',
+    md: 'text-[10px]',
+    lg: 'text-xs',
+  };
 
-        return (
-          <div 
-            key={badge.id}
-            className={`inline-flex items-center font-black uppercase tracking-[0.1em] rounded-lg border ${colorStyles} ${sizeClasses[size]}`}
-            title={badge.description}
-          >
-            <Icon className={iconSizeClasses[size]} />
-            {showName && <span>{badge.name}</span>}
-          </div>
-        );
-      })}
+  return (
+    <div 
+      className={`flex items-center gap-2 ${onClick ? 'cursor-pointer active:scale-95 transition-transform' : ''}`}
+      onClick={onClick}
+    >
+      <AvatarGroup 
+        max={4}
+        sx={{
+          '& .MuiAvatar-root': { 
+            width: sizePx[size], 
+            height: sizePx[size], 
+            fontSize: sizePx[size] / 2.5,
+            border: '2px solid white',
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
+          },
+        }}
+      >
+        {userBadges.map((badge) => {
+          const Icon = ICON_MAP[badge.icon || 'Award'] || Award;
+          
+          // Simple color mapping
+          const bgColor = badge.color === 'blue' ? '#eff6ff' : '#f8fafc';
+          const iconColor = badge.color === 'blue' ? '#2563eb' : '#64748b';
+
+          return (
+            <Tooltip key={badge.id} title={badge.description || badge.name} arrow>
+              <Avatar 
+                sx={{ 
+                  bgcolor: bgColor,
+                  color: iconColor,
+                }}
+              >
+                <Icon className={iconSizeClasses[size]} />
+              </Avatar>
+            </Tooltip>
+          );
+        })}
+      </AvatarGroup>
+      
+      {showName && userBadges.length === 1 && (
+        <span className={`font-black uppercase tracking-[0.1em] ${badgeIds.includes('staff') ? 'text-blue-600' : 'text-slate-500'} ${nameClasses[size]}`}>
+          {userBadges[0].name}
+        </span>
+      )}
     </div>
   );
 }

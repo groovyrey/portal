@@ -34,6 +34,10 @@ export async function GET(req: NextRequest) {
     console.log(`Running payment reminder check for: ${targetDateStr} (Today: ${phTime.toLocaleDateString()})`);
 
     // 3. Fetch all students from Firestore
+    const protocol = req.headers.get('x-forwarded-proto') || 'http';
+    const host = req.headers.get('host');
+    const baseUrl = `${protocol}://${host}`;
+
     const studentsSnap = await getDocs(collection(db, 'students'));
     let notificationCount = 0;
     let emailCount = 0;
@@ -83,7 +87,7 @@ export async function GET(req: NextRequest) {
             try {
               const parsedName = parseStudentName(studentData.name);
               const firstName = parsedName.firstName || studentData.name;
-              const html = getPaymentReminderEmailTemplate(firstName, dueInstallment);
+              const html = getPaymentReminderEmailTemplate(firstName, dueInstallment, baseUrl);
 
               await sendEmail({
                 to: studentData.email,
