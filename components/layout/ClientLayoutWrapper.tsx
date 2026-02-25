@@ -18,7 +18,7 @@ export default function ClientLayoutWrapper({ children }: { children: React.Reac
     checkRestricted();
     
     // Periodically check or listen for changes if needed
-    const interval = setInterval(checkRestricted, 500);
+    const interval = setInterval(checkRestricted, 5000);
     return () => clearInterval(interval);
   }, []);
 

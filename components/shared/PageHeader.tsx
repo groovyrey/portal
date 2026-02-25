@@ -46,7 +46,7 @@ export default function PageHeader({ title: propsTitle, description, icon: props
       setIsRestricted(document.cookie.includes('is_restricted=1'));
     };
     checkRestricted();
-    const interval = setInterval(checkRestricted, 500);
+    const interval = setInterval(checkRestricted, 5000);
     return () => clearInterval(interval);
   }, []);
 

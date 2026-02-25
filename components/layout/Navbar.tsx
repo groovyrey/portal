@@ -27,6 +27,8 @@ import {
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import NotificationDrawer from './NotificationDrawer';
+import { useNotificationsQuery } from '@/lib/hooks';
+import { Notification } from '@/types';
 
 export default function Navbar() {
   const router = useRouter();
@@ -40,7 +42,9 @@ export default function Navbar() {
   const [studentName, setStudentName] = useState<string | null>(null);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+
+  const { data: notifications = [] } = useNotificationsQuery(isLoggedIn);
+  const unreadCount = notifications.filter((n: Notification) => !n.isRead).length;
 
   useEffect(() => {
     // Check if logged in to show navbar
@@ -90,30 +94,6 @@ export default function Navbar() {
       window.removeEventListener('local-storage-update', checkLogin);
     };
   }, []);
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      const fetchUnreadCount = async () => {
-        try {
-          const res = await fetch('/api/student/notifications');
-          const data = await res.json();
-          if (data.success) {
-            const unread = data.notifications.filter((n: any) => !n.isRead).length;
-            setUnreadCount(unread);
-          }
-        } catch (err) {
-          console.error('Failed to fetch unread count');
-        }
-      };
-      
-      fetchUnreadCount();
-      // Poll for notifications every 30 seconds
-      const interval = setInterval(fetchUnreadCount, 30000);
-      return () => clearInterval(interval);
-    } else {
-      setUnreadCount(0);
-    }
-  }, [isLoggedIn]);
 
   const handleManualSync = async () => {
     if (isSyncing) return;
@@ -236,22 +216,17 @@ export default function Navbar() {
                 <div className="flex items-center gap-1 ml-2">
                   <button
                     onClick={() => setIsNotifOpen(true)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200 ${
+                    className={`relative p-2 rounded-xl border transition-all duration-200 ${
                       isNotifOpen 
-                        ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100' 
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200' 
                         : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600 hover:shadow-sm'
                     }`}
                   >
-                    {unreadCount > 0 ? (
-                      <>
-                        <span className="text-xs font-bold tabular-nums">
-                          {unreadCount > 99 ? '99+' : unreadCount}
-                        </span>
-                        <div className={`w-px h-3 ${isNotifOpen ? 'bg-white/30' : 'bg-slate-200'}`} />
-                        <Bell className="h-4 w-4" />
-                      </>
-                    ) : (
-                      <Bell className="h-4 w-4" />
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white ring-2 ring-white shadow-sm animate-in zoom-in duration-300">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
                     )}
                   </button>
 
@@ -302,18 +277,13 @@ export default function Navbar() {
               {isLoggedIn && (
                 <button
                   onClick={() => setIsNotifOpen(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-600 active:bg-slate-50 transition-all"
+                  className="relative p-2 rounded-xl border border-slate-200 bg-white text-slate-600 active:bg-slate-50 transition-all shadow-sm"
                 >
-                  {unreadCount > 0 ? (
-                    <>
-                      <span className="text-xs font-bold tabular-nums">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                      </span>
-                      <div className="w-px h-3 bg-slate-200" />
-                      <Bell className="h-4 w-4" />
-                    </>
-                  ) : (
-                    <Bell className="h-4 w-4" />
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white ring-2 ring-white shadow-sm">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
                   )}
                 </button>
               )}

@@ -1,10 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Drawer from './Drawer';
-import { Notification } from '@/types';
 import { 
-  Bell, 
   CheckCheck, 
   Trash2, 
   Info, 
@@ -12,11 +10,16 @@ import {
   AlertCircle, 
   XCircle,
   Clock,
-  ExternalLink
+  ExternalLink,
+  Bell
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import Skeleton from '../ui/Skeleton';
+import { useNotificationsQuery } from '@/lib/hooks';
+import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { Notification } from '@/types';
 
 interface NotificationDrawerProps {
   isOpen: boolean;
@@ -24,29 +27,13 @@ interface NotificationDrawerProps {
 }
 
 export default function NotificationDrawer({ isOpen, onClose }: NotificationDrawerProps) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const { data: notifications = [], isLoading } = useNotificationsQuery(isOpen);
+  const [activeTab, setActiveTab] = useState<'all' | 'unread'>('unread');
 
-  const fetchNotifications = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/student/notifications');
-      const data = await res.json();
-      if (data.success) {
-        setNotifications(data.notifications);
-      }
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchNotifications();
-    }
-  }, [isOpen]);
+  const filteredNotifications = notifications.filter((n: Notification) => 
+    activeTab === 'all' ? true : !n.isRead
+  );
 
   const markAsRead = async (id: string) => {
     try {
@@ -56,8 +43,8 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
         body: JSON.stringify({ id, action: 'markRead' }),
       });
       if (res.ok) {
-        setNotifications(prev => 
-          prev.map(n => n.id === id ? { ...n, isRead: true } : n)
+        queryClient.setQueryData(['notifications'], (prev: Notification[] | undefined) => 
+          prev?.map((n: Notification) => n.id === id ? { ...n, isRead: true } : n)
         );
       }
     } catch (error) {
@@ -73,7 +60,9 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
         body: JSON.stringify({ action: 'markAllRead' }),
       });
       if (res.ok) {
-        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        queryClient.setQueryData(['notifications'], (prev: Notification[] | undefined) => 
+          prev?.map((n: Notification) => ({ ...n, isRead: true }))
+        );
         toast.success('All notifications marked as read');
       }
     } catch (error) {
@@ -89,7 +78,9 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
         body: JSON.stringify({ id, action: 'delete' }),
       });
       if (res.ok) {
-        setNotifications(prev => prev.filter(n => n.id !== id));
+        queryClient.setQueryData(['notifications'], (prev: Notification[] | undefined) => 
+          prev?.filter((n: Notification) => n.id !== id)
+        );
         toast.success('Notification deleted');
       }
     } catch (error) {
@@ -106,7 +97,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
         body: JSON.stringify({ action: 'clearAll' }),
       });
       if (res.ok) {
-        setNotifications([]);
+        queryClient.setQueryData(['notifications'], []);
         toast.success('All notifications cleared');
       }
     } catch (error) {
@@ -137,7 +128,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
     return `${days}d ago`;
   };
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter((n: Notification) => !n.isRead).length;
 
   return (
     <Drawer 
@@ -146,20 +137,54 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
       title="Notifications"
     >
       <div className="flex flex-col h-full -mt-2">
-        {notifications.length > 0 && (
-          <div className="flex items-center justify-between mb-6">
-            <button 
-              onClick={markAllRead}
-              className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 transition-colors"
-            >
-              <CheckCheck className="h-3.5 w-3.5" />
-              Mark all read
-            </button>
+        <div className="flex p-1 bg-slate-100 rounded-xl mb-6">
+          <button
+            onClick={() => setActiveTab('unread')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
+              activeTab === 'unread' 
+                ? 'bg-white text-blue-600 shadow-sm' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Unread
+            {unreadCount > 0 && (
+              <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black ${
+                activeTab === 'unread' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'
+              }`}>
+                {unreadCount}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
+              activeTab === 'all' 
+                ? 'bg-white text-blue-600 shadow-sm' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            All
+          </button>
+        </div>
+
+        {filteredNotifications.length > 0 && (
+          <div className="flex items-center justify-between mb-6 px-1">
+            {activeTab === 'unread' ? (
+              <button 
+                onClick={markAllRead}
+                className="text-[10px] font-black text-blue-600 hover:text-blue-700 flex items-center gap-1.5 transition-colors uppercase tracking-widest"
+              >
+                <CheckCheck className="h-3 w-3" />
+                Mark all read
+              </button>
+            ) : (
+              <div />
+            )}
             <button 
               onClick={clearAll}
-              className="text-xs font-bold text-rose-500 hover:text-rose-600 flex items-center gap-1.5 transition-colors"
+              className="text-[10px] font-black text-rose-500 hover:text-rose-600 flex items-center gap-1.5 transition-colors uppercase tracking-widest"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-3 w-3" />
               Clear all
             </button>
           </div>
@@ -181,19 +206,23 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
               </div>
             ))}
           </div>
-        ) : notifications.length === 0 ? (
+        ) : filteredNotifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
               <Bell className="h-8 w-8 text-slate-300" />
             </div>
-            <h3 className="text-base font-bold text-slate-900 mb-1">No notifications yet</h3>
+            <h3 className="text-base font-bold text-slate-900 mb-1">
+              {activeTab === 'unread' ? 'You&apos;re all caught up!' : 'No notifications yet'}
+            </h3>
             <p className="text-sm text-slate-500">
-              When you get notifications, they&apos;ll show up here.
+              {activeTab === 'unread' 
+                ? 'Check the "All" tab to see your past notifications.' 
+                : 'When you get notifications, they&apos;ll show up here.'}
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {notifications.map((notif) => (
+            {filteredNotifications.map((notif: any) => (
               <div 
                 key={notif.id}
                 onClick={() => !notif.isRead && markAsRead(notif.id)}

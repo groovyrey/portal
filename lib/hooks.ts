@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Student } from '@/types';
+import { Student, Notification } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 
 export function useStudent() {
@@ -38,8 +38,23 @@ export function useStudent() {
   return { student, isLoading };
 }
 
+export function useNotificationsQuery(enabled = true) {
+  return useQuery<Notification[]>({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      const res = await fetch('/api/student/notifications');
+      if (!res.ok) throw new Error('Failed to fetch notifications');
+      const data = await res.json();
+      return data.notifications || [];
+    },
+    staleTime: 1000 * 60, // 1 minute
+    refetchInterval: 1000 * 60 * 2, // 2 minutes auto-poll as backup
+    enabled,
+  });
+}
+
 export function useStudentQuery() {
-  return useQuery({
+  return useQuery<Student | null>({
     queryKey: ['student-data'],
     queryFn: async () => {
       const res = await fetch('/api/student/me');
