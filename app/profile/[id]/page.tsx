@@ -249,63 +249,63 @@ function ProfileContent() {
               </div>
             </div>
           )}
+        </div>
+      </div>
 
-          <div className="mt-12 pt-12 border-t border-slate-50">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-xl bg-blue-50 flex items-center justify-center">
-                  <MessageSquare className="h-4 w-4 text-blue-600" />
-                </div>
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Feed Activity</h3>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Recent Updates</span>
-              </div>
+      <div className="mt-12">
+        <div className="flex items-center justify-between mb-8 px-4 sm:px-0">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-xl bg-blue-50 flex items-center justify-center">
+              <MessageSquare className="h-4 w-4 text-blue-600" />
             </div>
-
-            {loadingPosts ? (
-              <div className="space-y-4">
-                {[1, 2].map(i => (
-                  <div key={i} className="bg-white rounded-2xl p-6 border border-slate-100 space-y-4">
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="h-9 w-9 rounded-lg" />
-                      <div className="space-y-2 flex-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div>
-                    </div>
-                    <Skeleton className="h-20 w-full" />
-                  </div>
-                ))}
-              </div>
-            ) : posts.length === 0 ? (
-              <div className="text-center py-20 bg-slate-50 rounded-[2rem] border border-dashed border-slate-200">
-                <MessageSquare className="h-10 w-10 mx-auto mb-4 text-slate-200" />
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">No Activity Yet</p>
-                <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Join our student community to share posts</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {posts.map((post: CommunityPost) => (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    student={currentUserData}
-                    onLike={handleLike}
-                    onVote={handleVote}
-                    onOpen={openPostModal}
-                    onFetchReactors={() => {}}
-                    isProfileView={true}
-                  />
-                ))}
-                <Link 
-                  href="/community" 
-                  className="block text-center py-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-blue-600 transition-colors"
-                >
-                  View All in Community
-                </Link>
-              </div>
-            )}
+            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Feed Activity</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Recent Updates</span>
           </div>
         </div>
+
+        {loadingPosts ? (
+          <div className="space-y-4">
+            {[1, 2].map(i => (
+              <div key={i} className="bg-white rounded-2xl p-6 border border-slate-100 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-9 w-9 rounded-lg" />
+                  <div className="space-y-2 flex-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div>
+                </div>
+                <Skeleton className="h-20 w-full" />
+              </div>
+            ))}
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
+            <MessageSquare className="h-10 w-10 mx-auto mb-4 text-slate-200" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">No Activity Yet</p>
+            <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Join our student community to share posts</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {posts.map((post: CommunityPost) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                student={currentUserData}
+                onLike={handleLike}
+                onVote={handleVote}
+                onOpen={openPostModal}
+                onFetchReactors={() => {}}
+                isProfileView={true}
+              />
+            ))}
+            <Link 
+              href="/community" 
+              className="block text-center py-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-blue-600 transition-colors"
+            >
+              View All in Community
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
