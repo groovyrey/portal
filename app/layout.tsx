@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 import { Suspense } from 'react';
 import ClientLayoutWrapper from "@/components/layout/ClientLayoutWrapper";
 import RealtimeProvider from "@/components/shared/RealtimeProvider";
+import { Analytics } from "@vercel/analytics/react";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -35,6 +36,7 @@ export default function RootLayout({
               </ClientLayoutWrapper>
             </Suspense>
             <Toaster position="top-center" richColors />
+            <Analytics />
           </RealtimeProvider>
         </Providers>
       </body>
