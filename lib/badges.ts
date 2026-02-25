@@ -4,7 +4,7 @@ export const BADGES: Record<string, Badge> = {
   staff: {
     id: 'staff',
     name: 'Staff',
-    description: 'Official portal staff member',
+    description: 'Official LCC Hub Badge',
     icon: 'ShieldCheck',
     color: 'blue',
     permissions: [], // No permissions yet as requested
@@ -17,9 +17,17 @@ export const BADGES: Record<string, Badge> = {
     color: 'slate',
     permissions: [],
   },
+  beta_tester: {
+    id: 'beta_tester',
+    name: 'Beta Tester',
+    description: 'Early access to new features',
+    icon: 'Beaker',
+    color: 'amber',
+    permissions: [],
+  },
 };
 
-export const BADGE_LIST = [BADGES.staff, BADGES.community_active];
+export const BADGE_LIST = [BADGES.staff, BADGES.beta_tester, BADGES.community_active];
 
 /**
  * Checks if a user has a specific permission based on their badges

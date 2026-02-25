@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, User, Search, Save, Loader2, Check, Settings2 } from 'lucide-react';
+import { ShieldCheck, User, Search, Save, Loader2, Check, Settings2, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { BADGE_LIST } from '@/lib/badges';
 import BadgeDisplay from '@/components/shared/BadgeDisplay';
 import Modal from '@/components/ui/Modal';
+import { useStudentQuery } from '@/lib/hooks';
+import { useRouter } from 'next/navigation';
 
-interface Student {
+interface ManagedStudent {
   id: string;
   name: string;
   course: string;
@@ -15,12 +17,46 @@ interface Student {
 }
 
 export default function AdminPage() {
-  const [students, setStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<ManagedStudent[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<ManagedStudent | null>(null);
+
+  const { data: currentUser, isLoading: isUserLoading } = useStudentQuery();
+  const router = useRouter();
+
+  // Authentication check
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!currentUser || !currentUser.badges?.includes('staff')) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl max-w-md w-full text-center space-y-6">
+          <div className="bg-red-50 p-4 rounded-full w-20 h-20 mx-auto flex items-center justify-center text-red-500">
+            <ShieldAlert className="h-10 w-10" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Access Denied</h1>
+            <p className="text-sm font-bold text-slate-400">You do not have permission to view this page.</p>
+          </div>
+          <button 
+            onClick={() => router.push('/')}
+            className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95"
+          >
+            Return Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const fetchStudents = async (query: string) => {
     if (!query.trim()) {

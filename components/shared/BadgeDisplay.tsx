@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { BADGES } from '@/lib/badges';
-import { ShieldCheck, Award, Star, Shield, CheckCircle2, MessageSquare } from 'lucide-react';
+import { ShieldCheck, Award, Star, Shield, CheckCircle2, MessageSquare, Beaker } from 'lucide-react';
 import { Avatar, AvatarGroup, Tooltip } from '@mui/material';
 
 const ICON_MAP: Record<string, any> = {
@@ -11,7 +11,8 @@ const ICON_MAP: Record<string, any> = {
   Star,
   Shield,
   CheckCircle2,
-  MessageSquare
+  MessageSquare,
+  Beaker
 };
 
 interface BadgeDisplayProps {
@@ -69,8 +70,16 @@ export default function BadgeDisplay({ badgeIds, size = 'md', showName = false, 
           const Icon = ICON_MAP[badge.icon || 'Award'] || Award;
           
           // Simple color mapping
-          const bgColor = badge.color === 'blue' ? '#eff6ff' : '#f8fafc';
-          const iconColor = badge.color === 'blue' ? '#2563eb' : '#64748b';
+          let bgColor = '#f8fafc'; // slate-50
+          let iconColor = '#64748b'; // slate-500
+
+          if (badge.color === 'blue') {
+            bgColor = '#eff6ff'; // blue-50
+            iconColor = '#2563eb'; // blue-600
+          } else if (badge.color === 'amber') {
+            bgColor = '#fffbeb'; // amber-50
+            iconColor = '#d97706'; // amber-600
+          }
 
           return (
             <Tooltip key={badge.id} title={badge.description || badge.name} arrow>
