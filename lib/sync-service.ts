@@ -18,6 +18,8 @@ export class SyncService {
     
     // Explicitly set default settings for new users or if missing
     let settings = existingStudentDoc.exists() ? (existingStudentDoc.data().settings || null) : null;
+    const badges = existingStudentDoc.exists() ? (existingStudentDoc.data().badges || []) : [];
+    
     if (!settings) {
         settings = { 
             notifications: true, 
@@ -42,7 +44,7 @@ export class SyncService {
       updated_at: serverTimestamp()
     }, { merge: true });
 
-    return { isNewUser, settings };
+    return { isNewUser, settings, badges };
   }
 
   async syncFinancials(financials: ScrapedFinancials) {

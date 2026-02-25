@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getStudentProfile } from '@/lib/data-service';
 import { query } from '@/lib/pg';
 
 export async function GET(req: NextRequest) {
@@ -10,6 +11,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Student ID required' }, { status: 400 });
     }
 
+    // 1. Try to get from Firestore (Data Service) as it's the source of truth for badges and settings
+    const profile = await getStudentProfile(studentId);
+    
+    if (profile) {
+      return NextResponse.json({
+        success: true,
+        data: profile
+      });
+    }
+
+    // 2. Fallback to PostgreSQL if Firestore doc doesn't exist yet (e.g. sync in progress)
     const studentRes = await query(`
       SELECT id, name, course, year_level, semester, email
       FROM students
@@ -30,6 +42,7 @@ export async function GET(req: NextRequest) {
         yearLevel: student.year_level,
         semester: student.semester,
         email: student.email,
+        badges: [],
         settings: {
           notifications: true,
           isPublic: true,

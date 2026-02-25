@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
     const offeredSubjects = scraper.parseOfferedSubjects(subListRes.$);
 
     // --- DATABASE SYNCING ---
-    const { isNewUser, settings } = await syncer.syncStudentData(studentInfo, reportLinks);
+    const { isNewUser, settings, badges } = await syncer.syncStudentData(studentInfo, reportLinks);
     
     // Background Sync (Not truly background in Vercel unless using waitUntil, but decoupled here)
     await Promise.all([
@@ -168,6 +168,7 @@ export async function POST(req: NextRequest) {
           offeredSubjects,
           availableReports: reportLinks,
           settings: settings || { notifications: true, isPublic: true, showAcademicInfo: true, classReminders: true, paymentReminders: true },
+          badges: badges || [],
           financials: mergedFinancials,
           // Diagnostic raw data for the specific account page
           _debug_accounts_html: accountsRes.data

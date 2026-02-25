@@ -112,6 +112,17 @@ export interface Notification {
   link?: string;
 }
 
+export interface Badge {
+  id: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  permissions: string[];
+}
+
+export type Permission = string;
+
 export interface Student {
   name: string;
   parsedName?: ParsedName;
@@ -130,6 +141,7 @@ export interface Student {
   grades?: SemesterGrade[];
   availableReports?: ReportLink[];
   updated_at?: any;
+  badges?: string[]; // Array of badge IDs
   settings?: {
     notifications: boolean;
     isPublic: boolean;

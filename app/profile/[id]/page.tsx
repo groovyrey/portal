@@ -27,6 +27,7 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useStudent } from '@/lib/hooks';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
 import Skeleton from '@/components/ui/Skeleton';
+import BadgeDisplay from '@/components/shared/BadgeDisplay';
 
 function ProfileContent() {
   const queryClient = useQueryClient();
@@ -221,6 +222,10 @@ function ProfileContent() {
                     {isOnline ? 'Online' : 'Offline'}
                   </div>
                 </div>
+              </div>
+
+              <div className="flex flex-wrap justify-center sm:justify-start gap-3 items-center">
+                <BadgeDisplay badgeIds={student.badges} size="md" showName={true} />
               </div>
 
               {showAcademic && (
