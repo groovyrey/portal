@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Student } from '../../types';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Search, X, ChevronRight, BookOpen } from 'lucide-react';
+import { Search, X, ChevronRight } from 'lucide-react';
 import LottieAnimation from '@/components/ui/LottieAnimation';
 import Skeleton from '@/components/ui/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,10 +13,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 export default function SubjectsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [isInitialized, setIsInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: student, isLoading: loading, isError } = useQuery({
+  const { data: student, isLoading: loading } = useQuery({
     queryKey: ['student-data'],
     queryFn: async () => {
       const response = await fetch('/api/student/me');
@@ -29,16 +28,12 @@ export default function SubjectsPage() {
     }
   });
 
-  useEffect(() => {
-    setIsInitialized(true);
-  }, []);
-
   const handleRefresh = async () => {
     const refreshToast = toast.loading('Refreshing subject listing...');
     try {
       await queryClient.invalidateQueries({ queryKey: ['student-data'] });
       toast.success('Subjects updated!', { id: refreshToast });
-    } catch (err) {
+    } catch {
       toast.error('Refresh failed.', { id: refreshToast });
     }
   };
@@ -48,7 +43,7 @@ export default function SubjectsPage() {
     sub.description.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  if (!isInitialized) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 p-8">
         <div className="max-w-5xl mx-auto space-y-8">

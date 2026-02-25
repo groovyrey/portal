@@ -13,7 +13,8 @@ export default function Footer() {
   useEffect(() => {
     const data = localStorage.getItem('student_data');
     if (data) {
-      setStudentId(JSON.parse(data).id);
+      const timer = setTimeout(() => setStudentId(JSON.parse(data).id), 0);
+      return () => clearTimeout(timer);
     }
   }, []);
 

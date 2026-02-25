@@ -69,7 +69,7 @@ export default function DisclaimerContent() {
             1. Rules & Responsibility
           </h3>
           <p className="text-slate-600 leading-relaxed">
-            This software is provided "as-is" with no guarantees. The makers of this app are not responsible for any problems or issues, like account locks or wrong information.
+            This software is provided &quot;as-is&quot; with no guarantees. The makers of this app are not responsible for any problems or issues, like account locks or wrong information.
           </p>
         </section>
 
@@ -78,7 +78,7 @@ export default function DisclaimerContent() {
             2. How We Get Your Data
           </h3>
           <p className="text-slate-600 leading-relaxed mb-4">
-            The app acts as a secure web tool. it automatically gets your school info from the official portal and formats it for a better experience. We never change any data on the school's servers.
+            The app acts as a secure web tool. it automatically gets your school info from the official portal and formats it for a better experience. We never change any data on the school&apos;s servers.
           </p>
           <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex items-start gap-3">
             <Info className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
@@ -99,10 +99,10 @@ export default function DisclaimerContent() {
 
         <section>
           <h3 className="text-xl font-bold text-slate-900 mb-4 border-l-4 border-blue-600 pl-4">
-            4. App Features & Who's Responsible
+            4. App Features & Who&apos;s Responsible
           </h3>
           <p className="text-slate-600 leading-relaxed">
-            This app may show extra info or better-looking text that isn't on the official school portal. These features are the responsibility of the app makers and are not from La Concepcion College.
+            This app may show extra info or better-looking text that isn&apos;t on the official school portal. These features are the responsibility of the app makers and are not from La Concepcion College.
           </p>
         </section>
 
@@ -126,7 +126,7 @@ export default function DisclaimerContent() {
 
             <div>
               <h4 className="text-white font-bold mb-2">3. Service as it is</h4>
-              <p>LCC Hub is a convenience tool. We can't guarantee it will always be online or always work with the school portal. We can change or stop the app at any time.</p>
+              <p>LCC Hub is a convenience tool. We can&apos;t guarantee it will always be online or always work with the school portal. We can change or stop the app at any time.</p>
             </div>
 
             <div>

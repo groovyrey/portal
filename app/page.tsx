@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { LoginResponse, Student } from '@/types';
+import { useState } from 'react';
+import { LoginResponse } from '@/types';
 import LoginForm from '@/components/auth/LoginForm';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import ScheduleTable from '@/components/dashboard/ScheduleTable';
@@ -16,14 +16,9 @@ import Link from 'next/link';
 export default function Home() {
   const queryClient = useQueryClient();
   const [loginError, setLoginError] = useState<string | undefined>(undefined);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   // Use React Query for student data
   const { data: student, isLoading: isQueryLoading } = useStudentQuery();
-
-  useEffect(() => {
-    setIsInitialized(true);
-  }, []);
 
   const loginMutation = useMutation({
     mutationFn: async ({ userId, pass }: { userId: string, pass: string }) => {
@@ -55,28 +50,11 @@ export default function Home() {
     }
   });
 
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      await fetch('/api/student/logout', { method: 'POST' });
-    },
-    onSuccess: () => {
-      queryClient.setQueryData(['student-data'], null);
-      localStorage.removeItem('student_data');
-      localStorage.removeItem('student_pass');
-      window.dispatchEvent(new Event('local-storage-update'));
-      toast.success('Logged out successfully.');
-    }
-  });
-
   const handleLogin = (userId: string, pass: string) => {
     loginMutation.mutate({ userId, pass });
   };
 
-  const handleLogout = () => {
-    logoutMutation.mutate();
-  };
-
-  if (!isInitialized || (isQueryLoading && !student)) {
+  if (isQueryLoading && !student) {
     return (
       <div className="min-h-screen bg-slate-50 p-8">
         <div className="max-w-5xl mx-auto space-y-8">

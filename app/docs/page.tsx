@@ -45,7 +45,7 @@ const DocsPage: React.FC = () => {
               <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                 <h3 className="text-lg font-bold mb-3 text-slate-800">The Dashboard</h3>
                 <p className="text-slate-600 leading-relaxed">
-                  When you log in, you'll see everything in one place. Your GPA, your next class, and any fees you need to pay are all on your main screen.
+                  When you log in, you&apos;ll see everything in one place. Your GPA, your next class, and any fees you need to pay are all on your main screen.
                 </p>
               </div>
             </div>
@@ -127,7 +127,7 @@ const DocsPage: React.FC = () => {
                 </div>
                 <h3 className="font-bold mb-2">Live Notifications</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">
-                  Stay updated with instant alerts. Know right away when someone comments or when there's new activity.
+                  Stay updated with instant alerts. Know right away when someone comments or when there&apos;s new activity.
                 </p>
               </div>
             </div>
@@ -151,7 +151,7 @@ const DocsPage: React.FC = () => {
                   </p>
                   <h3 className="text-white font-bold text-lg mb-4">No Saved Passwords</h3>
                   <p className="text-sm leading-relaxed">
-                    We never save your password. It's only used to log you in once and is removed from the system immediately after.
+                    We never save your password. It&apos;s only used to log you in once and is removed from the system immediately after.
                   </p>
                 </div>
                 <div className="space-y-6">
@@ -205,8 +205,8 @@ const DocsPage: React.FC = () => {
             &copy; {new Date().getFullYear()} LCC Hub — Unofficial Documentation
           </p>
           <div className="flex gap-6">
-            <a href="/disclaimer" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">Disclaimer</a>
-            <a href="/" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">Home</a>
+            <Link href="/disclaimer" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">Disclaimer</Link>
+            <Link href="/" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">Home</Link>
           </div>
         </footer>
       </div>

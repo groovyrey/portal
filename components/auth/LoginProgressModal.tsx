@@ -24,7 +24,8 @@ export default function LoginProgressModal({ isOpen }: LoginProgressModalProps) 
   // Reset current step when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setCurrentStep(0);
+      const timer = setTimeout(() => setCurrentStep(0), 0);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 

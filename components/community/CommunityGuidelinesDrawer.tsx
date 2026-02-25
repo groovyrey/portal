@@ -72,7 +72,7 @@ export default function CommunityGuidelinesDrawer({ isOpen, onClose }: Community
 
         <div className="pt-6 border-t border-slate-100">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">
-            Let's build a better LCC together
+            Let&apos;s build a better LCC together
           </p>
         </div>
       </div>

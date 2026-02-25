@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import FinancialSummary from '@/components/dashboard/FinancialSummary';
 import Link from 'next/link';
 import { useStudentQuery } from '@/lib/hooks';
@@ -22,11 +21,6 @@ import { toast } from 'sonner';
 
 export default function AccountsPage() {
   const { data: student, isLoading: loadingQuery, isFetching, refetch } = useStudentQuery();
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  useEffect(() => {
-    setIsInitialized(true);
-  }, []);
 
   const handleManualRefresh = async () => {
     if (!student) return;
@@ -47,12 +41,12 @@ export default function AccountsPage() {
       } else {
         toast.error(result.error || 'Sync failed.', { id: refreshToast });
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to sync records.', { id: refreshToast });
     }
   };
 
-  if (!isInitialized || (loadingQuery && !student)) {
+  if (loadingQuery && !student) {
     return (
       <div className="min-h-screen bg-slate-50 p-8">
         <div className="max-w-5xl mx-auto space-y-8">
@@ -82,7 +76,7 @@ export default function AccountsPage() {
         />
         <h2 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">No Financial Records</h2>
         <p className="text-slate-500 mb-8 max-w-sm font-medium leading-relaxed text-sm">
-          We couldn't find any financial data for your account. Please log in or refresh your data from the dashboard.
+          We couldn&apos;t find any financial data for your account. Please log in or refresh your data from the dashboard.
         </p>
         <div className="flex gap-4">
           <Link 

@@ -38,8 +38,6 @@ export default function GradesList({ reports }: GradesListProps) {
     enabled: !!selectedHref,
   });
 
-  if (!reports) return null;
-
   const handleOpenReport = (href: string, title: string) => {
     setSelectedHref(href);
     setSelectedSem(title);
@@ -60,6 +58,8 @@ export default function GradesList({ reports }: GradesListProps) {
   const handleCloseDrawer = () => {
     setIsDrawerOpen(false);
   };
+
+  if (!reports) return null;
 
   return (
     <div className="space-y-6">

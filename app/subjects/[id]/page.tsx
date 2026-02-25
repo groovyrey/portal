@@ -44,7 +44,7 @@ export default function SubjectDetailPage() {
             <AlertCircle size={40} />
           </div>
           <h2 className="text-2xl font-black text-slate-900 mb-2">Subject Not Found</h2>
-          <p className="text-slate-500 mb-8 font-medium">We couldn't find the subject code "{subjectCode}" in your record.</p>
+          <p className="text-slate-500 mb-8 font-medium">We couldn&apos;t find the subject code &quot;{subjectCode}&quot; in your record.</p>
           <button 
             onClick={() => router.push('/subjects')}
             className="w-full px-6 py-4 bg-slate-900 text-white font-bold rounded-2xl transition-all hover:bg-slate-800 active:opacity-70 flex items-center justify-center gap-2"

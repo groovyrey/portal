@@ -188,7 +188,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             </div>
             <h3 className="text-base font-bold text-slate-900 mb-1">No notifications yet</h3>
             <p className="text-sm text-slate-500">
-              When you get notifications, they'll show up here.
+              When you get notifications, they&apos;ll show up here.
             </p>
           </div>
         ) : (

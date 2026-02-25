@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { Student } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 export function useStudent() {
   const [student, setStudent] = useState<Student | null>(null);
@@ -25,11 +24,12 @@ export function useStudent() {
   };
 
   useEffect(() => {
-    checkStudent();
+    const timer = setTimeout(() => checkStudent(), 0);
     window.addEventListener('storage', checkStudent);
     window.addEventListener('local-storage-update', checkStudent);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('storage', checkStudent);
       window.removeEventListener('local-storage-update', checkStudent);
     };

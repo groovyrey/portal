@@ -58,7 +58,7 @@ export default function PostReviewResultModal({ isOpen, onClose, result, isError
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Growth Tip</span>
             </div>
             <p className="text-xs text-slate-600 font-bold leading-relaxed italic">
-              "{result.growth_tip}"
+              &quot;{result.growth_tip}&quot;
             </p>
           </div>
         )}

@@ -42,15 +42,18 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
   const [paymentRemindersEnabled, setPaymentRemindersEnabled] = useState(true);
 
   useEffect(() => {
-    if (student?.settings?.notifications !== undefined) {
-      setAppNotifsEnabled(student.settings.notifications);
-    }
-    if (student?.settings?.classReminders !== undefined) {
-      setClassRemindersEnabled(student.settings.classReminders);
-    }
-    if (student?.settings?.paymentReminders !== undefined) {
-      setPaymentRemindersEnabled(student.settings.paymentReminders);
-    }
+    const timer = setTimeout(() => {
+      if (student?.settings?.notifications !== undefined) {
+        setAppNotifsEnabled(student.settings.notifications);
+      }
+      if (student?.settings?.classReminders !== undefined) {
+        setClassRemindersEnabled(student.settings.classReminders);
+      }
+      if (student?.settings?.paymentReminders !== undefined) {
+        setPaymentRemindersEnabled(student.settings.paymentReminders);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [student]);
 
   const handleAppNotifToggle = async (enabled: boolean) => {

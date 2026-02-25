@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 import { getFullStudentData } from '@/lib/data-service';
+import { Financials, ScheduleItem } from '@/types';
 import { 
   SCHOOL_INFO, 
   BUILDING_CODES, 
@@ -12,6 +13,11 @@ import {
   IMPORTANT_OFFICES 
 } from '@/lib/assistant-knowledge';
 
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export const maxDuration = 30;
 
 // Google Generative AI setup
@@ -19,7 +25,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.N
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, timezone = 'Asia/Manila' } = await req.json();
+    const { messages, timezone = 'Asia/Manila' }: { messages: Message[], timezone?: string } = await req.json();
     
     // 1. Authenticate
     const sessionCookie = req.cookies.get('session_token');
@@ -32,7 +38,7 @@ export async function POST(req: NextRequest) {
       const decrypted = decrypt(sessionCookie.value);
       const sessionData = JSON.parse(decrypted);
       userId = sessionData.userId;
-    } catch (e) {
+    } catch {
       return new Response('Invalid or expired session', { status: 401 });
     }
 
@@ -63,19 +69,19 @@ export async function POST(req: NextRequest) {
 `.trim();
 
       if (financials.dueAccounts && financials.dueAccounts.length > 0) {
-        financialContext += '\n\nPENDING DUES (Payable ASAP):\n' + financials.dueAccounts.map((d: any) => `- Due Date: ${d.dueDate} | ${d.description} | Due: ${d.due}`).join('\n');
+        financialContext += '\n\nPENDING DUES (Payable ASAP):\n' + financials.dueAccounts.map((d: Required<Financials>['dueAccounts'][number]) => `- Due Date: ${d.dueDate} | ${d.description} | Due: ${d.due}`).join('\n');
       }
 
       if (financials.installments && financials.installments.length > 0) {
-        financialContext += '\n\nINSTALLMENT PLAN:\n' + financials.installments.map((i: any) => `- ${i.description} (${i.dueDate}): Assessed: ${i.assessed} | Outstanding: ${i.outstanding}`).join('\n');
+        financialContext += '\n\nINSTALLMENT PLAN:\n' + financials.installments.map((i: Required<Financials>['installments'][number]) => `- ${i.description} (${i.dueDate}): Assessed: ${i.assessed} | Outstanding: ${i.outstanding}`).join('\n');
       }
 
       if (financials.payments && financials.payments.length > 0) {
-        financialContext += '\n\nPAYMENT HISTORY:\n' + financials.payments.map((p: any) => `- ${p.date}: ${p.amount} (Ref: ${p.reference})`).join('\n');
+        financialContext += '\n\nPAYMENT HISTORY:\n' + financials.payments.map((p: Required<Financials>['payments'][number]) => `- ${p.date}: ${p.amount} (Ref: ${p.reference})`).join('\n');
       }
 
       if (financials.adjustments && financials.adjustments.length > 0) {
-        financialContext += '\n\nADJUSTMENTS:\n' + financials.adjustments.map((a: any) => `- ${a.dueDate}: ${a.description} | ${a.adjustment}`).join('\n');
+        financialContext += '\n\nADJUSTMENTS:\n' + financials.adjustments.map((a: Required<Financials>['adjustments'][number]) => `- ${a.dueDate}: ${a.description} | ${a.adjustment}`).join('\n');
       }
     }
 
@@ -114,8 +120,8 @@ ACADEMIC QUICK STATS:
 - Total Subjects Recorded: ${allGrades.length}
 
 CURRENT SCHEDULE:
-${scheduleItems.length > 0 ? scheduleItems.map((s: any) => {
-  const code = s.subject || s.code || 'N/A'; // Handle variations
+${scheduleItems.length > 0 ? scheduleItems.map((s: ScheduleItem) => {
+  const code = s.subject; // Handle variations
   const title = s.description || s.subject || 'Unknown Subject';
   return `- ${title} (${code}): ${s.time} | Room: ${s.room}`;
 }).join('\n') : 'No schedule data found.'}
@@ -124,7 +130,7 @@ FINANCIAL STATUS:
 ${financialContext}
 
 GRADE SUMMARY (MOST RECENT):
-${allGrades.slice(0, 20).map(g => `- [${g.code}] ${g.description}: ${g.grade} (${g.remarks})`).join('\n')}
+${allGrades.slice(0, 20).map((g: any) => `- [${g.code}] ${g.description}: ${g.grade} (${g.remarks})`).join('\n')}
 ${allGrades.length > 20 ? '...and more subjects in the record.' : ''}
 
 ---
@@ -169,7 +175,7 @@ INSTRUCTIONS:
       history: [
         { role: "user", parts: [{ text: systemPrompt }] },
         { role: "model", parts: [{ text: "Understood. I am ready to assist the student based on their profile and academic data." }] },
-        ...messages.slice(0, -1).map((m: any) => ({
+        ...messages.slice(0, -1).map((m: Message) => ({
           role: m.role === 'assistant' ? 'model' : 'user',
           parts: [{ text: m.content }],
         })),

@@ -77,7 +77,7 @@ export default function StatusPage() {
             <div className="space-y-4">
               <p className="text-slate-500 leading-relaxed font-bold">
                 LCC Hub Automated Services (Cron Jobs) are scheduled tasks that handle time-sensitive notifications and system maintenance. 
-                Below is the real-time execution status for today's cycles.
+                Below is the real-time execution status for today&apos;s cycles.
               </p>
               <div className="flex gap-6">
                 <div className="flex items-center gap-2">

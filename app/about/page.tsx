@@ -70,7 +70,7 @@ export default function AboutPage() {
                 A Better Way to Manage Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">School Life.</span>
               </h1>
               <p className="text-xl text-slate-600 leading-relaxed mb-8 max-w-lg">
-                LCC Hub is more than just a dashboard. It's a modern, AI-powered tool built to make your academic life easier and keep you connected.
+                LCC Hub is more than just a dashboard. It&apos;s a modern, AI-powered tool built to make your academic life easier and keep you connected.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link 
@@ -184,7 +184,7 @@ export default function AboutPage() {
                   <GraduationCap className="text-white h-6 w-6" />
                 </div>
                 <h3 className="text-2xl font-bold mb-6 italic leading-relaxed">
-                  "Education is the passport to the future, for tomorrow belongs to those who prepare for it today."
+                  &quot;Education is the passport to the future, for tomorrow belongs to those who prepare for it today.&quot;
                 </h3>
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-black text-xs">
