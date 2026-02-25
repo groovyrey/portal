@@ -8,41 +8,20 @@ import {
   Loader2,
   Lock,
   MessageSquare,
-  Heart,
-  MoreVertical,
-  Trash2,
-  X,
-  ShieldCheck,
-  Award,
-  Star,
-  Shield,
-  CheckCircle2
+  X
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { db } from '@/lib/db';
 import { doc, getDoc } from 'firebase/firestore';
-import { parseStudentName, deobfuscateId, obfuscateId } from '@/lib/utils';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { parseStudentName, deobfuscateId } from '@/lib/utils';
 import PostCard from '@/components/community/PostCard';
-import Modal from '@/components/ui/Modal';
 import { toast } from 'sonner';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useStudent } from '@/lib/hooks';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
 import Skeleton from '@/components/ui/Skeleton';
 import BadgeDisplay from '@/components/shared/BadgeDisplay';
-import { BADGES } from '@/lib/badges';
-
-const BADGE_ICONS: Record<string, any> = {
-  ShieldCheck,
-  Award,
-  Star,
-  Shield,
-  CheckCircle2,
-  MessageSquare
-};
 
 function ProfileContent() {
   const queryClient = useQueryClient();
@@ -62,7 +41,6 @@ function ProfileContent() {
   });
   const [loading, setLoading] = useState(true);
   const [isPublicView, setIsPublicView] = useState(false);
-  const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
 
   const { data: posts = [], isLoading: loadingPosts } = useQuery({
     queryKey: ['user-posts', profileId],
@@ -267,7 +245,6 @@ function ProfileContent() {
                   badgeIds={student.badges} 
                   size="lg" 
                   showName={true} 
-                  onClick={() => setIsBadgeModalOpen(true)}
                 />
               </div>
             </div>
@@ -330,54 +307,6 @@ function ProfileContent() {
           </div>
         </div>
       </div>
-
-      {/* Badge Information Modal */}
-      <Modal
-        isOpen={isBadgeModalOpen}
-        onClose={() => setIsBadgeModalOpen(false)}
-        title={
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-50 p-2 rounded-xl text-blue-600">
-              <Award className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="font-black text-slate-900 uppercase tracking-tight leading-none">Badges & Achievements</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Official Recognition</p>
-            </div>
-          </div>
-        }
-        maxWidth="max-w-md"
-      >
-        <div className="p-6 space-y-4">
-          {student.badges?.map(badgeId => {
-            const badge = BADGES[badgeId];
-            if (!badge) return null;
-            const Icon = BADGE_ICONS[badge.icon || 'Award'] || Award;
-            const colorStyles = badge.color === 'blue' 
-              ? 'bg-blue-50 text-blue-600 border-blue-100' 
-              : 'bg-slate-50 text-slate-600 border-slate-100';
-
-            return (
-              <div key={badgeId} className={`flex items-start gap-4 p-4 rounded-2xl border ${colorStyles}`}>
-                <div className={`p-3 rounded-xl ${badge.color === 'blue' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="font-black uppercase tracking-tight text-sm">{badge.name}</h4>
-                  <p className="text-xs font-medium opacity-80 leading-relaxed">{badge.description}</p>
-                </div>
-              </div>
-            );
-          })}
-          
-          <button
-            onClick={() => setIsBadgeModalOpen(false)}
-            className="w-full mt-4 bg-slate-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95"
-          >
-            Close
-          </button>
-        </div>
-      </Modal>
     </div>
   );
 }
