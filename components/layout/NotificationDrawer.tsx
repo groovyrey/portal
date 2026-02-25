@@ -16,6 +16,7 @@ import {
 import Link from 'next/link';
 import { toast } from 'sonner';
 import Skeleton from '../ui/Skeleton';
+import Modal from '../ui/Modal';
 import { useNotificationsQuery } from '@/lib/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -30,6 +31,23 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
   const queryClient = useQueryClient();
   const { data: notifications = [], isLoading } = useNotificationsQuery(isOpen);
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('unread');
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText: string;
+    variant: 'rose' | 'blue';
+    icon: React.ReactNode;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    confirmText: '',
+    variant: 'blue',
+    icon: null
+  });
 
   const filteredNotifications = notifications.filter((n: Notification) => 
     activeTab === 'all' ? true : !n.isRead
@@ -64,10 +82,23 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
           prev?.map((n: Notification) => ({ ...n, isRead: true }))
         );
         toast.success('All notifications marked as read');
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
       }
     } catch (error) {
       console.error('Error marking all as read:', error);
     }
+  };
+
+  const confirmMarkAllRead = () => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Mark all as read',
+      message: 'Are you sure you want to mark all notifications as read?',
+      onConfirm: markAllRead,
+      confirmText: 'Mark all read',
+      variant: 'blue',
+      icon: <CheckCheck className="h-5 w-5 text-blue-500" />
+    });
   };
 
   const deleteNotification = async (id: string) => {
@@ -82,14 +113,26 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
           prev?.filter((n: Notification) => n.id !== id)
         );
         toast.success('Notification deleted');
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
       }
     } catch (error) {
       console.error('Error deleting notification:', error);
     }
   };
 
+  const confirmDelete = (id: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete notification',
+      message: 'Are you sure you want to delete this notification? This action cannot be undone.',
+      onConfirm: () => deleteNotification(id),
+      confirmText: 'Delete',
+      variant: 'rose',
+      icon: <Trash2 className="h-5 w-5 text-rose-500" />
+    });
+  };
+
   const clearAll = async () => {
-    if (!confirm('Are you sure you want to clear all notifications?')) return;
     try {
       const res = await fetch('/api/student/notifications', {
         method: 'DELETE',
@@ -99,10 +142,23 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
       if (res.ok) {
         queryClient.setQueryData(['notifications'], []);
         toast.success('All notifications cleared');
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
       }
     } catch (error) {
       console.error('Error clearing notifications:', error);
     }
+  };
+
+  const confirmClearAll = () => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Clear all',
+      message: 'This will permanently delete all your notifications. This action cannot be undone.',
+      onConfirm: clearAll,
+      confirmText: 'Clear all',
+      variant: 'rose',
+      icon: <Trash2 className="h-5 w-5 text-rose-500" />
+    });
   };
 
   const getIcon = (type: string) => {
@@ -171,7 +227,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
           <div className="flex items-center justify-between mb-6 px-1">
             {activeTab === 'unread' ? (
               <button 
-                onClick={markAllRead}
+                onClick={confirmMarkAllRead}
                 className="text-[10px] font-black text-blue-600 hover:text-blue-700 flex items-center gap-1.5 transition-colors uppercase tracking-widest"
               >
                 <CheckCheck className="h-3 w-3" />
@@ -181,7 +237,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
               <div />
             )}
             <button 
-              onClick={clearAll}
+              onClick={confirmClearAll}
               className="text-[10px] font-black text-rose-500 hover:text-rose-600 flex items-center gap-1.5 transition-colors uppercase tracking-widest"
             >
               <Trash2 className="h-3 w-3" />
@@ -189,6 +245,48 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             </button>
           </div>
         )}
+
+        <Modal
+          isOpen={confirmConfig.isOpen}
+          onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+          title={
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                confirmConfig.variant === 'rose' ? 'bg-rose-50' : 'bg-blue-50'
+              }`}>
+                {confirmConfig.icon}
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">{confirmConfig.title}</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Are you sure?</p>
+              </div>
+            </div>
+          }
+        >
+          <div className="p-6">
+            <p className="text-sm text-slate-500 mb-6 font-medium">
+              {confirmConfig.message}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                className="flex-1 py-3 px-4 rounded-xl text-[10px] font-black text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors uppercase tracking-widest"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmConfig.onConfirm}
+                className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black text-white transition-colors uppercase tracking-widest shadow-lg ${
+                  confirmConfig.variant === 'rose' 
+                    ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' 
+                    : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'
+                }`}
+              >
+                {confirmConfig.confirmText}
+              </button>
+            </div>
+          </div>
+        </Modal>
 
         {isLoading ? (
           <div className="space-y-3">
@@ -212,17 +310,19 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
               <Bell className="h-8 w-8 text-slate-300" />
             </div>
             <h3 className="text-base font-bold text-slate-900 mb-1">
-              {activeTab === 'unread' ? 'You&apos;re all caught up!' : 'No notifications yet'}
+              {activeTab === 'unread' && notifications.length > 0 
+                ? 'You&apos;re all caught up!' 
+                : 'No notifications yet'}
             </h3>
             <p className="text-sm text-slate-500">
-              {activeTab === 'unread' 
+              {activeTab === 'unread' && notifications.length > 0
                 ? 'Check the "All" tab to see your past notifications.' 
                 : 'When you get notifications, they&apos;ll show up here.'}
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredNotifications.map((notif: any) => (
+            {filteredNotifications.map((notif: Notification) => (
               <div 
                 key={notif.id}
                 onClick={() => !notif.isRead && markAsRead(notif.id)}
@@ -257,7 +357,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            deleteNotification(notif.id);
+                            confirmDelete(notif.id);
                           }}
                           className="p-1.5 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all group-hover:opacity-100 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                           title="Delete notification"

@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({ success: true, notifications });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Fetch notifications error:', error);
     return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 });
   }
@@ -39,7 +39,8 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const { id, action } = await req.json();
-    if (!id || !action) return NextResponse.json({ error: 'ID and action required' }, { status: 400 });
+    if (!action) return NextResponse.json({ error: 'Action required' }, { status: 400 });
+    if (action === 'markRead' && !id) return NextResponse.json({ error: 'ID required for markRead' }, { status: 400 });
 
     const sessionCookie = req.cookies.get('session_token');
     if (!sessionCookie) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -63,7 +64,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Update notification error:', error);
     return NextResponse.json({ error: 'Failed to update notification' }, { status: 500 });
   }
@@ -81,7 +82,8 @@ export async function DELETE(req: NextRequest) {
     const sessionData = JSON.parse(decrypted);
     const userId = sessionData.userId;
 
-    if (action === 'delete' && id) {
+    if (action === 'delete') {
+      if (!id) return NextResponse.json({ error: 'ID required for delete' }, { status: 400 });
       await query(`
         DELETE FROM notifications 
         WHERE id = $1 AND user_id = $2
@@ -94,7 +96,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Delete notification error:', error);
     return NextResponse.json({ error: 'Failed to delete notification' }, { status: 500 });
   }
