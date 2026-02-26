@@ -89,8 +89,6 @@ export default function SubjectDetailPage() {
   };
 
   const handleDeleteNote = async (noteId: string) => {
-    if (!confirm('Are you sure you want to delete this note?')) return;
-
     try {
       const res = await fetch('/api/student/notes', {
         method: 'DELETE',
