@@ -123,6 +123,16 @@ export interface Badge {
 
 export type Permission = string;
 
+export interface SubjectNote {
+  id: string;
+  userId: string;
+  userName: string;
+  subjectCode: string;
+  content: string;
+  imageUrl?: string;
+  createdAt: any;
+}
+
 export interface Student {
   name: string;
   parsedName?: ParsedName;

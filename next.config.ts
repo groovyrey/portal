@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '**', // Allow any path for Google user content
       },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '**',
+      },
     ],
   },
   /* config options here */
