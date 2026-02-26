@@ -63,9 +63,7 @@
     "zustand": "^5.0.11"
   },
   "overrides": {
-    "openai": {
-      "zod": "$zod"
-    }
+    "zod": "$zod"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",

@@ -1,1 +1,45 @@
-Error: Route "/api/admin/students/[id]/badges" used `params.id`. `params` is a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+08:12:04.256 Running build in Washington, D.C., USA (East) – iad1
+08:12:04.257 Build machine configuration: 2 cores, 8 GB
+08:12:04.510 Cloning github.com/groovyrey/portal (Branch: main, Commit: dad1831)
+08:12:05.661 Cloning completed: 1.150s
+08:12:07.676 Restored build cache from previous deployment (7iTAXhiUkny36bpACMBGb7n8bzz8)
+08:12:08.349 Running "vercel build"
+08:12:08.912 Vercel CLI 50.23.2
+08:12:09.034 Detected OpenTelemetry dependency: @opentelemetry/api@1.9.0, which meets the minimum version requirement of 1.7.0
+08:12:09.216 Installing dependencies...
+08:12:12.039 npm error code ERESOLVE
+08:12:12.040 npm error ERESOLVE could not resolve
+08:12:12.040 npm error
+08:12:12.042 npm error While resolving: @langchain/community@1.1.19
+08:12:12.043 npm error Found: zod@4.3.6
+08:12:12.043 npm error node_modules/zod
+08:12:12.043 npm error   zod@"^4.3.6" from the root project
+08:12:12.043 npm error   zod@"^3.25.76 || ^4" from @langchain/classic@1.0.20
+08:12:12.043 npm error   node_modules/@langchain/classic
+08:12:12.043 npm error     @langchain/classic@"1.0.20" from @langchain/community@1.1.19
+08:12:12.043 npm error     node_modules/@langchain/community
+08:12:12.044 npm error       @langchain/community@"^1.1.19" from the root project
+08:12:12.044 npm error   9 more (@langchain/community, @langchain/core, ...)
+08:12:12.044 npm error
+08:12:12.044 npm error Could not resolve dependency:
+08:12:12.044 npm error peer @browserbasehq/stagehand@"^1.0.0" from @langchain/community@1.1.19
+08:12:12.044 npm error node_modules/@langchain/community
+08:12:12.044 npm error   @langchain/community@"^1.1.19" from the root project
+08:12:12.044 npm error
+08:12:12.045 npm error Conflicting peer dependency: zod@3.25.76
+08:12:12.045 npm error node_modules/zod
+08:12:12.045 npm error   peer zod@"^3.23.8" from @browserbasehq/stagehand@1.14.0
+08:12:12.045 npm error   node_modules/@browserbasehq/stagehand
+08:12:12.045 npm error     peer @browserbasehq/stagehand@"^1.0.0" from @langchain/community@1.1.19
+08:12:12.045 npm error     node_modules/@langchain/community
+08:12:12.046 npm error       @langchain/community@"^1.1.19" from the root project
+08:12:12.046 npm error
+08:12:12.046 npm error Fix the upstream dependency conflict, or retry
+08:12:12.046 npm error this command with --force or --legacy-peer-deps
+08:12:12.046 npm error to accept an incorrect (and potentially broken) dependency resolution.
+08:12:12.047 npm error
+08:12:12.048 npm error
+08:12:12.048 npm error For a full report see:
+08:12:12.048 npm error /vercel/.npm/_logs/2026-02-26T00_12_09_505Z-eresolve-report.txt
+08:12:12.048 npm error A complete log of this run can be found in: /vercel/.npm/_logs/2026-02-26T00_12_09_505Z-debug-0.log
+08:12:12.085 Error: Command "npm install" exited with 1
