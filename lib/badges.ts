@@ -25,9 +25,17 @@ export const BADGES: Record<string, Badge> = {
     color: 'amber',
     permissions: [],
   },
+  perfect_grade: {
+    id: 'perfect_grade',
+    name: 'Perfect Grade',
+    description: 'Received a 1.00 in a subject',
+    icon: 'Award',
+    color: 'amber',
+    permissions: [],
+  },
 };
 
-export const BADGE_LIST = [BADGES.staff, BADGES.beta_tester, BADGES.community_active];
+export const BADGE_LIST = [BADGES.staff, BADGES.beta_tester, BADGES.community_active, BADGES.perfect_grade];
 
 /**
  * Checks if a user has a specific permission based on their badges

@@ -3,6 +3,8 @@ import { query, getClient } from '@/lib/pg';
 import { decrypt } from '@/lib/auth';
 import { publishUpdate } from '@/lib/realtime';
 import { notifyAllStudents } from '@/lib/notification-service';
+import { SyncService } from '@/lib/sync-service';
+import { logActivity } from '@/lib/activity-service';
 
 export async function GET(req: NextRequest) {
   try {
@@ -212,6 +214,32 @@ export async function POST(req: NextRequest) {
 
     await client.query('COMMIT');
 
+    // Log activity
+    logActivity(
+      userId, 
+      poll ? 'Created a poll' : 'Shared a post', 
+      poll ? `Created a poll: ${poll.question.substring(0, 50)}...` : `Posted: ${content?.substring(0, 50)}...`,
+      `/post/${postId}`
+    ).catch(e => console.error('Activity log error:', e));
+
+    // --- Badge System: Community Active ---
+    // Check if user has at least 5 posts to grant the community_active badge
+    try {
+      const countRes = await query(`
+        SELECT COUNT(*) as "postCount" 
+        FROM community_posts 
+        WHERE user_id = $1
+      `, [userId]);
+      
+      const postCount = parseInt(countRes.rows[0].postCount, 10);
+      if (postCount >= 5) {
+        const syncer = new SyncService(userId);
+        await syncer.grantBadge('community_active');
+      }
+    } catch (badgeError) {
+      console.error('[BadgeSystem] Error checking for community_active badge:', badgeError);
+    }
+
     // Notify all students of new community post asynchronously to avoid blocking the user
     const senderName = userName || 'A fellow student';
     notifyAllStudents({
@@ -298,6 +326,8 @@ export async function PATCH(req: NextRequest) {
         ON CONFLICT DO NOTHING
       `, [postId, userId]);
 
+      logActivity(userId, 'Liked a post', `Liked post #${postId}`, `/post/${postId}`).catch(e => {});
+
       await publishUpdate('community', { 
         type: 'LIKE_UPDATE', 
         postId, 
@@ -349,6 +379,8 @@ export async function PATCH(req: NextRequest) {
         INSERT INTO community_poll_votes (option_id, user_id)
         VALUES ($1, $2)
       `, [targetOptionId, userId]);
+
+      logActivity(userId, 'Voted in a poll', `Voted in poll on post #${postId}`, `/post/${postId}`).catch(e => {});
 
       await publishUpdate('community', { 
         type: 'VOTE_UPDATE', 

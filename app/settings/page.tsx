@@ -18,7 +18,8 @@ import {
   Star,
   MapPin,
   Phone,
-  IdCard
+  IdCard,
+  History
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -116,6 +117,12 @@ export default function SettingsPage() {
               title="Security" 
               description="Password and authentication"
               onClick={() => setActiveDrawer('security')}
+            />
+            <SettingsItem 
+              icon={<History size={18} className="text-slate-400" />} 
+              title="Activity Log" 
+              description="Your recent actions and updates"
+              onClick={() => setActiveDrawer('activity')}
             />
           </div>
         </section>

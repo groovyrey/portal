@@ -15,6 +15,7 @@ import {
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 import { notifyAllStudents } from '@/lib/notification-service';
+import { logActivity } from '@/lib/activity-service';
 import { v2 as cloudinary } from 'cloudinary';
 
 // Configure Cloudinary using the URL (contains cloud_name, api_key, and api_secret)
@@ -126,6 +127,14 @@ export async function POST(req: NextRequest) {
     });
 
     console.log('Successfully saved note with ID:', noteRef.id, 'for subject:', subjectCode);
+
+    // Log activity
+    logActivity(
+      userId, 
+      'Posted a note', 
+      `Shared a note for subject: ${subjectCode}`, 
+      `/subjects/${encodeURIComponent(subjectCode)}`
+    ).catch(e => console.error('Activity log error:', e));
 
     // Notify all students about the new note (don't await to keep response fast)
     notifyAllStudents({

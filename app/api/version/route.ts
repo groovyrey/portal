@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
 import { APP_VERSION } from '@/lib/version';
 import { pool } from '@/lib/pg';
+import { migrateCommunity, migrateNotifications, migrateActivityLogs } from '@/lib/db-migrate';
 
 export async function GET() {
-  // Wake up Postgres (Fire and forget, but wait for it to establish a connection)
+  // Wake up Postgres and run migrations
   try {
     await pool.query('SELECT 1');
+    
+    // Run migrations (these check for table existence anyway)
+    migrateCommunity().catch(e => console.error('Community migration failed:', e));
+    migrateNotifications().catch(e => console.error('Notifications migration failed:', e));
+    migrateActivityLogs().catch(e => console.error('Activity logs migration failed:', e));
   } catch (e) {
-    console.error('DB Warmup failed:', e);
+    console.error('DB Warmup/Migration failed:', e);
   }
 
   return NextResponse.json({ version: APP_VERSION });

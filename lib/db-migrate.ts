@@ -114,3 +114,39 @@ export async function migrateNotifications() {
     throw error;
   }
 }
+
+export async function migrateActivityLogs() {
+  console.log('Starting Activity Logs migration...');
+
+  try {
+    // Ensure students table exists
+    await query(`
+      CREATE TABLE IF NOT EXISTS students (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        course TEXT,
+        email TEXT,
+        year_level TEXT,
+        semester TEXT,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create activity_logs table
+    await query(`
+      CREATE TABLE IF NOT EXISTS activity_logs (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+        action TEXT NOT NULL,
+        details TEXT,
+        link TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    console.log('Activity Logs migration completed successfully.');
+  } catch (error) {
+    console.error('Activity Logs migration failed:', error);
+    throw error;
+  }
+}

@@ -19,7 +19,9 @@ import {
   ChevronRight,
   Sparkles,
   Loader2,
-  CreditCard
+  CreditCard,
+  History,
+  ExternalLink
 } from 'lucide-react';
 import Drawer from './Drawer';
 import SecuritySettings from '@/components/dashboard/SecuritySettings';
@@ -40,6 +42,29 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
   const [appNotifsEnabled, setAppNotifsEnabled] = useState(true);
   const [classRemindersEnabled, setClassRemindersEnabled] = useState(true);
   const [paymentRemindersEnabled, setPaymentRemindersEnabled] = useState(true);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+
+  useEffect(() => {
+    if (type === 'activity' && isOpen) {
+      fetchLogs();
+    }
+  }, [type, isOpen]);
+
+  const fetchLogs = async () => {
+    setLogsLoading(true);
+    try {
+      const res = await fetch('/api/student/activity');
+      const data = await res.json();
+      if (data.success) {
+        setLogs(data.logs);
+      }
+    } catch (e) {
+      console.error('Failed to fetch activity logs', e);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -80,6 +105,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
       case 'security': return 'Security Settings';
       case 'notifications': return 'Notification Settings';
       case 'privacy': return 'Privacy Settings';
+      case 'activity': return 'Activity Log';
       case 'rating': return 'Rate LCC Hub';
       default: return '';
     }
@@ -205,26 +231,78 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
             </div>
             <div className="space-y-3">
                 <SettingsToggle 
-                    icon={<Shield className="text-slate-400" />} 
+                    icon={<Shield size={16} className="text-slate-400" />} 
                     title="Public Profile" 
                     description="Visible to other students"
                     enabled={student?.settings?.isPublic ?? true}
                     onToggle={(val) => updateSettings!({ ...student?.settings, isPublic: val })}
                 />
                 <SettingsToggle 
-                    icon={<GraduationCap className="text-slate-400" />} 
+                    icon={<GraduationCap size={16} className="text-slate-400" />} 
                     title="Academic Info" 
                     description="Course and year level"
                     enabled={student?.settings?.showAcademicInfo ?? true}
                     onToggle={(val) => updateSettings!({ ...student?.settings, showAcademicInfo: val })}
                 />
                 <SettingsToggle 
-                    icon={<IdCard className="text-slate-400" />} 
+                    icon={<IdCard size={16} className="text-slate-400" />} 
                     title="Student ID" 
                     description="Visible on your profile"
                     enabled={student?.settings?.showStudentId ?? false}
                     onToggle={(val) => updateSettings!({ ...student?.settings, showStudentId: val })}
                 />
+            </div>
+          </div>
+        );
+
+      case 'activity':
+        return (
+          <div className="space-y-6">
+            <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 flex items-center gap-3">
+              <History className="h-4 w-4 text-blue-500" />
+              <p className="text-[10px] font-bold text-blue-700 uppercase tracking-widest">Recent Activity</p>
+            </div>
+
+            <div className="space-y-4">
+              {logsLoading ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                  <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Retrieving Logs...</p>
+                </div>
+              ) : logs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
+                    <History className="h-6 w-6 text-slate-200" />
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">No activities found</p>
+                </div>
+              ) : (
+                <div className="relative space-y-4">
+                  <div className="absolute left-4 top-2 bottom-2 w-px bg-slate-100" />
+                  {logs.map((log, idx) => (
+                    <div key={log.id} className="relative pl-10 group">
+                      <div className="absolute left-[13px] top-2 w-2 h-2 rounded-full bg-slate-200 border-2 border-white ring-4 ring-white group-hover:bg-blue-400 transition-colors" />
+                      <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:border-slate-200 transition-all group-hover:shadow-md active:scale-[0.98]">
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight">{log.action}</h4>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase">{new Date(log.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-[11px] font-medium text-slate-500 leading-relaxed mb-3">{log.details}</p>
+                        
+                        {log.link && (
+                          <a 
+                            href={log.link}
+                            className="inline-flex items-center gap-1.5 text-[9px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-700"
+                          >
+                            View Details
+                            <ExternalLink className="h-2.5 w-2.5" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         );

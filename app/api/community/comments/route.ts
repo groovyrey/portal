@@ -3,6 +3,7 @@ import { query, getClient } from '@/lib/pg';
 import { decrypt } from '@/lib/auth';
 import { publishUpdate } from '@/lib/realtime';
 import { createNotification } from '@/lib/notification-service';
+import { logActivity } from '@/lib/activity-service';
 
 export async function GET(req: NextRequest) {
   try {
@@ -92,6 +93,14 @@ export async function POST(req: NextRequest) {
       content,
       createdAt: commentRes.rows[0].created_at.toISOString()
     };
+
+    // Log activity
+    logActivity(
+      userId, 
+      'Commented on a post', 
+      `Commented on post #${postId}: ${content.substring(0, 50)}...`,
+      `/post/${postId}`
+    ).catch(e => console.error('Activity log error:', e));
 
     // Notify all clients of new comment
     await publishUpdate('community', { type: 'COMMENT_CREATED', postId });

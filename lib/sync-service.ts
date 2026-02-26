@@ -47,6 +47,57 @@ export class SyncService {
     return { isNewUser, settings, badges };
   }
 
+  async grantBadge(badgeId: string) {
+    try {
+      const studentRef = doc(db, 'students', this.userId);
+      const studentDoc = await getDoc(studentRef);
+      
+      if (studentDoc.exists()) {
+        const currentBadges = studentDoc.data().badges || [];
+        if (!currentBadges.includes(badgeId)) {
+          await setDoc(studentRef, {
+            badges: [...currentBadges, badgeId]
+          }, { merge: true });
+          console.log(`[BadgeSystem] Granted '${badgeId}' badge to ${this.userId}`);
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error(`[BadgeSystem] Error granting badge ${badgeId}:`, error);
+    }
+    return false;
+  }
+
+  async checkAndGrantBadges(subjects: any[]) {
+    // Look for a 1.00 grade
+    const hasPerfectGrade = subjects.some(s => {
+      const grade = parseFloat(s.grade);
+      return !isNaN(grade) && grade === 1.00;
+    });
+
+    if (hasPerfectGrade) {
+      await this.grantBadge('perfect_grade');
+    }
+  }
+
+  async syncGrades(reportName: string, subjects: any[], reportSlug?: string) {
+    if (!subjects || subjects.length === 0) return;
+
+    let slug = reportSlug || reportName.replace(/[^a-zA-Z0-9]/g, '_');
+    const reportId = `${this.userId}_${slug}`;
+    const gradeRef = doc(db, 'grades', reportId);
+    
+    await setDoc(gradeRef, {
+      student_id: this.userId,
+      report_name: reportName,
+      items: subjects,
+      updated_at: serverTimestamp()
+    });
+
+    // Automatically check for badges whenever grades are synced
+    await this.checkAndGrantBadges(subjects);
+  }
+
   async syncFinancials(financials: ScrapedFinancials) {
     const financialRef = doc(db, 'financials', this.userId);
     await setDoc(financialRef, {

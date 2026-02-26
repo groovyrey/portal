@@ -5,6 +5,7 @@ import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 import { getSessionClient, saveSession } from '@/lib/session-proxy';
 import { ScraperService } from '@/lib/scraper-service';
+import { SyncService } from '@/lib/sync-service';
 
 export async function POST(req: NextRequest) {
   let debugLog = "";
@@ -81,21 +82,14 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        let reportSlug = reportName.replace(/[^a-zA-Z0-9]/g, '_');
+        let reportSlug = undefined;
         if (reportName === 'Unknown Report') {
           const hash = href.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
           reportSlug = `unknown_${Math.abs(hash)}`;
         }
         
-        const reportId = `${userId}_${reportSlug}`;
-        const gradeRef = doc(db, 'grades', reportId);
-        
-        await setDoc(gradeRef, {
-          student_id: userId,
-          report_name: reportName,
-          items: subjects,
-          updated_at: serverTimestamp()
-        });
+        const syncer = new SyncService(userId);
+        await syncer.syncGrades(reportName, subjects, reportSlug);
       }
     } catch (dbError) {
       console.error('Database sync error (grades):', dbError);
