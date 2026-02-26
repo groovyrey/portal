@@ -1,45 +1,54 @@
-08:12:04.256 Running build in Washington, D.C., USA (East) – iad1
-08:12:04.257 Build machine configuration: 2 cores, 8 GB
-08:12:04.510 Cloning github.com/groovyrey/portal (Branch: main, Commit: dad1831)
-08:12:05.661 Cloning completed: 1.150s
-08:12:07.676 Restored build cache from previous deployment (7iTAXhiUkny36bpACMBGb7n8bzz8)
-08:12:08.349 Running "vercel build"
-08:12:08.912 Vercel CLI 50.23.2
-08:12:09.034 Detected OpenTelemetry dependency: @opentelemetry/api@1.9.0, which meets the minimum version requirement of 1.7.0
-08:12:09.216 Installing dependencies...
-08:12:12.039 npm error code ERESOLVE
-08:12:12.040 npm error ERESOLVE could not resolve
-08:12:12.040 npm error
-08:12:12.042 npm error While resolving: @langchain/community@1.1.19
-08:12:12.043 npm error Found: zod@4.3.6
-08:12:12.043 npm error node_modules/zod
-08:12:12.043 npm error   zod@"^4.3.6" from the root project
-08:12:12.043 npm error   zod@"^3.25.76 || ^4" from @langchain/classic@1.0.20
-08:12:12.043 npm error   node_modules/@langchain/classic
-08:12:12.043 npm error     @langchain/classic@"1.0.20" from @langchain/community@1.1.19
-08:12:12.043 npm error     node_modules/@langchain/community
-08:12:12.044 npm error       @langchain/community@"^1.1.19" from the root project
-08:12:12.044 npm error   9 more (@langchain/community, @langchain/core, ...)
-08:12:12.044 npm error
-08:12:12.044 npm error Could not resolve dependency:
-08:12:12.044 npm error peer @browserbasehq/stagehand@"^1.0.0" from @langchain/community@1.1.19
-08:12:12.044 npm error node_modules/@langchain/community
-08:12:12.044 npm error   @langchain/community@"^1.1.19" from the root project
-08:12:12.044 npm error
-08:12:12.045 npm error Conflicting peer dependency: zod@3.25.76
-08:12:12.045 npm error node_modules/zod
-08:12:12.045 npm error   peer zod@"^3.23.8" from @browserbasehq/stagehand@1.14.0
-08:12:12.045 npm error   node_modules/@browserbasehq/stagehand
-08:12:12.045 npm error     peer @browserbasehq/stagehand@"^1.0.0" from @langchain/community@1.1.19
-08:12:12.045 npm error     node_modules/@langchain/community
-08:12:12.046 npm error       @langchain/community@"^1.1.19" from the root project
-08:12:12.046 npm error
-08:12:12.046 npm error Fix the upstream dependency conflict, or retry
-08:12:12.046 npm error this command with --force or --legacy-peer-deps
-08:12:12.046 npm error to accept an incorrect (and potentially broken) dependency resolution.
-08:12:12.047 npm error
-08:12:12.048 npm error
-08:12:12.048 npm error For a full report see:
-08:12:12.048 npm error /vercel/.npm/_logs/2026-02-26T00_12_09_505Z-eresolve-report.txt
-08:12:12.048 npm error A complete log of this run can be found in: /vercel/.npm/_logs/2026-02-26T00_12_09_505Z-debug-0.log
-08:12:12.085 Error: Command "npm install" exited with 1
+23:46:26.658 Running build in Washington, D.C., USA (East) – iad1
+23:46:26.659 Build machine configuration: 2 cores, 8 GB
+23:46:26.808 Cloning github.com/groovyrey/portal (Branch: main, Commit: 6335744)
+23:46:27.762 Cloning completed: 953.000ms
+23:46:30.646 Restored build cache from previous deployment (8mMGWpMs12FNUbe3TCNWXvx7VQbx)
+23:46:30.995 Running "vercel build"
+23:46:31.583 Vercel CLI 50.23.2
+23:46:31.760 Detected OpenTelemetry dependency: @opentelemetry/api@1.9.0, which meets the minimum version requirement of 1.7.0
+23:46:31.930 Installing dependencies...
+23:46:33.837 npm warn deprecated @vercel/flags@3.1.1: This package has been renamed to flags. It offers the same functionality under a new name. Please follow the upgrade guide https://github.com/vercel/flags/blob/main/packages/flags/guides/upgrade-to-v4.md
+23:46:34.282 
+23:46:34.283 added 3 packages in 2s
+23:46:34.283 
+23:46:34.284 339 packages are looking for funding
+23:46:34.284   run `npm fund` for details
+23:46:34.316 Detected Next.js version: 16.1.6
+23:46:34.325 Running "npm run build"
+23:46:34.423 
+23:46:34.423 > app@1.2.0-BETA build
+23:46:34.424 > next build --webpack
+23:46:34.424 
+23:46:35.432 ▲ Next.js 16.1.6 (webpack)
+23:46:35.433 
+23:46:35.504   Creating an optimized production build ...
+23:46:53.181 ⚠ Compiled with warnings in 16.8s
+23:46:53.181 
+23:46:53.181 ./app/test/page.tsx
+23:46:53.182 Attempted import error: PageHeader is not exported from @/components/shared/PageHeader (imported as PageHeader).
+23:46:53.182 
+23:46:53.182 Import trace for requested module:
+23:46:53.182 ./app/test/page.tsx
+23:46:53.182 
+23:46:53.182 ./lib/flags.ts
+23:46:53.182 Attempted import error: unstable_flag is not exported from @vercel/flags/next (imported as flag).
+23:46:53.182 
+23:46:53.182 Import trace for requested module:
+23:46:53.182 ./lib/flags.ts
+23:46:53.182 ./app/test/page.tsx
+23:46:53.182 
+23:47:01.000 ✓ Compiled successfully in 22.8s
+23:47:01.002   Running TypeScript ...
+23:47:12.644 Failed to compile.
+23:47:12.645 
+23:47:12.645 ./app/test/page.tsx:2:10
+23:47:12.645 Type error: Module @/components/shared/PageHeader has no exported member PageHeader. Did you mean to use import PageHeader from @/components/shared/PageHeader instead?
+23:47:12.645 
+23:47:12.645 [0m [90m 1 |[39m [36mimport[39m { showTestFeature } [36mfrom[39m [32m@/lib/flags[39m[33m;[39m
+23:47:12.646 [31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { [33mPageHeader[39m } [36mfrom[39m [32m@/components/shared/PageHeader[39m[33m;[39m
+23:47:12.646  [90m   |[39m          [31m[1m^[22m[39m
+23:47:12.646  [90m 3 |[39m
+23:47:12.646  [90m 4 |[39m [36mexport[39m [36mdefault[39m [36masync[39m [36mfunction[39m [33mTestPage[39m() {
+23:47:12.646  [90m 5 |[39m   [36mconst[39m isEnabled [33m=[39m [36mawait[39m showTestFeature()[33m;[39m[0m
+23:47:12.687 Next.js build worker exited with code: 1 and signal: null
+23:47:12.712 Error: Command "npm run build" exited with 1

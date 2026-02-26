@@ -1,10 +1,13 @@
-import { unstable_flag as flag } from '@vercel/flags/next';
+import { flag } from 'flags/next';
 
-export const showTestFeature = flag({
+export const getTestFeature = flag<{ greeting: string } | null>({
   key: 'test-feature',
   decide: async () => {
-    // In a real app, you might check a database, Edge Config, or user session
-    // For this demo, we'll default to true if the environment variable is set
-    return process.env.NODE_ENV === 'development';
+    // In development, we'll return a default greeting. 
+    // In production, this would be controlled by Vercel.
+    if (process.env.NODE_ENV === 'development') {
+      return { greeting: 'Hello! This is your custom greeting from Vercel Flags.' };
+    }
+    return null;
   },
 });
