@@ -272,17 +272,17 @@ export default function SubjectDetailPage() {
           </h3>
 
           {/* Post Note Input */}
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
             <div className="flex items-center gap-2 mb-4 px-1">
-              <div className="h-6 w-1 bg-blue-600 rounded-full" />
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Create New Note</h4>
+              <div className="h-5 w-1 bg-blue-600 rounded-full" />
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">New Note</h4>
             </div>
             
             <textarea
               value={newNote}
               onChange={(e) => setNewNote(e.target.value)}
-              placeholder="Post a note, tip, or resource... Markdown is supported! (**bold**, # heading, etc.)"
-              className="w-full min-h-[120px] p-5 rounded-2xl bg-slate-50 border border-slate-100 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all resize-none mb-4 placeholder:text-slate-300"
+              placeholder="Post a note, tip, or resource..."
+              className="w-full min-h-[100px] p-4 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium focus:outline-none focus:border-blue-500 transition-all resize-none mb-4 placeholder:text-slate-300"
             />
             
             {previewUrl && (
@@ -315,24 +315,24 @@ export default function SubjectDetailPage() {
                 />
                 <button
                   onClick={() => document.getElementById('note-image')?.click()}
-                  className="p-3 bg-slate-50 text-slate-500 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-2 text-xs font-bold active:scale-95"
+                  className="p-2.5 bg-slate-50 text-slate-500 rounded-lg hover:bg-slate-100 transition-all flex items-center gap-2 text-xs font-bold active:scale-95"
                 >
-                  <ImageIcon size={18} />
-                  {selectedFile ? 'Change Image' : 'Attach Image'}
+                  <ImageIcon size={16} />
+                  {selectedFile ? 'Change' : 'Attach'}
                 </button>
               </div>
 
               <button
                 onClick={handlePostNote}
                 disabled={isSubmitting || (!newNote.trim() && !selectedFile)}
-                className="px-8 py-3.5 bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest rounded-xl flex items-center gap-2 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-200 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed transition-all active:scale-95 shadow-md shadow-slate-200"
+                className="px-6 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-lg flex items-center gap-2 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
               >
                 {isSubmitting ? (
                   <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <Send size={14} />
                 )}
-                Post Note
+                Post
               </button>
             </div>
           </div>
@@ -357,8 +357,8 @@ export default function SubjectDetailPage() {
                 />
               ))
             ) : (
-              <div className="text-center py-12 bg-slate-100/50 rounded-[2rem] border border-dashed border-slate-200">
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">No notes yet. Be the first!</p>
+              <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                <p className="text-slate-400 text-xs font-bold">No notes yet. Be the first!</p>
               </div>
             )}
           </div>

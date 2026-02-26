@@ -41,20 +41,20 @@ export default function NoteCard({
   };
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-500 overflow-hidden group">
-      <div className="p-7">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <div className="h-11 w-11 rounded-[1.2rem] bg-slate-900 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-slate-200">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all duration-300 overflow-hidden group">
+      <div className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm">
               {note.userName.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="text-base font-black text-slate-900 tracking-tight leading-none mb-1.5">{note.userName}</p>
+              <p className="text-sm font-bold text-slate-900 leading-none mb-1">{note.userName}</p>
               <div className="flex items-center gap-1.5 text-slate-400">
-                <Clock size={12} />
-                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">
+                <Clock size={10} />
+                <span className="text-[10px] font-medium">
                   {note.createdAt?.seconds 
-                    ? new Date(note.createdAt.seconds * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) 
+                    ? new Date(note.createdAt.seconds * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) 
                     : 'Just now'}
                 </span>
               </div>
@@ -64,16 +64,16 @@ export default function NoteCard({
           {isOwner && onDelete && (
             <button
               onClick={() => setIsDeleteModalOpen(true)}
-              className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+              className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
               title="Delete Note"
             >
-              <Trash2 size={18} />
+              <Trash2 size={16} />
             </button>
           )}
         </div>
 
         {note.content && (
-          <div className="prose prose-sm prose-slate max-w-none prose-p:leading-relaxed prose-p:text-slate-600 prose-headings:text-slate-900 prose-headings:font-black prose-strong:text-slate-900 prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-img:rounded-2xl px-1">
+          <div className="prose prose-sm prose-slate max-w-none prose-p:leading-relaxed prose-p:text-slate-600 prose-headings:text-slate-900 prose-headings:font-bold prose-strong:text-slate-900 prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl px-0.5">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {note.content}
             </ReactMarkdown>
@@ -84,26 +84,26 @@ export default function NoteCard({
       {note.imageUrl && (
         <div 
           onClick={() => setIsPreviewOpen(true)}
-          className="relative w-full aspect-[16/10] bg-slate-50 group/image border-t border-slate-100 cursor-zoom-in"
+          className="relative w-full aspect-[16/9] bg-slate-50 group/image border-t border-slate-100 cursor-zoom-in"
         >
           <CldImage
             src={note.imageUrl}
             alt="Note attachment"
             fill
-            className="object-cover transition-transform duration-500 group-hover/image:scale-105"
+            className="object-cover transition-transform duration-300 group-hover/image:scale-105"
           />
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/image:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
-            <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl text-white scale-90 group-hover/image:scale-100 transition-transform">
-              <Maximize2 size={24} />
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/image:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+            <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-xl text-white scale-90 group-hover/image:scale-100 transition-transform">
+              <Maximize2 size={20} />
             </div>
-            <p className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Click to Preview</p>
+            <p className="text-[10px] font-bold text-white uppercase tracking-wider">Preview</p>
             
             {onDownloadImage && (
               <button
                 onClick={handleDownload}
-                className="mt-2 px-5 py-2.5 bg-white text-slate-900 rounded-xl hover:bg-blue-600 hover:text-white transition-all transform translate-y-4 group-hover/image:translate-y-0 flex items-center gap-2 text-[10px] font-black uppercase tracking-wider shadow-2xl"
+                className="mt-1 px-4 py-2 bg-white text-slate-900 rounded-lg hover:bg-slate-100 transition-all transform translate-y-2 group-hover/image:translate-y-0 flex items-center gap-2 text-[10px] font-bold shadow-xl"
               >
-                <Download size={14} className="text-blue-600 group-hover:text-white" />
+                <Download size={12} className="text-blue-600" />
                 Download
               </button>
             )}
