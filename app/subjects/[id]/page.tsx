@@ -15,7 +15,6 @@ import {
 import Skeleton from '@/components/ui/Skeleton';
 import { SubjectNote } from '@/types';
 import { toast } from 'sonner';
-import { CldUploadWidget, CldImage } from 'next-cloudinary';
 import NoteCard from '@/components/shared/NoteCard';
 
 export default function SubjectDetailPage() {
@@ -24,18 +23,13 @@ export default function SubjectDetailPage() {
   const { data: student, isLoading } = useStudentQuery();
   const [notes, setNotes] = useState<SubjectNote[]>([]);
   const [newNote, setNewNote] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingNotes, setIsLoadingNotes] = useState(true);
 
   const subjectCode = typeof id === 'string' ? decodeURIComponent(id) : '';
   const subject = student?.offeredSubjects?.find(s => s.code === subjectCode);
-
-  useEffect(() => {
-    if (subjectCode) {
-      fetchNotes();
-    }
-  }, [subjectCode]);
 
   const fetchNotes = async () => {
     try {
@@ -57,11 +51,64 @@ export default function SubjectDetailPage() {
     }
   };
 
+  useEffect(() => {
+    if (subjectCode) {
+      fetchNotes();
+    }
+  }, [subjectCode]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'portal_notes');
+
+    try {
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dcozqx42z';
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      return data.secure_url;
+    } catch (error) {
+      console.error('Upload error:', error);
+      return null;
+    }
+  };
+
   const handlePostNote = async () => {
-    if ((!newNote.trim() && !imageUrl) || !student) return;
+    if ((!newNote.trim() && !selectedFile) || !student) return;
 
     try {
       setIsSubmitting(true);
+      
+      let finalImageUrl = '';
+      if (selectedFile) {
+        const uploadedUrl = await uploadImage(selectedFile);
+        if (!uploadedUrl) {
+          toast.error('Failed to upload image.');
+          setIsSubmitting(false);
+          return;
+        }
+        finalImageUrl = uploadedUrl;
+      }
+
       const res = await fetch('/api/student/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -69,13 +116,14 @@ export default function SubjectDetailPage() {
           subjectCode,
           content: newNote,
           userName: student.name,
-          imageUrl
+          imageUrl: finalImageUrl
         })
       });
 
       if (res.ok) {
         setNewNote('');
-        setImageUrl('');
+        setSelectedFile(null);
+        setPreviewUrl(null);
         fetchNotes();
         toast.success('Note posted successfully!');
       } else {
@@ -237,16 +285,18 @@ export default function SubjectDetailPage() {
               className="w-full min-h-[120px] p-5 rounded-2xl bg-slate-50 border border-slate-100 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all resize-none mb-4 placeholder:text-slate-300"
             />
             
-            {imageUrl && (
+            {previewUrl && (
               <div className="relative w-full max-w-[240px] aspect-video mb-4 rounded-2xl overflow-hidden border-2 border-slate-100 group">
-                <CldImage
-                  src={imageUrl}
-                  alt="Attached image"
-                  fill
-                  className="object-cover"
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
                 />
                 <button
-                  onClick={() => setImageUrl('')}
+                  onClick={() => {
+                    setSelectedFile(null);
+                    setPreviewUrl(null);
+                  }}
                   className="absolute top-2 right-2 p-2 bg-black/60 text-white rounded-full hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100 backdrop-blur-md scale-90 group-hover:scale-100"
                 >
                   <X size={14} />
@@ -255,27 +305,26 @@ export default function SubjectDetailPage() {
             )}
 
             <div className="flex justify-between items-center">
-              <CldUploadWidget 
-                uploadPreset="portal_notes"
-                onSuccess={(result: any) => {
-                  setImageUrl(result.info.secure_url);
-                  toast.success('Image attached!');
-                }}
-              >
-                {({ open }) => (
-                  <button
-                    onClick={() => open()}
-                    className="p-3 bg-slate-50 text-slate-500 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-2 text-xs font-bold active:scale-95"
-                  >
-                    <ImageIcon size={18} />
-                    {imageUrl ? 'Change Image' : 'Attach Image'}
-                  </button>
-                )}
-              </CldUploadWidget>
+              <div className="relative">
+                <input
+                  type="file"
+                  id="note-image"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <button
+                  onClick={() => document.getElementById('note-image')?.click()}
+                  className="p-3 bg-slate-50 text-slate-500 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-2 text-xs font-bold active:scale-95"
+                >
+                  <ImageIcon size={18} />
+                  {selectedFile ? 'Change Image' : 'Attach Image'}
+                </button>
+              </div>
 
               <button
                 onClick={handlePostNote}
-                disabled={isSubmitting || (!newNote.trim() && !imageUrl)}
+                disabled={isSubmitting || (!newNote.trim() && !selectedFile)}
                 className="px-8 py-3.5 bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest rounded-xl flex items-center gap-2 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-200 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed transition-all active:scale-95 shadow-md shadow-slate-200"
               >
                 {isSubmitting ? (

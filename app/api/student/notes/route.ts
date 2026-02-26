@@ -15,6 +15,36 @@ import {
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 import { notifyAllStudents } from '@/lib/notification-service';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary using the URL (contains cloud_name, api_key, and api_secret)
+cloudinary.config({
+  cloudinary_url: process.env.CLOUDINARY_URL,
+  secure: true
+});
+
+/**
+ * Extracts Cloudinary public ID from URL
+ */
+function extractPublicId(url: string) {
+  try {
+    // Format: https://res.cloudinary.com/cloud_name/image/upload/v12345678/folder/public_id.jpg
+    const parts = url.split('/');
+    const lastPart = parts[parts.length - 1];
+    const publicIdWithExtension = lastPart.split('.')[0];
+    
+    // Check if there are folders (parts between 'upload/' and the last part)
+    const uploadIndex = parts.indexOf('upload');
+    if (uploadIndex !== -1 && parts.length > uploadIndex + 2) {
+      const folderParts = parts.slice(uploadIndex + 2, parts.length - 1);
+      return [...folderParts, publicIdWithExtension].join('/');
+    }
+    
+    return publicIdWithExtension;
+  } catch (e) {
+    return null;
+  }
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -151,6 +181,20 @@ export async function DELETE(req: NextRequest) {
     const noteData = noteSnap.data();
     if (noteData.userId !== userId) {
       return NextResponse.json({ error: 'Unauthorized to delete this note' }, { status: 403 });
+    }
+
+    // Delete image from Cloudinary if it exists
+    if (noteData.imageUrl) {
+      const publicId = extractPublicId(noteData.imageUrl);
+      if (publicId) {
+        console.log('Deleting image from Cloudinary:', publicId);
+        try {
+          await cloudinary.uploader.destroy(publicId);
+        } catch (cloudinaryError) {
+          console.error('Cloudinary deletion error:', cloudinaryError);
+          // Continue with note deletion even if image deletion fails
+        }
+      }
     }
 
     await deleteDoc(noteDocRef);
