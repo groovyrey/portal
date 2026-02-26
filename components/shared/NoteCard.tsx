@@ -3,10 +3,11 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Clock, Download, Trash2, AlertTriangle } from 'lucide-react';
+import { Clock, Download, Trash2, AlertTriangle, Maximize2 } from 'lucide-react';
 import { SubjectNote, Student } from '@/types';
 import { CldImage } from 'next-cloudinary';
 import Modal from '@/components/ui/Modal';
+import ImagePreviewModal from './ImagePreviewModal';
 
 interface NoteCardProps {
   note: SubjectNote;
@@ -22,12 +23,20 @@ export default function NoteCard({
   onDownloadImage
 }: NoteCardProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const isOwner = student?.id === note.userId;
 
   const handleDelete = () => {
     if (onDelete) {
       onDelete(note.id);
       setIsDeleteModalOpen(false);
+    }
+  };
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDownloadImage && note.imageUrl) {
+      onDownloadImage(note.imageUrl, `note-${note.id}.jpg`);
     }
   };
 
@@ -73,21 +82,29 @@ export default function NoteCard({
       </div>
       
       {note.imageUrl && (
-        <div className="relative w-full aspect-[16/10] bg-slate-50 group/image border-t border-slate-100">
+        <div 
+          onClick={() => setIsPreviewOpen(true)}
+          className="relative w-full aspect-[16/10] bg-slate-50 group/image border-t border-slate-100 cursor-zoom-in"
+        >
           <CldImage
             src={note.imageUrl}
             alt="Note attachment"
             fill
             className="object-cover transition-transform duration-500 group-hover/image:scale-105"
           />
-          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/image:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
+            <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl text-white scale-90 group-hover/image:scale-100 transition-transform">
+              <Maximize2 size={24} />
+            </div>
+            <p className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Click to Preview</p>
+            
             {onDownloadImage && (
               <button
-                onClick={() => onDownloadImage(note.imageUrl!, `note-${note.id}.jpg`)}
-                className="px-5 py-2.5 bg-white/90 text-slate-900 rounded-xl hover:bg-white transition-all transform translate-y-4 group-hover/image:translate-y-0 flex items-center gap-2 text-[10px] font-black uppercase tracking-wider shadow-2xl backdrop-blur-sm"
+                onClick={handleDownload}
+                className="mt-2 px-5 py-2.5 bg-white text-slate-900 rounded-xl hover:bg-blue-600 hover:text-white transition-all transform translate-y-4 group-hover/image:translate-y-0 flex items-center gap-2 text-[10px] font-black uppercase tracking-wider shadow-2xl"
               >
-                <Download size={14} className="text-blue-600" />
-                Download Image
+                <Download size={14} className="text-blue-600 group-hover:text-white" />
+                Download
               </button>
             )}
           </div>
@@ -123,6 +140,16 @@ export default function NoteCard({
           </div>
         </div>
       </Modal>
+
+      {/* Image Preview Modal */}
+      {note.imageUrl && (
+        <ImagePreviewModal
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
+          imageUrl={note.imageUrl}
+          onDownload={() => onDownloadImage?.(note.imageUrl!, `note-${note.id}.jpg`)}
+        />
+      )}
     </div>
   );
 }

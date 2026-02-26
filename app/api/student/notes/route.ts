@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
+import { notifyAllStudents } from '@/lib/notification-service';
 
 export async function GET(req: NextRequest) {
   try {
@@ -95,6 +96,14 @@ export async function POST(req: NextRequest) {
     });
 
     console.log('Successfully saved note with ID:', noteRef.id, 'for subject:', subjectCode);
+
+    // Notify all students about the new note (don't await to keep response fast)
+    notifyAllStudents({
+      excludeUserId: userId,
+      title: 'New Subject Note',
+      message: `${userName} shared a new note for ${subjectCode}.`,
+      link: `/subjects/${encodeURIComponent(subjectCode)}`
+    }).catch(err => console.error('Notification error:', err));
 
     return NextResponse.json({ 
       success: true, 
