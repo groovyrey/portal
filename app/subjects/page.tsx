@@ -88,19 +88,19 @@ export default function SubjectsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
         
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
+          <div className="relative flex-1 max-w-md group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-slate-400" />
+              <Search className="h-4 w-4 text-slate-400 group-focus-within:text-slate-600 transition-colors" />
             </div>
             <input
               type="text"
-              placeholder="Search by code or description..."
+              placeholder="Search subjects..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-10 py-2 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all font-medium"
+              className="block w-full pl-9 pr-9 py-2 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:border-slate-400 transition-all font-medium"
             />
             {searchQuery && (
               <button 
@@ -116,35 +116,38 @@ export default function SubjectsPage() {
             <button
               onClick={handleRefresh}
               disabled={loading}
-              className={`px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold rounded-lg text-[10px] transition-colors flex items-center gap-2 uppercase tracking-wider ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`p-2 bg-white hover:bg-slate-50 text-slate-600 font-bold rounded-xl border border-slate-200 transition-all active:scale-95 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title="Refresh Listing"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              {loading ? 'Refreshing...' : 'Refresh'}
             </button>
-            <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1.5 rounded-lg border border-slate-200 uppercase tracking-wider">
+            <div className="bg-slate-900 text-white text-[10px] font-bold px-3 py-2 rounded-xl uppercase tracking-wider">
               {filteredSubjects.length} {searchQuery ? 'Found' : 'Total'}
-            </span>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-slate-100 flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+              <ChevronRight className="h-4 w-4 rotate-90" />
+            </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900">Full Subject Listing</h1>
-              <p className="text-slate-500 text-xs font-medium mt-1 uppercase tracking-wider">Current Academic Offering</p>
+              <h1 className="text-lg font-bold text-slate-900 leading-none">Academic Catalog</h1>
+              <p className="text-slate-400 text-[10px] font-medium mt-0.5 uppercase tracking-wider">Official Subject Listing</p>
             </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-white border-b border-slate-100">
-                  <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Code</th>
-                  <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description</th>
-                  <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Units</th>
-                  <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Action</th>
+                <tr className="bg-slate-50/50 border-b border-slate-100">
+                  <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Code</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Units</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -153,24 +156,24 @@ export default function SubjectsPage() {
                     <tr 
                       key={idx} 
                       onClick={() => router.push(`/subjects/${encodeURIComponent(sub.code)}`)}
-                      className="hover:bg-blue-50/30 transition-all cursor-pointer group"
+                      className="hover:bg-slate-50/50 transition-all cursor-pointer group"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-[10px] font-bold text-slate-500 font-mono bg-slate-100 px-2 py-1 rounded group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        <span className="text-[10px] font-bold text-slate-500 font-mono bg-slate-100 px-2 py-1 rounded group-hover:bg-white group-hover:text-blue-600 border border-transparent group-hover:border-slate-200 transition-all">
                           {sub.code}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm font-semibold text-slate-700 leading-tight uppercase group-hover:text-blue-900 transition-colors">{sub.description}</p>
+                      <td className="px-5 py-4">
+                        <p className="text-sm font-bold text-slate-700 leading-tight uppercase group-hover:text-slate-900 transition-colors">{sub.description}</p>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="text-xs font-bold text-slate-600">
+                      <td className="px-5 py-4 text-center">
+                        <span className="text-xs font-bold text-slate-500">
                           {parseFloat(sub.units).toFixed(1)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-5 py-4 text-right">
                         <div className="flex justify-end">
-                          <div className="h-8 w-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all">
+                          <div className="h-7 w-7 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all flex items-center justify-center">
                             <ChevronRight size={14} />
                           </div>
                         </div>
@@ -179,8 +182,8 @@ export default function SubjectsPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center">
-                      <p className="text-slate-400 text-sm font-medium">No subjects found matching your search.</p>
+                    <td colSpan={4} className="px-5 py-12 text-center">
+                      <p className="text-slate-400 text-sm font-medium">No matches found.</p>
                     </td>
                   </tr>
                 )}

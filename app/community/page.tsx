@@ -252,86 +252,79 @@ function CommunityContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-32">
+    <div className="min-h-screen bg-slate-50 pb-20">
       <div className="max-w-2xl mx-auto p-4 space-y-6">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Community Feed</h1>
-            <span className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Community</h1>
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
           </div>
-          <button onClick={() => setShowGuidelines(true)} className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors">
+          <button onClick={() => setShowGuidelines(true)} className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hover:text-blue-600 transition-colors">
             Guidelines
           </button>
         </div>
 
         {student ? (
-          <div className="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-200/40 transition-all focus-within:ring-2 focus-within:ring-blue-600/10 focus-within:border-blue-600/30 animate-in fade-in duration-700">
+          <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm transition-all focus-within:border-slate-400">
             <div className="flex border-b border-slate-100">
               <button 
                 type="button" 
                 onClick={() => setActiveTab('write')}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'write' ? 'text-blue-600 bg-blue-50/50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+                className={`flex-1 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === 'write' ? 'text-slate-900 bg-slate-50' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 Write
               </button>
               <button 
                 type="button" 
                 onClick={() => setActiveTab('preview')}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'preview' ? 'text-blue-600 bg-blue-50/50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+                className={`flex-1 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === 'preview' ? 'text-slate-900 bg-slate-50' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 Preview
               </button>
             </div>
             
-            <form onSubmit={handlePost} className="p-6 space-y-4">
+            <form onSubmit={handlePost} className="p-5 space-y-4">
               <div>
                 {activeTab === 'write' ? (
                   <div className="space-y-3">
                     <textarea
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
-                      placeholder="Share something with the community... (Markdown supported)"
-                      className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium placeholder:text-slate-400 resize-none min-h-[100px] outline-none"
+                      placeholder="What's on your mind?"
+                      className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium placeholder:text-slate-300 resize-none min-h-[80px] outline-none"
                     />
                     {showPollEditor && (
-                      <div className="mt-4 p-5 bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+                      <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
-                            <BarChart2 className="h-4 w-4 text-blue-600" />
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-500">Poll Details</label>
+                            <BarChart2 className="h-4 w-4 text-slate-600" />
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Poll Details</label>
                           </div>
                           <button 
                             type="button" 
                             onClick={() => setShowPollEditor(false)} 
-                            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Remove Poll"
+                            className="p-1 text-slate-400 hover:text-red-500 transition-colors"
                           >
                             <X className="h-4 w-4" />
                           </button>
                         </div>
                         
-                        <div className="space-y-4">
-                          <div className="relative group">
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
-                              <span className="text-lg font-serif italic font-bold">Q</span>
-                            </div>
-                            <input 
-                              value={pollQuestion} 
-                              onChange={(e) => setPollQuestion(e.target.value)} 
-                              placeholder="Ask a question..." 
-                              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-sm" 
-                            />
-                          </div>
+                        <div className="space-y-3">
+                          <input 
+                            value={pollQuestion} 
+                            onChange={(e) => setPollQuestion(e.target.value)} 
+                            placeholder="Ask a question..." 
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold placeholder:text-slate-300 focus:outline-none focus:border-slate-400 transition-all" 
+                          />
 
-                          <div className="space-y-2.5 pl-4 border-l-2 border-slate-100">
+                          <div className="space-y-2">
                             {pollOptions.map((opt, i) => (
-                              <div key={i} className="relative flex items-center gap-2 group">
-                                <span className="text-[10px] font-bold text-slate-300 w-4 text-center select-none group-focus-within:text-blue-600 transition-colors">{i + 1}</span>
+                              <div key={i} className="flex items-center gap-2">
                                 <input 
                                   value={opt} 
                                   onChange={(e) => { const n = [...pollOptions]; n[i] = e.target.value; setPollOptions(n); }} 
                                   placeholder={`Option ${i+1}`} 
-                                  className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-sm placeholder:text-slate-400" 
+                                  className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-slate-400 transition-all placeholder:text-slate-300" 
                                 />
                               </div>
                             ))}
@@ -339,7 +332,7 @@ function CommunityContent() {
                               <button 
                                 type="button" 
                                 onClick={() => setPollOptions([...pollOptions, ''])} 
-                                className="ml-6 mt-1 flex items-center gap-2 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                                className="mt-1 flex items-center gap-1 text-[10px] font-bold text-blue-600 uppercase tracking-wider hover:text-blue-700 transition-colors"
                               >
                                 <Plus className="h-3 w-3" />
                                 Add Option
@@ -351,84 +344,63 @@ function CommunityContent() {
                     )}
                   </div>
                 ) : (
-                  <div className="min-h-[100px] prose prose-slate prose-sm max-w-none">
+                  <div className="min-h-[80px] prose prose-slate prose-sm max-w-none">
                     {content.trim() ? (
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
                     ) : (
-                      <p className="text-slate-300 italic">Nothing to preview yet...</p>
-                    )}
-                    {showPollEditor && pollQuestion.trim() && (
-                      <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 not-prose">
-                        <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Poll Preview</p>
-                        <p className="text-sm font-bold text-slate-900 mb-3">{pollQuestion}</p>
-                        <div className="space-y-2">
-                          {pollOptions.filter(o => o.trim()).map((opt, i) => (
-                            <div key={i} className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 bg-white">
-                              {opt}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                      <p className="text-slate-300 italic">Preview will appear here...</p>
                     )}
                   </div>
                 )}
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => setShowPollEditor(!showPollEditor)} className={`p-2 rounded-xl transition-all ${showPollEditor ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-400 hover:bg-slate-50'}`} title="Add Poll"><BarChart2 className="h-5 w-5" /></button>
-                  <button type="button" className="p-2 rounded-xl text-slate-400 hover:bg-slate-50" title="Formatting help"><MessageSquare className="h-5 w-5" /></button>
+                <div className="flex gap-1">
+                  <button type="button" onClick={() => setShowPollEditor(!showPollEditor)} className={`p-2 rounded-lg transition-all ${showPollEditor ? 'bg-slate-900 text-white' : 'text-slate-400 hover:bg-slate-50'}`} title="Add Poll"><BarChart2 className="h-4 w-4" /></button>
                 </div>
-                <button type="submit" disabled={(!content.trim() && !pollQuestion.trim()) || posting} className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-400 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:opacity-70 flex items-center gap-2">
-                  {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                <button type="submit" disabled={(!content.trim() && !pollQuestion.trim()) || posting} className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white px-5 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 flex items-center gap-2">
+                  {posting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                   Post
                 </button>
               </div>
             </form>
           </div>
         ) : (
-          <div className="bg-white rounded-3xl p-10 border border-slate-200 text-center space-y-4 shadow-xl shadow-slate-200/30">
-            <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto"><User className="h-8 w-8 text-slate-300" /></div>
-            <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Ready to join in?</h2>
-            <p className="text-xs text-slate-500 font-medium mb-6">Join our student community to share posts, vote on polls, and join discussions.</p>
-            <Link href="/" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-200 active:opacity-70">Sign In Now</Link>
+          <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center space-y-4 shadow-sm">
+            <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto"><User className="h-6 w-6 text-slate-300" /></div>
+            <h2 className="text-lg font-bold text-slate-900">Ready to join?</h2>
+            <p className="text-xs text-slate-500 font-medium mb-4">Share posts, vote on polls, and join discussions.</p>
+            <Link href="/" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95">Sign In</Link>
           </div>
         )}
 
         {/* Search & Main Filters */}
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1 group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-              <input type="text" value={searchQuery} onChange={(e) => updateSearchParams({ search: e.target.value })} placeholder="Search posts, users or polls..." className="w-full pl-11 pr-10 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all shadow-sm" />
-              {searchQuery && <button onClick={() => updateSearchParams({ search: null })} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"><X className="h-3.5 w-3.5" /></button>}
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input type="text" value={searchQuery} onChange={(e) => updateSearchParams({ search: e.target.value })} placeholder="Search..." className="w-full pl-9 pr-9 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-slate-400 transition-all" />
+              {searchQuery && <button onClick={() => updateSearchParams({ search: null })} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"><X className="h-3.5 w-3.5" /></button>}
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider border transition-all ${showFilters || selectedType !== 'all' || sortBy !== 'newest' ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 shadow-sm'}`}><SlidersHorizontal className="h-4 w-4" />Filters {(selectedType !== 'all' || sortBy !== 'newest') && <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}</button>
-            </div>
+            <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider border transition-all ${showFilters || selectedType !== 'all' || sortBy !== 'newest' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 shadow-sm'}`}><SlidersHorizontal className="h-3.5 w-3.5" />Filters</button>
           </div>
 
           {showFilters && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xl shadow-slate-200/50 space-y-5 animate-in slide-in-from-top-2 duration-200">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Sort By</label>
-                  <div className="flex flex-wrap gap-2">{sortOptions.map(opt => <button key={opt.id} onClick={() => updateSearchParams({ sort: opt.id })} className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${sortBy === opt.id ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/10' : 'bg-slate-50 text-slate-500 border-slate-100 hover:border-slate-300'}`}>{opt.label}</button>)}</div>
+            <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 px-1">Sort</label>
+                  <div className="flex flex-wrap gap-1.5">{sortOptions.map(opt => <button key={opt.id} onClick={() => updateSearchParams({ sort: opt.id })} className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${sortBy === opt.id ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-500 border-slate-100 hover:border-slate-300'}`}>{opt.label}</button>)}</div>
                 </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Content Type</label>
-                  <div className="flex flex-wrap gap-2">{postTypes.map(type => <button key={type.id} onClick={() => updateSearchParams({ type: type.id })} className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${selectedType === type.id ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/10' : 'bg-slate-50 text-slate-500 border-slate-100 hover:border-slate-300'}`}>{type.label}</button>)}</div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 px-1">Type</label>
+                  <div className="flex flex-wrap gap-1.5">{postTypes.map(type => <button key={type.id} onClick={() => updateSearchParams({ type: type.id })} className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${selectedType === type.id ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-500 border-slate-100 hover:border-slate-300'}`}>{type.label}</button>)}</div>
                 </div>
               </div>
-              {(selectedType !== 'all' || sortBy !== 'newest' || searchQuery || selectedTopic !== 'All') && (
-                <div className="pt-4 border-t border-slate-50 flex justify-end">
-                  <button onClick={() => updateSearchParams({ search: null, topic: null, type: null, sort: null, limit: null })} className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-600 px-3 py-1 rounded-lg hover:bg-red-50 transition-colors">Reset All Filters</button>
-                </div>
-              )}
             </div>
           )}
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
-            {topics.map(topic => <button key={topic} onClick={() => updateSearchParams({ topic })} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap border transition-all ${selectedTopic === topic ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/10' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>{topic}</button>)}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+            {topics.map(topic => <button key={topic} onClick={() => updateSearchParams({ topic })} className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider whitespace-nowrap border transition-all ${selectedTopic === topic ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>{topic}</button>)}
           </div>
         </div>
 
@@ -436,22 +408,21 @@ function CommunityContent() {
         <div className="space-y-4">
           {loading ? (
             <div className="space-y-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white rounded-2xl p-6 border border-slate-200 space-y-4">
-                  <div className="flex items-center gap-3"><Skeleton className="h-9 w-9 rounded-lg" /><div className="space-y-2 flex-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div></div>
-                  <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-2/3" /></div>
+              {[1, 2].map(i => (
+                <div key={i} className="bg-white rounded-xl p-5 border border-slate-200 space-y-4">
+                  <div className="flex items-center gap-3"><Skeleton className="h-8 w-8 rounded-full" /><div className="space-y-1.5 flex-1"><Skeleton className="h-3.5 w-24" /><Skeleton className="h-2.5 w-16" /></div></div>
+                  <div className="space-y-2"><Skeleton className="h-3.5 w-full" /><Skeleton className="h-3.5 w-2/3" /></div>
                 </div>
               ))}
             </div>
           ) : isError ? (
-            <div className="text-center py-20 bg-white rounded-2xl border border-red-100 text-red-400">
-              <ShieldAlert className="h-10 w-10 mx-auto mb-3 opacity-20" /><p className="font-semibold text-xs uppercase tracking-wider mb-4">Failed to load posts</p>
-              <button onClick={() => refetch()} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-colors">Retry Fetching</button>
+            <div className="text-center py-16 bg-white rounded-2xl border border-red-100">
+              <p className="text-xs font-bold text-red-400 uppercase tracking-wider mb-4">Failed to load posts</p>
+              <button onClick={() => refetch()} className="px-4 py-2 bg-slate-900 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-slate-800 transition-colors">Retry</button>
             </div>
           ) : posts.length === 0 ? (
-            <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 text-slate-400">
-              <MessageSquare className="h-10 w-10 mx-auto mb-3 opacity-20" /><p className="font-semibold text-xs uppercase tracking-wider">No posts found</p>
-              {(searchQuery || selectedTopic !== 'All' || selectedType !== 'all') && <button onClick={() => updateSearchParams({ search: null, topic: null, type: null })} className="mt-4 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:underline">Clear all filters</button>}
+            <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">No posts found</p>
             </div>
           ) : (
             <>
@@ -467,7 +438,7 @@ function CommunityContent() {
                 />
               ))}
               {posts.length > postsToShow && (
-                <button onClick={handleLoadMore} className="w-full py-4 bg-white border border-slate-200 rounded-2xl text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm active:opacity-70">Load More Activity</button>
+                <button onClick={handleLoadMore} className="w-full py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 transition-all active:scale-95">Load More</button>
               )}
             </>
           )}

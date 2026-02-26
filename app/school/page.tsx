@@ -28,21 +28,21 @@ const SchoolInfoPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-20">
       {/* Hero Section */}
-      <div className="bg-blue-600 pt-16 pb-16 px-6">
+      <div className="bg-slate-900 pt-16 pb-12 px-6">
         <div className="max-w-5xl mx-auto">
-          <Link href="/" className="inline-flex items-center gap-2 text-blue-100 hover:text-white transition-colors text-sm font-bold mb-8 group">
-            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-            Back to Dashboard
+          <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-all text-xs font-bold mb-8 active:scale-95">
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Dashboard
           </Link>
-          <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
-            <div className="h-24 w-24 bg-white rounded-3xl shadow-xl flex items-center justify-center p-4">
-              <GraduationCap className="h-12 w-12 text-blue-600" />
+          <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+            <div className="h-20 w-20 bg-white rounded-2xl flex items-center justify-center shrink-0">
+              <GraduationCap className="h-10 w-10 text-slate-900" />
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2">La Concepcion College</h1>
-              <p className="text-blue-100 text-lg max-w-2xl">
+              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">La Concepcion College</h1>
+              <p className="text-slate-400 text-base max-w-2xl font-medium">
                 Changing Lives for the Better. Founded in 1998, LCC remains committed to providing quality education in the heart of Bulacan.
               </p>
             </div>
@@ -50,68 +50,59 @@ const SchoolInfoPage = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <div className="grid lg:grid-cols-3 gap-8">
+      <div className="max-w-5xl mx-auto px-6 py-10">
+        <div className="grid lg:grid-cols-3 gap-6">
           
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6">
             
-            {/* Quick Links */}
+            {/* Portals */}
             <section>
-              <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Globe className="h-5 w-5 text-blue-600" />
-                Official Portals
-              </h2>
-              <div className="grid gap-4">
+              <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4 ml-1">Official Portals</h2>
+              <div className="grid gap-3">
                 {officialLinks.map((link) => (
                   <a 
                     key={link.name}
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group bg-white p-6 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all flex items-center justify-between"
+                    className="group bg-white p-5 rounded-2xl border border-slate-200 hover:border-slate-400 transition-all flex items-center justify-between shadow-sm"
                   >
                     <div>
-                      <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{link.name}</h3>
-                      <p className="text-sm text-slate-500 mt-1">{link.description}</p>
+                      <h3 className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">{link.name}</h3>
+                      <p className="text-xs text-slate-500 mt-0.5 font-medium">{link.description}</p>
                     </div>
-                    <ExternalLink className="h-5 w-5 text-slate-300 group-hover:text-blue-500 transition-colors" />
+                    <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-slate-600 transition-colors" />
                   </a>
                 ))}
               </div>
             </section>
 
-            {/* Academic Calendar Notice */}
-            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-8 opacity-5">
-                <Calendar size={120} />
-              </div>
+            {/* Calendar */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
               <div className="relative z-10">
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Academic Calendar (S.Y. 2025-2026)</h3>
-                <p className="text-slate-500 mb-6">
-                  Stay updated with the latest semester schedules and examination dates.
-                </p>
+                <h3 className="text-base font-bold text-slate-900 mb-4">Academic Calendar 2025-2026</h3>
                 
-                <div className="grid sm:grid-cols-2 gap-4 mb-8">
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Upcoming Exam</p>
+                <div className="grid sm:grid-cols-2 gap-3 mb-6">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Upcoming Exam</p>
                     <p className="text-sm font-bold text-slate-800">Midterm Week</p>
-                    <p className="text-xs text-slate-500">March 2026 (Tentative)</p>
+                    <p className="text-xs text-slate-500 font-medium">March 2026 (Tentative)</p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                    <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1">Holiday</p>
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Holiday</p>
                     <p className="text-sm font-bold text-slate-800">Holy Week Break</p>
-                    <p className="text-xs text-slate-500">March 30 - April 5, 2026</p>
+                    <p className="text-xs text-slate-500 font-medium">March 30 - April 5, 2026</p>
                   </div>
                 </div>
 
                 <a 
                   href="https://www.facebook.com/laconcepcioncollege/photos" 
                   target="_blank"
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-all active:scale-95"
                 >
-                  View Full Calendar
-                  <ExternalLink className="h-4 w-4" />
+                  Full Calendar
+                  <ExternalLink className="h-3.5 w-3.5" />
                 </a>
               </div>
             </div>
@@ -120,21 +111,18 @@ const SchoolInfoPage = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             
-            {/* Contact Card */}
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-              <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-blue-600" />
-                Institution Contact
-              </h3>
-              <div className="space-y-6">
+            {/* Contact */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-6 ml-1">Contact Details</h3>
+              <div className="space-y-5">
                 {contactInfo.map((item) => (
-                  <div key={item.label} className="flex gap-4">
-                    <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+                  <div key={item.label} className="flex gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 border border-slate-100">
                       {item.icon}
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.label}</p>
-                      <p className="text-sm font-semibold text-slate-700">{item.value}</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{item.label}</p>
+                      <p className="text-xs font-bold text-slate-700 leading-tight">{item.value}</p>
                     </div>
                   </div>
                 ))}
@@ -144,16 +132,16 @@ const SchoolInfoPage = () => {
                 <a 
                   href="https://www.facebook.com/laconcepcioncollege" 
                   target="_blank"
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#1877F2] text-white font-bold text-sm hover:opacity-90 transition-opacity"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition-all active:scale-95"
                 >
-                  <Facebook className="h-4 w-4" />
-                  Follow on Facebook
+                  <Facebook className="h-3.5 w-3.5" />
+                  Facebook Page
                 </a>
               </div>
             </div>
 
-            {/* Location Map */}
-            <div className="bg-white p-2 rounded-3xl border border-slate-200 shadow-sm overflow-hidden h-64">
+            {/* Map */}
+            <div className="bg-white p-1 rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-60">
               <iframe 
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3857.240742151608!2d121.0688846108153!3d14.811802971842918!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397afd625759755%3A0x6a1006509a721727!2sLa%20Concepcion%20College!5e0!3m2!1sen!2sph!4v1708100000000!5m2!1sen!2sph" 
                 width="100%" 
@@ -162,7 +150,7 @@ const SchoolInfoPage = () => {
                 allowFullScreen={true} 
                 loading="lazy" 
                 referrerPolicy="no-referrer-when-downgrade"
-                className="rounded-2xl"
+                className="rounded-xl"
               ></iframe>
             </div>
 

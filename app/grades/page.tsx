@@ -82,21 +82,21 @@ export default function GradesPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-slate-50 p-8">
-        <div className="max-w-5xl mx-auto space-y-8">
+      <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
+        <div className="max-w-5xl mx-auto space-y-6">
           <div className="flex justify-end">
-            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-9 w-40 rounded-lg" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
           </div>
-          <div className="space-y-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-                <Skeleton className="h-6 w-48" />
-                <Skeleton className="h-20 w-full" />
+          <div className="space-y-4">
+            {[1, 2].map((i) => (
+              <div key={i} className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-16 w-full" />
               </div>
             ))}
           </div>
@@ -123,21 +123,21 @@ export default function GradesPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-        <div className="flex justify-end mb-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
+        <div className="flex justify-end mb-6">
           <button 
             onClick={calculateStats}
             disabled={isCalculating}
-            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 ${
               isCalculating 
-                ? 'bg-slate-200 text-slate-500 cursor-not-allowed' 
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                : 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm'
             }`}
           >
             {isCalculating ? (
               <>
                 <div className="animate-spin h-3 w-3 border-2 border-white/30 border-t-white rounded-full"></div>
-                Gathering Data...
+                Calculating...
               </>
             ) : (
               <>
@@ -153,7 +153,7 @@ export default function GradesPage() {
         <GradesList reports={student.availableReports} />
 
         {allGrades.length > 0 && (
-          <div className="mt-10">
+          <div className="mt-8">
             <GradeStats allGrades={allGrades} />
           </div>
         )}

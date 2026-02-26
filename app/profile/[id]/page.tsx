@@ -188,14 +188,14 @@ function ProfileContent() {
   const showAcademic = !isPublicView || (student.settings?.showAcademicInfo ?? true);
 
   return (
-    <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6">
-      <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/40 border border-slate-100">
-        <div className="h-40 sm:h-56 bg-slate-50 relative overflow-hidden" />
+    <div className="max-w-2xl mx-auto py-10 px-4">
+      <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+        <div className="h-32 sm:h-40 bg-slate-50 relative overflow-hidden" />
 
-        <div className="px-8 sm:px-12 pb-12 relative">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
-            <div className="shrink-0 -mt-16 sm:-mt-20 relative z-10">
-              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-[2.5rem] overflow-hidden bg-white border-4 border-white shadow-2xl">
+        <div className="px-6 sm:px-8 pb-8 relative">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <div className="shrink-0 -mt-12 sm:-mt-16 relative z-10">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-white border-4 border-white shadow-md">
                 <img 
                   src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=f1f5f9&color=64748b&size=256&font-size=0.33&bold=true`}
                   alt={student.name}
@@ -204,15 +204,15 @@ function ProfileContent() {
               </div>
             </div>
 
-            <div className="flex-1 text-center sm:text-left space-y-4 pt-2">
+            <div className="flex-1 text-center sm:text-left space-y-3 pt-2">
               <div className="space-y-1">
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight">{student.name || '?'}</h1>
+                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{student.name || '?'}</h1>
                 <div className="flex items-center justify-center sm:justify-start gap-3">
-                  <span className="text-xs font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
                     {student.id || '?'}
                   </span>
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
-                    <span className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                    <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                     {isOnline ? 'Online' : 'Offline'}
                   </div>
                 </div>
@@ -220,12 +220,12 @@ function ProfileContent() {
 
               {showAcademic && (
                 <div className="flex flex-wrap justify-center sm:justify-start gap-2">
-                  <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-                    <GraduationCap className="h-4 w-4 text-slate-400" />
+                  <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl">
+                    <GraduationCap className="h-3.5 w-3.5 text-slate-500" />
                     <span className="text-xs font-bold text-slate-600 tracking-tight">{student.course || '?'}</span>
                   </div>
-                  <div className="bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-                    <span className="text-xs font-bold text-slate-600 tracking-tight">Year {student.yearLevel || '?'} • Sem {student.semester || '?'}</span>
+                  <div className="bg-slate-100 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 tracking-tight">
+                    Year {student.yearLevel || '?'} • Sem {student.semester || '?'}
                   </div>
                 </div>
               )}
@@ -233,14 +233,14 @@ function ProfileContent() {
           </div>
 
           {student.badges && student.badges.length > 0 && (
-            <div className="mt-12 pt-12 border-t border-slate-50">
-               <div className="flex items-center gap-3 mb-6">
-                <div className="h-8 w-8 rounded-xl bg-blue-50 flex items-center justify-center">
-                  <IdCard className="h-4 w-4 text-blue-600" />
+            <div className="mt-10 pt-8 border-t border-slate-100">
+               <div className="flex items-center gap-2 mb-4">
+                <div className="h-6 w-6 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+                  <IdCard className="h-3.5 w-3.5" />
                 </div>
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Badges</h3>
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Academic Badges</h3>
               </div>
-              <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100/50">
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                 <BadgeDisplay 
                   badgeIds={student.badges} 
                   size="lg" 
@@ -252,37 +252,31 @@ function ProfileContent() {
         </div>
       </div>
 
-      <div className="mt-12">
-        <div className="flex items-center justify-between mb-8 px-4 sm:px-0">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-xl bg-blue-50 flex items-center justify-center">
-              <MessageSquare className="h-4 w-4 text-blue-600" />
-            </div>
-            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Feed Activity</h3>
-          </div>
+      <div className="mt-10">
+        <div className="flex items-center justify-between mb-6 px-2">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Recent Updates</span>
+            <div className="h-6 w-6 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+              <MessageSquare className="h-3.5 w-3.5" />
+            </div>
+            <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Activity Feed</h3>
           </div>
         </div>
 
         {loadingPosts ? (
           <div className="space-y-4">
             {[1, 2].map(i => (
-              <div key={i} className="bg-white rounded-2xl p-6 border border-slate-100 space-y-4">
+              <div key={i} className="bg-white rounded-xl p-5 border border-slate-200 space-y-4">
                 <div className="flex items-center gap-3">
-                  <Skeleton className="h-9 w-9 rounded-lg" />
-                  <div className="space-y-2 flex-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div>
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <div className="space-y-1.5 flex-1"><Skeleton className="h-3.5 w-24" /><Skeleton className="h-2.5 w-16" /></div>
                 </div>
-                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-16 w-full" />
               </div>
             ))}
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
-            <MessageSquare className="h-10 w-10 mx-auto mb-4 text-slate-200" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">No Activity Yet</p>
-            <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Join our student community to share posts</p>
+          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">No activity recorded</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -300,9 +294,9 @@ function ProfileContent() {
             ))}
             <Link 
               href="/community" 
-              className="block text-center py-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-blue-600 transition-colors"
+              className="block text-center py-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-blue-600 transition-colors"
             >
-              View All in Community
+              Back to Community Feed
             </Link>
           </div>
         )}
