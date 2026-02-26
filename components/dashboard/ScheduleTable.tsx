@@ -105,26 +105,25 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-200">
-            <Calendar className="h-5 w-5" />
+          <div className="h-8 w-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+            <Calendar className="h-4 w-4" />
           </div>
           <div>
-            <h2 className="text-lg font-black text-slate-900 tracking-tight">Class Schedule</h2>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Weekly Overview</p>
+            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Schedule</h2>
           </div>
         </div>
       </div>
 
-      <div className="bg-blue-50/50 border border-blue-100/50 rounded-2xl p-4 flex items-start gap-3">
-        <div className="h-6 w-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-          <Info className="h-3.5 w-3.5" />
+      <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-start gap-3">
+        <div className="h-5 w-5 rounded bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+          <Info className="h-3 w-3" />
         </div>
-        <p className="text-xs text-blue-700 leading-relaxed">
-          <span className="font-bold">Pro-tip:</span> Tap or click on any class in the schedule to view full subject details, room location, and section information.
+        <p className="text-[11px] text-blue-700 font-medium leading-relaxed">
+          Tap on any class to view full details and location.
         </p>
       </div>
 
-      <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
         <table className="w-full border-collapse table-fixed min-w-[600px]">
           <thead>
@@ -206,46 +205,43 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
         </div>
       </div>
 
-      {/* Detail Modal */}
       <Modal
         isOpen={!!selectedItem}
         onClose={() => setSelectedItem(null)}
       >
         {selectedItem && (
           <div className="overflow-hidden">
-            <div className={`p-6 ${getSubjectColor(selectedItem.subject)} border-b border-black/5`}>
-              <div className="flex justify-between items-start mb-4">
-                <div className="px-2 py-1 bg-white/40 rounded-lg text-[10px] font-black uppercase tracking-wider">
+            <div className={`p-5 ${getSubjectColor(selectedItem.subject)} border-b border-black/5`}>
+              <div className="flex justify-between items-start mb-3">
+                <div className="px-2 py-0.5 bg-white/40 rounded-md text-[10px] font-bold uppercase tracking-wider">
                   {selectedItem.section || '?'}
                 </div>
               </div>
-              <h3 className="text-lg font-black leading-tight mb-2 uppercase tracking-tight">
+              <h3 className="text-lg font-bold leading-tight uppercase tracking-tight">
                 {getSubjectName(selectedItem.subject) || '?'}
               </h3>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
-                  {getSubjectCode(selectedItem.subject) || '?'}
-                </span>
-              </div>
+              <p className="text-[10px] font-bold uppercase tracking-wider opacity-60 mt-1">
+                {getSubjectCode(selectedItem.subject) || '?'}
+              </p>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-5 space-y-4">
               <div className="flex items-center gap-4 group">
-                <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                  <Clock className="h-5 w-5" />
+                <div className="h-9 w-9 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-colors">
+                  <Clock className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Time Schedule</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Time Schedule</p>
                   <p className="text-sm font-bold text-slate-700">{selectedItem.time || '?'}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-4 group">
-                <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-                  <MapPin className="h-5 w-5" />
+                <div className="h-9 w-9 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-emerald-600 transition-colors">
+                  <MapPin className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Room / Facility</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Room / Facility</p>
                   <p className="text-sm font-bold text-slate-700">{selectedItem.room || '?'}</p>
                 </div>
               </div>
@@ -256,7 +252,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                     <Hash className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Units</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Units</p>
                     <p className="text-xs font-bold text-slate-700">{selectedItem.units || '?'} Units</p>
                   </div>
                 </div>
@@ -265,28 +261,28 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                     <BookOpen className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Section</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Section</p>
                     <p className="text-xs font-bold text-slate-700">{selectedItem.section || '?'}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 pt-4">
+              <div className="flex flex-col gap-2 pt-4">
                 <button 
                   onClick={() => {
                     const code = getSubjectCode(selectedItem.subject);
                     router.push(`/subjects/${encodeURIComponent(code)}`);
                   }}
-                  className="w-full py-3 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2 group"
+                  className="w-full py-2.5 bg-slate-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 group"
                 >
-                  View Catalog Info
+                  View Catalog
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button 
                   onClick={() => setSelectedItem(null)}
-                  className="w-full py-3 bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition-colors"
+                  className="w-full py-2.5 bg-slate-50 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-slate-100 transition-colors"
                 >
-                  Close Details
+                  Close
                 </button>
               </div>
             </div>

@@ -298,24 +298,24 @@ export default function PostPage() {
         ) : post && (
           <div className="bg-transparent space-y-6">
             <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-slate-900/10">
-                  {post.userName.charAt(0)}
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm">
+                  {post.userName.charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <Link href={`/profile/${obfuscateId(post.userId)}`} className="block">
-                    <h2 className="text-base font-bold text-slate-900 hover:text-blue-600 transition-colors">{post.userName}</h2>
+                    <h2 className="text-sm font-bold text-slate-900 hover:text-blue-600 transition-colors">{post.userName}</h2>
                   </Link>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
+                    <p className="text-[10px] font-medium text-slate-400">
                       {new Date(post.createdAt).toLocaleDateString()}
                     </p>
-                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-tighter ${getTopicStyle(post.topic || 'General')}`}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getTopicStyle(post.topic || 'General')}`}>
                       {post.topic || 'General'}
                     </span>
                     {post.isUnreviewed && (
-                      <span className="bg-amber-50 text-amber-600 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-100 uppercase tracking-tighter">
-                        Pending AI Review
+                      <span className="bg-amber-50 text-amber-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-100">
+                        Pending
                       </span>
                     )}
                   </div>
@@ -326,20 +326,20 @@ export default function PostPage() {
                 <div className="relative">
                   <button 
                     onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}
-                    className="p-2 rounded-xl hover:bg-white border border-transparent hover:border-slate-100 text-slate-400 hover:text-slate-600 transition-all shadow-sm"
+                    className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all"
                   >
                     <MoreVertical className="h-5 w-5" />
                   </button>
                   {activeMenu === post.id && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-50">
                       <button 
                         onClick={() => {
                           setPostToDelete(post.id);
                           setActiveMenu(null);
                         }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-50 transition-colors"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 transition-colors"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                         Delete Post
                       </button>
                     </div>
@@ -348,7 +348,7 @@ export default function PostPage() {
               )}
             </div>
 
-            <div className="prose prose-slate max-w-none prose-sm sm:prose-base font-medium text-slate-700 leading-relaxed px-1">
+            <div className="prose prose-slate max-w-none prose-sm font-normal text-slate-600 leading-relaxed px-0.5">
               <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
                 components={{
@@ -357,10 +357,9 @@ export default function PostPage() {
                       {...props} 
                       target="_blank" 
                       rel="noopener noreferrer" 
-                      className="text-blue-600 underline hover:text-blue-700 inline-flex items-center gap-0.5"
+                      className="text-blue-600 font-bold underline hover:text-blue-700"
                     >
                       {props.children}
-                      <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   )
                 }}
@@ -370,14 +369,8 @@ export default function PostPage() {
             </div>
 
             {post.poll && (
-              <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-6 w-6 bg-blue-50 rounded-lg flex items-center justify-center">
-                    <BarChart2 className="h-3.5 w-3.5 text-blue-600" />
-                  </div>
-                  <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Community Poll</h5>
-                </div>
-                <h4 className="text-base font-bold text-slate-900">{post.poll.question}</h4>
+              <div className="p-5 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                <h4 className="text-sm font-bold text-slate-900 tracking-tight">{post.poll.question}</h4>
                 <div className="space-y-2">
                   {post.poll.options.map((option, idx) => {
                     const totalVotes = post.poll?.options.reduce((acc, curr) => acc + curr.votes.length, 0) || 0;
@@ -390,10 +383,10 @@ export default function PostPage() {
                         key={idx}
                         disabled={!student || hasVoted}
                         onClick={() => handleVote(post.id, idx)}
-                        className={`w-full relative h-12 rounded-2xl overflow-hidden border transition-all ${
+                        className={`w-full relative h-10 rounded-xl overflow-hidden border transition-all ${
                           hasVoted 
-                            ? isSelected ? 'border-blue-200 bg-blue-50/50' : 'border-slate-50 bg-slate-50/30'
-                            : !student ? 'border-slate-100 bg-slate-50/50 cursor-not-allowed' : 'border-slate-200 bg-white hover:border-blue-600/30 active:opacity-70'
+                            ? isSelected ? 'border-blue-200 bg-white' : 'border-slate-50 bg-transparent opacity-60'
+                            : !student ? 'border-slate-100 bg-white/50 cursor-not-allowed' : 'border-slate-200 bg-white hover:border-blue-400'
                         }`}
                       >
                         {hasVoted && (
@@ -402,12 +395,12 @@ export default function PostPage() {
                             style={{ width: `${percentage}%` }}
                           />
                         )}
-                        <div className="absolute inset-0 px-5 flex items-center justify-between">
-                          <span className={`text-sm font-bold ${isSelected ? 'text-blue-700' : 'text-slate-700'}`}>
+                        <div className="absolute inset-0 px-4 flex items-center justify-between">
+                          <span className={`text-xs font-bold ${isSelected ? 'text-blue-700' : 'text-slate-600'}`}>
                             {option.text}
                           </span>
                           {hasVoted && (
-                            <span className="text-[10px] font-black text-slate-400">
+                            <span className="text-[10px] font-bold text-slate-400 tabular-nums">
                               {percentage}%
                             </span>
                           )}
@@ -416,18 +409,13 @@ export default function PostPage() {
                     );
                   })}
                 </div>
-                <div className="flex items-center justify-between pt-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    {post.poll.options.reduce((acc, curr) => acc + curr.votes.length, 0)} Total Votes
-                  </p>
-                  {student && post.poll.options.some(opt => opt.votes.includes(student.id)) && (
-                    <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Voted</span>
-                  )}
-                </div>
+                <p className="text-[10px] font-medium text-slate-400">
+                  {post.poll.options.reduce((acc, curr) => acc + curr.votes.length, 0)} votes
+                </p>
               </div>
             )}
 
-            <div className="flex items-center gap-6 py-4 px-1 border-y border-slate-100">
+            <div className="flex items-center gap-2 py-4 px-0.5 border-y border-slate-50">
                 <button 
                     onClick={() => handleLike(post.id, isLiked || false)}
                     onContextMenu={(e) => {
@@ -435,24 +423,24 @@ export default function PostPage() {
                       fetchReactors(post.id);
                     }}
                     disabled={!student}
-                    className={`flex items-center gap-2.5 px-4 py-2 rounded-2xl transition-all
+                    className={`flex items-center gap-2 px-4 py-1.5 rounded-lg transition-all
                         ${isLiked 
-                            ? 'bg-red-50 text-red-600 shadow-lg shadow-red-600/5' 
+                            ? 'bg-rose-50 text-rose-600 border border-rose-100' 
                             : !student 
                               ? 'bg-slate-50 text-slate-300 cursor-not-allowed'
-                              : 'bg-white border border-slate-100 text-slate-500 hover:bg-slate-50 hover:border-slate-200 shadow-sm'}`}
+                              : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                 >
                     <Heart 
                         className={`h-4 w-4 ${ isLiked ? 'fill-current' : ''}`} 
                     />
-                    <span className="text-xs font-black uppercase tracking-widest">
+                    <span className="text-xs font-bold">
                         {(post.likes || []).length}
                     </span>
                 </button>
 
-                <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-white border border-slate-100 text-slate-500 shadow-sm">
+                <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-slate-50 text-slate-500">
                     <MessageSquare className="h-4 w-4" />
-                    <span className="text-xs font-black uppercase tracking-widest">
+                    <span className="text-xs font-bold">
                         {post.commentCount || 0}
                     </span>
                 </div>
@@ -491,51 +479,51 @@ export default function PostPage() {
                 <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-tight">Be the first to share your thoughts</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {comments.map((comment, idx) => {
                   const isMe = student && comment.userId === student.id;
                   return (
-                    <div key={comment.id} className="p-4 sm:p-6 flex gap-4 items-start group hover:bg-slate-100/50 rounded-2xl transition-all">
+                    <div key={comment.id} className="p-4 flex gap-3 items-start group hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-100">
                       <Link 
                         href={`/profile/${obfuscateId(comment.userId)}`}
                         className="shrink-0"
                       >
-                        <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs group-hover:bg-white transition-colors">
-                          {comment.userName.charAt(0)}
+                        <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-[10px] group-hover:bg-white transition-colors">
+                          {comment.userName.charAt(0).toUpperCase()}
                         </div>
                       </Link>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1 gap-4">
+                        <div className="flex items-center justify-between mb-0.5 gap-4">
                           <Link href={`/profile/${obfuscateId(comment.userId)}`} className="truncate">
-                            <span className={`text-sm font-bold truncate hover:text-blue-500 transition-colors ${isMe ? 'text-blue-600' : 'text-slate-900'}`}>
+                            <span className={`text-xs font-bold truncate hover:text-blue-600 transition-colors ${isMe ? 'text-blue-600' : 'text-slate-900'}`}>
                               {isMe ? 'You' : comment.userName}
                             </span>
                           </Link>
-                          <div className="flex items-center gap-3">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase whitespace-nowrap">
-                              {new Date(comment.createdAt).toLocaleDateString()}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                              {new Date(comment.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                             </span>
                             {isMe ? (
                               <button 
                                 onClick={() => setCommentToDelete({ postId: postId, commentId: comment.id })}
-                                className="p-1 rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                className="p-1 rounded text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
                                 title="Delete comment"
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Trash2 className="h-3 w-3" />
                               </button>
                             ) : (
                               <button 
                                 onClick={() => setCommentToReport(comment.id)}
                                 disabled={reportingComment === comment.id}
-                                className={`p-1 rounded-md transition-colors ${reportingComment === comment.id ? 'text-blue-500 animate-pulse' : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50'}`}
+                                className={`p-1 rounded transition-colors ${reportingComment === comment.id ? 'text-blue-500 animate-pulse' : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50'}`}
                                 title="Report comment"
                               >
-                                <Flag className="h-3.5 w-3.5" />
+                                <Flag className="h-3 w-3" />
                               </button>
                             )}
                           </div>
                         </div>
-                        <p className="text-sm text-slate-600 font-medium leading-relaxed break-words">
+                        <p className="text-sm text-slate-600 font-normal leading-relaxed break-words">
                           {comment.content}
                         </p>
                       </div>
@@ -549,29 +537,29 @@ export default function PostPage() {
       </div>
 
       {/* Sticky Comment Input */}
-      <div className="fixed bottom-0 inset-x-0 bg-white/80 backdrop-blur-md border-t border-slate-100 p-4 z-[110]">
+      <div className="fixed bottom-0 inset-x-0 bg-white/80 backdrop-blur-md border-t border-slate-100 p-3 z-[110]">
         {student ? (
-          <div className="max-w-2xl mx-auto flex gap-3 items-center bg-white p-2 rounded-2xl border border-slate-200 focus-within:ring-4 focus-within:ring-blue-600/5 focus-within:border-blue-600 transition-all shadow-sm">
+          <div className="max-w-2xl mx-auto flex gap-3 items-center bg-white p-1.5 rounded-xl border border-slate-200 focus-within:border-blue-500 transition-all shadow-sm">
             <input
               type="text"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleComment()}
               placeholder="Share your thoughts..."
-              className="flex-1 bg-transparent border-none px-4 text-sm font-medium focus:outline-none py-2"
+              className="flex-1 bg-transparent border-none px-3 text-sm font-medium focus:outline-none py-2"
             />
             <button
               disabled={!newComment.trim() || commenting}
               onClick={handleComment}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white p-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/20 active:opacity-70"
+              className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 text-white p-2.5 rounded-lg transition-all active:scale-95"
             >
               {commenting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
           </div>
         ) : (
-          <div className="max-w-2xl mx-auto flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <div className="max-w-2xl mx-auto flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
             <p className="text-xs font-bold text-slate-500">Log in to join the discussion</p>
-            <Link href="/" className="text-xs font-black uppercase tracking-widest text-blue-600 hover:underline">Sign In</Link>
+            <Link href="/" className="text-xs font-bold text-blue-600 hover:underline">Sign In</Link>
           </div>
         )}
       </div>

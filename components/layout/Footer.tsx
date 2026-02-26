@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { GraduationCap, Github, Heart } from 'lucide-react';
+import { GraduationCap, Heart } from 'lucide-react';
 import { APP_VERSION } from '@/lib/version';
 import { obfuscateId } from '@/lib/utils';
 
@@ -66,12 +66,6 @@ export default function Footer() {
               </li>
               <li>
                 <Link href={studentId ? `/profile/${obfuscateId(studentId)}` : '/profile'} className="text-sm text-slate-500 hover:text-blue-600 transition-colors">Your Profile</Link>
-              </li>
-              <li>
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-sm text-slate-500 hover:text-blue-600 transition-colors flex items-center gap-2">
-                  <Github className="h-4 w-4" />
-                  GitHub
-                </a>
               </li>
             </ul>
           </div>

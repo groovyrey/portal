@@ -119,32 +119,32 @@ export default function AccountsPage() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2.5 rounded-2xl text-white shadow-lg shadow-blue-200">
+            <div className="bg-slate-900 p-2 rounded-xl text-white">
               <CreditCard className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-none">Account Ledger</h1>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Official Student Records</p>
+              <h1 className="text-xl font-bold text-slate-900">Account Ledger</h1>
+              <p className="text-[10px] font-medium text-slate-400">Official Student Records</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <AnimatePresence>
               {isFetching && (
                 <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full border border-blue-100 shadow-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="hidden sm:flex items-center gap-2 px-3 py-1 bg-slate-100 text-slate-600 rounded-full border border-slate-200"
                 >
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Refreshing...</span>
+                  <span className="text-[10px] font-bold">Refreshing</span>
                 </motion.div>
               )}
             </AnimatePresence>
             <button
               onClick={handleManualRefresh}
               disabled={isFetching}
-              className={`p-2.5 rounded-2xl bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50/50 transition-all shadow-sm active:opacity-70 ${isFetching ? 'cursor-not-allowed opacity-50' : ''}`}
+              className={`p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 transition-all shadow-sm ${isFetching ? 'cursor-not-allowed opacity-50' : ''}`}
               title="Manual Sync"
             >
               <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
@@ -156,7 +156,7 @@ export default function AccountsPage() {
           variants={container}
           initial="hidden"
           animate="show"
-          className="space-y-8"
+          className="space-y-6"
         >
           <motion.div variants={item}>
             <FinancialSummary financials={financials} />
@@ -165,48 +165,43 @@ export default function AccountsPage() {
           {/* Due Accounts Table */}
           {financials.dueAccounts && financials.dueAccounts.length > 0 && (
             <motion.div variants={item} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+              <div className="p-5 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="bg-orange-50 p-2 rounded-xl text-orange-600">
+                  <div className="bg-orange-50 p-2 rounded-lg text-orange-600">
                     <Calendar className="h-4 w-4" />
                   </div>
-                  <div>
-                    <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">Payment Schedule</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pending Obligations</p>
-                  </div>
+                  <h2 className="text-sm font-bold text-slate-900">Payment Schedule</h2>
                 </div>
                 {financials.dueToday && financials.dueToday !== '₱0.00' && (
-                  <div className="px-3 py-1 bg-orange-100 rounded-lg border border-orange-200">
-                    <span className="text-[10px] font-black text-orange-700 uppercase tracking-widest">Payable Today</span>
-                  </div>
+                  <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-100">Payable Today</span>
                 )}
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-white border-b border-slate-100">
-                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">Due Date</th>
-                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">Description</th>
-                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] text-right">Amount</th>
-                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] text-right">Paid</th>
-                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] text-right">Outstanding</th>
+                    <tr className="bg-slate-50/50 border-b border-slate-100">
+                      <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Due Date</th>
+                      <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description</th>
+                      <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Amount</th>
+                      <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Paid</th>
+                      <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Due</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {financials.dueAccounts.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50/50 transition-colors group">
-                        <td className="px-6 py-5 whitespace-nowrap">
-                          <span className="text-xs font-black text-slate-500 font-mono bg-slate-100/80 px-2 py-1 rounded">
+                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <span className="text-xs font-medium text-slate-500 font-mono">
                             {item.dueDate}
                           </span>
                         </td>
-                        <td className="px-6 py-5">
-                          <p className="text-xs font-bold text-slate-800 uppercase tracking-tight">{item.description}</p>
+                        <td className="px-5 py-4">
+                          <p className="text-xs font-bold text-slate-700">{item.description}</p>
                         </td>
-                        <td className="px-6 py-5 text-xs font-black text-slate-600 text-right uppercase">₱{item.amount.replace('₱', '')}</td>
-                        <td className="px-6 py-5 text-xs font-black text-emerald-600 text-right uppercase">₱{item.paid.replace('₱', '')}</td>
-                        <td className="px-6 py-5 text-right uppercase">
-                          <span className={`text-xs font-black ${item.due.replace('₱', '') !== '0.00' ? 'text-orange-600' : 'text-slate-400'}`}>
+                        <td className="px-5 py-4 text-xs font-medium text-slate-600 text-right">₱{item.amount.replace('₱', '')}</td>
+                        <td className="px-5 py-4 text-xs font-medium text-emerald-600 text-right">₱{item.paid.replace('₱', '')}</td>
+                        <td className="px-5 py-4 text-right">
+                          <span className={`text-xs font-bold ${item.due.replace('₱', '') !== '0.00' ? 'text-orange-600' : 'text-slate-400'}`}>
                             ₱{item.due.replace('₱', '')}
                           </span>
                         </td>
@@ -221,42 +216,36 @@ export default function AccountsPage() {
           {/* Payment History */}
           {financials.payments && financials.payments.length > 0 && (
             <motion.div variants={item} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+              <div className="p-5 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="bg-emerald-50 p-2 rounded-xl text-emerald-600">
+                  <div className="bg-emerald-50 p-2 rounded-lg text-emerald-600">
                     <History className="h-4 w-4" />
                   </div>
-                  <div>
-                    <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">Transaction History</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Verified Payments</p>
-                  </div>
+                  <h2 className="text-sm font-bold text-slate-900">Transaction History</h2>
                 </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-white border-b border-slate-100">
-                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">Payment Date</th>
-                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">Reference No.</th>
-                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] text-right">Amount Settled</th>
+                    <tr className="bg-slate-50/50 border-b border-slate-100">
+                      <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date</th>
+                      <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reference</th>
+                      <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {financials.payments.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-5 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                            <span className="text-xs font-black text-slate-700">{item.date}</span>
-                          </div>
+                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <span className="text-xs font-medium text-slate-700">{item.date}</span>
                         </td>
-                        <td className="px-6 py-5 whitespace-nowrap">
-                          <span className="text-[10px] font-black font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100">
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <span className="text-[10px] font-medium font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
                             {item.reference}
                           </span>
                         </td>
-                        <td className="px-6 py-5 text-right uppercase">
-                          <span className="text-sm font-black text-slate-900">₱{item.amount.replace('₱', '')}</span>
+                        <td className="px-5 py-4 text-right">
+                          <span className="text-sm font-bold text-slate-900">₱{item.amount.replace('₱', '')}</span>
                         </td>
                       </tr>
                     ))}
@@ -266,23 +255,23 @@ export default function AccountsPage() {
             </motion.div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Assessment Details */}
             {financials.assessment && financials.assessment.length > 0 && (
               <motion.div variants={item} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm h-full">
-                <div className="p-5 border-b border-slate-100 flex items-center gap-3 bg-slate-50/30">
-                  <div className="bg-indigo-50 p-2 rounded-xl text-indigo-600">
+                <div className="p-4 border-b border-slate-100 flex items-center gap-3 bg-slate-50/30">
+                  <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600">
                     <FileText className="h-4 w-4" />
                   </div>
-                  <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest">Fee Breakdown</h2>
+                  <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Fee Breakdown</h2>
                 </div>
                 <div className="p-0">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left">
                     <tbody className="divide-y divide-slate-100">
                       {financials.assessment.map((item, idx) => (
                         <tr key={idx} className="hover:bg-slate-50/30 transition-colors">
-                          <td className="px-6 py-4 text-[11px] font-bold text-slate-600 uppercase tracking-tight leading-tight">{item.description}</td>
-                          <td className="px-6 py-4 text-xs font-black text-slate-900 text-right tabular-nums">₱{item.amount.replace('₱', '')}</td>
+                          <td className="px-5 py-3.5 text-[11px] font-medium text-slate-600">{item.description}</td>
+                          <td className="px-5 py-3.5 text-xs font-bold text-slate-900 text-right tabular-nums">₱{item.amount.replace('₱', '')}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -291,43 +280,36 @@ export default function AccountsPage() {
               </motion.div>
             )}
 
-            <div className="space-y-8">
+            <div className="space-y-6">
               {/* Installments */}
               {financials.installments && financials.installments.length > 0 && (
                 <motion.div variants={item} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                  <div className="p-5 border-b border-slate-100 flex items-center gap-3 bg-slate-50/30">
-                    <div className="bg-blue-50 p-2 rounded-xl text-blue-600">
+                  <div className="p-4 border-b border-slate-100 flex items-center gap-3 bg-slate-50/30">
+                    <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
                       <TrendingDown className="h-4 w-4" />
                     </div>
-                    <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest">Installment Plan</h2>
+                    <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Installments</h2>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left">
                       <thead>
-                        <tr className="bg-white border-b border-slate-50">
-                          <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Period</th>
-                          <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Assessed</th>
-                          <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Balance</th>
+                        <tr className="bg-slate-50/50 border-b border-slate-100">
+                          <th className="px-5 py-2.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider">Period</th>
+                          <th className="px-5 py-2.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider text-right">Balance</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-50">
+                      <tbody className="divide-y divide-slate-100">
                         {financials.installments.map((item, idx) => (
-                          <tr key={idx} className="hover:bg-slate-50/30 transition-colors">
-                            <td className="px-6 py-4">
-                              <p className="text-[10px] font-black text-slate-800 uppercase">{item.description}</p>
-                              <p className="text-[9px] font-bold text-slate-400 font-mono mt-0.5">{item.dueDate}</p>
+                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-5 py-3">
+                              <p className="text-[10px] font-bold text-slate-800 uppercase">{item.description}</p>
+                              <p className="text-[9px] font-medium text-slate-400 font-mono">{item.dueDate}</p>
                             </td>
-                            <td className="px-6 py-4 text-xs font-black text-slate-600 text-right tabular-nums">₱{item.assessed.replace('₱', '')}</td>
-                            <td className="px-6 py-4 text-right tabular-nums">
+                            <td className="px-5 py-3 text-right">
                               {item.outstanding.replace('₱', '') === '0.00' ? (
-                                <div className="flex items-center justify-end gap-1.5 text-emerald-600">
-                                  <span className="text-[10px] font-black uppercase tracking-widest">Paid</span>
-                                  <div className="bg-emerald-100 p-0.5 rounded-full">
-                                    <Check className="h-2.5 w-2.5" />
-                                  </div>
-                                </div>
+                                <span className="text-[10px] font-bold text-emerald-600 uppercase">Paid</span>
                               ) : (
-                                <span className="text-xs font-black text-red-600">₱{item.outstanding.replace('₱', '')}</span>
+                                <span className="text-xs font-bold text-red-600">₱{item.outstanding.replace('₱', '')}</span>
                               )}
                             </td>
                           </tr>
@@ -341,28 +323,22 @@ export default function AccountsPage() {
               {/* Adjustments */}
               {financials.adjustments && financials.adjustments.length > 0 && (
                 <motion.div variants={item} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                  <div className="p-5 border-b border-slate-100 flex items-center gap-3 bg-slate-50/30">
-                    <div className="bg-purple-50 p-2 rounded-xl text-purple-600">
+                  <div className="p-4 border-b border-slate-100 flex items-center gap-3 bg-slate-50/30">
+                    <div className="bg-purple-50 p-2 rounded-lg text-purple-600">
                       <AlertCircle className="h-4 w-4" />
                     </div>
-                    <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest">Adjustments</h2>
+                    <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Adjustments</h2>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-white border-b border-slate-50">
-                          <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Description</th>
-                          <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Credit/Debit</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
+                    <table className="w-full text-left">
+                      <tbody className="divide-y divide-slate-100">
                         {financials.adjustments.map((item, idx) => (
-                          <tr key={idx} className="hover:bg-slate-50/30 transition-colors">
-                            <td className="px-6 py-4">
-                              <p className="text-[10px] font-black text-slate-800 uppercase">{item.description}</p>
-                              <p className="text-[9px] font-bold text-slate-400 font-mono mt-0.5">{item.dueDate}</p>
+                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-5 py-3">
+                              <p className="text-[10px] font-bold text-slate-800 uppercase">{item.description}</p>
+                              <p className="text-[9px] font-medium text-slate-400 font-mono">{item.dueDate}</p>
                             </td>
-                            <td className="px-6 py-4 text-xs font-black text-blue-600 text-right tabular-nums">₱{item.adjustment.replace('₱', '')}</td>
+                            <td className="px-5 py-3 text-xs font-bold text-blue-600 text-right">₱{item.adjustment.replace('₱', '')}</td>
                           </tr>
                         ))}
                       </tbody>

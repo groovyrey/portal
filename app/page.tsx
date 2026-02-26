@@ -92,21 +92,21 @@ export default function Home() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
         <DashboardHeader student={student} />
         
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-4xl mx-auto space-y-6">
           {student.financials && (
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:border-blue-200 transition-all duration-300">
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:border-slate-300 transition-all duration-300">
               <div className="flex items-center gap-4">
-                <div className="bg-blue-50 p-3 rounded-2xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
-                  <Wallet className="h-6 w-6" />
+                <div className="bg-slate-100 p-2.5 rounded-xl text-slate-600">
+                  <Wallet className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Current Balance</h3>
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Remaining Balance</h3>
                   <div className="flex items-baseline gap-2">
-                    <span className={`text-2xl font-black tracking-tight ${student.financials.balance && student.financials.balance !== '₱0.00' ? 'text-red-600' : 'text-emerald-600'}`}>
+                    <span className={`text-xl font-bold tracking-tight ${student.financials.balance && student.financials.balance !== '₱0.00' ? 'text-red-600' : 'text-emerald-600'}`}>
                       {student.financials.balance || '₱0.00'}
                     </span>
                     {student.financials.dueToday && student.financials.dueToday !== '₱0.00' && (
-                      <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">
+                      <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-100">
                         {student.financials.dueToday} Due Today
                       </span>
                     )}
@@ -116,9 +116,9 @@ export default function Home() {
 
               <Link 
                 href="/accounts" 
-                className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-200 hover:shadow-blue-200 active:opacity-70 group/btn"
+                className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 group/btn"
               >
-                View Account Ledger
+                View Ledger
                 <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
               </Link>
             </div>
