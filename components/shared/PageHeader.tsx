@@ -17,16 +17,16 @@ import {
 } from 'lucide-react';
 
 const pageConfig: { [key: string]: { title: string, icon: React.ReactNode } } = {
-  '/settings': { title: 'Settings', icon: <Settings className="h-5 w-5" /> },
-  '/eaf': { title: 'Enrollment Assessment Form', icon: <FileText className="h-5 w-5" /> },
-  '/grades': { title: 'Academic Reports', icon: <GraduationCap className="h-5 w-5" /> },
-  '/accounts': { title: 'Student Accounts', icon: <WalletCards className="h-5 w-5" /> },
-  '/subjects': { title: 'Subjects', icon: <BookOpen className="h-5 w-5" /> },
-  '/profile': { title: 'Student Profile', icon: <User className="h-5 w-5" /> },
-  '/about': { title: 'About LCC Hub', icon: <Info className="h-5 w-5" /> },
-  '/disclaimer': { title: 'Legal & Privacy', icon: <ShieldAlert className="h-5 w-5" /> },
-  '/community': { title: 'Community Feed', icon: <MessageSquare className="h-5 w-5" /> },
-  '/assistant': { title: 'AI Assistant', icon: <Bot className="h-5 w-5" /> },
+  '/settings': { title: 'Settings', icon: <Settings className="h-4 w-4" /> },
+  '/eaf': { title: 'Registration Form', icon: <FileText className="h-4 w-4" /> },
+  '/grades': { title: 'Registry', icon: <GraduationCap className="h-4 w-4" /> },
+  '/accounts': { title: 'Ledger', icon: <WalletCards className="h-4 w-4" /> },
+  '/subjects': { title: 'Catalog', icon: <BookOpen className="h-4 w-4" /> },
+  '/profile': { title: 'Profile', icon: <User className="h-4 w-4" /> },
+  '/about': { title: 'LCC Hub', icon: <Info className="h-4 w-4" /> },
+  '/disclaimer': { title: 'Privacy', icon: <ShieldAlert className="h-4 w-4" /> },
+  '/community': { title: 'Community', icon: <MessageSquare className="h-4 w-4" /> },
+  '/assistant': { title: 'Assistant', icon: <Bot className="h-4 w-4" /> },
 };
 
 interface PageHeaderProps {
@@ -70,28 +70,21 @@ export default function PageHeader({ title: propsTitle, description, icon: props
   }
 
   return (
-    <div className="bg-white/80 border-b border-slate-200 sticky top-16 z-[90] backdrop-blur-md">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <div className="bg-white border-b border-slate-200 sticky top-16 z-[90] backdrop-blur-md">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500"
+            className="p-1.5 hover:bg-slate-100 rounded-lg transition-all text-slate-400 hover:text-slate-900 active:scale-95"
             aria-label="Go back"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
           </button>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2.5">
-              <div className="text-blue-600">
-                {icon}
-              </div>
-              <h1 className="text-lg font-bold text-slate-900 tracking-tight">{title}</h1>
+          <div className="flex items-center gap-2">
+            <div className="text-slate-900">
+              {icon}
             </div>
-            {description && (
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 ml-7">
-                {description}
-              </p>
-            )}
+            <h1 className="text-sm font-bold text-slate-900 tracking-tight">{title}</h1>
           </div>
         </div>
         {children && (

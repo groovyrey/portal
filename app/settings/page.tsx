@@ -23,6 +23,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import Drawer from '@/components/layout/Drawer';
 import SecuritySettings from '@/components/dashboard/SecuritySettings';
 import StarRating from '@/components/ui/StarRating';
@@ -35,6 +36,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [activeDrawer, setActiveDrawer] = useState<string | null>(null);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (student !== undefined) {
@@ -77,6 +79,11 @@ export default function SettingsPage() {
     try {
       await fetch('/api/student/logout', { method: 'POST' });
       localStorage.removeItem('student_data');
+      
+      // Invalidate and clear React Query cache
+      queryClient.setQueryData(['student-data'], null);
+      queryClient.invalidateQueries({ queryKey: ['student-data'] });
+      
       window.dispatchEvent(new Event('local-storage-update'));
       toast.success('Logged out successfully');
       router.push('/');

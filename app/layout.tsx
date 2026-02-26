@@ -26,11 +26,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased text-slate-900 bg-slate-50 min-h-screen flex flex-col`}>
+      <body className={`${inter.variable} font-sans antialiased text-slate-900 bg-white min-h-screen flex flex-col selection:bg-slate-900 selection:text-white`}>
         <Providers>
           <RealtimeProvider>
             <VersionChecker />
-            <Suspense fallback={<main className="flex-1">{children}</main>}>
+            <Suspense fallback={<main className="flex-1 bg-white" />}>
               <ClientLayoutWrapper>
                 {children}
               </ClientLayoutWrapper>

@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { APP_VERSION } from '@/lib/version';
 import NotificationDrawer from './NotificationDrawer';
 import { useNotificationsQuery } from '@/lib/hooks';
 import { Notification } from '@/types';
@@ -177,17 +178,17 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-white/80 border-b border-slate-200 fixed top-0 left-0 right-0 z-[100] backdrop-blur-lg">
+      <nav className="bg-white/80 border-b border-slate-200 fixed top-0 left-0 right-0 z-[100] backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-3">
-              <Link href="/" className="flex items-center gap-2">
-                <div className="bg-blue-600 rounded-lg p-1.5 text-white shadow-lg shadow-blue-200">
+              <Link href="/" className="flex items-center gap-2 active:scale-95 transition-all">
+                <div className="bg-slate-900 rounded-lg p-1.5 text-white">
                   <GraduationCap className="h-5 w-5" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-xl tracking-tight text-slate-800">LCC Hub</span>
-                  <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-[10px] font-black text-blue-600 border border-blue-100 tracking-tighter uppercase">Beta</span>
+                  <span className="font-bold text-lg tracking-tight text-slate-900">LCC Hub</span>
+                  <span className="px-1.5 py-0.5 rounded bg-slate-100 text-[9px] font-bold text-slate-500 border border-slate-200 uppercase tracking-wider">Beta</span>
                 </div>
               </Link>
             </div>
@@ -200,9 +201,9 @@ export default function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
                       isActive(link.href)
-                        ? 'bg-blue-50 text-blue-600'
+                        ? 'bg-slate-900 text-white shadow-sm'
                         : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
@@ -218,13 +219,13 @@ export default function Navbar() {
                     onClick={() => setIsNotifOpen(true)}
                     className={`relative p-2 rounded-xl border transition-all duration-200 ${
                       isNotifOpen 
-                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200' 
-                        : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600 hover:shadow-sm'
+                        ? 'bg-slate-900 border-slate-900 text-white shadow-sm' 
+                        : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-900'
                     }`}
                   >
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white ring-2 ring-white shadow-sm animate-in zoom-in duration-300">
+                      <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-slate-900 px-1 text-[9px] font-bold text-white ring-2 ring-white shadow-sm">
                         {unreadCount > 99 ? '99+' : unreadCount}
                       </span>
                     )}
@@ -236,9 +237,9 @@ export default function Navbar() {
                         e.stopPropagation();
                         setIsMoreOpen(!isMoreOpen);
                       }}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
                         isMoreOpen || desktopMore.some(link => isActive(link.href))
-                          ? 'bg-slate-50 text-slate-900'
+                          ? 'bg-slate-100 text-slate-900'
                           : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
@@ -247,20 +248,20 @@ export default function Navbar() {
                     </button>
 
                     {isMoreOpen && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-2 z-[110] animate-in fade-in zoom-in duration-200">
+                      <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-[110] animate-in fade-in zoom-in-95 duration-200">
                         {desktopMore.map((link) => {
                           const Icon = link.icon;
                           return (
                             <Link
                               key={link.name}
                               href={link.href}
-                              className={`flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors ${
+                              className={`flex items-center gap-3 px-4 py-2 text-sm font-bold transition-all ${
                                 isActive(link.href)
-                                  ? 'text-blue-600 bg-blue-50'
-                                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                  ? 'text-slate-900 bg-slate-50'
+                                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                               }`}
                             >
-                              <Icon className="h-4 w-4" />
+                              <Icon className="h-4 w-4 text-slate-400" />
                               {link.name}
                             </Link>
                           );
@@ -277,11 +278,11 @@ export default function Navbar() {
               {isLoggedIn && (
                 <button
                   onClick={() => setIsNotifOpen(true)}
-                  className="relative p-2 rounded-xl border border-slate-200 bg-white text-slate-600 active:bg-slate-50 transition-all shadow-sm"
+                  className="relative p-2 rounded-xl border border-slate-200 bg-white text-slate-500 active:bg-slate-50 transition-all shadow-sm"
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white ring-2 ring-white shadow-sm">
+                    <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-slate-900 px-1 text-[9px] font-bold text-white ring-2 ring-white shadow-sm">
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                   )}
@@ -289,7 +290,7 @@ export default function Navbar() {
               )}
               <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-slate-500 hover:bg-slate-100 focus:outline-none transition-colors"
+                className="inline-flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-50 focus:outline-none transition-colors"
               >
                 {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
@@ -324,11 +325,11 @@ export default function Navbar() {
         >
           <div className="flex flex-col h-full">
             <div className="p-6 border-b border-slate-100">
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-bold text-xs uppercase tracking-widest text-slate-400">Student Portal</span>
+              <div className="flex items-center justify-between mb-6">
+                <span className="font-bold text-[10px] uppercase tracking-wider text-slate-400">Student Console</span>
                 <button 
                   onClick={() => setIsOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -336,14 +337,14 @@ export default function Navbar() {
               
               {isLoggedIn && (
                 <div className="flex items-center justify-between">
-                  <div className="flex flex-col gap-1">
-                    <div className="text-lg font-bold text-slate-900 tracking-tight">
+                  <div className="flex flex-col gap-0.5">
+                    <div className="text-base font-bold text-slate-900 leading-tight">
                       {studentName}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <div className={`h-1.5 w-1.5 rounded-full bg-emerald-500 ${isSyncing ? 'animate-ping' : 'animate-pulse'}`}></div>
+                      <div className={`h-1.5 w-1.5 rounded-full ${isSyncing ? 'bg-blue-500 animate-pulse' : 'bg-emerald-500'}`}></div>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Synced {lastSynced || 'Just now'}
+                        {lastSynced || 'Just now'}
                       </span>
                     </div>
                   </div>
@@ -354,10 +355,10 @@ export default function Navbar() {
                       handleManualSync();
                     }}
                     disabled={isSyncing}
-                    className={`p-2 rounded-lg border transition-all ${
+                    className={`p-2 rounded-xl border transition-all ${
                       isSyncing 
                         ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed' 
-                        : 'bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-100'
+                        : 'bg-slate-900 border-slate-900 text-white hover:bg-slate-800'
                     }`}
                     title="Manual Sync"
                   >
@@ -375,9 +376,9 @@ export default function Navbar() {
                     key={link.name}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
                       isActive(link.href)
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-slate-900 text-white'
                         : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
@@ -389,7 +390,7 @@ export default function Navbar() {
             </div>
 
             <div className="p-6 border-t border-slate-100 text-center">
-              <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">LCC Hub v1.2.0-BETA</p>
+              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Version {APP_VERSION}</p>
             </div>
           </div>
         </div>
