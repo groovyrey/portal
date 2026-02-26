@@ -176,42 +176,41 @@ export default function DevPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-mono text-[11px] selection:bg-blue-100 pb-20">
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans text-xs selection:bg-blue-100 pb-20">
       {/* Dev Header */}
       <header className="border-b border-slate-200 bg-white sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Terminal size={14} className="text-blue-600" />
-            <span className="font-bold uppercase tracking-tight">LCC_HUB_SYSTEM_REF</span>
+            <Terminal size={16} className="text-slate-900" />
+            <span className="font-bold uppercase tracking-wider">System Reference</span>
           </div>
-          <div className="flex items-center gap-4 text-[10px] font-black text-slate-400">
-            <span className="flex items-center gap-1"><Activity size={10} className="text-emerald-500" /> ACTIVE</span>
-            <span>VER_1.2.0_BETA</span>
+          <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <span className="flex items-center gap-1.5"><div className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active</span>
+            <span>v1.2.0-BETA</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-10 space-y-12">
+      <main className="max-w-6xl mx-auto px-6 py-10 space-y-10">
         {/* Technical Summary */}
         <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-3 border border-slate-200 bg-white p-6 rounded-md">
-            <h2 className="font-black uppercase flex items-center gap-2 text-slate-900 mb-4 border-b border-slate-100 pb-2">
-              <Layers size={14} className="text-blue-600" /> System Architecture
+          <div className="md:col-span-3 border border-slate-200 bg-white p-6 rounded-2xl shadow-sm">
+            <h2 className="font-bold uppercase flex items-center gap-2 text-slate-900 mb-4 text-[10px] tracking-wider border-b border-slate-50 pb-3">
+              System Architecture
             </h2>
-            <p className="text-slate-500 leading-relaxed max-w-4xl">
+            <p className="text-slate-500 leading-relaxed font-medium">
               LCC Hub operates as an Ephemeral Headless Browser Proxy. It establishes secure sessions with the Schoolista ASP.NET 
               legacy portal via Scraper-Service (Cheerio/Axios). Data is normalized into JSON and stored in a hybrid architecture 
-              (Firebase for academic metadata, PostgreSQL for relational community data). Security is enforced through AES-256 
-              credential encryption and HTTP-only session tokens.
+              (Firebase for academic metadata, PostgreSQL for relational community data).
             </p>
           </div>
-          <div className="border border-slate-200 bg-white p-6 rounded-md">
-            <h2 className="font-black uppercase flex items-center gap-2 text-slate-900 mb-4 border-b border-slate-100 pb-2">
-              <Package size={14} className="text-blue-600" /> Stack
+          <div className="border border-slate-200 bg-white p-6 rounded-2xl shadow-sm">
+            <h2 className="font-bold uppercase flex items-center gap-2 text-slate-900 mb-4 text-[10px] tracking-wider border-b border-slate-50 pb-3">
+              Technology Stack
             </h2>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {techStack.map(s => (
-                <div key={s.k} className="flex justify-between border-b border-slate-50 pb-1 last:border-0">
+                <div key={s.k} className="flex justify-between border-b border-slate-50 pb-1 last:border-0 last:pb-0">
                   <span className="text-slate-400 uppercase text-[9px] font-bold">{s.k}</span>
                   <span className="font-bold text-slate-700">{s.v}</span>
                 </div>
@@ -221,134 +220,97 @@ export default function DevPage() {
         </section>
 
         {/* Data Flow Lifecycle */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-2 border-b-2 border-slate-200 pb-2">
-            <Clock size={14} className="text-slate-900" />
-            <h2 className="font-black uppercase tracking-widest text-slate-900">Data Flow Examination</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto pb-4 no-scrollbar">
+        <section className="space-y-4">
+          <h2 className="font-bold uppercase tracking-wider text-slate-400 text-[10px] ml-1">Lifecycle Examination</h2>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
             {[
-              { step: "01 / SCRAPE", icon: <Globe size={14} />, desc: "ScraperService visits Portal DOM using Axios + CookieJar." },
-              { step: "02 / PARSE", icon: <Search size={14} />, desc: "Cheerio extracts structured JSON from legacy HTML tables." },
-              { step: "03 / ENCRYPT", icon: <Shield size={14} />, desc: "Sensitive data & sessions secured via AES-256-CBC." },
-              { step: "04 / SYNC", icon: <Database size={14} />, desc: "SyncService writes to Firestore & mirrors to Postgres." },
-              { step: "05 / REALTIME", icon: <Zap size={14} />, desc: "Updates broadcasted instantly via Ably WebSockets." }
+              { step: "01 / SCRAPE", icon: <Globe size={14} />, desc: "Session visits Portal DOM via Axios." },
+              { step: "02 / PARSE", icon: <Search size={14} />, desc: "Extract structured JSON from HTML." },
+              { step: "03 / ENCRYPT", icon: <Shield size={14} />, desc: "Credential security via AES-256." },
+              { step: "04 / SYNC", icon: <Database size={14} />, desc: "Persistence to Firestore & PG." },
+              { step: "05 / REALTIME", icon: <Zap size={14} />, desc: "Broadcast via Ably WebSockets." }
             ].map((s, i) => (
-              <div key={i} className="min-w-[180px] bg-white border border-slate-200 p-4 rounded-md space-y-3 relative group hover:border-blue-500/30 transition-all">
+              <div key={i} className="bg-white border border-slate-200 p-4 rounded-xl space-y-3 shadow-sm hover:border-slate-300 transition-all group">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black text-blue-600">{s.step}</span>
-                  {s.icon}
+                  <span className="text-[9px] font-bold text-slate-400 group-hover:text-blue-600 transition-colors">{s.step}</span>
+                  <div className="text-slate-300 group-hover:text-slate-600 transition-colors">{s.icon}</div>
                 </div>
                 <p className="text-[10px] text-slate-500 leading-tight font-bold">{s.desc}</p>
-                {i < 4 && <ArrowRight className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-slate-300" size={12} />}
               </div>
             ))}
           </div>
         </section>
 
         {/* Firestore Schema */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-2 border-b-2 border-slate-200 pb-2">
-            <Database size={14} className="text-slate-900" />
-            <h2 className="font-black uppercase tracking-widest text-slate-900">Firestore Hierarchical Schema</h2>
-          </div>
-          <div className="border border-slate-200 rounded-md overflow-x-auto bg-white shadow-sm">
-            <table className="w-full text-left border-collapse min-w-[900px]">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-4 py-2 w-40 text-[9px] text-slate-400 font-black uppercase border-r border-slate-200">COLLECTION</th>
-                  <th className="px-4 py-2 w-48 text-[9px] text-slate-400 font-black uppercase border-r border-slate-200">DOCUMENT_ID</th>
-                  <th className="px-4 py-2 w-64 text-[9px] text-slate-400 font-black uppercase border-r border-slate-200">SCHEMA STRUCTURE</th>
-                  <th className="px-4 py-2 text-[9px] text-slate-400 font-black uppercase">SYSTEM ROLE</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-[10px]">
-                {firestoreSchema.map((item, i) => (
-                  <tr key={i} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
-                    <td className="px-4 py-2 font-black text-blue-600 border-r border-slate-100">{item.collection}</td>
-                    <td className="px-4 py-2 border-r border-slate-100 font-bold text-slate-700">{item.id}</td>
-                    <td className="px-4 py-2 border-r border-slate-100">
-                      <code className="text-[9px] bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 text-slate-400 font-mono">{item.structure}</code>
-                    </td>
-                    <td className="px-4 py-2 text-slate-500 font-medium leading-snug">
-                      <span className="font-black text-slate-900 block mb-0.5">{item.role}</span>
-                      {item.desc}
-                    </td>
+        <section className="space-y-4">
+          <h2 className="font-bold uppercase tracking-wider text-slate-400 text-[10px] ml-1">Persistence Schema</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[800px]">
+                <thead className="bg-slate-50/50 border-b border-slate-100">
+                  <tr>
+                    <th className="px-5 py-3 text-[9px] text-slate-400 font-bold uppercase tracking-wider">Collection</th>
+                    <th className="px-5 py-3 text-[9px] text-slate-400 font-bold uppercase tracking-wider">Document ID</th>
+                    <th className="px-5 py-3 text-[9px] text-slate-400 font-bold uppercase tracking-wider">System Role</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-[10px]">
+                  {firestoreSchema.map((item, i) => (
+                    <tr key={i} className="hover:bg-slate-50/30 transition-colors">
+                      <td className="px-5 py-4 font-bold text-slate-900">{item.collection}</td>
+                      <td className="px-5 py-4 font-mono text-slate-500">{item.id}</td>
+                      <td className="px-5 py-4 text-slate-600 font-medium leading-relaxed">
+                        <span className="font-bold text-slate-900 block mb-0.5">{item.role}</span>
+                        {item.desc}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
         {/* API Table */}
         <section className="space-y-6">
-          <div className="flex items-center gap-2 border-b-2 border-slate-200 pb-2">
-            <Server size={14} className="text-slate-900" />
-            <h2 className="font-black uppercase tracking-widest text-slate-900">API Documentation</h2>
-          </div>
+          <h2 className="font-bold uppercase tracking-wider text-slate-400 text-[10px] ml-1">API Documentation</h2>
           
           <div className="space-y-10">
             {apiGroups.map((group, i) => (
-              <div key={i} className="space-y-2">
-                <h3 className="text-[10px] text-blue-600 font-black uppercase tracking-tighter border-l-2 border-blue-600 pl-2">{group.name}</h3>
-                <div className="border border-slate-200 rounded-md overflow-x-auto bg-white shadow-sm">
-                  <table className="w-full text-left border-collapse min-w-[800px]">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                      <tr>
-                        <th className="px-4 py-2 w-16 text-[9px] text-slate-400 font-black uppercase border-r border-slate-200">TYPE</th>
-                        <th className="px-4 py-2 w-56 text-[9px] text-slate-400 font-black uppercase border-r border-slate-200">ENDPOINT</th>
-                        <th className="px-4 py-2 w-48 text-[9px] text-slate-400 font-black uppercase border-r border-slate-200">PARAMETERS</th>
-                        <th className="px-4 py-2 text-[9px] text-slate-400 font-black uppercase">FUNCTIONAL DESCRIPTION</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-[10px]">
-                      {group.endpoints.map((api, j) => (
-                        <tr key={j} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
-                          <td className="px-4 py-2 font-black text-slate-400 border-r border-slate-100 text-center">{api.method}</td>
-                          <td className="px-4 py-2 text-blue-600 font-bold border-r border-slate-100">{api.path}</td>
-                          <td className="px-4 py-2 text-slate-400 border-r border-slate-100 italic">{api.params}</td>
-                          <td className="px-4 py-2 text-slate-600 font-medium">{api.desc}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <div key={i} className="space-y-3">
+                <div className="flex items-center gap-2 px-1">
+                  <div className="h-4 w-1 bg-slate-900 rounded-full" />
+                  <h3 className="text-[10px] text-slate-900 font-bold uppercase tracking-wider">{group.name}</h3>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Data Types Table */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-2 border-b-2 border-slate-200 pb-2">
-            <FileJson size={14} className="text-slate-900" />
-            <h2 className="font-black uppercase tracking-widest text-slate-900">Data Types & Models (/types)</h2>
-          </div>
-          
-          <div className="space-y-10">
-            {typeGroups.map((group, i) => (
-              <div key={i} className="space-y-2">
-                <h3 className="text-[10px] text-indigo-600 font-black uppercase tracking-tighter border-l-2 border-indigo-600 pl-2">{group.name}</h3>
-                <div className="border border-slate-200 rounded-md overflow-x-auto bg-white shadow-sm">
-                  <table className="w-full text-left border-collapse min-w-[800px]">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                      <tr>
-                        <th className="px-4 py-2 w-48 text-[9px] text-slate-400 font-black uppercase border-r border-slate-200">INTERFACE NAME</th>
-                        <th className="px-4 py-2 w-80 text-[9px] text-slate-400 font-black uppercase border-r border-slate-200">CORE PROPERTIES</th>
-                        <th className="px-4 py-2 text-[9px] text-slate-400 font-black uppercase">APPLICATION USE</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-[10px]">
-                      {group.types.map((type, j) => (
-                        <tr key={j} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
-                          <td className="px-4 py-2 font-black text-indigo-600 border-r border-slate-100">{type.name}</td>
-                          <td className="px-4 py-2 border-r border-slate-100 font-bold text-slate-500 italic">{type.props}</td>
-                          <td className="px-4 py-2 text-slate-600 font-medium">{type.desc}</td>
+                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse min-w-[800px]">
+                      <thead className="bg-slate-50/50 border-b border-slate-100">
+                        <tr>
+                          <th className="px-5 py-3 w-20 text-[9px] text-slate-400 font-bold uppercase tracking-wider">Method</th>
+                          <th className="px-5 py-3 w-64 text-[9px] text-slate-400 font-bold uppercase tracking-wider">Endpoint</th>
+                          <th className="px-5 py-3 text-[9px] text-slate-400 font-bold uppercase tracking-wider">Description</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-[10px]">
+                        {group.endpoints.map((api, j) => (
+                          <tr key={j} className="hover:bg-slate-50/30 transition-colors">
+                            <td className="px-5 py-4">
+                              <span className={`font-bold px-2 py-0.5 rounded text-[9px] ${
+                                api.method === 'GET' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                api.method === 'POST' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                                'bg-amber-50 text-amber-600 border border-amber-100'
+                              }`}>
+                                {api.method}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 text-slate-900 font-bold font-mono">{api.path}</td>
+                            <td className="px-5 py-4 text-slate-500 font-medium leading-relaxed">{api.desc}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             ))}
@@ -356,44 +318,32 @@ export default function DevPage() {
         </section>
 
         {/* Utility Library Table */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-2 border-b-2 border-slate-200 pb-2">
-            <Box size={14} className="text-slate-900" />
-            <h2 className="font-black uppercase tracking-widest text-slate-900">Logic Modules Reference (/lib)</h2>
-          </div>
-
-          <div className="border border-slate-200 rounded-md overflow-x-auto bg-white shadow-sm">
-            <table className="w-full text-left border-collapse min-w-[800px]">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-4 py-2 w-48 text-[9px] text-slate-400 font-black uppercase border-r border-slate-200">MODULE FILENAME</th>
-                  <th className="px-4 py-2 w-80 text-[9px] text-slate-400 font-black uppercase border-r border-slate-200">EXPORTED SYMBOLS/METHODS</th>
-                  <th className="px-4 py-2 text-[9px] text-slate-400 font-black uppercase">ARCHITECTURAL ROLE</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-[10px]">
-                {libraryFiles.map((lib, i) => (
-                  <tr key={i} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
-                    <td className="px-4 py-2 font-black text-blue-600 border-r border-slate-100">{lib.name}</td>
-                    <td className="px-4 py-2 border-r border-slate-100">
-                      <div className="flex flex-wrap gap-1">
-                        {lib.methods.map((m, j) => (
-                          <span key={j} className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-sm text-[9px] border border-slate-200 font-bold">
-                            {m}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 text-slate-500 italic leading-snug">{lib.desc}</td>
+        <section className="space-y-4">
+          <h2 className="font-bold uppercase tracking-wider text-slate-400 text-[10px] ml-1">Logic Modules (/lib)</h2>
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[800px]">
+                <thead className="bg-slate-50/50 border-b border-slate-100">
+                  <tr>
+                    <th className="px-5 py-3 w-56 text-[9px] text-slate-400 font-bold uppercase tracking-wider">Module</th>
+                    <th className="px-5 py-3 text-[9px] text-slate-400 font-bold uppercase tracking-wider">Description</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-[10px]">
+                  {libraryFiles.map((lib, i) => (
+                    <tr key={i} className="hover:bg-slate-50/30 transition-colors">
+                      <td className="px-5 py-4 font-bold text-slate-900 font-mono">{lib.name}</td>
+                      <td className="px-5 py-4 text-slate-500 font-medium leading-relaxed">{lib.desc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
-        <footer className="text-center pt-10 border-t border-slate-200">
-          <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">System Reference • Proprietary Technical Documentation</p>
+        <footer className="text-center pt-8 border-t border-slate-200">
+          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Technical Reference • v1.2.0</p>
         </footer>
       </main>
     </div>

@@ -91,165 +91,140 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
     switch (type) {
       case 'profile':
         return (
-          <div className="space-y-8">
-            <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-10 group-hover:opacity-20 transition duration-500"></div>
-              <div className="relative flex items-center gap-5 p-5 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                  <div className="w-20 h-20 rounded-2xl bg-slate-50 border border-slate-100 p-1 shadow-inner shrink-0 overflow-hidden">
-                      <img 
-                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student!.name)}&background=f8fafc&color=334155&size=256&bold=true`}
-                          alt={student!.name}
-                          className="w-full h-full rounded-xl object-cover group-hover:opacity-80 transition duration-500"
-                      />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                      <h3 className="font-black text-xl text-slate-900 tracking-tight break-words">{student?.name || '?'}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="px-2 py-0.5 bg-blue-50 text-[10px] font-bold text-blue-600 rounded-md border border-blue-100 uppercase tracking-tighter">Student ID</span>
-                        <p className="text-xs text-slate-400 font-mono font-bold">{student?.id || '?'}</p>
-                      </div>
-                  </div>
-              </div>
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-100 shrink-0 overflow-hidden">
+                    <img 
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student!.name)}&background=f8fafc&color=334155&size=256&bold=true`}
+                        alt={student!.name}
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-lg text-slate-900 leading-tight truncate">{student?.name || '?'}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="px-1.5 py-0.5 bg-blue-50 text-[9px] font-bold text-blue-600 rounded border border-blue-100 uppercase">ID</span>
+                      <p className="text-[11px] text-slate-400 font-mono font-bold">{student?.id || '?'}</p>
+                    </div>
+                </div>
             </div>
 
-            <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <DrawerInfoItem icon={<User className="text-blue-500" />} label="First Name" value={student!.parsedName?.firstName} />
-                    <DrawerInfoItem icon={<User className="text-slate-400" />} label="Middle Name" value={student!.parsedName?.middleName} />
-                    <DrawerInfoItem icon={<User className="text-blue-500" />} label="Last Name" value={student!.parsedName?.lastName} />
+            <div className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <DrawerInfoItem icon={<User />} label="First" value={student!.parsedName?.firstName} />
+                    <DrawerInfoItem icon={<User />} label="Middle" value={student!.parsedName?.middleName} />
+                    <DrawerInfoItem icon={<User />} label="Last" value={student!.parsedName?.lastName} />
                 </div>
                 
-                <div className="pt-6 border-t border-slate-100 space-y-4">
-                    <DrawerInfoItem icon={<Mail className="text-rose-500" />} label="Email Address" value={student!.email} />
-                    <DrawerInfoItem icon={<Phone className="text-emerald-500" />} label="Mobile Number" value={student!.mobile} />
-                    <DrawerInfoItem icon={<MapPin className="text-amber-500" />} label="Home Address" value={student!.address} />
+                <div className="pt-5 border-t border-slate-100 space-y-3">
+                    <DrawerInfoItem icon={<Mail />} label="Email" value={student!.email} />
+                    <DrawerInfoItem icon={<Phone />} label="Mobile" value={student!.mobile} />
+                    <DrawerInfoItem icon={<MapPin />} label="Address" value={student!.address} />
                 </div>
 
-                <div className="pt-6 border-t border-slate-100 grid grid-cols-2 gap-4">
-                    <DrawerInfoItem icon={<GraduationCap className="text-indigo-500" />} label="Program" value={student!.course} />
-                    <DrawerInfoItem icon={<Calendar className="text-blue-500" />} label="Year/Sem" value={`${student!.yearLevel} / ${student!.semester}`} />
-                    <DrawerInfoItem icon={<Calendar className="text-slate-400" />} label="Enrolled On" value={student!.enrollment_date} />
+                <div className="pt-5 border-t border-slate-100 grid grid-cols-2 gap-3">
+                    <DrawerInfoItem icon={<GraduationCap />} label="Program" value={student!.course} />
+                    <DrawerInfoItem icon={<Calendar />} label="Year/Sem" value={`${student!.yearLevel} / ${student!.semester}`} />
                 </div>
             </div>
 
-            <div className="p-5 bg-slate-900 rounded-2xl text-white flex items-center gap-4 shadow-xl shadow-slate-200">
-              <div className="p-3 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
-                <Shield className="h-5 w-5" />
+            <div className="p-4 bg-slate-900 rounded-xl text-white flex items-center gap-3 shadow-md shadow-slate-200">
+              <div className="p-2 bg-slate-800 rounded-lg">
+                <Shield className="h-4 w-4 text-blue-400" />
               </div>
-              <div>
-                <p className="text-xs font-black uppercase tracking-widest text-blue-400">Privacy Control</p>
-                <p className="text-[11px] text-slate-300 font-medium mt-1 leading-relaxed">Your personal details are strictly private and only visible to you.</p>
-              </div>
+              <p className="text-[10px] text-slate-300 font-medium leading-relaxed">Personal records are strictly private and only visible to you.</p>
             </div>
           </div>
         );
 
       case 'security':
         return (
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 mb-2">
-              <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <p className="text-xs font-bold text-indigo-700 leading-tight">Keep your account safe by using a strong, unique password.</p>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 mb-2">
+              <Info className="h-4 w-4 text-slate-400" />
+              <p className="text-[11px] font-medium text-slate-600">Update your credentials to maintain account security.</p>
             </div>
-            <div>
-              <SecuritySettings />
-            </div>
+            <SecuritySettings />
           </div>
         );
 
       case 'notifications':
         return (
-          <div className="space-y-8 pb-8">
-            <div className="flex items-center gap-4 p-5 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden relative group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 group-hover:opacity-80 transition duration-700 opacity-50"></div>
-              <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 p-4 shadow-sm shrink-0 flex items-center justify-center relative z-10">
-                <Bell className="h-full w-full text-blue-600" />
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden relative group">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-12 -mt-12 group-hover:opacity-80 transition duration-700 opacity-50"></div>
+              <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 shrink-0 flex items-center justify-center relative z-10">
+                <Bell className="h-6 w-6 text-slate-400" />
               </div>
               <div className="relative z-10">
-                <h3 className="font-black text-lg text-slate-900 leading-tight tracking-tight">Alert Preferences</h3>
-                <p className="text-xs text-slate-500 font-bold mt-1">Manage how you receive real-time updates.</p>
+                <h3 className="font-bold text-base text-slate-900 leading-tight">Preferences</h3>
+                <p className="text-[11px] text-slate-400 font-medium mt-0.5">Manage how you receive updates.</p>
               </div>
             </div>
 
-            <div className="space-y-5">
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">General Updates</label>
-                <div className="space-y-3">
-                  <SettingsToggle 
-                    icon={<Bell className="text-amber-500" />} 
-                    title="App Notifications" 
-                    description="Receive alerts for grades and activities"
-                    enabled={appNotifsEnabled}
-                    onToggle={handleAppNotifToggle}
-                  />
-                  <SettingsToggle 
-                    icon={<Calendar className="text-blue-500" />} 
-                    title="Daily Class Reminders" 
-                    description="Get notified about your schedule every morning"
-                    enabled={classRemindersEnabled}
-                    onToggle={handleClassReminderToggle}
-                  />
-                  <SettingsToggle 
-                    icon={<CreditCard className="text-emerald-500" />} 
-                    title="Payment Reminders" 
-                    description="Alerts for installments due in 5 days"
-                    enabled={paymentRemindersEnabled}
-                    onToggle={handlePaymentReminderToggle}
-                  />
-                </div>
-              </div>
+            <div className="space-y-3">
+              <SettingsToggle 
+                icon={<Bell className="text-slate-400" />} 
+                title="Alerts" 
+                description="Grades and activities"
+                enabled={appNotifsEnabled}
+                onToggle={handleAppNotifToggle}
+              />
+              <SettingsToggle 
+                icon={<Calendar className="text-slate-400" />} 
+                title="Schedule" 
+                description="Daily morning reminders"
+                enabled={classRemindersEnabled}
+                onToggle={handleClassReminderToggle}
+              />
+              <SettingsToggle 
+                icon={<CreditCard className="text-slate-400" />} 
+                title="Financials" 
+                description="Payment due reminders"
+                enabled={paymentRemindersEnabled}
+                onToggle={handlePaymentReminderToggle}
+              />
             </div>
 
-            <div className="p-5 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-start gap-4">
-              <div className="p-3 bg-white rounded-xl shadow-sm shrink-0">
-                <ShieldCheck className="h-5 w-5 text-emerald-500" />
+            <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start gap-3">
+              <div className="p-2 bg-white rounded-lg shadow-sm shrink-0 border border-emerald-100">
+                <ShieldCheck className="h-4 w-4 text-emerald-500" />
               </div>
-              <div>
-                <h4 className="text-xs font-black text-emerald-900 uppercase tracking-widest">Privacy First</h4>
-                <p className="text-[11px] text-emerald-700 font-bold mt-1 leading-relaxed">
-                  We only send alerts for important school updates, grades, and community activity.
-                </p>
-              </div>
+              <p className="text-[10px] text-emerald-700 font-medium leading-relaxed">
+                We only send alerts for important school updates, grades, and community activity.
+              </p>
             </div>
           </div>
         );
 
       case 'privacy':
         return (
-          <div className="space-y-6">
-            <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 mb-2">
-              <p className="text-xs font-bold text-blue-700 leading-relaxed">Manage what information is visible to other students in the community portal.</p>
+          <div className="space-y-4">
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 mb-2">
+              <p className="text-[11px] font-medium text-slate-600 leading-relaxed">Manage your visibility in the student community.</p>
             </div>
-            <div className="space-y-4">
-                <div>
-                  <SettingsToggle 
-                      icon={<Shield className="text-blue-500" />} 
-                      title="Public Profile" 
-                      description="Allow others to view your profile"
-                      enabled={student?.settings?.isPublic ?? true}
-                      onToggle={(val) => updateSettings!({ ...student?.settings, isPublic: val })}
-                  />
-                </div>
-                <div>
-                  <SettingsToggle 
-                      icon={<GraduationCap className="text-purple-500" />} 
-                      title="Show Academic Info" 
-                      description="Show course and year level"
-                      enabled={student?.settings?.showAcademicInfo ?? true}
-                      onToggle={(val) => updateSettings!({ ...student?.settings, showAcademicInfo: val })}
-                  />
-                </div>
-                <div>
-                  <SettingsToggle 
-                      icon={<IdCard className="text-amber-500" />} 
-                      title="Show Student ID" 
-                      description="Make your ID visible to others"
-                      enabled={student?.settings?.showStudentId ?? false}
-                      onToggle={(val) => updateSettings!({ ...student?.settings, showStudentId: val })}
-                  />
-                </div>
+            <div className="space-y-3">
+                <SettingsToggle 
+                    icon={<Shield className="text-slate-400" />} 
+                    title="Public Profile" 
+                    description="Visible to other students"
+                    enabled={student?.settings?.isPublic ?? true}
+                    onToggle={(val) => updateSettings!({ ...student?.settings, isPublic: val })}
+                />
+                <SettingsToggle 
+                    icon={<GraduationCap className="text-slate-400" />} 
+                    title="Academic Info" 
+                    description="Course and year level"
+                    enabled={student?.settings?.showAcademicInfo ?? true}
+                    onToggle={(val) => updateSettings!({ ...student?.settings, showAcademicInfo: val })}
+                />
+                <SettingsToggle 
+                    icon={<IdCard className="text-slate-400" />} 
+                    title="Student ID" 
+                    description="Visible on your profile"
+                    enabled={student?.settings?.showStudentId ?? false}
+                    onToggle={(val) => updateSettings!({ ...student?.settings, showStudentId: val })}
+                />
             </div>
           </div>
         );
@@ -257,8 +232,8 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
       case 'rating':
         return (
           <div className="space-y-6">
-            <p className="text-sm font-bold text-slate-500 mb-6 text-center leading-relaxed">Your feedback is valuable to us. Let us know your experience using LCC Hub.</p>
-            <div className="bg-slate-50/50 p-8 rounded-3xl border border-slate-100">
+            <p className="text-xs font-medium text-slate-500 text-center leading-relaxed">How is your experience with LCC Hub?</p>
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
               <StarRating onSuccess={() => setTimeout(onClose, 2000)} />
             </div>
           </div>
@@ -278,13 +253,13 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
 
 function DrawerInfoItem({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string }) {
   return (
-    <div className="group flex items-start gap-4 p-2 -ml-2 rounded-2xl hover:bg-slate-50 transition-colors duration-300">
-      <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shrink-0 border border-slate-100 text-slate-400 shadow-sm group-hover:text-blue-600 group-hover:shadow-md transition-all duration-300">
-        {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 18 }) : icon}
+    <div className="flex items-start gap-3 p-2">
+      <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 text-slate-400">
+        {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 14 }) : icon}
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-slate-500 transition-colors">{label}</p>
-        <p className="text-sm font-bold text-slate-800 break-words">{value || '?'}</p>
+        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{label}</p>
+        <p className="text-xs font-bold text-slate-700 truncate">{value || '?'}</p>
       </div>
     </div>
   );
@@ -309,27 +284,27 @@ function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon:
   return (
     <button 
       onClick={handleToggle}
-      className={`group w-full flex items-center justify-between p-5 rounded-2xl border transition-all duration-300 ${
+      className={`group w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
         isOn 
-          ? 'bg-white border-blue-100 shadow-md ring-1 ring-blue-50' 
-          : 'bg-slate-50/30 border-slate-200 text-slate-400 opacity-80 hover:bg-white hover:border-slate-300'
+          ? 'bg-white border-slate-300 shadow-sm' 
+          : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-white hover:border-slate-200'
       }`}
     >
-      <div className="flex items-center gap-4">
-        <div className={`h-11 w-11 rounded-xl flex items-center justify-center border transition-all duration-300 ${
-          isOn ? 'bg-blue-50 border-blue-100 text-blue-600 shadow-sm' : 'bg-white border-slate-100 text-slate-400 group-hover:text-slate-600'
+      <div className="flex items-center gap-3">
+        <div className={`h-9 w-9 rounded-lg flex items-center justify-center border transition-all ${
+          isOn ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-100 text-slate-400'
         }`}>
-          {icon}
+          {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 16 }) : icon}
         </div>
         <div className="text-left">
-          <p className={`text-sm font-black tracking-tight ${isOn ? 'text-slate-900' : 'text-slate-500'}`}>{title}</p>
-          <p className={`text-[11px] font-bold mt-0.5 ${isOn ? 'text-slate-500' : 'text-slate-400'}`}>{description}</p>
+          <p className="text-xs font-bold text-slate-900">{title}</p>
+          <p className="text-[10px] font-medium text-slate-400">{description}</p>
         </div>
       </div>
-      <div className={`w-12 h-6 rounded-full relative transition-colors duration-300 shadow-inner ${isOn ? 'bg-blue-600' : 'bg-slate-200 group-hover:bg-slate-300'}`}>
+      <div className={`w-10 h-5 rounded-full relative transition-colors shadow-inner ${isOn ? 'bg-slate-900' : 'bg-slate-200'}`}>
         <motion.div 
-          animate={{ x: isOn ? 24 : 4 }}
-          className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md"
+          animate={{ x: isOn ? 22 : 2 }}
+          className="absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm"
         />
       </div>
     </button>
