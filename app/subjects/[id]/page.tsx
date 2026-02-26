@@ -9,18 +9,14 @@ import {
   AlertCircle,
   MessageSquare,
   Send,
-  User,
-  Clock,
   Image as ImageIcon,
-  X,
-  Download
+  X
 } from 'lucide-react';
 import Skeleton from '@/components/ui/Skeleton';
 import { SubjectNote } from '@/types';
 import { toast } from 'sonner';
 import { CldUploadWidget, CldImage } from 'next-cloudinary';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import NoteCard from '@/components/shared/NoteCard';
 
 export default function SubjectDetailPage() {
   const { id } = useParams();
@@ -48,9 +44,14 @@ export default function SubjectDetailPage() {
       if (res.ok) {
         const data = await res.json();
         setNotes(data);
+      } else {
+        const err = await res.json();
+        console.error('API Error:', err);
+        toast.error('Could not load notes.');
       }
     } catch (error) {
       console.error('Error fetching notes:', error);
+      toast.error('Connection error.');
     } finally {
       setIsLoadingNotes(false);
     }
@@ -84,6 +85,28 @@ export default function SubjectDetailPage() {
       toast.error('An error occurred.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!confirm('Are you sure you want to delete this note?')) return;
+
+    try {
+      const res = await fetch('/api/student/notes', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ noteId })
+      });
+
+      if (res.ok) {
+        toast.success('Note deleted.');
+        setNotes(prev => prev.filter(n => n.id !== noteId));
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Failed to delete note.');
+      }
+    } catch (error) {
+      toast.error('Connection error.');
     }
   };
 
@@ -278,56 +301,13 @@ export default function SubjectDetailPage() {
               ))
             ) : notes.length > 0 ? (
               notes.map((note) => (
-                <div key={note.id} className="bg-white rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all animate-fade-in-up overflow-hidden group">
-                  <div className="p-7">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-100 ring-4 ring-white">
-                          <User size={18} className="text-white" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-black text-slate-900 leading-none mb-1.5">{note.userName}</p>
-                          <div className="flex items-center gap-1.5 text-slate-400">
-                            <Clock size={12} />
-                            <span className="text-[10px] font-bold uppercase tracking-tight">
-                              {note.createdAt?.seconds 
-                                ? new Date(note.createdAt.seconds * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) 
-                                : 'Just now'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {note.content && (
-                      <div className="prose prose-sm prose-slate max-w-none prose-p:leading-relaxed prose-p:text-slate-600 prose-headings:text-slate-900 prose-headings:font-black prose-strong:text-slate-900 prose-code:text-blue-600 prose-code:bg-blue-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-img:rounded-2xl">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {note.content}
-                        </ReactMarkdown>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {note.imageUrl && (
-                    <div className="relative w-full aspect-[16/10] bg-slate-50 group/image border-t border-slate-100">
-                      <CldImage
-                        src={note.imageUrl}
-                        alt="Note attachment"
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover/image:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
-                        <button
-                          onClick={() => handleDownloadImage(note.imageUrl!, `note-${note.id}.jpg`)}
-                          className="px-5 py-2.5 bg-white/90 text-slate-900 rounded-xl hover:bg-white transition-all transform translate-y-4 group-hover/image:translate-y-0 flex items-center gap-2 text-[10px] font-black uppercase tracking-wider shadow-2xl backdrop-blur-sm"
-                        >
-                          <Download size={14} className="text-blue-600" />
-                          Download Image
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <NoteCard 
+                  key={note.id} 
+                  note={note} 
+                  student={student || null} 
+                  onDelete={handleDeleteNote}
+                  onDownloadImage={handleDownloadImage}
+                />
               ))
             ) : (
               <div className="text-center py-12 bg-slate-100/50 rounded-[2rem] border border-dashed border-slate-200">
