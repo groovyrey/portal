@@ -1,5 +1,14 @@
 import { NextRequest } from 'next/server';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { 
+  ChatPromptTemplate, 
+  MessagesPlaceholder,
+  SystemMessagePromptTemplate,
+  HumanMessagePromptTemplate,
+} from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
+
 import { db } from '@/lib/db';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
@@ -19,9 +28,6 @@ interface Message {
 }
 
 export const maxDuration = 30;
-
-// Google Generative AI setup
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '');
 
 export async function POST(req: NextRequest) {
   try {
@@ -165,39 +171,46 @@ INSTRUCTIONS:
 - Reference the current time and date if relevant.
 `.trim();
 
-    // 3. Inference Call with Gemini
-    const modelName = "gemma-3-27b-it"; 
-    const model = genAI.getGenerativeModel({ 
-      model: modelName,
+    // 3. Initialize LangChain Model
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemma-3-27b-it",
+      apiKey: process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
+      maxOutputTokens: 2048,
+      streaming: true,
     });
 
-    const chat = model.startChat({
-      history: [
-        { role: "user", parts: [{ text: systemPrompt }] },
-        { role: "model", parts: [{ text: "Understood. I am ready to assist the student based on their profile and academic data." }] },
-        ...messages.slice(0, -1).map((m: Message) => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.content }],
-        })),
-      ],
+    const prompt = ChatPromptTemplate.fromMessages([
+      new HumanMessage(systemPrompt),
+      new AIMessage("Understood. I am ready to assist the student based on their profile and academic data."),
+      new MessagesPlaceholder("history"),
+      ["user", "{input}"],
+    ]);
+
+    const chain = prompt.pipe(model).pipe(new StringOutputParser());
+
+    // Prepare history
+    const history = messages.slice(0, -1).map((m: Message) => {
+      if (m.role === 'assistant') return new AIMessage(m.content);
+      return new HumanMessage(m.content);
     });
 
     const lastMessage = messages[messages.length - 1].content;
-    const result = await chat.sendMessageStream(lastMessage);
     
-    // We create a TransformStream to handle the streaming response back to the client
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
-    const encoder = new TextEncoder();
+    // 4. Stream Response
+    const stream = await chain.stream({
+      history: history,
+      input: lastMessage,
+    });
 
-    // Background process to stream text
+    // Create a new stream for the Response object
+    const encoder = new TextEncoder();
+    const transformStream = new TransformStream();
+    const writer = transformStream.writable.getWriter();
+
     (async () => {
       try {
-        for await (const chunk of result.stream) {
-          const text = chunk.text();
-          if (text) {
-            await writer.write(encoder.encode(text));
-          }
+        for await (const chunk of stream) {
+          await writer.write(encoder.encode(chunk));
         }
       } catch (err: any) {
         console.error("Streaming error:", err);
@@ -207,7 +220,7 @@ INSTRUCTIONS:
       }
     })();
 
-    return new Response(stream.readable, {
+    return new Response(transformStream.readable, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
         'Transfer-Encoding': 'chunked',

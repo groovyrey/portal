@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { ChatOpenAI } from "@langchain/openai";
+import { 
+  ChatPromptTemplate, 
+  SystemMessagePromptTemplate,
+  HumanMessagePromptTemplate,
+} from "@langchain/core/prompts";
+import { z } from "zod";
 import { decrypt } from '@/lib/auth';
 
-// Initialize OpenAI client with xAI configuration
-const xaiClient = new OpenAI({
-  apiKey: process.env.XAI_API_KEY || '',
-  baseURL: 'https://api.x.ai/v1',
+// Define schema for structured output
+const moderationSchema = z.object({
+  decision: z.enum(["APPROVED", "REJECTED"]),
+  topic: z.string(),
+  reason: z.string(),
+  growth_tip: z.string(),
+  safety_score: z.number().min(0).max(100)
 });
 
 export async function POST(req: NextRequest) {
@@ -23,6 +32,18 @@ export async function POST(req: NextRequest) {
     } catch (e) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
+
+    // 2. Initialize LangChain model for xAI
+    const model = new ChatOpenAI({
+      modelName: "grok-beta", // Or your preferred Grok model
+      apiKey: process.env.XAI_API_KEY || '',
+      configuration: {
+        baseURL: "https://api.x.ai/v1",
+      },
+      temperature: 0.1,
+    });
+
+    const structuredLlm = model.withStructuredOutput(moderationSchema);
 
     const systemPrompt = `
 You are "Aegis", the community moderation engine for LCC. Your role is to moderate student posts before they are published to the community feed.
@@ -44,15 +65,6 @@ GUIDELINES:
 
 3. CATEGORIZE (Topic):
    - Choose exactly one: "Academics", "Campus Life", "Career", "Well-being", "General".
-
-OUTPUT FORMAT (Strict JSON):
-{
-  "decision": "APPROVED" | "REJECTED",
-  "topic": "Topic Name",
-  "reason": "Brief explanation",
-  "growth_tip": "Advice for the student",
-  "safety_score": 0-100
-}
 `.trim();
 
     const postContext = `
@@ -62,31 +74,16 @@ ${poll ? `POLL QUESTION: ${poll.question}
 POLL OPTIONS: ${poll.options.join(', ')}` : ''}
 `.trim();
 
-    // 2. Inference Call with xAI
+    const prompt = ChatPromptTemplate.fromMessages([
+      SystemMessagePromptTemplate.fromTemplate(systemPrompt),
+      HumanMessagePromptTemplate.fromTemplate(postContext),
+    ]);
+
+    const chain = prompt.pipe(structuredLlm);
+
+    // 3. Inference Call
     try {
-        const response = await xaiClient.chat.completions.create({
-          model: 'grok-3',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: postContext },
-          ],
-          response_format: { type: "json_object" }
-        });
-
-        const resultText = response.choices[0].message.content || "{}";
-        
-        let result;
-        try {
-          result = JSON.parse(resultText);
-        } catch (e) {
-          result = {
-            decision: resultText.includes("APPROVED") ? "APPROVED" : "REJECTED",
-            reason: "Manual check required",
-            growth_tip: "Ensure your post follows school guidelines.",
-            safety_score: 50
-          };
-        }
-
+        const result = await chain.invoke({});
         return NextResponse.json(result);
     } catch (xaiError: any) {
         console.error('xAI fallback failed:', xaiError.message);
