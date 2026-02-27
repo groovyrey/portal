@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,6 +14,11 @@ const firebaseConfig = {
 
 // Initialize Firebase with safety check
 let db: any;
+let auth: any;
+const googleProvider = new GoogleAuthProvider();
+
+// Request additional scopes if we want to sync Calendar later
+googleProvider.addScope('https://www.googleapis.com/auth/calendar.events.readonly');
 
 try {
   const dbId = process.env.FIREBASE_DATABASE_ID || '(default)';
@@ -24,8 +30,9 @@ try {
   // App for Firestore (lccportal)
   const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
   db = dbId === '(default)' ? getFirestore(app) : getFirestore(app, dbId);
+  auth = getAuth(app);
 } catch (error) {
   console.error('Failed to initialize Firebase:', error);
 }
 
-export { db };
+export { db, auth, googleProvider };
