@@ -20,7 +20,7 @@ const protectedRoutes = [
   '/api/ai'
 ];
 
-export function proxy(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Check if the current route is protected

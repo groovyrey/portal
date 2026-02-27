@@ -1,92 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useStudentQuery } from '@/lib/hooks';
 import { 
   ArrowLeft, 
   ShieldCheck, 
-  AlertCircle,
-  MessageSquare
+  AlertCircle
 } from 'lucide-react';
 import Skeleton from '@/components/ui/Skeleton';
-import { SubjectNote } from '@/types';
-import { toast } from 'sonner';
-import NoteCard from '@/components/shared/NoteCard';
 
 export default function SubjectDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { data: student, isLoading } = useStudentQuery();
-  const [notes, setNotes] = useState<SubjectNote[]>([]);
-  const [isLoadingNotes, setIsLoadingNotes] = useState(true);
 
   const subjectCode = typeof id === 'string' ? decodeURIComponent(id) : '';
   const subject = student?.offeredSubjects?.find(s => s.code === subjectCode);
-
-  const fetchNotes = async () => {
-    try {
-      setIsLoadingNotes(true);
-      const res = await fetch(`/api/student/notes?subjectCode=${encodeURIComponent(subjectCode)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setNotes(data);
-      } else {
-        const err = await res.json();
-        console.error('API Error:', err);
-        toast.error('Could not load notes.');
-      }
-    } catch (error) {
-      console.error('Error fetching notes:', error);
-      toast.error('Connection error.');
-    } finally {
-      setIsLoadingNotes(false);
-    }
-  };
-
-  useEffect(() => {
-    if (subjectCode) {
-      fetchNotes();
-    }
-  }, [subjectCode]);
-
-  const handleDeleteNote = async (noteId: string) => {
-    try {
-      const res = await fetch('/api/student/notes', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ noteId })
-      });
-
-      if (res.ok) {
-        toast.success('Note deleted.');
-        setNotes(prev => prev.filter(n => n.id !== noteId));
-      } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to delete note.');
-      }
-    } catch (error) {
-      toast.error('Connection error.');
-    }
-  };
-
-  const handleDownloadImage = async (url: string, fileName: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = fileName || 'note-attachment';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      toast.error('Failed to download image.');
-      console.error('Download error:', error);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -177,40 +107,6 @@ export default function SubjectDetailPage() {
             </section>
           </div>
         </div>
-
-        {/* Notes Section */}
-        <section className="space-y-6">
-          <h3 className="text-lg font-black text-slate-900 flex items-center gap-2 px-1">
-            <MessageSquare size={20} className="text-blue-600" />
-            Subject Notes
-          </h3>
-
-          {/* Notes List */}
-          <div className="space-y-4">
-            {isLoadingNotes ? (
-              [1, 2].map(i => (
-                <div key={i} className="bg-white/50 p-6 rounded-3xl border border-slate-100">
-                  <Skeleton className="h-4 w-32 mb-4" />
-                  <Skeleton className="h-4 w-full" />
-                </div>
-              ))
-            ) : notes.length > 0 ? (
-              notes.map((note) => (
-                <NoteCard 
-                  key={note.id} 
-                  note={note} 
-                  student={student || null} 
-                  onDelete={handleDeleteNote}
-                  onDownloadImage={handleDownloadImage}
-                />
-              ))
-            ) : (
-              <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                <p className="text-slate-400 text-xs font-bold">No notes yet. Be the first!</p>
-              </div>
-            )}
-          </div>
-        </section>
       </main>
     </div>
   );
