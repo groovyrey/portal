@@ -2,20 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { 
   collection, 
-  addDoc, 
   getDocs, 
   query, 
   where, 
   orderBy, 
-  serverTimestamp,
   doc,
   getDoc,
   deleteDoc
 } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
-import { notifyAllStudents } from '@/lib/notification-service';
-import { logActivity } from '@/lib/activity-service';
 import { v2 as cloudinary } from 'cloudinary';
 
 // Configure Cloudinary using the URL (contains cloud_name, api_key, and api_secret)
@@ -85,71 +81,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(notes);
   } catch (error: any) {
     console.error('Fetch notes error:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error', 
-      details: error.message,
-      code: error.code 
-    }, { status: 500 });
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    const { subjectCode, content, userName, imageUrl } = await req.json();
-    if (!subjectCode || (!content && !imageUrl) || !userName) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    const sessionCookie = req.cookies.get('session_token');
-    if (!sessionCookie?.value) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    let userId = "";
-    try {
-      const decrypted = decrypt(sessionCookie.value);
-      const sessionData = JSON.parse(decrypted);
-      userId = sessionData.userId;
-    } catch (e) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-    }
-
-    await initDatabase();
-    if (!db) return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
-
-    const noteRef = await addDoc(collection(db, 'subject_notes'), {
-      userId,
-      userName,
-      subjectCode,
-      content,
-      imageUrl: imageUrl || null,
-      createdAt: serverTimestamp()
-    });
-
-    console.log('Successfully saved note with ID:', noteRef.id, 'for subject:', subjectCode);
-
-    // Log activity
-    logActivity(
-      userId, 
-      'Posted a note', 
-      `Shared a note for subject: ${subjectCode}`, 
-      `/subjects/${encodeURIComponent(subjectCode)}`
-    ).catch(e => console.error('Activity log error:', e));
-
-    // Notify all students about the new note (don't await to keep response fast)
-    notifyAllStudents({
-      excludeUserId: userId,
-      title: 'New Subject Note',
-      message: `${userName} shared a new note for ${subjectCode}.`,
-      link: `/subjects/${encodeURIComponent(subjectCode)}`
-    }).catch(err => console.error('Notification error:', err));
-
-    return NextResponse.json({ 
-      success: true, 
-      id: noteRef.id 
-    });
-  } catch (error: any) {
-    console.error('Post note error:', error);
     return NextResponse.json({ 
       error: 'Internal server error', 
       details: error.message,

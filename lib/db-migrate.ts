@@ -1,4 +1,4 @@
-import { query } from './pg';
+import { query } from './turso';
 
 export async function migrateCommunity() {
   console.log('Starting Community migration...');
@@ -13,33 +13,33 @@ export async function migrateCommunity() {
         email TEXT,
         year_level TEXT,
         semester TEXT,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
     // 2. Create community_posts table
     await query(`
       CREATE TABLE IF NOT EXISTS community_posts (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
         user_name TEXT NOT NULL,
         content TEXT,
         topic TEXT DEFAULT 'General',
-        is_unreviewed BOOLEAN DEFAULT FALSE,
+        is_unreviewed INTEGER DEFAULT 0,
         poll_question TEXT,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
     // 3. Create community_comments table
     await query(`
       CREATE TABLE IF NOT EXISTS community_comments (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         post_id INTEGER NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
         user_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
         user_name TEXT NOT NULL,
         content TEXT NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
@@ -55,7 +55,7 @@ export async function migrateCommunity() {
     // 5. Create community_poll_options table
     await query(`
       CREATE TABLE IF NOT EXISTS community_poll_options (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         post_id INTEGER NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
         option_text TEXT NOT NULL
       );
@@ -90,21 +90,21 @@ export async function migrateNotifications() {
         email TEXT,
         year_level TEXT,
         semester TEXT,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
     // Create notifications table
     await query(`
       CREATE TABLE IF NOT EXISTS notifications (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
         title TEXT NOT NULL,
         message TEXT NOT NULL,
         type TEXT DEFAULT 'info',
-        is_read BOOLEAN DEFAULT FALSE,
+        is_read INTEGER DEFAULT 0,
         link TEXT,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
@@ -128,19 +128,19 @@ export async function migrateActivityLogs() {
         email TEXT,
         year_level TEXT,
         semester TEXT,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
     // Create activity_logs table
     await query(`
       CREATE TABLE IF NOT EXISTS activity_logs (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
         action TEXT NOT NULL,
         details TEXT,
         link TEXT,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 

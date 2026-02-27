@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { InferenceClient } from '@huggingface/inference';
 import { decrypt } from '@/lib/auth';
-import { query } from '@/lib/pg';
+import { query } from '@/lib/turso';
 import { createNotification } from '@/lib/notification-service';
 import { publishUpdate } from '@/lib/realtime';
 

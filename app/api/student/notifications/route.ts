@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/pg';
+import { query } from '@/lib/turso';
 import { decrypt } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {

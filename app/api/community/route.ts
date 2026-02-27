@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query, getClient } from '@/lib/pg';
+import { query, getClient } from '@/lib/turso';
 import { decrypt } from '@/lib/auth';
 import { publishUpdate } from '@/lib/realtime';
 import { notifyAllStudents } from '@/lib/notification-service';
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
           p.*,
           (SELECT COUNT(*) FROM community_post_likes WHERE post_id = p.id) as "likeCount",
           (SELECT COUNT(*) FROM community_comments WHERE post_id = p.id) as "commentCount",
-          (SELECT json_agg(user_id) FROM community_post_likes WHERE post_id = p.id) as likes
+          (SELECT json_group_array(user_id) FROM community_post_likes WHERE post_id = p.id) as likes
         FROM community_posts p
         WHERE p.id = $1
       `, [postId]);
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
           SELECT 
             o.id, 
             o.option_text as text,
-            (SELECT json_agg(user_id) FROM community_poll_votes WHERE option_id = o.id) as votes
+            (SELECT json_group_array(user_id) FROM community_poll_votes WHERE option_id = o.id) as votes
           FROM community_poll_options o
           WHERE o.post_id = $1
         `, [post.id]);
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
         p.*,
         (SELECT COUNT(*) FROM community_post_likes WHERE post_id = p.id) as "likeCount",
         (SELECT COUNT(*) FROM community_comments WHERE post_id = p.id) as "commentCount",
-        (SELECT json_agg(user_id) FROM community_post_likes WHERE post_id = p.id) as likes
+        (SELECT json_group_array(user_id) FROM community_post_likes WHERE post_id = p.id) as likes
       FROM community_posts p
     `;
     
@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
           SELECT 
             o.id, 
             o.option_text as text,
-            (SELECT json_agg(user_id) FROM community_poll_votes WHERE option_id = o.id) as votes
+            (SELECT json_group_array(user_id) FROM community_poll_votes WHERE option_id = o.id) as votes
           FROM community_poll_options o
           WHERE o.post_id = $1
         `, [post.id]);

@@ -144,20 +144,20 @@ export class SyncService {
 
   async syncToPostgres(info: ScrapedStudentInfo) {
     try {
-      const { query: pgQuery } = await import('@/lib/pg');
-      await pgQuery(`
+      const { query: tursoQuery } = await import('@/lib/turso');
+      await tursoQuery(`
         INSERT INTO students (id, name, course, email, year_level, semester, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
         ON CONFLICT (id) DO UPDATE SET
-          name = EXCLUDED.name,
-          course = EXCLUDED.course,
-          email = EXCLUDED.email,
-          year_level = EXCLUDED.year_level,
-          semester = EXCLUDED.semester,
+          name = excluded.name,
+          course = excluded.course,
+          email = excluded.email,
+          year_level = excluded.year_level,
+          semester = excluded.semester,
           updated_at = CURRENT_TIMESTAMP
       `, [this.userId, info.name, info.course, info.email, info.yearLevel, info.semester]);
-    } catch (pgError) {
-      console.error('PostgreSQL student sync error:', pgError);
+    } catch (error) {
+      console.error('Turso student sync error:', error);
     }
   }
 }

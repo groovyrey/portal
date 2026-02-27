@@ -1,4 +1,4 @@
-import { query } from './pg';
+import { query } from './turso';
 import { publishUpdate } from './realtime';
 
 export interface CreateNotificationParams {

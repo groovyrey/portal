@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { APP_VERSION } from '@/lib/version';
-import { pool } from '@/lib/pg';
+import { pool } from '@/lib/turso';
 import { migrateCommunity, migrateNotifications, migrateActivityLogs } from '@/lib/db-migrate';
 
 export async function GET() {
-  // Wake up Postgres and run migrations
+  // Wake up Turso and run migrations
   try {
     await pool.query('SELECT 1');
     

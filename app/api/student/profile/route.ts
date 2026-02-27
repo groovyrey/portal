@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStudentProfile } from '@/lib/data-service';
-import { query } from '@/lib/pg';
+import { query } from '@/lib/turso';
 
 export async function GET(req: NextRequest) {
   try {

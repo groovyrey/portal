@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query, getClient } from '@/lib/pg';
+import { query, getClient } from '@/lib/turso';
 import { decrypt } from '@/lib/auth';
 import { publishUpdate } from '@/lib/realtime';
 import { createNotification } from '@/lib/notification-service';

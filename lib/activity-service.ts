@@ -1,4 +1,4 @@
-import { query } from './pg';
+import { query } from './turso';
 
 export interface ActivityLog {
   id: string;

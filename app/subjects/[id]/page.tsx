@@ -7,10 +7,7 @@ import {
   ArrowLeft, 
   ShieldCheck, 
   AlertCircle,
-  MessageSquare,
-  Send,
-  Image as ImageIcon,
-  X
+  MessageSquare
 } from 'lucide-react';
 import Skeleton from '@/components/ui/Skeleton';
 import { SubjectNote } from '@/types';
@@ -22,10 +19,6 @@ export default function SubjectDetailPage() {
   const router = useRouter();
   const { data: student, isLoading } = useStudentQuery();
   const [notes, setNotes] = useState<SubjectNote[]>([]);
-  const [newNote, setNewNote] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingNotes, setIsLoadingNotes] = useState(true);
 
   const subjectCode = typeof id === 'string' ? decodeURIComponent(id) : '';
@@ -56,85 +49,6 @@ export default function SubjectDetailPage() {
       fetchNotes();
     }
   }, [subjectCode]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size should be less than 5MB');
-        return;
-      }
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const uploadImage = async (file: File): Promise<string | null> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', 'portal_notes');
-
-    try {
-      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dcozqx42z';
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      return data.secure_url;
-    } catch (error) {
-      console.error('Upload error:', error);
-      return null;
-    }
-  };
-
-  const handlePostNote = async () => {
-    if ((!newNote.trim() && !selectedFile) || !student) return;
-
-    try {
-      setIsSubmitting(true);
-      
-      let finalImageUrl = '';
-      if (selectedFile) {
-        const uploadedUrl = await uploadImage(selectedFile);
-        if (!uploadedUrl) {
-          toast.error('Failed to upload image.');
-          setIsSubmitting(false);
-          return;
-        }
-        finalImageUrl = uploadedUrl;
-      }
-
-      const res = await fetch('/api/student/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subjectCode,
-          content: newNote,
-          userName: student.name,
-          imageUrl: finalImageUrl
-        })
-      });
-
-      if (res.ok) {
-        setNewNote('');
-        setSelectedFile(null);
-        setPreviewUrl(null);
-        fetchNotes();
-        toast.success('Note posted successfully!');
-      } else {
-        toast.error('Failed to post note.');
-      }
-    } catch (error) {
-      toast.error('An error occurred.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleDeleteNote = async (noteId: string) => {
     try {
@@ -270,72 +184,6 @@ export default function SubjectDetailPage() {
             <MessageSquare size={20} className="text-blue-600" />
             Subject Notes
           </h3>
-
-          {/* Post Note Input */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-2 mb-4 px-1">
-              <div className="h-5 w-1 bg-blue-600 rounded-full" />
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">New Note</h4>
-            </div>
-            
-            <textarea
-              value={newNote}
-              onChange={(e) => setNewNote(e.target.value)}
-              placeholder="Post a note, tip, or resource..."
-              className="w-full min-h-[100px] p-4 rounded-xl bg-slate-50 border border-slate-100 text-sm font-medium focus:outline-none focus:border-blue-500 transition-all resize-none mb-4 placeholder:text-slate-300"
-            />
-            
-            {previewUrl && (
-              <div className="relative w-full max-w-[240px] aspect-video mb-4 rounded-2xl overflow-hidden border-2 border-slate-100 group">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  onClick={() => {
-                    setSelectedFile(null);
-                    setPreviewUrl(null);
-                  }}
-                  className="absolute top-2 right-2 p-2 bg-black/60 text-white rounded-full hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100 backdrop-blur-md scale-90 group-hover:scale-100"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            )}
-
-            <div className="flex justify-between items-center">
-              <div className="relative">
-                <input
-                  type="file"
-                  id="note-image"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-                <button
-                  onClick={() => document.getElementById('note-image')?.click()}
-                  className="p-2.5 bg-slate-50 text-slate-500 rounded-lg hover:bg-slate-100 transition-all flex items-center gap-2 text-xs font-bold active:scale-95"
-                >
-                  <ImageIcon size={16} />
-                  {selectedFile ? 'Change' : 'Attach'}
-                </button>
-              </div>
-
-              <button
-                onClick={handlePostNote}
-                disabled={isSubmitting || (!newNote.trim() && !selectedFile)}
-                className="px-6 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-lg flex items-center gap-2 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
-              >
-                {isSubmitting ? (
-                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <Send size={14} />
-                )}
-                Post
-              </button>
-            </div>
-          </div>
 
           {/* Notes List */}
           <div className="space-y-4">
