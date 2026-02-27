@@ -132,6 +132,12 @@ export default function SettingsPage() {
           <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 ml-1">Preferences</h2>
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
             <SettingsItem 
+              icon={<Calendar size={18} className="text-slate-400" />} 
+              title="Google Calendar" 
+              description="Sync your schedule automatically"
+              onClick={() => setActiveDrawer('google-sync')}
+            />
+            <SettingsItem 
               icon={<Bell size={18} className="text-slate-400" />} 
               title="Notifications" 
               description="Alerts and updates"

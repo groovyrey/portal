@@ -20,7 +20,7 @@ import { ScheduleItem, Financials } from '@/types';
 import Skeleton from '@/components/ui/Skeleton';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { auth, googleProvider } from '@/lib/db';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { toast } from 'sonner';
 
 // --- Types ---
@@ -157,7 +157,11 @@ export default function TestCalendarPage() {
   const [view, setView] = useState<'calendar' | 'agenda'>('calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isLinking, setIsLinking] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isFetchingGoogle, setIsFetchingGoogle] = useState(false);
   const [linkedEmail, setLinkedEmail] = useState<string | null>(null);
+  const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
+  const [googleEvents, setGoogleEvents] = useState<any[]>([]);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -172,10 +176,18 @@ export default function TestCalendarPage() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const googleEmail = result.user.email;
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const token = credential?.accessToken;
 
       if (googleEmail?.toLowerCase() === student.email.toLowerCase()) {
         setLinkedEmail(googleEmail);
+        setGoogleAccessToken(token || null);
         toast.success('Google account verified! This email matches your portal records.');
+        
+        // Auto fetch events after verification
+        if (token) {
+          fetchGoogleEvents(token);
+        }
       } else {
         toast.error(`Email mismatch: ${googleEmail} is not ${student.email}`);
         await auth.signOut();
@@ -185,6 +197,132 @@ export default function TestCalendarPage() {
       toast.error(error.message || 'Verification failed');
     } finally {
       setIsLinking(false);
+    }
+  };
+
+  const fetchGoogleEvents = async (token: string) => {
+    setIsFetchingGoogle(true);
+    try {
+      const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=50&orderBy=startTime&singleEvents=true', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setGoogleEvents(data.items || []);
+        toast.success(`Retrieved ${data.items?.length || 0} events from Google Calendar`);
+      } else {
+        const err = await response.json();
+        console.error('Fetch Google Events Error:', err);
+        toast.error('Failed to fetch events from Google Calendar');
+      }
+    } catch (error) {
+      console.error('Fetch Error:', error);
+      toast.error('Error connecting to Google Calendar');
+    } finally {
+      setIsFetchingGoogle(false);
+    }
+  };
+
+  const handleSyncToGoogle = async () => {
+    if (!googleAccessToken) {
+      toast.error('Please verify your Google account first.');
+      return;
+    }
+
+    if (!student?.schedule) {
+      toast.error('No schedule found to sync.');
+      return;
+    }
+
+    setIsSyncing(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    try {
+      // Sync only class events
+      const classEvents = events.filter(e => e.type === 'class');
+      
+      if (classEvents.length === 0) {
+        toast.info('No class events to sync for this month.');
+        setIsSyncing(false);
+        return;
+      }
+
+      toast.loading(`Syncing ${classEvents.length} events to Google Calendar...`, { id: 'sync-google' });
+
+      for (const event of classEvents) {
+        // Extract hours and minutes
+        const startMatch = event.startTime?.match(/(\d+):(\d+)(AM|PM)/i);
+        const endMatch = event.endTime?.match(/(\d+):(\d+)(AM|PM)/i);
+
+        if (!startMatch || !endMatch) continue;
+
+        let startH = parseInt(startMatch[1]);
+        const startM = parseInt(startMatch[2]);
+        const startAMPM = startMatch[3].toUpperCase();
+
+        let endH = parseInt(endMatch[1]);
+        const endM = parseInt(endMatch[2]);
+        const endAMPM = endMatch[3].toUpperCase();
+
+        if (startAMPM === 'PM' && startH !== 12) startH += 12;
+        if (startAMPM === 'AM' && startH === 12) startH = 0;
+        if (endAMPM === 'PM' && endH !== 12) endH += 12;
+        if (endAMPM === 'AM' && endH === 12) endH = 0;
+
+        const startDate = new Date(event.date);
+        startDate.setHours(startH, startM, 0);
+
+        const endDate = new Date(event.date);
+        endDate.setHours(endH, endM, 0);
+
+        const gEvent = {
+          summary: event.title,
+          description: event.description,
+          location: event.location,
+          start: {
+            dateTime: startDate.toISOString(),
+            timeZone: 'Asia/Manila',
+          },
+          end: {
+            dateTime: endDate.toISOString(),
+            timeZone: 'Asia/Manila',
+          },
+          reminders: {
+            useDefault: false,
+            overrides: [
+              { method: 'popup', minutes: 30 },
+            ],
+          },
+        };
+
+        const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${googleAccessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(gEvent),
+        });
+
+        if (response.ok) {
+          successCount++;
+        } else {
+          failCount++;
+          const err = await response.json();
+          console.error('Google Calendar Error:', err);
+        }
+      }
+
+      toast.success(`Successfully synced ${successCount} events! ${failCount > 0 ? `${failCount} failed.` : ''}`, { id: 'sync-google' });
+    } catch (error: any) {
+      console.error('Sync Error:', error);
+      toast.error('An error occurred during sync.', { id: 'sync-google' });
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -255,8 +393,38 @@ export default function TestCalendarPage() {
 
             <div className="z-10 w-full md:w-auto">
               {linkedEmail ? (
-                <div className="flex items-center gap-3 px-6 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                  <span className="text-xs font-black text-emerald-600 uppercase tracking-widest">Ready for Sync</span>
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <div className="px-6 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                    <span className="text-xs font-black text-emerald-600 uppercase tracking-widest">Verified</span>
+                  </div>
+                  <div className="flex gap-2 w-full md:w-auto">
+                    <button 
+                      onClick={() => fetchGoogleEvents(googleAccessToken!)}
+                      disabled={isFetchingGoogle}
+                      className="flex-1 md:flex-none px-6 py-3.5 bg-slate-100 text-slate-900 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {isFetchingGoogle ? (
+                        <div className="h-3 w-3 border-2 border-slate-900/30 border-t-slate-900 animate-spin rounded-full" />
+                      ) : (
+                        <CalendarIcon className="h-4 w-4" />
+                      )}
+                      Refresh
+                    </button>
+                    <button 
+                      onClick={handleSyncToGoogle}
+                      disabled={isSyncing}
+                      className="flex-1 md:flex-none px-8 py-3.5 bg-blue-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 shadow-lg shadow-blue-600/20"
+                    >
+                      {isSyncing ? (
+                        <div className="h-4 w-4 border-2 border-white/30 border-t-white animate-spin rounded-full" />
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4" />
+                          Push to Google
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button 
@@ -276,6 +444,77 @@ export default function TestCalendarPage() {
               )}
             </div>
           </div>
+
+          {/* Google Calendar Events List */}
+          {linkedEmail && (
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-emerald-50/30">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <CalendarIcon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-slate-900 tracking-tight">Google Calendar Events</h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      {isFetchingGoogle ? 'Fetching your events...' : `${googleEvents.length} events found on Google`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 max-h-[400px] overflow-y-auto no-scrollbar">
+                {isFetchingGoogle ? (
+                  <div className="space-y-4 py-4">
+                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)}
+                  </div>
+                ) : googleEvents.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                      <CalendarIcon className="h-8 w-8 text-slate-200" />
+                    </div>
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">No events found</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {googleEvents.map((event) => {
+                      const start = event.start?.dateTime || event.start?.date;
+                      const startDate = start ? new Date(start) : null;
+                      return (
+                        <div key={event.id} className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:border-emerald-200 hover:bg-emerald-50/20 transition-all group">
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 shrink-0 text-center">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
+                                {startDate?.toLocaleString('default', { weekday: 'short' })}
+                              </p>
+                              <p className="text-lg font-black text-slate-900 leading-none mt-1">
+                                {startDate?.getDate()}
+                              </p>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-bold text-slate-900 truncate uppercase tracking-tight group-hover:text-emerald-600 transition-colors">
+                                {event.summary || 'Untitled Event'}
+                              </h4>
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                                <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase">
+                                  <Clock className="h-3 w-3" />
+                                  {startDate?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                                {event.location && (
+                                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase truncate max-w-[200px]">
+                                    <MapPin className="h-3 w-3" />
+                                    {event.location}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Controls & Export */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">

@@ -18,7 +18,7 @@ let auth: any;
 const googleProvider = new GoogleAuthProvider();
 
 // Request additional scopes if we want to sync Calendar later
-googleProvider.addScope('https://www.googleapis.com/auth/calendar.events.readonly');
+googleProvider.addScope('https://www.googleapis.com/auth/calendar.events');
 
 try {
   const dbId = process.env.FIREBASE_DATABASE_ID || '(default)';
@@ -35,4 +35,4 @@ try {
   console.error('Failed to initialize Firebase:', error);
 }
 
-export { db, auth, googleProvider };
+export { db, auth, googleProvider, GoogleAuthProvider };
