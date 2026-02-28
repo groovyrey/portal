@@ -6,6 +6,7 @@ import { parseStudentName } from '@/lib/utils';
 import { getSessionClient, saveSession } from '@/lib/session-proxy';
 import { ScraperService } from '@/lib/scraper-service';
 import { SyncService } from '@/lib/sync-service';
+import { logActivity } from '@/lib/activity-service';
 
 import { decrypt } from '@/lib/auth';
 
@@ -119,59 +120,32 @@ export async function POST(req: NextRequest) {
       }, { status: 401 });
     }
 
-    // --- SCRAPING ---
+    // --- SCRAPING & SYNC ---
     const { periodCode, dashboardUrl } = await scraper.fetchDashboard();
     
-    // Parallel Fetch (EAF, Grades, Subject List, Accounts)
-    const [eafRes, subListRes, gradesRes, accountsRes] = await Promise.all([
-      scraper.fetchEAF(periodCode),
-      scraper.fetchSubjectList(periodCode, dashboardUrl, $dashboard),
-      scraper.fetchGrades(periodCode, dashboardUrl),
-      scraper.fetchAccounts(periodCode, dashboardUrl)
-    ]);
+    // Centralized Sync Logic
+    const syncResult = await syncer.performFullSync(scraper, $dashboard, periodCode, dashboardUrl);
 
-    const studentInfo = scraper.parseStudentInfo($dashboard, eafRes.$);
-    const schedule = scraper.parseSchedule(eafRes.$);
-    const financials = scraper.parseFinancials(eafRes.$);
-    const extraFinancials = scraper.parseAccounts(accountsRes.$);
-    
-    // Merge financial data
-    const mergedFinancials = {
-      ...financials,
-      ...extraFinancials
-    };
+    // Log successful login
+    logActivity(userId, 'Login', 'Logged into student portal').catch(e => {});
 
-    const reportLinks = scraper.parseReportCardLinks(gradesRes.$);
-    const offeredSubjects = scraper.parseOfferedSubjects(subListRes.$);
-
-    // --- DATABASE SYNCING ---
-    const { isNewUser, settings, badges } = await syncer.syncStudentData(studentInfo, reportLinks);
-    
-    // Background Sync (Not truly background in Vercel unless using waitUntil, but decoupled here)
-    await Promise.all([
-      syncer.syncFinancials(mergedFinancials),
-      syncer.syncSchedule(schedule),
-      syncer.syncProspectusSubjects(offeredSubjects),
-      syncer.syncToPostgres(studentInfo)
-    ]);
-
-    if (studentInfo.name && studentInfo.name.length > 2) {
+    if (syncResult.studentInfo.name && syncResult.studentInfo.name.length > 2) {
       const encryptedSession = encrypt(JSON.stringify({ userId, password }));
       const response = NextResponse.json({
         success: true,
-        isNewUser,
+        isNewUser: syncResult.isNewUser,
         data: { 
-          ...studentInfo,
-          parsedName: parseStudentName(studentInfo.name),
+          ...syncResult.studentInfo,
+          parsedName: parseStudentName(syncResult.studentInfo.name),
           id: userId, 
-          schedule,
-          offeredSubjects,
-          availableReports: reportLinks,
-          settings: settings || { notifications: true, isPublic: true, showAcademicInfo: true, classReminders: true, paymentReminders: true },
-          badges: badges || [],
-          financials: mergedFinancials,
-          // Diagnostic raw data for the specific account page
-          _debug_accounts_html: accountsRes.data
+          schedule: syncResult.schedule,
+          offeredSubjects: syncResult.offeredSubjects,
+          availableReports: syncResult.reportLinks,
+          settings: syncResult.settings,
+          badges: syncResult.badges,
+          financials: syncResult.mergedFinancials,
+          // Diagnostic raw data (if still needed)
+          _debug_accounts_html: "Synced via centralized service"
         }
       });
 

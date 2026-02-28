@@ -13,7 +13,9 @@ import {
   MessageSquare,
   ArrowLeft,
   Globe,
-  Search
+  Search,
+  Copy,
+  Check
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -29,24 +31,37 @@ type Message = {
 
 // Modern Typing Indicator Component
 const TypingIndicator = () => (
-  <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100 w-fit">
-    <motion.div
-      animate={{ scale: [1, 1.2, 1] }}
-      transition={{ repeat: Infinity, duration: 1, delay: 0 }}
-      className="w-1 h-1 bg-slate-300 rounded-full"
-    />
-    <motion.div
-      animate={{ scale: [1, 1.2, 1] }}
-      transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
-      className="w-1 h-1 bg-slate-400 rounded-full"
-    />
-    <motion.div
-      animate={{ scale: [1, 1.2, 1] }}
-      transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
-      className="w-1 h-1 bg-slate-500 rounded-full"
-    />
+  <div className="px-4 py-2.5 bg-slate-50 rounded-2xl border border-slate-100 w-fit">
+    <span className="text-[11px] font-bold text-slate-500 animate-pulse uppercase tracking-[0.2em] leading-none">
+      Thinking...
+    </span>
   </div>
 );
+
+// Copy Button Component for Assistant Messages
+const CopyButton = ({ content }: { content: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="p-1 rounded bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all border border-slate-100 shadow-sm"
+      title="Copy message"
+    >
+      {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+    </button>
+  );
+};
 
 export default function AssistantPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -58,7 +73,7 @@ export default function AssistantPage() {
     "Search for Latest AI Advancement",
     "Summarize: https://laconcepcioncollege.com/"
   ]);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -147,20 +162,20 @@ export default function AssistantPage() {
       if (!reader) throw new Error('No reader available');
 
       const textDecoder = new TextDecoder();
-      let isFirstChunk = true;
       let buffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
-        
+
         if (value) {
           buffer += textDecoder.decode(value, { stream: true });
         }
-        
+
+        // Remove status signals if they appear in the stream
+        buffer = buffer.replace(/STATUS:(SEARCHING|PROCESSING|FINALIZING)/g, '');
+
         // Process buffer for tool calls
-        const toolCallPrefix = "TOOL_CALL:";
-        
-        while (true) {
+        const toolCallPrefix = "TOOL_CALL:";        while (true) {
           const toolCallIndex = buffer.indexOf(toolCallPrefix);
           
           if (toolCallIndex === -1) {
@@ -210,7 +225,7 @@ export default function AssistantPage() {
                 const toolCall = JSON.parse(toolCallStr);
                 if (toolCall.name === 'show_toast' && toolCall.parameters) {
                   const { message, type } = toolCall.parameters as { message: string; type: 'success' | 'error' | 'info' | 'warning' };
-                  toast[type || 'info'](message);
+                  toast[type || 'info'](`[Assistant]: ${message}`);
                 }
               } catch (e) {
                 console.error('Failed to parse tool call', e, toolCallStr);
@@ -326,7 +341,10 @@ export default function AssistantPage() {
                       {m.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                     </div>
                     {m.role === 'assistant' && (
-                      <span className="text-xs font-bold text-slate-900">Assistant</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-900">Assistant</span>
+                        {m.content && !isLoading && <CopyButton content={m.content} />}
+                      </div>
                     )}
                   </div>
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { decrypt } from '@/lib/auth';
 import { getSessionClient, saveSession } from '@/lib/session-proxy';
 import { ScraperService } from '@/lib/scraper-service';
+import { logActivity } from '@/lib/activity-service';
 
 export async function POST(req: NextRequest) {
     try {
@@ -79,6 +80,9 @@ export async function POST(req: NextRequest) {
         const formIsGone = $result('#otbPasswordChangeTable_1').length === 0;
 
         if (hasSuccessText || (redirectedToLogin && formIsGone) || (redirectedToMain && formIsGone)) {
+            // Log successful password change
+            logActivity(userId, 'Security', 'Changed portal password').catch(e => {});
+
             const response = NextResponse.json({ 
                 success: true, 
                 message: 'Password changed successfully. Please log in again.'

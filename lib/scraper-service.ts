@@ -68,6 +68,9 @@ export class ScraperService {
     const $ = cheerio.load(res.data);
     const dashboardUrl = res.request.res.responseUrl || baseUrl;
 
+    // Check if we are actually logged in
+    const isLoggedOut = res.data.includes('obtnLogin') || res.data.includes('otbUserID');
+
     // Extract Period Code
     let periodCode = "SY2025-2026-2"; // Fallback
     $('a').each((_, el) => {
@@ -81,7 +84,21 @@ export class ScraperService {
       }
     });
 
-    return { $, periodCode, dashboardUrl, data: res.data };
+    return { $, periodCode, dashboardUrl, data: res.data, isLoggedOut };
+  }
+
+  /**
+   * Fetches all core student data in parallel once the session is confirmed.
+   */
+  async fetchAllData(periodCode: string, dashboardUrl: string, dashboard$: cheerio.CheerioAPI) {
+    const [eaf, grades, accounts, subjects] = await Promise.all([
+      this.fetchEAF(periodCode),
+      this.fetchGrades(periodCode, dashboardUrl),
+      this.fetchAccounts(periodCode, dashboardUrl),
+      this.fetchSubjectList(periodCode, dashboardUrl, dashboard$)
+    ]);
+
+    return { eaf, grades, accounts, subjects };
   }
 
   async fetchEAF(periodCode: string) {

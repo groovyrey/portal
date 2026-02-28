@@ -67,11 +67,12 @@ export default function DevPage() {
       methods: ["fetchDashboard", "fetchEAF", "fetchGrades", "parseSchedule", "forceLogin"], 
       desc: "Cheerio-based scraping engine for Schoolista portal DOM parsing." 
     },
-    { 
-      name: "sync-service.ts", 
-      methods: ["syncStudentData", "syncToPostgres", "syncFinancials", "syncSchedule"], 
-      desc: "Bidirectional data synchronization between Portal and local storage." 
+    {
+      name: "sync-service.ts",
+      methods: ["syncStudentData", "syncToRelationalDB", "syncFinancials", "syncSchedule"],
+      desc: "Bidirectional data synchronization between Portal and local storage."
     },
+
     { 
       name: "auth.ts", 
       methods: ["encrypt", "decrypt", "hashPassword"], 

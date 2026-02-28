@@ -19,13 +19,25 @@ export async function logActivity(
   link?: string
 ) {
   try {
-    // Ensure student exists in PG first (handled by standard sync, but safe to check)
+    // 1. Insert the new log
     await query(`
       INSERT INTO activity_logs (user_id, action, details, link)
       VALUES ($1, $2, $3, $4)
     `, [userId, action, details || null, link || null]);
     
-    console.log(`[ActivityLog] ${userId}: ${action}`);
+    // 2. Enforce the 15-log limit: Delete oldest logs exceeding the limit
+    await query(`
+      DELETE FROM activity_logs 
+      WHERE user_id = $1 
+      AND id NOT IN (
+        SELECT id FROM activity_logs 
+        WHERE user_id = $1 
+        ORDER BY created_at DESC 
+        LIMIT 15
+      )
+    `, [userId]);
+    
+    console.log(`[ActivityLog] ${userId}: ${action} (Enforced 15-log limit)`);
   } catch (error) {
     console.error('[ActivityLog] Error saving activity log:', error);
   }

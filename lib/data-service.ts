@@ -90,11 +90,16 @@ export async function getStudentFinancials(userId: string): Promise<Financials |
     const docSnap = await getDoc(doc(db, 'financials', userId));
     if (docSnap.exists()) {
       const data = docSnap.data();
+      const details = data.details || {};
       return {
         total: data.total,
         balance: data.balance,
         dueToday: data.due_today,
-        installments: data.details?.installments || []
+        installments: details.installments || [],
+        dueAccounts: details.dueAccounts || [],
+        payments: details.payments || [],
+        assessment: details.assessment || [],
+        adjustments: details.adjustments || []
       };
     }
     return null;
@@ -104,62 +109,59 @@ export async function getStudentFinancials(userId: string): Promise<Financials |
   }
 }
 
+// Simple in-memory cache for offered subjects (TTL: 1 hour)
+let offeredSubjectsCache: { data: ProspectusSubject[], timestamp: number } | null = null;
+const CACHE_TTL = 60 * 60 * 1000;
+
 export async function getStudentGrades(userId: string): Promise<SubjectGrade[]> {
   try {
-    // 1. Get Prospectus for subject titles
-    const prospectusSnap = await getDocs(collection(db, 'prospectus_subjects'));
-    const prospectus: Record<string, string> = {};
-    prospectusSnap.forEach(d => {
-      const data = d.data();
-      if (data.description) prospectus[d.id] = data.description;
-    });
-
-    const allGrades: SubjectGrade[] = [];
-    const seenReports = new Set<string>();
-
-    // 2. Fetch by Query (New Format)
+    // 1. Fetch by Query (New Format)
     const q = query(collection(db, 'grades'), where('student_id', '==', userId));
     const querySnap = await getDocs(q);
     
-    querySnap.forEach(doc => {
-      seenReports.add(doc.id);
-      const data = doc.data();
-      if (data.items) {
-        data.items.forEach((item: any) => {
-           // Normalize
+    // We'll use a map to deduplicate by subject key, keeping the latest one based on updated_at
+    const subjectsMap = new Map<string, { grade: SubjectGrade, updatedAt: number }>();
+
+    // Helper to process items
+    const processItems = (items: any[], updatedAt: any) => {
+        if (!items) return;
+        const ts = updatedAt?.toMillis ? updatedAt.toMillis() : (updatedAt instanceof Date ? updatedAt.getTime() : 0);
+        
+        items.forEach((item: any) => {
            const code = item.code || 'N/A';
-           const desc = item.description || prospectus[code] || item.subject || 'Unknown Subject';
-           allGrades.push({
-             code,
-             description: desc,
-             grade: item.grade || 'N/A',
-             remarks: item.remarks || 'N/A'
-           });
+           const desc = item.description || item.subject || 'Unknown Subject';
+           const key = `${code}-${desc}`.toLowerCase();
+           
+           const current = subjectsMap.get(key);
+           if (!current || ts >= current.updatedAt) {
+               subjectsMap.set(key, {
+                   grade: {
+                       code,
+                       description: desc,
+                       grade: item.grade || 'N/A',
+                       remarks: item.remarks || 'N/A'
+                   },
+                   updatedAt: ts
+               });
+           }
         });
-      }
+    };
+
+    querySnap.forEach(doc => {
+      const data = doc.data();
+      processItems(data.items, data.updated_at);
     });
 
-    // 3. Fetch Direct (Legacy Format)
-    if (!seenReports.has(userId)) {
+    // If no grades found in query, check direct document for legacy compatibility
+    if (subjectsMap.size === 0) {
       const directSnap = await getDoc(doc(db, 'grades', userId));
       if (directSnap.exists()) {
          const data = directSnap.data();
-         if (data.items) {
-            data.items.forEach((item: any) => {
-               const code = item.code || 'N/A';
-               const desc = item.description || prospectus[code] || item.subject || 'Unknown Subject';
-               allGrades.push({
-                 code,
-                 description: desc,
-                 grade: item.grade || 'N/A',
-                 remarks: item.remarks || 'N/A'
-               });
-            });
-         }
+         processItems(data.items, data.updated_at);
       }
     }
     
-    return allGrades;
+    return Array.from(subjectsMap.values()).map(v => v.grade);
   } catch (error) {
     console.error('Error fetching grades:', error);
     return [];
@@ -167,6 +169,11 @@ export async function getStudentGrades(userId: string): Promise<SubjectGrade[]> 
 }
 
 export async function getOfferedSubjects(): Promise<ProspectusSubject[]> {
+  // Check cache
+  if (offeredSubjectsCache && (Date.now() - offeredSubjectsCache.timestamp < CACHE_TTL)) {
+    return offeredSubjectsCache.data;
+  }
+
   try {
     const querySnap = await getDocs(collection(db, 'prospectus_subjects'));
     const subjects: ProspectusSubject[] = [];
@@ -179,8 +186,12 @@ export async function getOfferedSubjects(): Promise<ProspectusSubject[]> {
         preReq: data.pre_req || ''
       });
     });
-    // Sort by code for better UX
-    return subjects.sort((a, b) => a.code.localeCompare(b.code));
+    const sorted = subjects.sort((a, b) => a.code.localeCompare(b.code));
+    
+    // Update cache
+    offeredSubjectsCache = { data: sorted, timestamp: Date.now() };
+    
+    return sorted;
   } catch (error) {
     console.error('Error fetching offered subjects:', error);
     return [];
@@ -198,14 +209,27 @@ export async function getFullStudentData(userId: string): Promise<AggregatedStud
     getOfferedSubjects()
   ]);
 
-  // Calculate GPA
-  const numericGrades = grades
-      .map(g => parseFloat(g.grade))
-      .filter(g => !isNaN(g) && g > 0);
-  
-  const gpa = numericGrades.length > 0 
-      ? (numericGrades.reduce((a, b) => a + b, 0) / numericGrades.length).toFixed(2) 
-      : 'N/A';
+  // Calculate Weighted GPA
+  let totalWeightedGrade = 0;
+  let totalUnits = 0;
+
+  // Create a map for quick subject lookup to get units
+  const subjectUnitsMap = new Map<string, number>();
+  offeredSubjects.forEach(s => {
+    const units = parseFloat(s.units);
+    if (!isNaN(units)) subjectUnitsMap.set(s.code.toLowerCase(), units);
+  });
+
+  grades.forEach(g => {
+    const grade = parseFloat(g.grade);
+    if (!isNaN(grade) && grade > 0) {
+      const units = subjectUnitsMap.get(g.code.toLowerCase()) || 3.0; // Default to 3 units if not found
+      totalWeightedGrade += grade * units;
+      totalUnits += units;
+    }
+  });
+
+  const gpa = totalUnits > 0 ? (totalWeightedGrade / totalUnits).toFixed(2) : 'N/A';
 
   return {
     ...profile,

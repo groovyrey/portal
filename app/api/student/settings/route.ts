@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { doc, updateDoc } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
+import { logActivity } from '@/lib/activity-service';
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,6 +29,9 @@ export async function POST(req: NextRequest) {
 
     const studentRef = doc(db, 'students', userId);
     await updateDoc(studentRef, { settings });
+
+    // Log settings update
+    logActivity(userId, 'Settings', 'Updated account settings').catch(e => {});
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

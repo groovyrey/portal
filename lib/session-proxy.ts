@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
 import { db } from './db';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
 import { encrypt, decrypt } from './auth';
 import { PORTAL_BASE } from './constants';
 
@@ -134,14 +134,29 @@ export async function acquireRefreshLock(userId: string): Promise<boolean> {
     try {
         const sessionRef = doc(db, 'portal_sessions', userId);
         const lockDuration = 60 * 1000; // 60 seconds lock
-        const lockUntil = new Date(Date.now() + lockDuration);
 
-        await setDoc(sessionRef, {
-            refresh_lock_until: lockUntil,
-            last_attempt_at: serverTimestamp()
-        }, { merge: true });
-        
-        return true;
+        return await runTransaction(db, async (transaction) => {
+            const sessionSnap = await transaction.get(sessionRef);
+            const now = Date.now();
+            
+            if (sessionSnap.exists()) {
+                const data = sessionSnap.data();
+                const lockUntil = data.refresh_lock_until?.toDate ? data.refresh_lock_until.toDate() : new Date(0);
+                
+                if (now < lockUntil.getTime()) {
+                    console.log(`Lock already held for ${userId}`);
+                    return false;
+                }
+            }
+
+            const newLockUntil = new Date(now + lockDuration);
+            transaction.set(sessionRef, {
+                refresh_lock_until: newLockUntil,
+                last_attempt_at: serverTimestamp()
+            }, { merge: true });
+            
+            return true;
+        });
     } catch (e) {
         console.error('Failed to acquire lock:', e);
         return false;

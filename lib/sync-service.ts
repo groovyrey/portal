@@ -1,7 +1,8 @@
+import * as cheerio from 'cheerio';
 import { db } from '@/lib/db';
-import { doc, setDoc, getDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, writeBatch, updateDoc, arrayUnion } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
-import { ScrapedStudentInfo, ScrapedScheduleItem, ScrapedFinancials, ScrapedSubject } from './scraper-service';
+import { ScraperService, ScrapedStudentInfo, ScrapedScheduleItem, ScrapedFinancials, ScrapedSubject } from './scraper-service';
 
 export class SyncService {
   private userId: string;
@@ -55,9 +56,9 @@ export class SyncService {
       if (studentDoc.exists()) {
         const currentBadges = studentDoc.data().badges || [];
         if (!currentBadges.includes(badgeId)) {
-          await setDoc(studentRef, {
-            badges: [...currentBadges, badgeId]
-          }, { merge: true });
+          await updateDoc(studentRef, {
+            badges: arrayUnion(badgeId)
+          });
           console.log(`[BadgeSystem] Granted '${badgeId}' badge to ${this.userId}`);
           return true;
         }
@@ -126,23 +127,78 @@ export class SyncService {
   }
 
   async syncProspectusSubjects(subjects: ScrapedSubject[]) {
-    if (subjects && subjects.length > 0) {
-      const batch = writeBatch(db);
-      const subjectsToProcess = subjects.slice(0, 450); 
-      for (const sub of subjectsToProcess) {
-        const subRef = doc(db, 'prospectus_subjects', sub.code);
-        batch.set(subRef, {
-          description: sub.description,
-          units: sub.units,
-          pre_req: sub.preReq,
-          updated_at: serverTimestamp()
-        }, { merge: true });
-      }
-      await batch.commit();
+    if (!subjects || subjects.length === 0) return;
+
+    // Check if we need to sync prospectus (once per 7 days)
+    const lastSyncRef = doc(db, 'system_config', 'prospectus_sync_last_at');
+    const lastSyncDoc = await getDoc(lastSyncRef);
+    const lastSyncAt = lastSyncDoc.exists() ? (lastSyncDoc.data().at?.toDate?.() || new Date(0)) : new Date(0);
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+
+    if (Date.now() - lastSyncAt.getTime() < sevenDaysMs) {
+      console.log('[SyncService] Skipping prospectus sync: Last sync was less than 7 days ago.');
+      return;
     }
+
+    const batch = writeBatch(db);
+    const subjectsToProcess = subjects.slice(0, 450); 
+    for (const sub of subjectsToProcess) {
+      const subRef = doc(db, 'prospectus_subjects', sub.code);
+      batch.set(subRef, {
+        description: sub.description,
+        units: sub.units,
+        pre_req: sub.preReq,
+        updated_at: serverTimestamp()
+      }, { merge: true });
+    }
+    
+    await batch.commit();
+    await setDoc(lastSyncRef, { at: serverTimestamp() });
   }
 
-  async syncToPostgres(info: ScrapedStudentInfo) {
+  async performFullSync(scraper: ScraperService, dashboard$: cheerio.CheerioAPI, periodCode: string, dashboardUrl: string) {
+    console.log(`[SyncService] Starting full sync for ${this.userId}...`);
+    
+    // Parallel Fetch all data from portal
+    const { eaf, grades, accounts, subjects: offeredSubsRes } = await scraper.fetchAllData(periodCode, dashboardUrl, dashboard$);
+
+    // Parse all data
+    const studentInfo = scraper.parseStudentInfo(dashboard$, eaf.$);
+    const schedule = scraper.parseSchedule(eaf.$);
+    const financials = scraper.parseFinancials(eaf.$);
+    const extraFinancials = scraper.parseAccounts(accounts.$);
+
+    const mergedFinancials = {
+      ...financials,
+      ...extraFinancials
+    };
+
+    const reportLinks = scraper.parseReportCardLinks(grades.$);
+    const offeredSubjects = scraper.parseOfferedSubjects(offeredSubsRes.$);
+
+    // Database Syncing
+    const { isNewUser, settings, badges } = await this.syncStudentData(studentInfo, reportLinks);
+    
+    await Promise.all([
+      this.syncFinancials(mergedFinancials),
+      this.syncSchedule(schedule),
+      this.syncProspectusSubjects(offeredSubjects),
+      this.syncToRelationalDB(studentInfo)
+    ]);
+
+    return { 
+      isNewUser, 
+      settings, 
+      badges, 
+      studentInfo, 
+      schedule, 
+      mergedFinancials, 
+      reportLinks, 
+      offeredSubjects 
+    };
+  }
+
+  async syncToRelationalDB(info: ScrapedStudentInfo) {
     try {
       const { query: tursoQuery } = await import('@/lib/turso');
       await tursoQuery(`

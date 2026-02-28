@@ -121,33 +121,9 @@ async function backgroundSync(userId: string, password: string) {
   }
 
   const { periodCode, dashboardUrl } = await scraper.fetchDashboard();
-  const [eafRes, subListRes, gradesRes, accountsRes] = await Promise.all([
-    scraper.fetchEAF(periodCode),
-    scraper.fetchSubjectList(periodCode, dashboardUrl, $dashboard),
-    scraper.fetchGrades(periodCode, dashboardUrl),
-    scraper.fetchAccounts(periodCode, dashboardUrl)
-  ]);
-
-  const studentInfo = scraper.parseStudentInfo($dashboard, eafRes.$);
-  const schedule = scraper.parseSchedule(eafRes.$);
-  const financials = scraper.parseFinancials(eafRes.$);
-  const extraFinancials = scraper.parseAccounts(accountsRes.$);
-
-  const mergedFinancials = {
-    ...financials,
-    ...extraFinancials
-  };
-
-  const reportLinks = scraper.parseReportCardLinks(gradesRes.$);
-  const offeredSubjects = scraper.parseOfferedSubjects(subListRes.$);
-
-  await syncer.syncStudentData(studentInfo, reportLinks);
-  await Promise.all([
-    syncer.syncFinancials(mergedFinancials),
-    syncer.syncSchedule(schedule),
-    syncer.syncProspectusSubjects(offeredSubjects),
-    syncer.syncToPostgres(studentInfo)
-  ]);
+  
+  // Use centralized sync logic
+  await syncer.performFullSync(scraper, $dashboard, periodCode, dashboardUrl);
 
   // Notify client via Ably
   await publishUpdate(`student-${userId}`, { type: 'SYNC_COMPLETE' });

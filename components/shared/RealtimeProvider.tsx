@@ -187,6 +187,7 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
       if (type === 'SYNC_COMPLETE') {
         queryClient.invalidateQueries({ queryKey: ['student-data'] });
         toast.success('Your data has been updated in the background.', {
+          id: 'sync-complete-toast',
           description: 'Latest records from the portal are now visible.',
           duration: 3000,
         });

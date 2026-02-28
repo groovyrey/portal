@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { decrypt } from '@/lib/auth';
 import { getSessionClient } from '@/lib/session-proxy';
 import { ScraperService } from '@/lib/scraper-service';
+import { logActivity } from '@/lib/activity-service';
 import * as cheerio from 'cheerio';
 
 export async function POST(req: NextRequest) {
@@ -26,6 +27,9 @@ export async function POST(req: NextRequest) {
     
     // Specifically fetch the Account DM page
     const accountsRes = await scraper.fetchAccounts(periodCode, dashboardUrl);
+
+    // Log diagnostic check
+    logActivity(userId, 'System', 'Performed account diagnostic check').catch(e => {});
 
     return NextResponse.json({ 
       success: true, 

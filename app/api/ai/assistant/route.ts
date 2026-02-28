@@ -13,6 +13,7 @@ import { db } from '@/lib/db';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 import { getFullStudentData } from '@/lib/data-service';
+import { logActivity } from '@/lib/activity-service';
 import { 
   SCHOOL_INFO, 
   BUILDING_CODES, 
@@ -226,6 +227,12 @@ STRICT OPERATIONAL RULES:
 2. **QUICK START INTENT:** If the user sends a suggestion like "Search for Latest AI Advancement" or "Search for...", you MUST immediately call the \`web_search\` tool.
 3. **WEB RESEARCH FIRST:** If the user asks about ANY topic outside of the school's internal knowledge, you MUST use the \`web_search\` tool immediately.
 4. **CITE SOURCES:** When using \`web_search\` or \`web_fetch\`, synthesize results and provide Markdown links.
+5. **ACTIVE FEEDBACK (TOASTS):** You MUST use the \`show_toast\` tool to provide real-time feedback for your actions. 
+   - Use \`success\` when you've found specific data the user requested.
+   - Use \`info\` for general status updates.
+   - Use \`warning\` if something is missing but you can still help.
+   - Use \`error\` ONLY for critical system failures.
+   Note: The UI already shows "Thinking...", "Searching for...", and "Processing results..." automatically. Use toasts for more specific feedback like "Found your 2024 grades!" or "Summarization complete". Your toasts will be automatically prefixed with "[Assistant]: " in the UI.
 
 ---
 🛠️ TOOL CALLING CONFIGURATION
@@ -309,6 +316,9 @@ ${scheduleContext}
 
     const input = messages[messages.length - 1].content;
 
+    // Log AI interaction
+    logActivity(userId, 'AI Assistant', `Asked: "${input.substring(0, 50)}${input.length > 50 ? '...' : ''}"`, '/assistant').catch(e => {});
+
     (async () => {
       let currentInput = input;
       const maxTurns = 3;
@@ -343,7 +353,6 @@ ${scheduleContext}
             toolCallPos = toolMarkerIndex;
           } else {
             // Fallback: search for tool-like JSON in the whole content
-            // Look for patterns like "name": "web_search"
             const toolPatterns = ['"web_search"', '"web_fetch"', '"show_toast"'];
             if (toolPatterns.some(p => fullContent.includes(p))) {
               const startOfJsonIndex = fullContent.lastIndexOf('{');
@@ -357,7 +366,6 @@ ${scheduleContext}
           }
 
           if (jsonStr && jsonStr.includes('{')) {
-            // Robust JSON extraction: Find the first '{' and last '}' within the candidate string
             const startOfJsonIndex = jsonStr.indexOf('{');
             const endOfJsonIndex = jsonStr.lastIndexOf('}');
             
@@ -371,14 +379,22 @@ ${scheduleContext}
               
               if (isOurTool) {
                 if (toolCall.name === 'web_search' && toolCall.parameters?.query) {
-                  if (!isWriterClosed) await writer.write(encoder.encode('\n🔍 *Searching for: "' + toolCall.parameters.query + '"...*\n\n'));
+                  if (!isWriterClosed) {
+                    await writer.write(encoder.encode('STATUS:SEARCHING'));
+                    await writer.write(encoder.encode('\n🔍 *Searching for: "' + toolCall.parameters.query + '"...*\n\n'));
+                  }
                   const result = await performWebSearch(toolCall.parameters.query);
+                  if (!isWriterClosed) await writer.write(encoder.encode('STATUS:PROCESSING'));
                   history.push(new AIMessage(fullContent));
                   currentInput = `TOOL_RESULT: ${result}\n\nBased on these search results, please provide a comprehensive answer and cite your sources.`;
                   continue;
                 } else if (toolCall.name === 'web_fetch' && toolCall.parameters?.url) {
-                  if (!isWriterClosed) await writer.write(encoder.encode('\n📄 *Reading page: ' + toolCall.parameters.url + '...*\n\n'));
+                  if (!isWriterClosed) {
+                    await writer.write(encoder.encode('STATUS:SEARCHING'));
+                    await writer.write(encoder.encode('\n📄 *Reading page: ' + toolCall.parameters.url + '...*\n\n'));
+                  }
                   const result = await performWebFetch(toolCall.parameters.url);
+                  if (!isWriterClosed) await writer.write(encoder.encode('STATUS:PROCESSING'));
                   history.push(new AIMessage(fullContent));
                   currentInput = `TOOL_RESULT: ${result}\n\nBased on this page content, please provide a comprehensive summary and cite the source.`;
                   continue;
@@ -386,7 +402,10 @@ ${scheduleContext}
                   // Client-side tool (toast)
                   const textBefore = fullContent.substring(0, toolCallPos).replace(/\|\|\|$/, '').trim();
                   if (textBefore && !isWriterClosed) await writer.write(encoder.encode(textBefore));
-                  if (!isWriterClosed) await writer.write(encoder.encode('\nTOOL_CALL:' + JSON.stringify(toolCall) + '\n'));
+                  if (!isWriterClosed) {
+                    await writer.write(encoder.encode('STATUS:FINALIZING'));
+                    await writer.write(encoder.encode('\nTOOL_CALL:' + JSON.stringify(toolCall) + '\n'));
+                  }
                   break;
                 }
               } else {
@@ -394,15 +413,20 @@ ${scheduleContext}
               }
             } catch (e) {
               console.error('Tool parsing error:', e, 'Raw JSON string:', jsonStr);
-              // Strip the marker if parsing fails
               const cleanedContent = fullContent.split(toolCallMarker)[0].trim();
-              if (!isWriterClosed) await writer.write(encoder.encode(cleanedContent));
+              if (!isWriterClosed) {
+                await writer.write(encoder.encode('STATUS:FINALIZING'));
+                await writer.write(encoder.encode(cleanedContent));
+              }
               break;
             }
           } else {
-            // Final answer turn or no tool call - stream everything but strip trailing marker
+            // Final answer turn or no tool call
             const cleanedContent = fullContent.split(toolCallMarker)[0].trim();
-            if (!isWriterClosed) await writer.write(encoder.encode(cleanedContent));
+            if (!isWriterClosed) {
+              await writer.write(encoder.encode('STATUS:FINALIZING'));
+              await writer.write(encoder.encode(cleanedContent));
+            }
             break;
           }
         }
