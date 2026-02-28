@@ -52,9 +52,41 @@ export default function AssistantPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([
+    "What's my current balance?",
+    "Show my schedule for today",
+    "Search for Latest AI Advancement",
+    "Summarize: https://laconcepcioncollege.com/"
+  ]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const response = await fetch('/api/student/me');
+        if (response.ok) {
+          const result = await response.json();
+          // Use current schedule instead of historical grades
+          const subjects = result.data?.schedule || [];
+          if (subjects.length > 0) {
+            const randomSubject = subjects[Math.floor(Math.random() * subjects.length)];
+            const subjectTitle = randomSubject.description || randomSubject.subject;
+            if (subjectTitle) {
+              setSuggestions(prev => [
+                ...prev,
+                `Search for "${subjectTitle}" learning Resources`
+              ]);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch student data for suggestions:', error);
+      }
+    };
+    fetchStudentData();
+  }, []);
 
   const scrollToBottom = () => {
     if (scrollContainerRef.current) {
@@ -229,13 +261,6 @@ export default function AssistantPage() {
     sendMessage(input);
   };
 
-  const suggestions = [
-    "What's my current balance?",
-    "Show my schedule for today",
-    "Search for Latest AI Advancement",
-    "Summarize: https://example.com"
-  ];
-
   return (
     <div className="max-w-4xl mx-auto px-4 py-4 md:py-6 flex flex-col h-[calc(100vh-128px)]">
       {/* Messages Area */}
@@ -306,20 +331,20 @@ export default function AssistantPage() {
                   </div>
 
                   {/* Bubble */}
-                  <div className={`text-sm leading-relaxed ${
+                  <div className={`text-sm leading-relaxed break-words overflow-hidden ${
                     m.role === 'user' 
-                      ? 'p-3 rounded-xl bg-slate-900 text-white font-medium' 
-                      : 'py-1 px-0.5 text-slate-700'
+                      ? 'p-3 rounded-xl bg-slate-900 text-white font-medium self-end ml-auto' 
+                      : 'py-1 px-0.5 text-slate-700 w-full max-w-full'
                   }`}>
                     {m.role === 'user' ? (
-                      <p>{m.content}</p>
+                      <p className="whitespace-pre-wrap">{m.content}</p>
                     ) : (
                       m.content ? (
-                        <div className="relative">
+                        <div className="relative w-full overflow-hidden">
                           <ReactMarkdown 
                             remarkPlugins={[remarkGfm]} 
                             rehypePlugins={[rehypeHighlight]}
-                            className={`prose prose-slate max-w-none leading-relaxed text-slate-600 font-normal ${
+                            className={`prose prose-slate max-w-full leading-relaxed text-slate-600 font-normal break-words ${
                               isLoading && m.id === messages[messages.length - 1].id ? 'streaming-active' : ''
                             }`}
                             components={{

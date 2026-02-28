@@ -8,6 +8,7 @@ import {
   Users, 
   Code2, 
   Star,
+  Sparkles,
   ExternalLink,
   GraduationCap,
   ArrowRight,
@@ -58,7 +59,7 @@ export default function AboutPage() {
               transition={{ duration: 0.6 }}
             >
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider mb-6">
-                <Sparkles size={12} />
+                <SparkleIcon size={12} />
                 <span>Next-Gen Student Hub</span>
               </div>
               <h1 className="text-4xl md:text-6xl font-bold text-slate-900 leading-tight mb-6">
@@ -181,7 +182,7 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               { icon: Zap, title: 'Live Sync', desc: 'Fetch data in real-time straight from the school portal.' },
-              { icon: Cpu, title: 'Portal AI', desc: 'Your personal school assistant for grades and info.' },
+              { icon: Cpu, title: 'Portal AI', desc: 'Personal school assistant with Web Research & URL Summarization.' },
               { icon: ShieldCheck, title: 'Smart Review', desc: 'AI-monitored community feed for safe discussions.' },
               { icon: MessageSquare, title: 'Community', desc: 'Engage with fellow students about campus life.' },
               { icon: Code2, title: 'Optimized', desc: 'Built for speed and performance on every device.' },
@@ -229,7 +230,7 @@ export default function AboutPage() {
   );
 }
 
-function Sparkles({ size }: { size: number }) {
+function SparkleIcon({ size }: { size: number }) {
   return (
     <svg 
       width={size} 

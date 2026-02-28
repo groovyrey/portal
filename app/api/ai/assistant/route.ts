@@ -191,8 +191,17 @@ export async function POST(req: NextRequest) {
 - Current Balance: ${financials.balance || '0.00'}
 - Total Assessment: ${financials.total || '0.00'}
 - Due Today: ${financials.dueToday || '0.00'}
+- Installments: ${JSON.stringify(financials.installments)}
 `.trim();
     }
+
+    const gradesContext = allGrades.length > 0 
+      ? allGrades.map(g => `- ${g.code}: ${g.description} | Grade: ${g.grade} | Remarks: ${g.remarks}`).join('\n')
+      : 'No grades found.';
+
+    const scheduleContext = scheduleItems.length > 0
+      ? scheduleItems.map(s => `- ${s.subject}: ${s.description} | Time: ${s.time} | Room: ${s.room}`).join('\n')
+      : 'No schedule found.';
 
     const now = new Date();
     const dateStr = now.toLocaleDateString('en-PH', { 
@@ -220,7 +229,12 @@ STRICT OPERATIONAL RULES:
 
 ---
 🛠️ TOOL CALLING CONFIGURATION
-To use a tool, append \`|||\` followed by the JSON tool call on a single line at the VERY END of your response.
+If you need to use a tool, append \`|||\` followed by the JSON tool call at the VERY END of your response. 
+**CRITICAL:** DO NOT wrap the tool call in markdown code blocks.
+
+**Example:**
+I'll check the web for that information.
+||| {"name": "web_search", "parameters": {"query": "latest enrollment dates"}}
 
 **Available Tools:**
 \`\`\`json
@@ -261,8 +275,14 @@ STUDENT REFERENCE DATA (FOR BACKGROUND ONLY):
 - Name: ${studentData.name}
 - Course: ${studentData.course}
 - GPA: ${gpa}
-- Financials: ${financialContext}
+- Financials: 
+${financialContext}
+- Grades:
+${gradesContext}
+- Current Schedule:
+${scheduleContext}
 - School: ${SCHOOL_INFO.name}
+- Current Date/Time: ${dateStr}, ${timeStr}
 `.trim();
 
     const model = new ChatGoogleGenerativeAI({
@@ -311,53 +331,78 @@ STUDENT REFERENCE DATA (FOR BACKGROUND ONLY):
           for await (const chunk of responseStream) {
             const content = chunk.content as string || '';
             fullContent += content;
-            // During intermediate turns, we don't stream content that leads to a tool call
-            // unless it's the final turn or we've decided not to call a tool.
           }
 
           // Check if model called a tool
           const toolMarkerIndex = fullContent.indexOf(toolCallMarker);
+          let jsonStr = '';
+          let toolCallPos = -1;
+
           if (toolMarkerIndex !== -1) {
-            let jsonStr = fullContent.substring(toolMarkerIndex + toolCallMarker.length).trim();
-            
-            // Clean up common trailing junk from model output
+            jsonStr = fullContent.substring(toolMarkerIndex + toolCallMarker.length).trim();
+            toolCallPos = toolMarkerIndex;
+          } else {
+            // Fallback: search for tool-like JSON in the whole content
+            // Look for patterns like "name": "web_search"
+            const toolPatterns = ['"web_search"', '"web_fetch"', '"show_toast"'];
+            if (toolPatterns.some(p => fullContent.includes(p))) {
+              const startOfJsonIndex = fullContent.lastIndexOf('{');
+              const endOfJsonIndex = fullContent.lastIndexOf('}');
+              
+              if (startOfJsonIndex !== -1 && endOfJsonIndex !== -1 && endOfJsonIndex > startOfJsonIndex) {
+                 jsonStr = fullContent.substring(startOfJsonIndex, endOfJsonIndex + 1);
+                 toolCallPos = startOfJsonIndex;
+              }
+            }
+          }
+
+          if (jsonStr && jsonStr.includes('{')) {
+            // Robust JSON extraction: Find the first '{' and last '}' within the candidate string
+            const startOfJsonIndex = jsonStr.indexOf('{');
             const endOfJsonIndex = jsonStr.lastIndexOf('}');
-            if (endOfJsonIndex !== -1) {
-              jsonStr = jsonStr.substring(0, endOfJsonIndex + 1);
+            
+            if (startOfJsonIndex !== -1 && endOfJsonIndex !== -1 && endOfJsonIndex > startOfJsonIndex) {
+              jsonStr = jsonStr.substring(startOfJsonIndex, endOfJsonIndex + 1);
             }
 
             try {
               const toolCall = JSON.parse(jsonStr);
+              const isOurTool = ['web_search', 'web_fetch', 'show_toast'].includes(toolCall.name);
               
-              if (toolCall.name === 'web_search' && toolCall.parameters?.query) {
-                if (!isWriterClosed) await writer.write(encoder.encode('\n🔍 *Searching for: "' + toolCall.parameters.query + '"...*\n\n'));
-                const result = await performWebSearch(toolCall.parameters.query);
-                history.push(new AIMessage(fullContent));
-                currentInput = `TOOL_RESULT: ${result}\n\nBased on these search results, please provide a comprehensive answer and cite your sources.`;
-                continue;
-              } else if (toolCall.name === 'web_fetch' && toolCall.parameters?.url) {
-                if (!isWriterClosed) await writer.write(encoder.encode('\n📄 *Reading page: ' + toolCall.parameters.url + '...*\n\n'));
-                const result = await performWebFetch(toolCall.parameters.url);
-                history.push(new AIMessage(fullContent));
-                currentInput = `TOOL_RESULT: ${result}\n\nBased on this page content, please provide a comprehensive summary and cite the source.`;
-                continue;
+              if (isOurTool) {
+                if (toolCall.name === 'web_search' && toolCall.parameters?.query) {
+                  if (!isWriterClosed) await writer.write(encoder.encode('\n🔍 *Searching for: "' + toolCall.parameters.query + '"...*\n\n'));
+                  const result = await performWebSearch(toolCall.parameters.query);
+                  history.push(new AIMessage(fullContent));
+                  currentInput = `TOOL_RESULT: ${result}\n\nBased on these search results, please provide a comprehensive answer and cite your sources.`;
+                  continue;
+                } else if (toolCall.name === 'web_fetch' && toolCall.parameters?.url) {
+                  if (!isWriterClosed) await writer.write(encoder.encode('\n📄 *Reading page: ' + toolCall.parameters.url + '...*\n\n'));
+                  const result = await performWebFetch(toolCall.parameters.url);
+                  history.push(new AIMessage(fullContent));
+                  currentInput = `TOOL_RESULT: ${result}\n\nBased on this page content, please provide a comprehensive summary and cite the source.`;
+                  continue;
+                } else {
+                  // Client-side tool (toast)
+                  const textBefore = fullContent.substring(0, toolCallPos).replace(/\|\|\|$/, '').trim();
+                  if (textBefore && !isWriterClosed) await writer.write(encoder.encode(textBefore));
+                  if (!isWriterClosed) await writer.write(encoder.encode('\nTOOL_CALL:' + JSON.stringify(toolCall) + '\n'));
+                  break;
+                }
               } else {
-                // Client-side tool (toast)
-                const textBefore = fullContent.substring(0, toolMarkerIndex);
-                if (textBefore && !isWriterClosed) await writer.write(encoder.encode(textBefore));
-                if (!isWriterClosed) await writer.write(encoder.encode('\nTOOL_CALL:' + jsonStr + '\n'));
-                break;
+                throw new Error("Invalid tool name");
               }
             } catch (e) {
               console.error('Tool parsing error:', e, 'Raw JSON string:', jsonStr);
-              // If parsing fails, just show the text before the marker
-              const textBefore = fullContent.substring(0, toolMarkerIndex);
-              if (textBefore && !isWriterClosed) await writer.write(encoder.encode(textBefore));
+              // Strip the marker if parsing fails
+              const cleanedContent = fullContent.split(toolCallMarker)[0].trim();
+              if (!isWriterClosed) await writer.write(encoder.encode(cleanedContent));
               break;
             }
           } else {
-            // Final answer turn - stream everything
-            if (!isWriterClosed) await writer.write(encoder.encode(fullContent));
+            // Final answer turn or no tool call - stream everything but strip trailing marker
+            const cleanedContent = fullContent.split(toolCallMarker)[0].trim();
+            if (!isWriterClosed) await writer.write(encoder.encode(cleanedContent));
             break;
           }
         }

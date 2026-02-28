@@ -63,7 +63,7 @@ const DocsPage: React.FC = () => {
                 { title: 'Ledger Access', desc: 'View your assessment of fees and transaction history in real-time.' },
                 { title: 'Subject Catalog', desc: 'Search through the current academic offerings and course requirements.' },
                 { title: 'Student Feed', desc: 'Engage with the community through posts, comments, and polls.' },
-                { title: 'Portal AI', desc: 'Instant answers to questions about your academic records and school info.' }
+                { title: 'Portal AI', desc: 'Personal school assistant with Web Research and URL Summarization.' }
               ].map((f, i) => (
                 <div key={i} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                   <h3 className="text-sm font-bold mb-1.5 text-slate-900">{f.title}</h3>

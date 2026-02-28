@@ -39,10 +39,10 @@ export default function DevPage() {
     {
       name: "AI & Content APIs",
       endpoints: [
-        { method: "POST", path: "/api/ai/chat", params: "message, history", desc: "Google Gemini 2.0 Flash conversational endpoint." },
-        { method: "POST", path: "/api/ai/review", params: "content, poll", desc: "Aegis AI: Scans content for safety (Growth Tips/Safety Score)." },
+        { method: "POST", path: "/api/ai/assistant", params: "messages, timezone", desc: "Portal Assistant with Web Search, URL Summarization, and deep student context." },
+        { method: "POST", path: "/api/ai/chat", params: "message, history", desc: "Conversational chatbot with basic academic knowledge." },
+        { method: "POST", path: "/api/ai/review", params: "content, poll", desc: "Aegis AI: Content moderation with growth-oriented feedback." },
         { method: "POST", path: "/api/ai/reviewer", params: "content", desc: "Internal moderation service for manual flagged reviews." },
-        { method: "GET", path: "/api/ai/assistant", params: "query", desc: "Deep-dive academic assistant for portal navigation." },
         { method: "POST", path: "/api/ai/fallback", params: "None", desc: "Secondary AI model routing for high-traffic failover." }
       ]
     },
