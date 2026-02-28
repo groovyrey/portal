@@ -45,14 +45,14 @@ export default function SubjectsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 p-8">
+      <div className="min-h-screen bg-accent p-8">
         <div className="max-w-5xl mx-auto space-y-8">
           <div className="flex justify-between items-center">
             <Skeleton className="h-10 w-64" />
             <Skeleton className="h-10 w-24" />
           </div>
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 bg-slate-50">
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="p-6 border-b border-border bg-accent">
               <Skeleton className="h-6 w-48 mb-2" />
               <Skeleton className="h-4 w-32" />
             </div>
@@ -69,13 +69,13 @@ export default function SubjectsPage() {
 
   if (!student || !student.offeredSubjects) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-accent p-4 text-center">
         <LottieAnimation 
           animationPath="/animations/error-404.json"
           className="w-48 h-48 mb-4"
         />
-        <h2 className="text-xl font-bold text-slate-900 mb-2">No data available</h2>
-        <p className="text-slate-500 mb-6 text-sm font-medium">Please log in or refresh your data from the dashboard first.</p>
+        <h2 className="text-xl font-bold text-foreground mb-2">No data available</h2>
+        <p className="text-muted-foreground mb-6 text-sm font-medium">Please log in or refresh your data from the dashboard first.</p>
         <Link 
           href="/" 
           className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg transition-colors text-sm"
@@ -87,25 +87,25 @@ export default function SubjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
+    <div className="min-h-screen bg-accent font-sans text-foreground pb-12">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
           <div className="relative flex-1 max-w-md group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-slate-400 group-focus-within:text-slate-600 transition-colors" />
+              <Search className="h-4 w-4 text-muted-foreground group-focus-within:text-muted-foreground transition-colors" />
             </div>
             <input
               type="text"
               placeholder="Search subjects..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-9 pr-9 py-2 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:border-slate-400 transition-all font-medium"
+              className="block w-full pl-9 pr-9 py-2 border border-border rounded-xl bg-card text-sm focus:outline-none focus:border-slate-400 transition-all font-medium"
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-muted-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -116,7 +116,7 @@ export default function SubjectsPage() {
             <button
               onClick={handleRefresh}
               disabled={loading}
-              className={`p-2 bg-white hover:bg-slate-50 text-slate-600 font-bold rounded-xl border border-slate-200 transition-all active:scale-95 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`p-2 bg-card hover:bg-accent text-muted-foreground font-bold rounded-xl border border-border transition-all active:scale-95 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               title="Refresh Listing"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -129,25 +129,25 @@ export default function SubjectsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex items-center gap-3">
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-border flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
               <ChevronRight className="h-4 w-4 rotate-90" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900 leading-none">Academic Catalog</h1>
-              <p className="text-slate-400 text-[10px] font-medium mt-0.5 uppercase tracking-wider">Official Subject Listing</p>
+              <h1 className="text-lg font-bold text-foreground leading-none">Academic Catalog</h1>
+              <p className="text-muted-foreground text-[10px] font-medium mt-0.5 uppercase tracking-wider">Official Subject Listing</p>
             </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Code</th>
-                  <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description</th>
-                  <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Units</th>
-                  <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Action</th>
+                <tr className="bg-accent/50 border-b border-border">
+                  <th className="px-5 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Code</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Description</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">Units</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -156,24 +156,24 @@ export default function SubjectsPage() {
                     <tr 
                       key={idx} 
                       onClick={() => router.push(`/subjects/${encodeURIComponent(sub.code)}`)}
-                      className="hover:bg-slate-50/50 transition-all cursor-pointer group"
+                      className="hover:bg-accent/50 transition-all cursor-pointer group"
                     >
                       <td className="px-5 py-4 whitespace-nowrap">
-                        <span className="text-[10px] font-bold text-slate-500 font-mono bg-slate-100 px-2 py-1 rounded group-hover:bg-white group-hover:text-blue-600 border border-transparent group-hover:border-slate-200 transition-all">
+                        <span className="text-[10px] font-bold text-muted-foreground font-mono bg-accent px-2 py-1 rounded group-hover:bg-card group-hover:text-blue-600 border border-transparent group-hover:border-border transition-all">
                           {sub.code}
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <p className="text-sm font-bold text-slate-700 leading-tight uppercase group-hover:text-slate-900 transition-colors">{sub.description}</p>
+                        <p className="text-sm font-bold text-foreground leading-tight uppercase group-hover:text-foreground transition-colors">{sub.description}</p>
                       </td>
                       <td className="px-5 py-4 text-center">
-                        <span className="text-xs font-bold text-slate-500">
+                        <span className="text-xs font-bold text-muted-foreground">
                           {parseFloat(sub.units).toFixed(1)}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex justify-end">
-                          <div className="h-7 w-7 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all flex items-center justify-center">
+                          <div className="h-7 w-7 rounded-lg bg-accent text-muted-foreground group-hover:bg-slate-900 group-hover:text-white transition-all flex items-center justify-center">
                             <ChevronRight size={14} />
                           </div>
                         </div>
@@ -183,7 +183,7 @@ export default function SubjectsPage() {
                 ) : (
                   <tr>
                     <td colSpan={4} className="px-5 py-12 text-center">
-                      <p className="text-slate-400 text-sm font-medium">No matches found.</p>
+                      <p className="text-muted-foreground text-sm font-medium">No matches found.</p>
                     </td>
                   </tr>
                 )}

@@ -10,7 +10,7 @@ export default function DisclaimerContent() {
           <ShieldCheck size={140} />
         </div>
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-full border border-white/20 mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-card/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-full border border-white/20 mb-6">
             <Info className="h-3 w-3" />
             Your Data & How We Use It
           </div>
@@ -20,19 +20,19 @@ export default function DisclaimerContent() {
           </p>
           <ul className="grid md:grid-cols-2 gap-4 text-sm font-semibold text-blue-100">
             <li className="flex items-start gap-3">
-              <div className="h-5 w-5 bg-white/10 rounded-full flex items-center justify-center text-white shrink-0">✓</div>
+              <div className="h-5 w-5 bg-card/10 rounded-full flex items-center justify-center text-white shrink-0">✓</div>
               <span>Securely processed without saving your passwords.</span>
             </li>
             <li className="flex items-start gap-3">
-              <div className="h-5 w-5 bg-white/10 rounded-full flex items-center justify-center text-white shrink-0">✓</div>
+              <div className="h-5 w-5 bg-card/10 rounded-full flex items-center justify-center text-white shrink-0">✓</div>
               <span>Encrypted sessions to keep your data safe.</span>
             </li>
             <li className="flex items-start gap-3">
-              <div className="h-5 w-5 bg-white/10 rounded-full flex items-center justify-center text-white shrink-0">✓</div>
+              <div className="h-5 w-5 bg-card/10 rounded-full flex items-center justify-center text-white shrink-0">✓</div>
               <span>Your info comes straight from the school and we never change it.</span>
             </li>
             <li className="flex items-start gap-3">
-              <div className="h-5 w-5 bg-white/10 rounded-full flex items-center justify-center text-white shrink-0">✓</div>
+              <div className="h-5 w-5 bg-card/10 rounded-full flex items-center justify-center text-white shrink-0">✓</div>
               <span>No Tracking: we do not sell or share your personal information.</span>
             </li>
           </ul>
@@ -40,22 +40,22 @@ export default function DisclaimerContent() {
       </div>
 
       {/* Not an Official School App Warning Card */}
-      <div className="relative overflow-hidden bg-white p-8 rounded-3xl border border-slate-200 shadow-sm group">
+      <div className="relative overflow-hidden bg-card p-8 rounded-3xl border border-border shadow-sm group">
         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
           <ShieldAlert size={120} />
         </div>
         <div className="relative z-10">
-          <div className="h-12 w-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 mb-6">
+          <div className="h-12 w-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600 mb-6">
             <ShieldAlert className="h-6 w-6" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-4">
+          <h2 className="text-2xl font-bold text-foreground mb-4">
             Not an Official School App
           </h2>
-          <div className="prose prose-slate max-w-none">
-            <p className="text-slate-600 leading-relaxed text-lg font-medium">
-              This app is <span className="font-bold text-slate-900">not an official school publication</span>. It is made by students for students to make portal navigation easier. 
+          <div className="prose prose-slate dark:prose-invert max-w-none">
+            <p className="text-muted-foreground leading-relaxed text-lg font-medium">
+              This app is <span className="font-bold text-foreground">not an official school publication</span>. It is made by students for students to make portal navigation easier. 
             </p>
-            <p className="text-slate-500 mt-4 italic leading-relaxed">
+            <p className="text-muted-foreground/80 mt-4 italic leading-relaxed">
               LCC (La Concepcion College) is not responsible for how this app works or the data it shows. Using this app is your choice.
             </p>
           </div>
@@ -65,43 +65,43 @@ export default function DisclaimerContent() {
       {/* Detailed Sections */}
       <div className="space-y-12 mt-8">
         <section>
-          <h3 className="text-xl font-bold text-slate-900 mb-4 border-l-4 border-blue-600 pl-4">
+          <h3 className="text-xl font-bold text-foreground mb-4 border-l-4 border-blue-600 pl-4">
             1. Rules & Responsibility
           </h3>
-          <p className="text-slate-600 leading-relaxed">
+          <p className="text-muted-foreground leading-relaxed">
             This software is provided &quot;as-is&quot; with no guarantees. The makers of this app are not responsible for any problems or issues, like account locks or wrong information.
           </p>
         </section>
 
         <section>
-          <h3 className="text-xl font-bold text-slate-900 mb-4 border-l-4 border-blue-600 pl-4">
+          <h3 className="text-xl font-bold text-foreground mb-4 border-l-4 border-blue-600 pl-4">
             2. How We Get Your Data
           </h3>
-          <p className="text-slate-600 leading-relaxed mb-4">
+          <p className="text-muted-foreground leading-relaxed mb-4">
             The app acts as a secure web tool. it automatically gets your school info from the official portal and formats it for a better experience. We never change any data on the school&apos;s servers.
           </p>
-          <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex items-start gap-3">
+          <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20 flex items-start gap-3">
             <Info className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
-            <p className="text-sm text-blue-700 font-medium">
+            <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
               We recommend checking important info (like fees or final grades) with the school registrar directly.
             </p>
           </div>
         </section>
 
         <section>
-          <h3 className="text-xl font-bold text-slate-900 mb-4 border-l-4 border-blue-600 pl-4">
+          <h3 className="text-xl font-bold text-foreground mb-4 border-l-4 border-blue-600 pl-4">
             3. School Property
           </h3>
-          <p className="text-slate-600 leading-relaxed">
+          <p className="text-muted-foreground leading-relaxed">
             All school logos and names are owned by La Concepcion College. This app does not claim to own any school branding or records.
           </p>
         </section>
 
         <section>
-          <h3 className="text-xl font-bold text-slate-900 mb-4 border-l-4 border-blue-600 pl-4">
+          <h3 className="text-xl font-bold text-foreground mb-4 border-l-4 border-blue-600 pl-4">
             4. App Features & Who&apos;s Responsible
           </h3>
-          <p className="text-slate-600 leading-relaxed">
+          <p className="text-muted-foreground leading-relaxed">
             This app may show extra info or better-looking text that isn&apos;t on the official school portal. These features are the responsibility of the app makers and are not from La Concepcion College.
           </p>
         </section>
@@ -135,7 +135,7 @@ export default function DisclaimerContent() {
             </div>
 
             <div className="pt-4 border-t border-slate-800">
-              <p className="text-[10px] font-medium text-slate-500 italic">
+              <p className="text-[10px] font-medium text-muted-foreground italic">
                 Note: These terms exist to protect both the students and the independent makers of this project.
               </p>
             </div>

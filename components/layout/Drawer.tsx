@@ -38,7 +38,7 @@ export default function Drawer({ isOpen, onClose, title, children, side = 'right
           
           {/* Drawer Panel */}
           <div
-            className={`fixed bg-white shadow-2xl z-[160] flex flex-col transition-transform duration-200 ${
+            className={`fixed bg-card shadow-2xl z-[160] flex flex-col transition-transform duration-200 ${
               isBottom 
                 ? 'inset-x-0 bottom-0 max-h-[90vh] rounded-t-3xl translate-y-0' 
                 : 'right-0 top-0 bottom-0 w-full max-w-md translate-x-0'
@@ -47,11 +47,11 @@ export default function Drawer({ isOpen, onClose, title, children, side = 'right
             {isBottom && (
               <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mt-3 mb-1 shrink-0" />
             )}
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h2 className="text-lg font-bold text-foreground">{title}</h2>
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                className="p-2 rounded-lg text-muted-foreground hover:text-muted-foreground hover:bg-accent transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>

@@ -104,22 +104,22 @@ export default function SettingsPage() {
       <div className="space-y-6">
         {/* Account Section */}
         <section>
-          <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 ml-1">Account</h2>
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3 ml-1">Account</h2>
+          <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
             <SettingsItem 
-              icon={<Shield size={18} className="text-slate-400" />} 
+              icon={<Shield size={18} className="text-muted-foreground" />} 
               title="Personal Information" 
               description="Profile and contact details"
               onClick={() => setActiveDrawer('profile')}
             />
             <SettingsItem 
-              icon={<Lock size={18} className="text-slate-400" />} 
+              icon={<Lock size={18} className="text-muted-foreground" />} 
               title="Security" 
               description="Password and authentication"
               onClick={() => setActiveDrawer('security')}
             />
             <SettingsItem 
-              icon={<History size={18} className="text-slate-400" />} 
+              icon={<History size={18} className="text-muted-foreground" />} 
               title="Activity Log" 
               description="Your recent actions and updates"
               onClick={() => setActiveDrawer('activity')}
@@ -129,22 +129,22 @@ export default function SettingsPage() {
 
         {/* Preferences Section */}
         <section>
-          <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 ml-1">Preferences</h2>
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3 ml-1">Preferences</h2>
+          <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
             <SettingsItem 
-              icon={<Calendar size={18} className="text-slate-400" />} 
+              icon={<Calendar size={18} className="text-muted-foreground" />} 
               title="Google Calendar" 
               description="Sync your schedule automatically"
               onClick={() => setActiveDrawer('google-sync')}
             />
             <SettingsItem 
-              icon={<Bell size={18} className="text-slate-400" />} 
+              icon={<Bell size={18} className="text-muted-foreground" />} 
               title="Notifications" 
               description="Alerts and updates"
               onClick={() => setActiveDrawer('notifications')}
             />
             <SettingsItem 
-              icon={<Eye size={18} className="text-slate-400" />} 
+              icon={<Eye size={18} className="text-muted-foreground" />} 
               title="Privacy" 
               description="Visibility and data sharing"
               onClick={() => setActiveDrawer('privacy')}
@@ -154,16 +154,16 @@ export default function SettingsPage() {
 
         {/* Support Section */}
         <section>
-          <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 ml-1">Support</h2>
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3 ml-1">Support</h2>
+          <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
             <SettingsItem 
-              icon={<Star size={18} className="text-slate-400" />} 
+              icon={<Star size={18} className="text-muted-foreground" />} 
               title="Rate LCC Hub" 
               description="Share your feedback"
               onClick={() => setActiveDrawer('rating')}
             />
             <SettingsItem 
-              icon={<Shield size={18} className="text-slate-400" />} 
+              icon={<Shield size={18} className="text-muted-foreground" />} 
               title="Help Center" 
               description="Documentation and FAQs"
               onClick={() => router.push('/docs')}
@@ -175,10 +175,10 @@ export default function SettingsPage() {
         <section className="pt-2">
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center justify-between p-4 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-100 rounded-2xl transition-all text-slate-600 hover:text-red-600 font-bold active:scale-[0.99] group shadow-sm"
+            className="w-full flex items-center justify-between p-4 bg-card hover:bg-red-50 border border-border hover:border-red-100 rounded-2xl transition-all text-muted-foreground hover:text-red-600 font-bold active:scale-[0.99] group shadow-sm"
           >
             <div className="flex items-center gap-4">
-              <div className="h-9 w-9 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-white group-hover:border-red-100 transition-colors">
+              <div className="h-9 w-9 rounded-xl bg-accent flex items-center justify-center border border-border group-hover:bg-card group-hover:border-red-100 transition-colors">
                 <LogOut size={18} />
               </div>
               <span className="text-sm">Sign Out</span>
@@ -206,18 +206,18 @@ function SettingsItem({ icon, title, description, onClick }: { icon: React.React
   return (
     <button 
       onClick={onClick}
-      className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group"
+      className="w-full flex items-center justify-between p-4 hover:bg-accent transition-colors border-b border-border last:border-0 group"
     >
       <div className="flex items-center gap-4 text-left">
-        <div className="h-9 w-9 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-white transition-colors">
+        <div className="h-9 w-9 rounded-xl bg-accent flex items-center justify-center border border-border group-hover:bg-card transition-colors">
           {icon}
         </div>
         <div>
-          <p className="text-sm font-bold text-slate-800">{title}</p>
-          <p className="text-[11px] text-slate-400 font-medium">{description}</p>
+          <p className="text-sm font-bold text-foreground">{title}</p>
+          <p className="text-[11px] text-muted-foreground font-medium">{description}</p>
         </div>
       </div>
-      <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+      <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-muted-foreground transition-colors" />
     </button>
   );
 }

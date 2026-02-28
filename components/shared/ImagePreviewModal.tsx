@@ -180,7 +180,7 @@ export default function ImagePreviewModal({
 
                 <button
                   onClick={handleReset}
-                  className="p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all flex items-center gap-2"
+                  className="p-3 text-white/70 hover:text-white hover:bg-card/10 rounded-full transition-all flex items-center gap-2"
                   title="Reset"
                 >
                   <RotateCcw size={20} />
@@ -189,7 +189,7 @@ export default function ImagePreviewModal({
 
                 {onDownload && (
                   <>
-                    <div className="w-px h-6 bg-white/10 mx-1" />
+                    <div className="w-px h-6 bg-card/10 mx-1" />
                     <button
                       onClick={onDownload}
                       className="p-3 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-full transition-all"

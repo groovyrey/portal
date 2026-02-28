@@ -40,24 +40,24 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
   return (
     <div className="space-y-4 mb-8">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 flex flex-col items-center justify-center text-center shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">GWA</span>
-          <p className="text-2xl font-bold text-slate-900 tracking-tight">{gwa}</p>
+        <div className="bg-card p-5 rounded-2xl border border-border flex flex-col items-center justify-center text-center shadow-sm">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">GWA</span>
+          <p className="text-2xl font-bold text-foreground tracking-tight">{gwa}</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 flex flex-col items-center justify-center text-center shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pass Rate</span>
-          <p className="text-2xl font-bold text-slate-900 tracking-tight">{passRate}%</p>
+        <div className="bg-card p-5 rounded-2xl border border-border flex flex-col items-center justify-center text-center shadow-sm">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Pass Rate</span>
+          <p className="text-2xl font-bold text-foreground tracking-tight">{passRate}%</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 flex flex-col items-center justify-center text-center shadow-sm">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Graded</span>
-          <p className="text-2xl font-bold text-slate-900 tracking-tight">{allGrades.length}</p>
+        <div className="bg-card p-5 rounded-2xl border border-border flex flex-col items-center justify-center text-center shadow-sm">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Graded</span>
+          <p className="text-2xl font-bold text-foreground tracking-tight">{allGrades.length}</p>
         </div>
       </div>
 
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-6">Grade Distribution</h4>
+      <div className="bg-card p-5 rounded-2xl border border-border shadow-sm">
+        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-6">Grade Distribution</h4>
         <div className="h-40 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>

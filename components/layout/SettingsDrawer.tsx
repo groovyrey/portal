@@ -122,8 +122,8 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
       case 'profile':
         return (
           <div className="space-y-6">
-            <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-                <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-100 shrink-0 overflow-hidden">
+            <div className="flex items-center gap-4 p-4 bg-card rounded-xl border border-border shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-accent border border-border shrink-0 overflow-hidden">
                     <img 
                         src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student!.name)}&background=f8fafc&color=334155&size=256&bold=true`}
                         alt={student!.name}
@@ -131,10 +131,10 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                     />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-lg text-slate-900 leading-tight truncate">{student?.name || '?'}</h3>
+                    <h3 className="font-bold text-lg text-foreground leading-tight truncate">{student?.name || '?'}</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="px-1.5 py-0.5 bg-blue-50 text-[9px] font-bold text-blue-600 rounded border border-blue-100 uppercase">ID</span>
-                      <p className="text-[11px] text-slate-400 font-mono font-bold">{student?.id || '?'}</p>
+                      <p className="text-[11px] text-muted-foreground font-mono font-bold">{student?.id || '?'}</p>
                     </div>
                 </div>
             </div>
@@ -146,13 +146,13 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                     <DrawerInfoItem icon={<User />} label="Last" value={student!.parsedName?.lastName} />
                 </div>
                 
-                <div className="pt-5 border-t border-slate-100 space-y-3">
+                <div className="pt-5 border-t border-border space-y-3">
                     <DrawerInfoItem icon={<Mail />} label="Email" value={student!.email} />
                     <DrawerInfoItem icon={<Phone />} label="Mobile" value={student!.mobile} />
                     <DrawerInfoItem icon={<MapPin />} label="Address" value={student!.address} />
                 </div>
 
-                <div className="pt-5 border-t border-slate-100 grid grid-cols-2 gap-3">
+                <div className="pt-5 border-t border-border grid grid-cols-2 gap-3">
                     <DrawerInfoItem icon={<GraduationCap />} label="Program" value={student!.course} />
                     <DrawerInfoItem icon={<Calendar />} label="Year/Sem" value={`${student!.yearLevel} / ${student!.semester}`} />
                 </div>
@@ -170,9 +170,9 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
       case 'security':
         return (
           <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 mb-2">
-              <Info className="h-4 w-4 text-slate-400" />
-              <p className="text-[11px] font-medium text-slate-600">Update your credentials to maintain account security.</p>
+            <div className="flex items-center gap-3 p-3 bg-accent rounded-xl border border-border mb-2">
+              <Info className="h-4 w-4 text-muted-foreground" />
+              <p className="text-[11px] font-medium text-muted-foreground">Update your credentials to maintain account security.</p>
             </div>
             <SecuritySettings />
           </div>
@@ -181,34 +181,34 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
       case 'notifications':
         return (
           <div className="space-y-6">
-            <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden relative group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-12 -mt-12 group-hover:opacity-80 transition duration-700 opacity-50"></div>
-              <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 shrink-0 flex items-center justify-center relative z-10">
-                <Bell className="h-6 w-6 text-slate-400" />
+            <div className="flex items-center gap-4 p-4 bg-card rounded-xl border border-border shadow-sm overflow-hidden relative group">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-accent rounded-full -mr-12 -mt-12 group-hover:opacity-80 transition duration-700 opacity-50"></div>
+              <div className="w-12 h-12 rounded-xl bg-accent border border-border shrink-0 flex items-center justify-center relative z-10">
+                <Bell className="h-6 w-6 text-muted-foreground" />
               </div>
               <div className="relative z-10">
-                <h3 className="font-bold text-base text-slate-900 leading-tight">Preferences</h3>
-                <p className="text-[11px] text-slate-400 font-medium mt-0.5">Manage how you receive updates.</p>
+                <h3 className="font-bold text-base text-foreground leading-tight">Preferences</h3>
+                <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Manage how you receive updates.</p>
               </div>
             </div>
 
             <div className="space-y-3">
               <SettingsToggle 
-                icon={<Bell className="text-slate-400" />} 
+                icon={<Bell className="text-muted-foreground" />} 
                 title="Alerts" 
                 description="Grades and activities"
                 enabled={appNotifsEnabled}
                 onToggle={handleAppNotifToggle}
               />
               <SettingsToggle 
-                icon={<Calendar className="text-slate-400" />} 
+                icon={<Calendar className="text-muted-foreground" />} 
                 title="Schedule" 
                 description="Daily morning reminders"
                 enabled={classRemindersEnabled}
                 onToggle={handleClassReminderToggle}
               />
               <SettingsToggle 
-                icon={<CreditCard className="text-slate-400" />} 
+                icon={<CreditCard className="text-muted-foreground" />} 
                 title="Financials" 
                 description="Payment due reminders"
                 enabled={paymentRemindersEnabled}
@@ -217,7 +217,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
             </div>
 
             <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start gap-3">
-              <div className="p-2 bg-white rounded-lg shadow-sm shrink-0 border border-emerald-100">
+              <div className="p-2 bg-card rounded-lg shadow-sm shrink-0 border border-emerald-100">
                 <ShieldCheck className="h-4 w-4 text-emerald-500" />
               </div>
               <p className="text-[10px] text-emerald-700 font-medium leading-relaxed">
@@ -230,26 +230,26 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
       case 'privacy':
         return (
           <div className="space-y-4">
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 mb-2">
-              <p className="text-[11px] font-medium text-slate-600 leading-relaxed">Manage your visibility in the student community.</p>
+            <div className="p-3 bg-accent rounded-xl border border-border mb-2">
+              <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">Manage your visibility in the student community.</p>
             </div>
             <div className="space-y-3">
                 <SettingsToggle 
-                    icon={<Shield size={16} className="text-slate-400" />} 
+                    icon={<Shield size={16} className="text-muted-foreground" />} 
                     title="Public Profile" 
                     description="Visible to other students"
                     enabled={student?.settings?.isPublic ?? true}
                     onToggle={(val) => updateSettings!({ ...student?.settings, isPublic: val })}
                 />
                 <SettingsToggle 
-                    icon={<GraduationCap size={16} className="text-slate-400" />} 
+                    icon={<GraduationCap size={16} className="text-muted-foreground" />} 
                     title="Academic Info" 
                     description="Course and year level"
                     enabled={student?.settings?.showAcademicInfo ?? true}
                     onToggle={(val) => updateSettings!({ ...student?.settings, showAcademicInfo: val })}
                 />
                 <SettingsToggle 
-                    icon={<IdCard size={16} className="text-slate-400" />} 
+                    icon={<IdCard size={16} className="text-muted-foreground" />} 
                     title="Student ID" 
                     description="Visible on your profile"
                     enabled={student?.settings?.showStudentId ?? false}
@@ -273,27 +273,28 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                   <History className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 leading-none">Activity History</h3>
-                  <p className="text-[10px] text-slate-400 font-medium mt-1">Last 15 actions performed</p>
+                  <h3 className="text-sm font-bold text-foreground leading-none">Activity History</h3>
+                  <p className="text-[10px] text-muted-foreground font-medium mt-1">Last 15 actions performed</p>
                 </div>
               </div>
 
               {/* Modern Search Bar */}
               <div className="relative group">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <Search className={`h-3.5 w-3.5 transition-colors ${searchQuery ? 'text-slate-900' : 'text-slate-400'}`} />
+                  <Search className={`h-3.5 w-3.5 transition-colors ${searchQuery ? 'text-foreground' : 'text-muted-foreground'}`} />
                 </div>
                 <input
                   type="text"
                   placeholder="Filter actions (e.g. 'Login', 'AI')..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-100 focus:bg-white focus:border-slate-300 rounded-xl pl-9 pr-4 py-2.5 text-xs font-medium transition-all outline-none"
+                  className="w-full bg-accent border border-border focus:bg-card focus:border-muted-foreground rounded-xl pl-9 pr-4 py-2.5 text-xs font-medium transition-all outline-none text-foreground"
+
                 />
                 {searchQuery && (
                   <button 
                     onClick={() => setSearchQuery('')}
-                    className="absolute inset-y-0 right-3 flex items-center text-[10px] font-bold text-slate-400 hover:text-slate-900"
+                    className="absolute inset-y-0 right-3 flex items-center text-[10px] font-bold text-muted-foreground hover:text-foreground"
                   >
                     Clear
                   </button>
@@ -304,22 +305,22 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
             <div className="space-y-2">
               {logsLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3">
-                  <Loader2 className="h-5 w-5 text-slate-400 animate-spin" />
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Updating...</p>
+                  <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Updating...</p>
                 </div>
               ) : logs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
-                  <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mb-3 border border-slate-100">
+                  <div className="h-12 w-12 bg-accent rounded-full flex items-center justify-center mb-3 border border-border">
                     <History className="h-5 w-5 text-slate-300" />
                   </div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No Recent Activity</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No Recent Activity</p>
                 </div>
               ) : filteredLogs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mb-3 border border-slate-100">
+                  <div className="h-12 w-12 bg-accent rounded-full flex items-center justify-center mb-3 border border-border">
                     <Search className="h-5 w-5 text-slate-200" />
                   </div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No matches found</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No matches found</p>
                   <button onClick={() => setSearchQuery('')} className="text-[10px] font-bold text-blue-600 mt-2 hover:underline">Clear search</button>
                 </div>
               ) : (
@@ -331,8 +332,8 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                       
                       // Categorical Icons
                       let Icon = History;
-                      let iconBg = "bg-slate-50";
-                      let iconColor = "text-slate-400";
+                      let iconBg = "bg-accent";
+                      let iconColor = "text-muted-foreground";
 
                       const action = log.action.toLowerCase();
                       if (action.includes('login')) { Icon = Lock; iconBg = "bg-blue-50"; iconColor = "text-blue-500"; }
@@ -349,7 +350,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           key={log.id} 
-                          className="group flex gap-3 p-3 bg-white hover:bg-slate-50 rounded-xl border border-slate-100 transition-all active:scale-[0.99]"
+                          className="group flex gap-3 p-3 bg-card hover:bg-accent rounded-xl border border-border transition-all active:scale-[0.99]"
                         >
                           <div className={`w-9 h-9 rounded-lg ${iconBg} ${iconColor} flex items-center justify-center shrink-0 border border-white shadow-sm`}>
                             <Icon className="h-4 w-4" />
@@ -357,17 +358,17 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                           
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
                             <div className="flex items-center justify-between gap-2">
-                              <h4 className="text-[11px] font-bold text-slate-900 truncate uppercase tracking-tight">{log.action}</h4>
+                              <h4 className="text-[11px] font-bold text-foreground truncate uppercase tracking-tight">{log.action}</h4>
                               <span className={`text-[9px] font-bold shrink-0 uppercase ${isToday ? 'text-blue-600' : 'text-slate-300'}`}>
                                 {isToday ? 'Today' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                               </span>
                             </div>
-                            <p className="text-[11px] text-slate-500 font-medium leading-snug line-clamp-1">{log.details}</p>
+                            <p className="text-[11px] text-muted-foreground font-medium leading-snug line-clamp-1">{log.details}</p>
                           </div>
 
                           {log.link && (
                             <div className="flex items-center pl-1">
-                               <a href={log.link} className="p-1.5 rounded-md hover:bg-white hover:shadow-sm text-slate-300 hover:text-slate-900 transition-all">
+                               <a href={log.link} className="p-1.5 rounded-md hover:bg-card hover:shadow-sm text-slate-300 hover:text-foreground transition-all">
                                   <ChevronRight className="h-3.5 w-3.5" />
                                </a>
                             </div>
@@ -381,8 +382,8 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
             </div>
             
             <div className="pt-2">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <div className="p-3 bg-accent rounded-xl border border-border text-center">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                   {searchQuery ? `End of search results` : 'End of History'}
                 </p>
               </div>
@@ -393,8 +394,8 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
       case 'rating':
         return (
           <div className="space-y-6">
-            <p className="text-xs font-medium text-slate-500 text-center leading-relaxed">How is your experience with LCC Hub?</p>
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+            <p className="text-xs font-medium text-muted-foreground text-center leading-relaxed">How is your experience with LCC Hub?</p>
+            <div className="bg-accent p-6 rounded-2xl border border-border">
               <StarRating onSuccess={() => setTimeout(onClose, 2000)} />
             </div>
           </div>
@@ -415,12 +416,12 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
 function DrawerInfoItem({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string }) {
   return (
     <div className="flex items-start gap-3 p-2">
-      <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 text-slate-400">
+      <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center shrink-0 border border-border text-muted-foreground">
         {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 14 }) : icon}
       </div>
       <div className="min-w-0">
-        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{label}</p>
-        <p className="text-xs font-bold text-slate-700 truncate">{value || '?'}</p>
+        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">{label}</p>
+        <p className="text-xs font-bold text-foreground truncate">{value || '?'}</p>
       </div>
     </div>
   );
@@ -447,25 +448,25 @@ function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon:
       onClick={handleToggle}
       className={`group w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
         isOn 
-          ? 'bg-white border-slate-300 shadow-sm' 
-          : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-white hover:border-slate-200'
+          ? 'bg-card border-muted-foreground shadow-sm' 
+          : 'bg-accent border-border text-muted-foreground hover:bg-card hover:border-muted-foreground'
       }`}
     >
       <div className="flex items-center gap-3">
         <div className={`h-9 w-9 rounded-lg flex items-center justify-center border transition-all ${
-          isOn ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-100 text-slate-400'
+          isOn ? 'bg-primary border-primary text-primary-foreground' : 'bg-card border-border text-muted-foreground'
         }`}>
           {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 16 }) : icon}
         </div>
         <div className="text-left">
-          <p className="text-xs font-bold text-slate-900">{title}</p>
-          <p className="text-[10px] font-medium text-slate-400">{description}</p>
+          <p className="text-xs font-bold text-foreground">{title}</p>
+          <p className="text-[10px] font-medium text-muted-foreground">{description}</p>
         </div>
       </div>
-      <div className={`w-10 h-5 rounded-full relative transition-colors shadow-inner ${isOn ? 'bg-slate-900' : 'bg-slate-200'}`}>
+      <div className={`w-10 h-5 rounded-full relative transition-colors shadow-inner ${isOn ? 'bg-primary' : 'bg-muted'}`}>
         <motion.div 
           animate={{ x: isOn ? 22 : 2 }}
-          className="absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm"
+          className="absolute top-1 w-3 h-3 bg-card rounded-full shadow-sm"
         />
       </div>
     </button>

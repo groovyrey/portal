@@ -19,16 +19,16 @@ export default function PostReviewModal({ isOpen }: PostReviewModalProps) {
       <div className="py-12 flex flex-col items-center max-w-xs mx-auto">
         {/* Animated Icon */}
         <div className="relative mb-8 flex items-center justify-center">
-          <div className="absolute inset-0 bg-blue-100/50 rounded-full animate-pulse" />
-          <div className="relative bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-blue-50">
+          <div className="absolute inset-0 bg-blue-500/10 rounded-full animate-pulse" />
+          <div className="relative bg-card p-6 rounded-3xl border border-border shadow-xl">
             <ShieldCheck className="h-10 w-10 text-blue-600" />
           </div>
         </div>
 
-        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-3">Post Review</h2>
+        <h2 className="text-xl font-black text-foreground uppercase tracking-tight mb-3">Post Review</h2>
         
         <div className="space-y-4">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-relaxed">
             AI is analyzing your content to ensure it follows our community guidelines.
           </p>
           
@@ -51,7 +51,7 @@ export default function PostReviewModal({ isOpen }: PostReviewModalProps) {
           </div>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-slate-50 w-full text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
+        <div className="mt-12 pt-6 border-t border-border w-full text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">
           Community Safety First
         </div>
       </div>

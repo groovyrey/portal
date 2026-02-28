@@ -24,6 +24,7 @@ import {
   RefreshCw,
   Bell
 } from 'lucide-react';
+import { ThemeToggle } from '../shared/ThemeToggle';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { APP_VERSION } from '@/lib/version';
@@ -178,17 +179,17 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-white/80 border-b border-slate-200 fixed top-0 left-0 right-0 z-[100] backdrop-blur-md">
+      <nav className="bg-background/80 border-b border-border fixed top-0 left-0 right-0 z-[100] backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-3">
               <Link href="/" className="flex items-center gap-2 active:scale-95 transition-all">
-                <div className="bg-slate-900 rounded-lg p-1.5 text-white">
+                <div className="bg-primary rounded-lg p-1.5 text-primary-foreground">
                   <GraduationCap className="h-5 w-5" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-lg tracking-tight text-slate-900">LCC Hub</span>
-                  <span className="px-1.5 py-0.5 rounded bg-slate-100 text-[9px] font-bold text-slate-500 border border-slate-200 uppercase tracking-wider">Beta</span>
+                  <span className="font-bold text-lg tracking-tight text-foreground">LCC Hub</span>
+                  <span className="px-1.5 py-0.5 rounded bg-secondary text-[9px] font-bold text-muted-foreground border border-border uppercase tracking-wider">Beta</span>
                 </div>
               </Link>
             </div>
@@ -203,8 +204,8 @@ export default function Navbar() {
                     href={link.href}
                     className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
                       isActive(link.href)
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -213,76 +214,81 @@ export default function Navbar() {
                 );
               })}
 
-              {isLoggedIn && (
-                <div className="flex items-center gap-1 ml-2">
-                  <button
-                    onClick={() => setIsNotifOpen(true)}
-                    className={`relative p-2 rounded-xl border transition-all duration-200 ${
-                      isNotifOpen 
-                        ? 'bg-slate-900 border-slate-900 text-white shadow-sm' 
-                        : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-900'
-                    }`}
-                  >
-                    <Bell className="h-5 w-5" />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-slate-900 px-1 text-[9px] font-bold text-white ring-2 ring-white shadow-sm">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                      </span>
-                    )}
-                  </button>
-
-                  <div className="relative">
+              <div className="flex items-center gap-1 ml-2">
+                <ThemeToggle />
+                
+                {isLoggedIn && (
+                  <>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsMoreOpen(!isMoreOpen);
-                      }}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
-                        isMoreOpen || desktopMore.some(link => isActive(link.href))
-                          ? 'bg-slate-100 text-slate-900'
-                          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                      onClick={() => setIsNotifOpen(true)}
+                      className={`relative p-2 rounded-xl border transition-all duration-200 ${
+                        isNotifOpen 
+                          ? 'bg-primary border-primary text-primary-foreground shadow-sm' 
+                          : 'bg-background border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      More
-                      <ChevronDown className={`h-4 w-4 transition-transform ${isMoreOpen ? 'rotate-180' : ''}`} />
+                      <Bell className="h-5 w-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground ring-2 ring-background shadow-sm">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
                     </button>
 
-                    {isMoreOpen && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-[110] animate-in fade-in zoom-in-95 duration-200">
-                        {desktopMore.map((link) => {
-                          const Icon = link.icon;
-                          return (
-                            <Link
-                              key={link.name}
-                              href={link.href}
-                              className={`flex items-center gap-3 px-4 py-2 text-sm font-bold transition-all ${
-                                isActive(link.href)
-                                  ? 'text-slate-900 bg-slate-50'
-                                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                              }`}
-                            >
-                              <Icon className="h-4 w-4 text-slate-400" />
-                              {link.name}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsMoreOpen(!isMoreOpen);
+                        }}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
+                          isMoreOpen || desktopMore.some(link => isActive(link.href))
+                            ? 'bg-secondary text-foreground'
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                        }`}
+                      >
+                        More
+                        <ChevronDown className={`h-4 w-4 transition-transform ${isMoreOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {isMoreOpen && (
+                        <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-2xl shadow-xl py-2 z-[110] animate-in fade-in zoom-in-95 duration-200">
+                          {desktopMore.map((link) => {
+                            const Icon = link.icon;
+                            return (
+                              <Link
+                                key={link.name}
+                                href={link.href}
+                                className={`flex items-center gap-3 px-4 py-2 text-sm font-bold transition-all ${
+                                  isActive(link.href)
+                                    ? 'text-foreground bg-accent'
+                                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                                }`}
+                              >
+                                <Icon className="h-4 w-4 text-muted-foreground" />
+                                {link.name}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Mobile menu button */}
             <div className="lg:hidden flex items-center gap-1">
+              <ThemeToggle />
               {isLoggedIn && (
                 <button
                   onClick={() => setIsNotifOpen(true)}
-                  className="relative p-2 rounded-xl border border-slate-200 bg-white text-slate-500 active:bg-slate-50 transition-all shadow-sm"
+                  className="relative p-2 rounded-xl border border-border bg-background text-muted-foreground active:bg-accent transition-all shadow-sm"
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-slate-900 px-1 text-[9px] font-bold text-white ring-2 ring-white shadow-sm">
+                    <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground ring-2 ring-background shadow-sm">
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                   )}
@@ -290,7 +296,7 @@ export default function Navbar() {
               )}
               <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-50 focus:outline-none transition-colors"
+                className="inline-flex items-center justify-center p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent focus:outline-none transition-colors"
               >
                 {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
@@ -319,17 +325,17 @@ export default function Navbar() {
         
         {/* Drawer */}
         <div 
-          className={`absolute right-0 top-0 bottom-0 w-72 bg-white shadow-xl transition-transform duration-300 transform ${
+          className={`absolute right-0 top-0 bottom-0 w-72 bg-background shadow-xl transition-transform duration-300 transform ${
             isOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
           <div className="flex flex-col h-full">
-            <div className="p-6 border-b border-slate-100">
+            <div className="p-6 border-b border-border">
               <div className="flex items-center justify-between mb-6">
-                <span className="font-bold text-[10px] uppercase tracking-wider text-slate-400">Student Console</span>
+                <span className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Student Console</span>
                 <button 
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 transition-colors"
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -338,12 +344,12 @@ export default function Navbar() {
               {isLoggedIn && (
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col gap-0.5">
-                    <div className="text-base font-bold text-slate-900 leading-tight">
+                    <div className="text-base font-bold text-foreground leading-tight">
                       {studentName}
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className={`h-1.5 w-1.5 rounded-full ${isSyncing ? 'bg-blue-500 animate-pulse' : 'bg-emerald-500'}`}></div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                         {lastSynced || 'Just now'}
                       </span>
                     </div>
@@ -357,8 +363,8 @@ export default function Navbar() {
                     disabled={isSyncing}
                     className={`p-2 rounded-xl border transition-all ${
                       isSyncing 
-                        ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed' 
-                        : 'bg-slate-900 border-slate-900 text-white hover:bg-slate-800'
+                        ? 'bg-accent border-border text-muted-foreground cursor-not-allowed' 
+                        : 'bg-primary border-primary text-primary-foreground hover:opacity-90'
                     }`}
                     title="Manual Sync"
                   >
@@ -378,8 +384,8 @@ export default function Navbar() {
                     onClick={() => setIsOpen(false)}
                     className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
                       isActive(link.href)
-                        ? 'bg-slate-900 text-white'
-                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -389,7 +395,7 @@ export default function Navbar() {
               })}
             </div>
 
-            <div className="p-6 border-t border-slate-100 text-center">
+            <div className="p-6 border-t border-border text-center">
               <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Version {APP_VERSION}</p>
             </div>
           </div>

@@ -95,8 +95,8 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
 
   if (!schedule || schedule.length === 0) {
     return (
-      <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-sm">
-        <h3 className="text-slate-900 font-bold mb-1">No Schedule</h3>
+      <div className="bg-card rounded-3xl p-12 text-center border border-border shadow-sm">
+        <h3 className="text-foreground font-bold mb-1">No Schedule</h3>
       </div>
     );
   }
@@ -109,7 +109,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
             <Calendar className="h-4 w-4" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Schedule</h2>
+            <h2 className="text-lg font-bold text-foreground tracking-tight">Schedule</h2>
           </div>
         </div>
       </div>
@@ -123,15 +123,15 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
         <table className="w-full border-collapse table-fixed min-w-[600px]">
           <thead>
-            <tr className="bg-slate-50/50">
-              <th className="w-14 py-2 border-b border-slate-100"></th>
+            <tr className="bg-accent/50">
+              <th className="w-14 py-2 border-b border-border"></th>
               {DAYS.map(day => (
-                <th key={day} className="py-2 px-1 border-b border-slate-100 text-center">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{day.substring(0, 3)}</span>
+                <th key={day} className="py-2 px-1 border-b border-border text-center">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{day.substring(0, 3)}</span>
                 </th>
               ))}
             </tr>
@@ -144,8 +144,8 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
 
                 return (
                   <tr key={hourStr} className="h-10">
-                    <td className="border-r border-b border-slate-50 text-center bg-slate-50/30">
-                      <span className="text-[9px] font-bold text-slate-400 tabular-nums">
+                    <td className="border-r border-b border-slate-50 text-center bg-accent/30">
+                      <span className="text-[9px] font-bold text-muted-foreground tabular-nums">
                         {hourStr.split(' ')[0]}
                       </span>
                     </td>
@@ -213,7 +213,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
           <div className="overflow-hidden">
             <div className={`p-5 ${getSubjectColor(selectedItem.subject)} border-b border-black/5`}>
               <div className="flex justify-between items-start mb-3">
-                <div className="px-2 py-0.5 bg-white/40 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                <div className="px-2 py-0.5 bg-card/40 rounded-md text-[10px] font-bold uppercase tracking-wider">
                   {selectedItem.section || '?'}
                 </div>
               </div>
@@ -227,42 +227,42 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
 
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-4 group">
-                <div className="h-9 w-9 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-colors">
+                <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center text-muted-foreground group-hover:text-blue-600 transition-colors">
                   <Clock className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Time Schedule</p>
-                  <p className="text-sm font-bold text-slate-700">{selectedItem.time || '?'}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Time Schedule</p>
+                  <p className="text-sm font-bold text-foreground">{selectedItem.time || '?'}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-4 group">
-                <div className="h-9 w-9 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-emerald-600 transition-colors">
+                <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center text-muted-foreground group-hover:text-emerald-600 transition-colors">
                   <MapPin className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Room / Facility</p>
-                  <p className="text-sm font-bold text-slate-700">{selectedItem.room || '?'}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Room / Facility</p>
+                  <p className="text-sm font-bold text-foreground">{selectedItem.room || '?'}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                  <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center text-muted-foreground">
                     <Hash className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Units</p>
-                    <p className="text-xs font-bold text-slate-700">{selectedItem.units || '?'} Units</p>
+                    <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Units</p>
+                    <p className="text-xs font-bold text-foreground">{selectedItem.units || '?'} Units</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                  <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center text-muted-foreground">
                     <BookOpen className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Section</p>
-                    <p className="text-xs font-bold text-slate-700">{selectedItem.section || '?'}</p>
+                    <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Section</p>
+                    <p className="text-xs font-bold text-foreground">{selectedItem.section || '?'}</p>
                   </div>
                 </div>
               </div>
@@ -280,7 +280,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                 </button>
                 <button 
                   onClick={() => setSelectedItem(null)}
-                  className="w-full py-2.5 bg-slate-50 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-slate-100 transition-colors"
+                  className="w-full py-2.5 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-accent transition-colors"
                 >
                   Close
                 </button>

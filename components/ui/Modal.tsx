@@ -68,15 +68,15 @@ export default function Modal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className={`relative w-full ${maxWidth} bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 ${className}`}
+            className={`relative w-full ${maxWidth} bg-card rounded-3xl shadow-2xl overflow-hidden border border-border ${className}`}
           >
             {title && (
-              <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <div className="flex items-center justify-between p-6 border-b border-border">
                 <div className="flex-1">{title}</div>
                 {showCloseButton && (
                   <button
                     onClick={onClose}
-                    className="p-2 ml-2 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-xl transition-colors"
+                    className="p-2 ml-2 bg-accent hover:bg-accent text-muted-foreground hover:text-muted-foreground rounded-xl transition-colors"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -86,7 +86,7 @@ export default function Modal({
             {!title && showCloseButton && (
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 z-10 p-2 bg-white/20 hover:bg-white/40 text-slate-600 rounded-xl transition-colors"
+                className="absolute top-4 right-4 z-10 p-2 bg-accent/20 hover:bg-accent/40 text-muted-foreground rounded-xl transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>

@@ -30,7 +30,7 @@ export default function AdminPage() {
   // Authentication check
   if (isUserLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-accent flex items-center justify-center">
         <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
       </div>
     );
@@ -38,14 +38,14 @@ export default function AdminPage() {
 
   if (!currentUser || !currentUser.badges?.includes('staff')) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl max-w-md w-full text-center space-y-6">
+      <div className="min-h-screen bg-accent flex items-center justify-center p-4">
+        <div className="bg-card p-8 rounded-3xl border border-border shadow-xl max-w-md w-full text-center space-y-6">
           <div className="bg-red-50 p-4 rounded-full w-20 h-20 mx-auto flex items-center justify-center text-red-500">
             <ShieldAlert className="h-10 w-10" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Access Denied</h1>
-            <p className="text-sm font-bold text-slate-400">You do not have permission to view this page.</p>
+            <h1 className="text-2xl font-black text-foreground uppercase tracking-tight mb-2">Access Denied</h1>
+            <p className="text-sm font-bold text-muted-foreground">You do not have permission to view this page.</p>
           </div>
           <button 
             onClick={() => router.push('/')}
@@ -127,22 +127,22 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-accent py-12 px-4 sm:px-6 lg:px-8">
       <main className="max-w-5xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Badge Management</h1>
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">Admin Control Panel</p>
+          <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">Badge Management</h1>
+          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-1">Admin Control Panel</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-border bg-accent/50">
             <form onSubmit={handleSearch} className="flex gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Search by name or student ID..."
-                  className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -161,7 +161,7 @@ export default function AdminPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                <tr className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border">
                   <th className="px-6 py-4">Student</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
@@ -171,35 +171,35 @@ export default function AdminPage() {
                   <tr>
                     <td colSpan={2} className="px-6 py-12 text-center">
                       <Loader2 className="h-8 w-8 text-blue-600 animate-spin mx-auto mb-2" />
-                      <span className="text-xs font-bold text-slate-400 uppercase">Searching Registry...</span>
+                      <span className="text-xs font-bold text-muted-foreground uppercase">Searching Registry...</span>
                     </td>
                   </tr>
                 ) : !hasSearched ? (
                   <tr>
                     <td colSpan={2} className="px-6 py-20 text-center">
                       <Search className="h-10 w-10 text-slate-200 mx-auto mb-4" />
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Type a name or ID to search students</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Type a name or ID to search students</p>
                     </td>
                   </tr>
                 ) : students.length === 0 ? (
                   <tr>
-                    <td colSpan={2} className="px-6 py-12 text-center text-slate-400 font-bold uppercase text-xs">
+                    <td colSpan={2} className="px-6 py-12 text-center text-muted-foreground font-bold uppercase text-xs">
                       No students found
                     </td>
                   </tr>
                 ) : (
                   students.map((student) => (
-                    <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={student.id} className="hover:bg-accent/50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-900">{student.name}</span>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">{student.id} • {student.course}</span>
+                          <span className="font-bold text-foreground">{student.name}</span>
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">{student.id} • {student.course}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => setSelectedStudent(student)}
-                          className="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-blue-300 hover:text-blue-600 text-slate-600 font-black py-2 px-4 rounded-xl text-[10px] uppercase tracking-widest transition-all active:scale-95"
+                          className="inline-flex items-center gap-2 bg-card border border-border hover:border-blue-300 hover:text-blue-600 text-muted-foreground font-black py-2 px-4 rounded-xl text-[10px] uppercase tracking-widest transition-all active:scale-95"
                         >
                           <Settings2 className="h-3.5 w-3.5" />
                           Manage
@@ -224,8 +224,8 @@ export default function AdminPage() {
               <User className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-black text-slate-900 uppercase tracking-tight leading-none">Manage User</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+              <h3 className="font-black text-foreground uppercase tracking-tight leading-none">Manage User</h3>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
                 {selectedStudent?.name}
               </p>
             </div>
@@ -237,7 +237,7 @@ export default function AdminPage() {
           {/* Badge Assignment Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Badge Assignment</h4>
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Badge Assignment</h4>
               <BadgeDisplay badgeIds={selectedStudent?.badges} size="sm" />
             </div>
             
@@ -254,11 +254,11 @@ export default function AdminPage() {
                     className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
                       isActive 
                         ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm' 
-                        : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50'
+                        : 'bg-card border-border text-muted-foreground hover:border-border hover:bg-accent'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${isActive ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                      <div className={`p-2 rounded-lg ${isActive ? 'bg-blue-600 text-white' : 'bg-accent text-muted-foreground'}`}>
                         <ShieldCheck className="h-4 w-4" />
                       </div>
                       <div className="text-left">
@@ -268,7 +268,7 @@ export default function AdminPage() {
                     </div>
                     
                     <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                      isActive ? 'bg-blue-600 border-blue-600' : 'border-slate-200'
+                      isActive ? 'bg-blue-600 border-blue-600' : 'border-border'
                     }`}>
                       {isUpdating ? (
                         <Loader2 className="h-3 w-3 text-white animate-spin" />

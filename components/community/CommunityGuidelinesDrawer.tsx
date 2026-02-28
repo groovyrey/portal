@@ -45,12 +45,12 @@ export default function CommunityGuidelinesDrawer({ isOpen, onClose }: Community
       side="right"
     >
       <div className="space-y-8 pb-10">
-        <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
-          <div className="flex items-center gap-3 mb-2 text-slate-900">
+        <div className="bg-accent rounded-2xl p-6 border border-border">
+          <div className="flex items-center gap-3 mb-2 text-foreground">
             <Info className="h-5 w-5" />
             <h3 className="font-bold text-sm">Why have guidelines?</h3>
           </div>
-          <p className="text-xs text-slate-500 leading-relaxed font-medium">
+          <p className="text-xs text-muted-foreground leading-relaxed font-medium">
             To ensure the LCC Community remains a safe and productive space for all students, every post is reviewed by Aegis using these standards.
           </p>
         </div>
@@ -58,11 +58,11 @@ export default function CommunityGuidelinesDrawer({ isOpen, onClose }: Community
         <div className="space-y-6">
           {GUIDELINES.map((item, idx) => (
             <div key={idx} className="flex gap-4 group">
-                                <div className="shrink-0 h-10 w-10 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center group-hover:opacity-80 transition-opacity">                {item.icon}
+                                <div className="shrink-0 h-10 w-10 rounded-xl bg-card border border-border shadow-sm flex items-center justify-center group-hover:opacity-80 transition-opacity">                {item.icon}
               </div>
               <div>
-                <h4 className="text-sm font-bold text-slate-900 mb-1">{item.title}</h4>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                <h4 className="text-sm font-bold text-foreground mb-1">{item.title}</h4>
+                <p className="text-xs text-muted-foreground font-medium leading-relaxed">
                   {item.description}
                 </p>
               </div>
@@ -70,8 +70,8 @@ export default function CommunityGuidelinesDrawer({ isOpen, onClose }: Community
           ))}
         </div>
 
-        <div className="pt-6 border-t border-slate-100">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">
+        <div className="pt-6 border-t border-border">
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] text-center">
             Let&apos;s build a better LCC together
           </p>
         </div>

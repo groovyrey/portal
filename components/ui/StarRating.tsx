@@ -59,7 +59,7 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
     return (
       <div className="flex flex-col items-center justify-center py-10 gap-3">
         <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading your rating...</p>
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Loading your rating...</p>
       </div>
     );
   }
@@ -70,8 +70,8 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
         <div className="h-12 w-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <Star className="h-6 w-6 fill-current" />
         </div>
-        <p className="text-sm font-bold text-slate-900">Thank you!</p>
-        <p className="text-xs text-slate-500 mt-1">Your feedback helps us improve LCC Hub.</p>
+        <p className="text-sm font-bold text-foreground">Thank you!</p>
+        <p className="text-xs text-muted-foreground mt-1">Your feedback helps us improve LCC Hub.</p>
       </div>
     );
   }
@@ -79,7 +79,7 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col items-center gap-3">
-        <p className="text-xs font-black uppercase tracking-widest text-slate-400">Rate your experience</p>
+        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Rate your experience</p>
         <div className="flex gap-2">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
@@ -112,7 +112,7 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
           placeholder="What do you think of LCC Hub? (Optional)"
-          className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none min-h-[100px] resize-none"
+          className="w-full bg-accent border border-border rounded-2xl p-4 text-sm focus:bg-card focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none min-h-[100px] resize-none text-foreground"
         />
         <button
           onClick={handleSubmit}

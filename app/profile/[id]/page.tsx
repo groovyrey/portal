@@ -166,19 +166,19 @@ function ProfileContent() {
   if (!student) return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-8 text-center">
       <IdCard className="h-12 w-12 text-slate-200 mb-4" />
-      <h2 className="text-xl font-bold text-slate-900">Profile Not Found</h2>
+      <h2 className="text-xl font-bold text-foreground">Profile Not Found</h2>
       <Link href="/" className="mt-4 text-blue-600 font-semibold">Return Home</Link>
     </div>
   );
 
   if (isPublicView && student.settings && !student.settings.isPublic) return (
     <div className="max-w-3xl mx-auto py-10 px-4">
-      <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
-        <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
+      <div className="bg-card border border-border rounded-2xl p-12 text-center shadow-sm">
+        <div className="h-16 w-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-6 border border-border">
           <Lock className="h-8 w-8 text-slate-300" />
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">This Profile is Private</h2>
-        <p className="text-slate-500 max-w-sm mx-auto">
+        <h2 className="text-2xl font-bold text-foreground mb-2">This Profile is Private</h2>
+        <p className="text-muted-foreground max-w-sm mx-auto">
           The student has chosen to keep their profile information private.
         </p>
       </div>
@@ -189,13 +189,13 @@ function ProfileContent() {
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-4">
-      <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200">
-        <div className="h-32 sm:h-40 bg-slate-50 relative overflow-hidden" />
+      <div className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border">
+        <div className="h-32 sm:h-40 bg-accent relative overflow-hidden" />
 
         <div className="px-6 sm:px-8 pb-8 relative">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
             <div className="shrink-0 -mt-12 sm:-mt-16 relative z-10">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-white border-4 border-white shadow-md">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-card border-4 border-white shadow-md">
                 <img 
                   src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=f1f5f9&color=64748b&size=256&font-size=0.33&bold=true`}
                   alt={student.name}
@@ -206,12 +206,12 @@ function ProfileContent() {
 
             <div className="flex-1 text-center sm:text-left space-y-3 pt-2">
               <div className="space-y-1">
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{student.name || '?'}</h1>
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">{student.name || '?'}</h1>
                 <div className="flex items-center justify-center sm:justify-start gap-3">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
                     {student.id || '?'}
                   </span>
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
                     <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                     {isOnline ? 'Online' : 'Offline'}
                   </div>
@@ -220,11 +220,11 @@ function ProfileContent() {
 
               {showAcademic && (
                 <div className="flex flex-wrap justify-center sm:justify-start gap-2">
-                  <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl">
-                    <GraduationCap className="h-3.5 w-3.5 text-slate-500" />
-                    <span className="text-xs font-bold text-slate-600 tracking-tight">{student.course || '?'}</span>
+                  <div className="flex items-center gap-1.5 bg-accent px-3 py-1.5 rounded-xl">
+                    <GraduationCap className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs font-bold text-muted-foreground tracking-tight">{student.course || '?'}</span>
                   </div>
-                  <div className="bg-slate-100 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 tracking-tight">
+                  <div className="bg-accent px-3 py-1.5 rounded-xl text-xs font-bold text-muted-foreground tracking-tight">
                     Year {student.yearLevel || '?'} • Sem {student.semester || '?'}
                   </div>
                 </div>
@@ -233,14 +233,14 @@ function ProfileContent() {
           </div>
 
           {student.badges && student.badges.length > 0 && (
-            <div className="mt-10 pt-8 border-t border-slate-100">
+            <div className="mt-10 pt-8 border-t border-border">
                <div className="flex items-center gap-2 mb-4">
                 <div className="h-6 w-6 rounded-lg bg-slate-900 text-white flex items-center justify-center">
                   <IdCard className="h-3.5 w-3.5" />
                 </div>
-                <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Academic Badges</h3>
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Academic Badges</h3>
               </div>
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+              <div className="bg-accent p-5 rounded-2xl border border-border">
                 <BadgeDisplay 
                   badgeIds={student.badges} 
                   size="lg" 
@@ -258,14 +258,14 @@ function ProfileContent() {
             <div className="h-6 w-6 rounded-lg bg-slate-900 text-white flex items-center justify-center">
               <MessageSquare className="h-3.5 w-3.5" />
             </div>
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Activity Feed</h3>
+            <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Activity Feed</h3>
           </div>
         </div>
 
         {loadingPosts ? (
           <div className="space-y-4">
             {[1, 2].map(i => (
-              <div key={i} className="bg-white rounded-xl p-5 border border-slate-200 space-y-4">
+              <div key={i} className="bg-card rounded-xl p-5 border border-border space-y-4">
                 <div className="flex items-center gap-3">
                   <Skeleton className="h-8 w-8 rounded-full" />
                   <div className="space-y-1.5 flex-1"><Skeleton className="h-3.5 w-24" /><Skeleton className="h-2.5 w-16" /></div>
@@ -275,8 +275,8 @@ function ProfileContent() {
             ))}
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">No activity recorded</p>
+          <div className="text-center py-16 bg-card rounded-2xl border border-border shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">No activity recorded</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -294,7 +294,7 @@ function ProfileContent() {
             ))}
             <Link 
               href="/community" 
-              className="block text-center py-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-blue-600 transition-colors"
+              className="block text-center py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-blue-600 transition-colors"
             >
               Back to Community Feed
             </Link>
@@ -307,7 +307,7 @@ function ProfileContent() {
 
 export default function ProfilePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="h-10 w-10 text-blue-600 animate-spin" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-accent"><Loader2 className="h-10 w-10 text-blue-600 animate-spin" /></div>}>
       <ProfileContent />
     </Suspense>
   );

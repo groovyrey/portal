@@ -63,14 +63,14 @@ export default function GradesList({ reports }: GradesListProps) {
 
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-6">
             <div className="h-8 w-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
               <BookOpenCheck className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900 leading-none">Scholastic Registry</h3>
-              <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mt-0.5">Academic Records</p>
+              <h3 className="text-lg font-bold text-foreground leading-none">Scholastic Registry</h3>
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Academic Records</p>
             </div>
           </div>
 
@@ -84,11 +84,11 @@ export default function GradesList({ reports }: GradesListProps) {
                   className={`group flex items-center justify-between p-4 rounded-xl text-[13px] font-bold transition-all border outline-none ${
                     isActive
                       ? 'bg-slate-900 text-white border-slate-900'
-                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-100'
+                      : 'bg-accent text-muted-foreground hover:bg-accent border-border'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <FileText className={`h-4 w-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                    <FileText className={`h-4 w-4 ${isActive ? 'text-white' : 'text-muted-foreground'}`} />
                     <span className="truncate">{report.text.replace('Grades of ', '')}</span>
                   </div>
                   <ChevronRight className={`h-4 w-4 ${isActive ? 'opacity-100' : 'opacity-30 group-hover:opacity-100'}`} />
@@ -109,7 +109,7 @@ export default function GradesList({ reports }: GradesListProps) {
                 <Skeleton className="h-12 w-full rounded-xl" />
                 <div className="space-y-3">
                   {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="p-4 border border-slate-100 rounded-xl flex justify-between">
+                    <div key={i} className="p-4 border border-border rounded-xl flex justify-between">
                       <div className="space-y-2 flex-1">
                         <Skeleton className="h-4 w-3/4" />
                         <Skeleton className="h-3 w-1/4" />
@@ -122,7 +122,7 @@ export default function GradesList({ reports }: GradesListProps) {
             ) : grades ? (
               <div className="space-y-6">
                 <div className="bg-slate-900 p-4 rounded-xl">
-                  <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     <span>Semester Summary</span>
                     <span className="bg-slate-800 px-2 py-0.5 rounded text-white">{grades.length} Subjects</span>
                   </div>
@@ -132,11 +132,11 @@ export default function GradesList({ reports }: GradesListProps) {
                   {grades.map((sub, sIdx) => {
                     const isPassed = sub.remarks.toLowerCase().includes('pass') || (parseFloat(sub.grade) <= 3.0 && parseFloat(sub.grade) > 0);
                     return (
-                      <div key={sIdx} className="p-4 bg-white border border-slate-100 rounded-xl hover:border-slate-200 transition-all">
+                      <div key={sIdx} className="p-4 bg-card border border-border rounded-xl hover:border-muted-foreground transition-all">
                         <div className="flex justify-between items-start gap-4 mb-3">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-slate-900 uppercase leading-snug truncate">{sub.description}</p>
-                            <span className="text-[10px] font-bold text-slate-400 font-mono uppercase">{sub.code}</span>
+                            <p className="text-sm font-bold text-foreground uppercase leading-snug truncate">{sub.description}</p>
+                            <span className="text-[10px] font-bold text-muted-foreground font-mono uppercase">{sub.code}</span>
                           </div>
                           <div className={`text-base font-bold px-3 py-1 rounded-lg border ${
                             isPassed
@@ -162,9 +162,9 @@ export default function GradesList({ reports }: GradesListProps) {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-16 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+              <div className="text-center py-16 bg-accent rounded-xl border border-dashed border-border">
                 <FileText className="h-8 w-8 mx-auto mb-3 text-slate-300" />
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">No records available</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">No records available</p>
               </div>
             )}
           </div>

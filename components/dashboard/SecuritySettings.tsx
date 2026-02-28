@@ -144,8 +144,8 @@ export default function SecuritySettings() {
         <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-green-600">
           <CheckCircle2 className="h-8 w-8" />
         </div>
-        <h2 className="text-xl font-bold text-slate-900 mb-2">Success!</h2>
-        <p className="text-slate-500 text-sm font-medium">
+        <h2 className="text-xl font-bold text-foreground mb-2">Success!</h2>
+        <p className="text-muted-foreground text-sm font-medium">
           Your password has been updated. You will be redirected to login.
         </p>
       </div>
@@ -155,21 +155,21 @@ export default function SecuritySettings() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 mb-1.5 block">Current Password</label>
+        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1 mb-1.5 block">Current Password</label>
         <div className="relative">
-          <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type={showCurrentPassword ? "text" : "password"}
             required
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all"
+            className="w-full bg-accent border border-border rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all"
             placeholder="Enter current password"
           />
           <button
             type="button"
             onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
           >
             {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -177,21 +177,21 @@ export default function SecuritySettings() {
       </div>
 
       <div>
-        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 mb-1.5 block">New Password</label>
+        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1 mb-1.5 block">New Password</label>
         <div className="relative">
-          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type={showNewPassword ? "text" : "password"}
             required
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all"
+            className="w-full bg-accent border border-border rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all"
             placeholder="Min 8 characters recommended"
           />
           <button
             type="button"
             onClick={() => setShowNewPassword(!showNewPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
           >
             {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -200,7 +200,7 @@ export default function SecuritySettings() {
         {/* Password Strength Indicator */}
         <div className="mt-2 px-1">
           <div className="flex justify-between items-center mb-1.5">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Strength</span>
+            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Strength</span>
             <span className={`text-[9px] font-black uppercase tracking-widest transition-colors duration-300 ${strength.color.replace('bg-', 'text-')}`}>
               {strength.label}
             </span>
@@ -212,12 +212,12 @@ export default function SecuritySettings() {
                 className={`h-full flex-1 rounded-full transition-all duration-500 ${
                   i < strength.score 
                     ? strength.color 
-                    : 'bg-slate-100'
+                    : 'bg-accent'
                 }`}
               />
             ))}
           </div>
-          <p className="mt-2 text-[10px] text-slate-400 font-medium leading-relaxed flex items-start gap-1.5">
+          <p className="mt-2 text-[10px] text-muted-foreground font-medium leading-relaxed flex items-start gap-1.5">
             <Info className="h-3 w-3 shrink-0 mt-0.5 opacity-60" />
             Use 8+ characters with mixed case and numbers. <span className="text-red-500 font-bold">Special characters (@, #, !, etc.) are NOT allowed.</span>
           </p>
@@ -225,21 +225,21 @@ export default function SecuritySettings() {
       </div>
 
       <div>
-        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 mb-1.5 block">Confirm Password</label>
+        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1 mb-1.5 block">Confirm Password</label>
         <div className="relative">
-          <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type={showConfirmPassword ? "text" : "password"}
             required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all"
+            className="w-full bg-accent border border-border rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all"
             placeholder="Repeat new password"
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
           >
             {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -274,10 +274,10 @@ export default function SecuritySettings() {
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-8 pt-8 border-t border-slate-100"
+            className="mt-8 pt-8 border-t border-border"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 text-slate-500">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <Terminal className="h-4 w-4" />
                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">Diagnostic Data</h4>
               </div>
@@ -287,14 +287,14 @@ export default function SecuritySettings() {
                   navigator.clipboard.writeText(debugHtml);
                   toast.success('Diagnostic data copied to clipboard');
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-slate-200 text-muted-foreground rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors"
               >
                 <Copy className="h-3 w-3" />
                 Copy HTML
               </button>
             </div>
             
-            <p className="text-[10px] text-slate-400 font-medium mb-3 leading-relaxed">
+            <p className="text-[10px] text-muted-foreground font-medium mb-3 leading-relaxed">
               The school portal returned the following response. Copy this data and share it with support if the issue persists.
             </p>
             

@@ -252,32 +252,32 @@ function CommunityContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
+    <div className="min-h-screen bg-background pb-20">
       <div className="max-w-2xl mx-auto p-4 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Community</h1>
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+            <h1 className="text-xl font-bold text-foreground tracking-tight">Community</h1>
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
           </div>
-          <button onClick={() => setShowGuidelines(true)} className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hover:text-blue-600 transition-colors">
+          <button onClick={() => setShowGuidelines(true)} className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider hover:text-blue-500 transition-colors">
             Guidelines
           </button>
         </div>
 
         {student ? (
-          <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm transition-all focus-within:border-slate-400">
-            <div className="flex border-b border-slate-100">
+          <div className="bg-card rounded-2xl overflow-hidden border border-border shadow-sm transition-all focus-within:border-primary/30">
+            <div className="flex border-b border-border">
               <button 
                 type="button" 
                 onClick={() => setActiveTab('write')}
-                className={`flex-1 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === 'write' ? 'text-slate-900 bg-slate-50' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`flex-1 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === 'write' ? 'text-foreground bg-accent' : 'text-muted-foreground hover:text-foreground'}`}
               >
                 Write
               </button>
               <button 
                 type="button" 
                 onClick={() => setActiveTab('preview')}
-                className={`flex-1 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === 'preview' ? 'text-slate-900 bg-slate-50' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`flex-1 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === 'preview' ? 'text-foreground bg-accent' : 'text-muted-foreground hover:text-foreground'}`}
               >
                 Preview
               </button>
@@ -291,19 +291,19 @@ function CommunityContent() {
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
                       placeholder="What's on your mind?"
-                      className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium placeholder:text-slate-300 resize-none min-h-[80px] outline-none"
+                      className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium placeholder:text-muted-foreground/50 resize-none min-h-[80px] outline-none text-foreground"
                     />
                     {showPollEditor && (
-                      <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+                      <div className="mt-4 p-4 bg-accent rounded-xl border border-border animate-in fade-in zoom-in-95 duration-200">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
-                            <BarChart2 className="h-4 w-4 text-slate-600" />
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Poll Details</label>
+                            <BarChart2 className="h-4 w-4 text-muted-foreground" />
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Poll Details</label>
                           </div>
                           <button 
                             type="button" 
                             onClick={() => setShowPollEditor(false)} 
-                            className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                            className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -314,7 +314,7 @@ function CommunityContent() {
                             value={pollQuestion} 
                             onChange={(e) => setPollQuestion(e.target.value)} 
                             placeholder="Ask a question..." 
-                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold placeholder:text-slate-300 focus:outline-none focus:border-slate-400 transition-all" 
+                            className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm font-bold placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-all text-foreground" 
                           />
 
                           <div className="space-y-2">
@@ -324,7 +324,7 @@ function CommunityContent() {
                                   value={opt} 
                                   onChange={(e) => { const n = [...pollOptions]; n[i] = e.target.value; setPollOptions(n); }} 
                                   placeholder={`Option ${i+1}`} 
-                                  className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-slate-400 transition-all placeholder:text-slate-300" 
+                                  className="flex-1 px-3 py-2 bg-card border border-border rounded-lg text-xs font-semibold focus:outline-none focus:border-primary transition-all placeholder:text-muted-foreground/50 text-foreground" 
                                 />
                               </div>
                             ))}
@@ -332,7 +332,7 @@ function CommunityContent() {
                               <button 
                                 type="button" 
                                 onClick={() => setPollOptions([...pollOptions, ''])} 
-                                className="mt-1 flex items-center gap-1 text-[10px] font-bold text-blue-600 uppercase tracking-wider hover:text-blue-700 transition-colors"
+                                className="mt-1 flex items-center gap-1 text-[10px] font-bold text-blue-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
                               >
                                 <Plus className="h-3 w-3" />
                                 Add Option
@@ -344,20 +344,20 @@ function CommunityContent() {
                     )}
                   </div>
                 ) : (
-                  <div className="min-h-[80px] prose prose-slate prose-sm max-w-none">
+                  <div className="min-h-[80px] prose prose-slate dark:prose-invert prose-sm max-w-none">
                     {content.trim() ? (
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
                     ) : (
-                      <p className="text-slate-300 italic">Preview will appear here...</p>
+                      <p className="text-muted-foreground/50 italic">Preview will appear here...</p>
                     )}
                   </div>
                 )}
               </div>
-              <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+              <div className="flex items-center justify-between pt-4 border-t border-border">
                 <div className="flex gap-1">
-                  <button type="button" onClick={() => setShowPollEditor(!showPollEditor)} className={`p-2 rounded-lg transition-all ${showPollEditor ? 'bg-slate-900 text-white' : 'text-slate-400 hover:bg-slate-50'}`} title="Add Poll"><BarChart2 className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => setShowPollEditor(!showPollEditor)} className={`p-2 rounded-lg transition-all ${showPollEditor ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`} title="Add Poll"><BarChart2 className="h-4 w-4" /></button>
                 </div>
-                <button type="submit" disabled={(!content.trim() && !pollQuestion.trim()) || posting} className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white px-5 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 flex items-center gap-2">
+                <button type="submit" disabled={(!content.trim() && !pollQuestion.trim()) || posting} className="bg-primary hover:opacity-90 disabled:opacity-30 text-primary-foreground px-5 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 flex items-center gap-2">
                   {posting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                   Post
                 </button>
@@ -365,11 +365,11 @@ function CommunityContent() {
             </form>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center space-y-4 shadow-sm">
-            <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto"><User className="h-6 w-6 text-slate-300" /></div>
-            <h2 className="text-lg font-bold text-slate-900">Ready to join?</h2>
-            <p className="text-xs text-slate-500 font-medium mb-4">Share posts, vote on polls, and join discussions.</p>
-            <Link href="/" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95">Sign In</Link>
+          <div className="bg-card rounded-2xl p-8 border border-border text-center space-y-4 shadow-sm">
+            <div className="h-12 w-12 bg-accent rounded-full flex items-center justify-center mx-auto"><User className="h-6 w-6 text-muted-foreground" /></div>
+            <h2 className="text-lg font-bold text-foreground">Ready to join?</h2>
+            <p className="text-xs text-muted-foreground font-medium mb-4">Share posts, vote on polls, and join discussions.</p>
+            <Link href="/" className="inline-flex items-center gap-2 bg-primary hover:opacity-90 text-primary-foreground px-6 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95">Sign In</Link>
           </div>
         )}
 
@@ -377,30 +377,30 @@ function CommunityContent() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1 group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input type="text" value={searchQuery} onChange={(e) => updateSearchParams({ search: e.target.value })} placeholder="Search..." className="w-full pl-9 pr-9 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-slate-400 transition-all" />
-              {searchQuery && <button onClick={() => updateSearchParams({ search: null })} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"><X className="h-3.5 w-3.5" /></button>}
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input type="text" value={searchQuery} onChange={(e) => updateSearchParams({ search: e.target.value })} placeholder="Search..." className="w-full pl-9 pr-9 py-2 bg-card border border-border rounded-xl text-sm font-medium focus:outline-none focus:border-primary transition-all text-foreground" />
+              {searchQuery && <button onClick={() => updateSearchParams({ search: null })} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" /></button>}
             </div>
-            <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider border transition-all ${showFilters || selectedType !== 'all' || sortBy !== 'newest' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 shadow-sm'}`}><SlidersHorizontal className="h-3.5 w-3.5" />Filters</button>
+            <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider border transition-all ${showFilters || selectedType !== 'all' || sortBy !== 'newest' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-muted-foreground border-border hover:border-muted-foreground shadow-sm'}`}><SlidersHorizontal className="h-3.5 w-3.5" />Filters</button>
           </div>
 
           {showFilters && (
-            <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-200">
+            <div className="bg-card rounded-xl border border-border p-4 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-200">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 px-1">Sort</label>
-                  <div className="flex flex-wrap gap-1.5">{sortOptions.map(opt => <button key={opt.id} onClick={() => updateSearchParams({ sort: opt.id })} className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${sortBy === opt.id ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-500 border-slate-100 hover:border-slate-300'}`}>{opt.label}</button>)}</div>
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground px-1">Sort</label>
+                  <div className="flex flex-wrap gap-1.5">{sortOptions.map(opt => <button key={opt.id} onClick={() => updateSearchParams({ sort: opt.id })} className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${sortBy === opt.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-accent text-muted-foreground border-border hover:border-muted-foreground'}`}>{opt.label}</button>)}</div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 px-1">Type</label>
-                  <div className="flex flex-wrap gap-1.5">{postTypes.map(type => <button key={type.id} onClick={() => updateSearchParams({ type: type.id })} className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${selectedType === type.id ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-500 border-slate-100 hover:border-slate-300'}`}>{type.label}</button>)}</div>
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground px-1">Type</label>
+                  <div className="flex flex-wrap gap-1.5">{postTypes.map(type => <button key={type.id} onClick={() => updateSearchParams({ type: type.id })} className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${selectedType === type.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-accent text-muted-foreground border-border hover:border-muted-foreground'}`}>{type.label}</button>)}</div>
                 </div>
               </div>
             </div>
           )}
 
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-            {topics.map(topic => <button key={topic} onClick={() => updateSearchParams({ topic })} className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider whitespace-nowrap border transition-all ${selectedTopic === topic ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>{topic}</button>)}
+            {topics.map(topic => <button key={topic} onClick={() => updateSearchParams({ topic })} className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider whitespace-nowrap border transition-all ${selectedTopic === topic ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-muted-foreground border-border hover:border-muted-foreground'}`}>{topic}</button>)}
           </div>
         </div>
 
@@ -409,20 +409,20 @@ function CommunityContent() {
           {loading ? (
             <div className="space-y-4">
               {[1, 2].map(i => (
-                <div key={i} className="bg-white rounded-xl p-5 border border-slate-200 space-y-4">
+                <div key={i} className="bg-card rounded-xl p-5 border border-border space-y-4">
                   <div className="flex items-center gap-3"><Skeleton className="h-8 w-8 rounded-full" /><div className="space-y-1.5 flex-1"><Skeleton className="h-3.5 w-24" /><Skeleton className="h-2.5 w-16" /></div></div>
                   <div className="space-y-2"><Skeleton className="h-3.5 w-full" /><Skeleton className="h-3.5 w-2/3" /></div>
                 </div>
               ))}
             </div>
           ) : isError ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-red-100">
-              <p className="text-xs font-bold text-red-400 uppercase tracking-wider mb-4">Failed to load posts</p>
-              <button onClick={() => refetch()} className="px-4 py-2 bg-slate-900 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-slate-800 transition-colors">Retry</button>
+            <div className="text-center py-16 bg-card rounded-2xl border border-red-500/20">
+              <p className="text-xs font-bold text-red-500 uppercase tracking-wider mb-4">Failed to load posts</p>
+              <button onClick={() => refetch()} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-[10px] font-bold uppercase tracking-wider hover:opacity-90 transition-colors">Retry</button>
             </div>
           ) : posts.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">No posts found</p>
+            <div className="text-center py-16 bg-card rounded-2xl border border-border">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">No posts found</p>
             </div>
           ) : (
             <>
@@ -438,7 +438,7 @@ function CommunityContent() {
                 />
               ))}
               {posts.length > postsToShow && (
-                <button onClick={handleLoadMore} className="w-full py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 transition-all active:scale-95">Load More</button>
+                <button onClick={handleLoadMore} className="w-full py-3 bg-card border border-border rounded-xl text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-all active:scale-95">Load More</button>
               )}
             </>
           )}
@@ -455,13 +455,13 @@ function CommunityContent() {
 export default function CommunityPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-50 p-4">
+      <div className="min-h-screen bg-background p-4">
         <div className="max-w-2xl mx-auto space-y-6">
           <div className="flex items-center justify-between mb-2">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-4 w-20" />
           </div>
-          <div className="bg-white rounded-3xl p-6 border border-slate-200">
+          <div className="bg-card rounded-3xl p-6 border border-border">
             <div className="flex gap-4">
               <Skeleton className="h-10 w-10 rounded-2xl" />
               <Skeleton className="h-20 flex-1" />
@@ -469,7 +469,7 @@ export default function CommunityPage() {
           </div>
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-2xl p-6 border border-slate-200 space-y-4">
+              <div key={i} className="bg-card rounded-2xl p-6 border border-border space-y-4">
                 <div className="flex items-center gap-3"><Skeleton className="h-9 w-9 rounded-lg" /><div className="space-y-2 flex-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div></div>
                 <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-2/3" /></div>
               </div>

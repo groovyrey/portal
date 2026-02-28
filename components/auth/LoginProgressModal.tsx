@@ -19,16 +19,16 @@ export default function LoginProgressModal({ isOpen }: LoginProgressModalProps) 
       <div className="py-12 flex flex-col items-center max-w-xs mx-auto">
         {/* Animated Icon */}
         <div className="relative mb-8 flex items-center justify-center">
-          <div className="absolute inset-0 bg-blue-100/50 rounded-full animate-ping" />
-          <div className="relative bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-blue-50">
-            <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
+          <div className="absolute inset-0 bg-blue-500/10 rounded-full animate-ping" />
+          <div className="relative bg-card p-6 rounded-3xl border border-border shadow-xl">
+            <Loader2 className="h-10 w-10 text-blue-500 animate-spin" />
           </div>
         </div>
 
-        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-3">Syncing Portal</h2>
+        <h2 className="text-xl font-black text-foreground uppercase tracking-tight mb-3">Syncing Portal</h2>
         
         <div className="space-y-4">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-relaxed">
             Please wait while we securely fetch your latest academic data from Schoolista.
           </p>
           
@@ -45,13 +45,13 @@ export default function LoginProgressModal({ isOpen }: LoginProgressModalProps) 
                   repeat: Infinity,
                   delay: i * 0.2,
                 }}
-                className="w-1.5 h-1.5 bg-blue-600 rounded-full"
+                className="w-1.5 h-1.5 bg-blue-500 rounded-full"
               />
             ))}
           </div>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-slate-50 w-full text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
+        <div className="mt-12 pt-6 border-t border-border w-full text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">
           Do not close this tab
         </div>
       </div>

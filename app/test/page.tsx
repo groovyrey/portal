@@ -261,7 +261,7 @@ export default function TestCalendarPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 p-8">
+      <div className="min-h-screen bg-accent p-8">
         <div className="max-w-5xl mx-auto space-y-8">
           <Skeleton className="h-12 w-64" />
           <Skeleton className="h-[600px] w-full" />
@@ -273,13 +273,13 @@ export default function TestCalendarPage() {
   if (!student) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-20">
+    <div className="min-h-screen bg-accent font-sans text-foreground pb-20">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <DashboardHeader student={student} />
 
         <div className="mt-8 space-y-6">
           {/* Account Sync Card */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative group">
+          <div className="bg-card p-6 rounded-3xl border border-border shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative group">
             <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
               <Mail className="h-32 w-32 rotate-12" />
             </div>
@@ -289,10 +289,10 @@ export default function TestCalendarPage() {
                 {linkedEmail ? <CheckCircle2 className="h-7 w-7 text-white" /> : <Mail className="h-7 w-7 text-white" />}
               </div>
               <div>
-                <h3 className="text-lg font-black text-slate-900 tracking-tight">
+                <h3 className="text-lg font-black text-foreground tracking-tight">
                   {linkedEmail ? 'Account Verified' : 'Sync Google Account'}
                 </h3>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-0.5">
                   {linkedEmail ? `Connected as: ${linkedEmail}` : `Target: ${student.email || 'No email set'}`}
                 </p>
               </div>
@@ -308,7 +308,7 @@ export default function TestCalendarPage() {
                     <button 
                       onClick={() => fetchGoogleEvents(googleAccessToken!)}
                       disabled={isFetchingGoogle}
-                      className="flex-1 md:flex-none px-6 py-3.5 bg-slate-100 text-slate-900 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="flex-1 md:flex-none px-6 py-3.5 bg-accent text-foreground rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                       {isFetchingGoogle ? (
                         <div className="h-3 w-3 border-2 border-slate-900/30 border-t-slate-900 animate-spin rounded-full" />
@@ -320,7 +320,7 @@ export default function TestCalendarPage() {
                     <button 
                       onClick={handleGoogleVerify}
                       disabled={isLinking}
-                      className="flex-1 md:flex-none px-6 py-3.5 bg-white border border-slate-200 text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50"
+                      className="flex-1 md:flex-none px-6 py-3.5 bg-card border border-border text-muted-foreground rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-accent transition-all active:scale-95 disabled:opacity-50"
                     >
                       Re-verify
                     </button>
@@ -347,15 +347,15 @@ export default function TestCalendarPage() {
 
           {/* Google Calendar Events List */}
           {linkedEmail && (
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-emerald-50/30">
+            <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-emerald-50/30">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
                     <CalendarIcon className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-black text-slate-900 tracking-tight">Google Calendar Events</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <h2 className="text-xl font-black text-foreground tracking-tight">Google Calendar Events</h2>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                       {isFetchingGoogle ? 'Fetching your events...' : `${googleEvents.length} events found on Google`}
                     </p>
                   </div>
@@ -368,10 +368,10 @@ export default function TestCalendarPage() {
                   </div>
                 ) : googleEvents.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                    <div className="h-16 w-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4 border border-border">
                       <CalendarIcon className="h-8 w-8 text-slate-200" />
                     </div>
-                    <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">No events found</p>
+                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.2em]">No events found</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -379,30 +379,30 @@ export default function TestCalendarPage() {
                       const start = event.start?.dateTime || event.start?.date;
                       const startDate = start ? new Date(start) : null;
                       return (
-                        <div key={event.id} className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:border-emerald-200 hover:bg-emerald-50/20 transition-all group">
+                        <div key={event.id} className="p-4 rounded-2xl border border-border bg-accent/50 hover:border-emerald-200 hover:bg-emerald-50/20 transition-all group">
                           <div className="flex items-start gap-4">
-                            <div className="w-16 shrink-0 text-center border-r border-slate-100 pr-4">
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
+                            <div className="w-16 shrink-0 text-center border-r border-border pr-4">
+                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter">
                                 {startDate?.toLocaleString('default', { month: 'short' })}
                               </p>
-                              <p className="text-xl font-black text-slate-900 leading-none mt-1">
+                              <p className="text-xl font-black text-foreground leading-none mt-1">
                                 {startDate?.getDate()}
                               </p>
-                              <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">
+                              <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">
                                 {startDate?.toLocaleString('default', { weekday: 'short' })}
                               </p>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-bold text-slate-900 truncate uppercase tracking-tight group-hover:text-emerald-600 transition-colors">
+                              <h4 className="text-sm font-bold text-foreground truncate uppercase tracking-tight group-hover:text-emerald-600 transition-colors">
                                 {event.summary || 'Untitled Event'}
                               </h4>
                               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
-                                <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase">
+                                <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase">
                                   <Clock className="h-3 w-3" />
                                   {startDate?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </div>
                                 {event.location && (
-                                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase truncate max-w-[200px]">
+                                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase truncate max-w-[200px]">
                                     <MapPin className="h-3 w-3" />
                                     {event.location}
                                   </div>
@@ -421,17 +421,17 @@ export default function TestCalendarPage() {
 
           {/* Controls & Export */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex items-center gap-2 bg-card p-1 rounded-xl border border-border shadow-sm">
               <button 
                 onClick={() => setView('calendar')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'calendar' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'calendar' ? 'bg-slate-900 text-white shadow-md' : 'text-muted-foreground hover:bg-accent'}`}
               >
                 <CalendarDays className="h-4 w-4" />
                 Calendar
               </button>
               <button 
                 onClick={() => setView('agenda')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'agenda' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'agenda' ? 'bg-slate-900 text-white shadow-md' : 'text-muted-foreground hover:bg-accent'}`}
               >
                 <ListTodo className="h-4 w-4" />
                 Agenda
@@ -440,23 +440,23 @@ export default function TestCalendarPage() {
 
             <button 
               onClick={downloadICS}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all shadow-sm active:scale-95 group"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-card border border-border text-foreground rounded-xl text-xs font-bold hover:bg-accent transition-all shadow-sm active:scale-95 group"
             >
               <Download className="h-4 w-4 group-hover:-translate-y-0.5 transition-transform" />
               Sync to Device (iCal)
             </button>
           </div>
 
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
             {/* Calendar Header */}
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="p-6 border-b border-border flex items-center justify-between bg-accent/50">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
                   <CalendarIcon className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 tracking-tight">{monthName} {year}</h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <h2 className="text-xl font-black text-foreground tracking-tight">{monthName} {year}</h2>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     {events.length} Events this month
                   </p>
                 </div>
@@ -465,19 +465,19 @@ export default function TestCalendarPage() {
               <div className="flex items-center gap-2">
                 <button 
                   onClick={handlePrevMonth}
-                  className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all border border-transparent hover:border-slate-100"
+                  className="p-2 hover:bg-card hover:shadow-sm rounded-lg transition-all border border-transparent hover:border-border"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
                 <button 
                   onClick={() => setCurrentDate(new Date())}
-                  className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500 hover:text-slate-900 transition-colors"
+                  className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Today
                 </button>
                 <button 
                   onClick={handleNextMonth}
-                  className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all border border-transparent hover:border-slate-100"
+                  className="p-2 hover:bg-card hover:shadow-sm rounded-lg transition-all border border-transparent hover:border-border"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
@@ -496,14 +496,14 @@ export default function TestCalendarPage() {
                   >
                     <div className="grid grid-cols-7 gap-1">
                       {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                        <div key={d} className="text-center py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <div key={d} className="text-center py-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                           {d}
                         </div>
                       ))}
                     </div>
                     <div className="grid grid-cols-7 gap-1 sm:gap-2">
                       {Array.from({ length: firstDayOfMonth }).map((_, i) => (
-                        <div key={`pad-${i}`} className="h-20 sm:h-32 rounded-2xl bg-slate-50/50 border border-transparent" />
+                        <div key={`pad-${i}`} className="h-20 sm:h-32 rounded-2xl bg-accent/50 border border-transparent" />
                       ))}
                       {Array.from({ length: daysInMonth }).map((_, i) => {
                         const dayNum = i + 1;
@@ -515,11 +515,11 @@ export default function TestCalendarPage() {
                             key={dayNum} 
                             className={`h-24 sm:h-32 rounded-2xl border p-1.5 sm:p-3 flex flex-col gap-1 transition-all ${
                               isToday 
-                                ? 'bg-slate-50 border-slate-900/10 ring-1 ring-slate-900/5' 
-                                : 'bg-white border-slate-100 hover:border-slate-200'
+                                ? 'bg-accent border-slate-900/10 ring-1 ring-slate-900/5' 
+                                : 'bg-card border-border hover:border-border'
                             }`}
                           >
-                            <span className={`text-xs font-bold ${isToday ? 'text-slate-900' : 'text-slate-400'}`}>
+                            <span className={`text-xs font-bold ${isToday ? 'text-foreground' : 'text-muted-foreground'}`}>
                               {dayNum}
                             </span>
                             <div className="flex flex-col gap-1 overflow-y-auto no-scrollbar">
@@ -548,34 +548,34 @@ export default function TestCalendarPage() {
                   >
                     {events.length === 0 ? (
                       <div className="text-center py-12">
-                        <p className="text-sm font-medium text-slate-400">No events scheduled for this month.</p>
+                        <p className="text-sm font-medium text-muted-foreground">No events scheduled for this month.</p>
                       </div>
                     ) : (
                       <div className="divide-y divide-slate-100">
                         {events.map((event) => (
                           <div key={event.id} className="py-4 flex items-start gap-4 group">
                             <div className="flex flex-col items-center justify-center w-12 shrink-0">
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
+                              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter">
                                 {event.date.toLocaleString('default', { weekday: 'short' })}
                               </span>
-                              <span className="text-lg font-black text-slate-900">
+                              <span className="text-lg font-black text-foreground">
                                 {event.date.getDate()}
                               </span>
                             </div>
                             <div className={`h-12 w-1 shrink-0 rounded-full ${event.color}`} />
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-bold text-slate-900 truncate uppercase tracking-tight">
+                              <h4 className="text-sm font-bold text-foreground truncate uppercase tracking-tight">
                                 {event.title}
                               </h4>
                               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
                                 {event.startTime && (
-                                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase">
+                                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase">
                                     <Clock className="h-3 w-3" />
                                     {event.startTime} - {event.endTime}
                                   </div>
                                 )}
                                 {event.location && (
-                                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase">
+                                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase">
                                     <MapPin className="h-3 w-3" />
                                     {event.location}
                                   </div>
@@ -605,14 +605,14 @@ export default function TestCalendarPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-6 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex flex-wrap items-center justify-center gap-6 p-4 bg-card rounded-2xl border border-border shadow-sm">
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-rose-500" />
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Payment Due Dates</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Payment Due Dates</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-slate-900" />
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Current Day</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Current Day</span>
             </div>
           </div>
         </div>

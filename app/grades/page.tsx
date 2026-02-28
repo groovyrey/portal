@@ -82,7 +82,7 @@ export default function GradesPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen bg-accent p-4 sm:p-6 lg:p-8">
         <div className="max-w-5xl mx-auto space-y-6">
           <div className="flex justify-end">
             <Skeleton className="h-9 w-40 rounded-lg" />
@@ -94,7 +94,7 @@ export default function GradesPage() {
           </div>
           <div className="space-y-4">
             {[1, 2].map((i) => (
-              <div key={i} className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+              <div key={i} className="bg-card rounded-xl border border-border p-5 space-y-4">
                 <Skeleton className="h-5 w-40" />
                 <Skeleton className="h-16 w-full" />
               </div>
@@ -107,13 +107,13 @@ export default function GradesPage() {
 
   if (!student || !student.availableReports) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-accent p-4 text-center">
         <LottieAnimation 
           animationPath="/animations/error-404.json"
           className="w-48 h-48 mb-4"
         />
-        <h2 className="text-xl font-bold text-slate-900 mb-2">No reports available</h2>
-        <p className="text-slate-500 mb-6 text-sm font-medium">Please log in or refresh your data from the dashboard first.</p>
+        <h2 className="text-xl font-bold text-foreground mb-2">No reports available</h2>
+        <p className="text-muted-foreground mb-6 text-sm font-medium">Please log in or refresh your data from the dashboard first.</p>
         <Link href="/" className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg transition-colors text-sm">
           Return to Dashboard
         </Link>
@@ -122,7 +122,7 @@ export default function GradesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
+    <div className="min-h-screen bg-accent font-sans text-foreground pb-12">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
         <div className="flex justify-end mb-6">
           <button 
@@ -130,7 +130,7 @@ export default function GradesPage() {
             disabled={isCalculating}
             className={`px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 ${
               isCalculating 
-                ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                ? 'bg-slate-200 text-muted-foreground cursor-not-allowed' 
                 : 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm'
             }`}
           >

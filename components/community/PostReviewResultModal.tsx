@@ -40,11 +40,11 @@ export default function PostReviewResultModal({ isOpen, onClose, result, isError
           )}
         </div>
 
-        <h2 className="text-xl font-bold text-slate-900 mb-2">
+        <h2 className="text-xl font-bold text-foreground mb-2">
           {isError ? 'Review Skipped' : isApproved ? 'Post Approved' : 'Post Rejected'}
         </h2>
         
-        <p className="text-sm text-slate-500 mb-6 px-2 font-medium leading-relaxed">
+        <p className="text-sm text-muted-foreground mb-6 px-2 font-medium leading-relaxed">
           {isError 
             ? "We couldn't complete the review due to a technical error. Your post has been shared but is marked for later review." 
             : result?.reason}
@@ -52,12 +52,12 @@ export default function PostReviewResultModal({ isOpen, onClose, result, isError
 
         {/* Growth Tip Box */}
         {!isError && result?.growth_tip && (
-          <div className="w-full bg-slate-50 rounded-2xl p-5 mb-8 text-left border border-slate-100">
+          <div className="w-full bg-accent rounded-2xl p-5 mb-8 text-left border border-border">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="h-4 w-4 text-amber-500" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Growth Tip</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Growth Tip</span>
             </div>
-            <p className="text-xs text-slate-600 font-bold leading-relaxed italic">
+            <p className="text-xs text-muted-foreground font-bold leading-relaxed italic">
               &quot;{result.growth_tip}&quot;
             </p>
           </div>
@@ -66,8 +66,8 @@ export default function PostReviewResultModal({ isOpen, onClose, result, isError
         {/* Safety Score (Optional display) */}
         {!isError && (
           <div className="flex items-center gap-2 mb-8">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Safety Score:</span>
-            <div className="h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Safety Score:</span>
+            <div className="h-1.5 w-24 bg-accent rounded-full overflow-hidden">
               <div 
                 className={`h-full transition-all duration-1000 ${isApproved ? 'bg-green-500' : 'bg-red-500'}`}
                 style={{ width: `${result?.safety_score}%` }}

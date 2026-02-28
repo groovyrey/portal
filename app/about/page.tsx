@@ -1,252 +1,249 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
-  Zap, 
-  Cpu, 
   ShieldCheck, 
   Users, 
-  Code2, 
-  Star,
-  Sparkles,
-  ExternalLink,
-  GraduationCap,
-  ArrowRight,
-  CheckCircle2,
+  Zap, 
+  Star, 
+  Target, 
+  Heart, 
+  Globe, 
+  Award, 
   Lock,
-  MessageSquare,
-  Quote
+  Calendar,
+  MessageCircle,
+  Code2,
+  CheckCircle2,
+  Quote,
+  ChevronRight,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import LottieAnimation from '@/components/ui/LottieAnimation';
-
-const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 }
-};
-
-const staggerContainer = {
-  animate: {
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
 
 export default function AboutPage() {
-  const [stats, setStats] = useState({ average: 0, count: 0, recentFeedbacks: [] as any[] });
+  const [stats, setStats] = useState({ count: 0, average: '0.0' });
 
   useEffect(() => {
-    fetch('/api/ratings')
-      .then(res => res.json())
-      .then(data => {
-        if (data.average !== undefined) setStats(data);
-      })
-      .catch(console.error);
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/ratings');
+        const data = await res.json();
+        if (data.success) {
+          setStats({
+            count: data.totalRatings,
+            average: data.averageRating
+          });
+        }
+      } catch (e) {}
+    };
+    fetchStats();
   }, []);
 
-  return (
-    <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-100 overflow-x-hidden pb-20">
-      {/* Hero Section */}
-      <section className="relative pt-16 pb-12 md:pt-24 md:pb-20 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider mb-6">
-                <SparkleIcon size={12} />
-                <span>Next-Gen Student Hub</span>
-              </div>
-              <h1 className="text-4xl md:text-6xl font-bold text-slate-900 leading-tight mb-6">
-                Manage Your <span className="text-blue-600">School Life</span> with Ease.
-              </h1>
-              <p className="text-lg text-slate-500 leading-relaxed mb-8 max-w-lg font-medium">
-                LCC Hub is a modern student interface designed to keep you connected, informed, and organized throughout your academic journey.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Link 
-                  href="/" 
-                  className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-sm active:scale-95"
-                >
-                  Launch Hub
-                  <ArrowRight size={16} />
-                </Link>
-                <Link 
-                  href="/docs" 
-                  className="px-6 py-3 bg-white border border-slate-200 text-slate-900 rounded-xl font-bold hover:bg-slate-50 transition-all active:scale-95"
-                >
-                  Docs
-                </Link>
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative hidden md:flex items-center justify-center"
-            >
-              <LottieAnimation 
-                animationPath="/animations/creative-team.json" 
-                className="w-full h-full max-w-sm"
-              />
-            </motion.div>
-          </div>
-        </div>
-      </section>
+  const fadeIn = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.6 }
+  };
 
-      {/* Stats Section */}
-      <section className="py-10 border-y border-slate-100 bg-slate-50/50">
-        <div className="max-w-7xl mx-auto px-6">
+  const features = [
+    { title: 'Real-time Sync', desc: 'Instant access to your official school records from Schoolista.', icon: Zap },
+    { title: 'AI Assistant', desc: 'An intelligent academic companion that understands your course context.', icon: Sparkles },
+    { title: 'Student Feed', desc: 'A dedicated space for LCCians to share, poll, and connect.', icon: MessageCircle },
+    { title: 'Bank-grade Security', desc: 'Your data is encrypted and never stored on unauthorized servers.', icon: ShieldCheck },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground overflow-x-hidden pb-20">
+      {/* Hero Section */}
+      <section className="relative pt-20 pb-16 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
+        <div className="absolute top-0 right-0 -z-10 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 -z-10 w-[300px] h-[300px] bg-indigo-500/5 rounded-full blur-3xl" />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <motion.div {...fadeIn}>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent text-muted-foreground text-[10px] font-bold uppercase tracking-wider mb-6">
+              <Sparkles className="h-3 w-3 text-blue-500" />
+              The Future of LCC Portal
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold text-foreground leading-tight mb-6">
+              Empowering Every <span className="text-blue-500 italic">LCCian</span> with Intelligence.
+            </h1>
+            <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-lg font-medium">
+              LCC Hub is more than just a portal—it's your ultimate academic companion, designed to streamline your school life with modern tools and real-time connectivity.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link 
+                href="/" 
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-sm active:scale-95"
+              >
+                Access Portal
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link 
+                href="/docs" 
+                className="px-6 py-3 bg-card border border-border text-foreground rounded-xl font-bold hover:bg-accent transition-all active:scale-95"
+              >
+                Read Documentation
+              </Link>
+            </div>
+          </motion.div>
+
           <motion.div 
-            variants={staggerContainer}
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            className="relative lg:h-[500px] bg-accent/30 rounded-3xl border border-border p-8 flex items-center justify-center overflow-hidden"
           >
-            {[
-              { label: 'Uptime', value: '99.9%', icon: Zap, color: 'text-slate-400' },
-              { label: 'Rating', value: stats.average || '0.0', icon: Star, color: 'text-slate-400' },
-              { label: 'Community', value: 'Active', icon: Users, color: 'text-slate-400' },
-              { label: 'Security', value: 'AES-256', icon: Lock, color: 'text-slate-400' },
-            ].map((stat, i) => (
-              <motion.div key={i} variants={fadeInUp} className="text-center">
-                <div className="text-2xl font-bold text-slate-900 mb-1">{stat.value}</div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</div>
-              </motion.div>
-            ))}
+             <div className="grid grid-cols-2 gap-4 w-full relative z-10">
+                {features.map((f, i) => (
+                    <div key={i} className="p-6 bg-card rounded-2xl border border-border shadow-sm">
+                        <f.icon className="h-8 w-8 text-blue-500 mb-4" />
+                        <h4 className="font-bold text-sm mb-1">{f.title}</h4>
+                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{f.desc}</p>
+                    </div>
+                ))}
+             </div>
+             {/* Decorative element */}
+             <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl" />
           </motion.div>
         </div>
       </section>
 
+      {/* Stats Section */}
+      <section className="py-10 border-y border-border bg-accent/30">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { label: 'Uptime', value: '99.9%', icon: Zap, color: 'text-blue-500' },
+              { label: 'Rating', value: stats.average || '0.0', icon: Star, color: 'text-amber-500' },
+              { label: 'Community', value: 'Active', icon: Users, color: 'text-emerald-500' },
+              { label: 'Security', value: 'AES-256', icon: Lock, color: 'text-indigo-500' },
+            ].map((stat, i) => (
+              <div key={i} className="text-center group">
+                <stat.icon className={`h-5 w-5 mx-auto mb-3 ${stat.color} group-hover:scale-110 transition-transform`} />
+                <div className="text-2xl font-bold text-foreground mb-1">{stat.value}</div>
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Mission Section */}
-      <section className="py-20 max-w-7xl mx-auto px-6">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900">Our Mission</h2>
-            <p className="text-base text-slate-500 leading-relaxed font-medium">
-              We aim to modernize the student experience by providing tools that are fast, intuitive, and reliable.
+      <section className="py-24 px-4 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+          <div>
+            <div className="h-12 w-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center mb-6 shadow-lg shadow-primary/20">
+              <Target className="h-6 w-6" />
+            </div>
+            <h2 className="text-2xl font-bold text-foreground mb-6">Our Mission</h2>
+            <p className="text-base text-muted-foreground leading-relaxed font-medium mb-8">
+              We aim to eliminate the friction between students and their academic data. By providing a clean, fast, and intelligent interface, we empower students to focus on what truly matters: learning and personal growth.
             </p>
-            
-            <div className="space-y-3">
+            <div className="space-y-4">
               {[
-                { title: 'Modern Interface', desc: 'A cleaner way to access your academic records.' },
-                { title: 'Secure & Private', desc: 'Industry-standard encryption for your sensitive data.' },
-                { title: 'Community Driven', desc: 'Built for students, with student feedback in mind.' }
+                { title: 'User-Centric Design', desc: 'Built by students, for students.' },
+                { title: 'Data Sovereignty', desc: 'Your data, your access, always.' },
+                { title: 'Community Growth', desc: 'Fostering a safer digital campus.' }
               ].map((item, i) => (
-                <div key={i} className="flex gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100 transition-colors">
-                  <CheckCircle2 className="h-5 w-5 text-slate-900 shrink-0 mt-0.5" />
+                <div key={i} className="flex gap-3 p-4 rounded-xl bg-accent border border-border transition-colors">
+                  <CheckCircle2 className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-bold text-slate-900 text-sm">{item.title}</h4>
-                    <p className="text-xs text-slate-500 font-medium">{item.desc}</p>
+                    <h4 className="font-bold text-foreground text-sm">{item.title}</h4>
+                    <p className="text-xs text-muted-foreground font-medium">{item.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bg-slate-900 rounded-2xl p-8 md:p-10 text-white relative overflow-hidden shadow-xl">
-            <div className="relative z-10">
-              <Quote className="text-slate-700 h-8 w-8 mb-6" />
-              <h3 className="text-xl font-bold mb-6 italic leading-relaxed">
-                &quot;Education is the passport to the future, for tomorrow belongs to those who prepare for it today.&quot;
-              </h3>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-[10px]">
-                  MX
+          <div className="relative">
+            <div className="bg-primary rounded-2xl p-8 md:p-10 text-primary-foreground relative overflow-hidden shadow-xl">
+              <Quote className="text-primary-foreground/20 h-8 w-8 mb-6" />
+              <p className="text-lg font-medium leading-relaxed mb-8 relative z-10 italic">
+                "The greatness of a man is not in how much wealth he acquires, but in his integrity and his ability to affect those around him positively."
+              </p>
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center font-bold text-[10px]">
+                  BM
                 </div>
                 <div>
-                  <p className="font-bold text-xs">Malcolm X</p>
-                  <p className="text-[10px] text-slate-500">Human Rights Activist</p>
+                  <h5 className="text-sm font-bold">Bob Marley</h5>
+                  <p className="text-[10px] text-primary-foreground/60">Human Rights Activist</p>
                 </div>
               </div>
+              {/* Decorative circle */}
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-card/5 rounded-full" />
+            </div>
+            
+            <div className="mt-8 p-6 rounded-2xl border border-dashed border-border flex items-center gap-4 group hover:border-blue-500 transition-colors cursor-help">
+               <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+                  <Heart className="h-5 w-5 group-hover:scale-110 transition-transform" />
+               </div>
+               <div>
+                  <h4 className="text-sm font-bold text-foreground">Community Funded</h4>
+                  <p className="text-xs text-muted-foreground font-medium">LCC Hub is maintained by student contributions.</p>
+               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="py-20 bg-slate-50 border-y border-slate-100">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-slate-900">Platform Features</h2>
-            <p className="text-slate-500 text-sm font-medium">Tools designed to enhance your productivity.</p>
+      {/* Feature Grid */}
+      <section className="py-20 bg-accent/30 border-y border-border">
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">Platform Features</h2>
+            <p className="text-muted-foreground text-sm font-medium">Tools designed to enhance your productivity.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { icon: Zap, title: 'Live Sync', desc: 'Fetch data in real-time straight from the school portal.' },
-              { icon: Cpu, title: 'Portal AI', desc: 'Personal school assistant with Web Research & URL Summarization.' },
-              { icon: ShieldCheck, title: 'Smart Review', desc: 'AI-monitored community feed for safe discussions.' },
-              { icon: MessageSquare, title: 'Community', desc: 'Engage with fellow students about campus life.' },
-              { icon: Code2, title: 'Optimized', desc: 'Built for speed and performance on every device.' },
-              { icon: Star, title: 'Updates', desc: 'Continuous improvements based on user feedback.' }
+              { title: 'Ledger View', desc: 'Easily track your balance, payments, and assessment history.', icon: Award },
+              { title: 'Schedule Table', desc: 'A beautiful, responsive class schedule available offline.', icon: Calendar },
+              { title: 'Community Feed', desc: 'Connect with other students and share your thoughts.', icon: Users },
             ].map((feature, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 transition-all shadow-sm">
-                <div className="h-10 w-10 rounded-lg bg-slate-50 text-slate-900 flex items-center justify-center mb-4">
+              <div key={i} className="p-6 rounded-2xl bg-card border border-border hover:border-muted-foreground transition-all shadow-sm">
+                <div className="h-10 w-10 rounded-lg bg-accent text-foreground flex items-center justify-center mb-4">
                   <feature.icon className="h-5 w-5" />
                 </div>
-                <h3 className="text-base font-bold mb-2 text-slate-900">{feature.title}</h3>
-                <p className="text-slate-500 text-xs leading-relaxed font-medium">{feature.desc}</p>
+                <h3 className="text-base font-bold mb-2 text-foreground">{feature.title}</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed font-medium">{feature.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 max-w-7xl mx-auto px-6">
-        <div className="bg-slate-900 rounded-2xl p-10 md:p-16 text-white text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to get started?</h2>
-          <div className="flex flex-wrap justify-center gap-4">
+      {/* CTA Section */}
+      <section className="py-20 px-4 max-w-5xl mx-auto">
+        <div className="bg-primary rounded-2xl p-10 md:p-16 text-primary-foreground text-center">
+          <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-6">Ready to upgrade your experience?</h2>
+          <p className="text-primary-foreground/70 mb-10 max-w-md mx-auto font-medium">
+            Join thousands of students who have already moved to the modern hub.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link 
               href="/" 
-              className="px-8 py-3 bg-white text-slate-900 rounded-xl font-bold transition-all active:scale-95 shadow-sm"
+              className="px-8 py-3 bg-card text-foreground rounded-xl font-bold transition-all active:scale-95 shadow-sm hover:bg-accent"
             >
-              Launch Hub
+              Get Started Now
             </Link>
             <Link 
-              href="/disclaimer" 
-              className="px-8 py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 transition-all active:scale-95"
+              href="/docs" 
+              className="px-8 py-3 bg-primary-foreground/10 text-primary-foreground rounded-xl font-bold hover:bg-primary-foreground/20 transition-all active:scale-95"
             >
-              Disclaimer
+              Learn More
             </Link>
           </div>
         </div>
-      </section>
-
-      <footer className="pt-10 max-w-7xl mx-auto px-6 text-center">
-        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-          LCC Hub &copy; {new Date().getFullYear()} • Community Project
+        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest text-center mt-12">
+          &copy; {new Date().getFullYear()} LCC Hub • Designed with pride in the Philippines
         </p>
-      </footer>
+      </section>
     </div>
-  );
-}
-
-function SparkleIcon({ size }: { size: number }) {
-  return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-    >
-      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-      <path d="M5 3v4"/>
-      <path d="M19 17v4"/>
-      <path d="M3 5h4"/>
-      <path d="M17 19h4"/>
-    </svg>
   );
 }

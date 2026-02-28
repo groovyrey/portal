@@ -23,7 +23,7 @@ export default function ProfileRedirect() {
   }, [router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center bg-accent">
       <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
     </div>
   );
