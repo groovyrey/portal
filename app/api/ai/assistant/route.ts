@@ -256,6 +256,18 @@ I'll check the web for that information.
     }
   },
   {
+    "name": "ask_user",
+    "description": "Ask the user a question through a modal with a text input. Use this when you need specific information from the user that isn't in your database.",
+    "parameters": {
+      "type": "object",
+      "properties": { 
+        "question": { "type": "string", "description": "The question to show in the modal." },
+        "placeholder": { "type": "string", "description": "Hint text for the input field." }
+      },
+      "required": ["question"]
+    }
+  },
+  {
     "name": "web_search",
     "description": "Search the web for real-time information or general knowledge.",
     "parameters": {
@@ -375,7 +387,7 @@ ${scheduleContext}
 
             try {
               const toolCall = JSON.parse(jsonStr);
-              const isOurTool = ['web_search', 'web_fetch', 'show_toast'].includes(toolCall.name);
+              const isOurTool = ['web_search', 'web_fetch', 'show_toast', 'ask_user'].includes(toolCall.name);
               
               if (isOurTool) {
                 if (toolCall.name === 'web_search' && toolCall.parameters?.query) {
