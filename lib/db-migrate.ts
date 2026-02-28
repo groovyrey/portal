@@ -1,8 +1,6 @@
 import { query } from './turso';
 
 export async function migrateCommunity() {
-  console.log('Starting Community migration...');
-
   try {
     // 1. Create students table (minimal for community feature)
     await query(`
@@ -70,16 +68,12 @@ export async function migrateCommunity() {
       );
     `);
 
-    console.log('Community migration completed successfully.');
   } catch (error) {
-    console.error('Community migration failed:', error);
     throw error;
   }
 }
 
 export async function migrateNotifications() {
-  console.log('Starting Notifications migration...');
-
   try {
     // Ensure students table exists
     await query(`
@@ -108,16 +102,12 @@ export async function migrateNotifications() {
       );
     `);
 
-    console.log('Notifications migration completed successfully.');
   } catch (error) {
-    console.error('Notifications migration failed:', error);
     throw error;
   }
 }
 
 export async function migrateActivityLogs() {
-  console.log('Starting Activity Logs migration...');
-
   try {
     // Ensure students table exists
     await query(`
@@ -144,9 +134,7 @@ export async function migrateActivityLogs() {
       );
     `);
 
-    console.log('Activity Logs migration completed successfully.');
   } catch (error) {
-    console.error('Activity Logs migration failed:', error);
     throw error;
   }
 }

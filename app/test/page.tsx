@@ -49,48 +49,28 @@ const COLORS = {
   today: 'bg-slate-900',
 };
 
-function parseScheduleToEvents(schedule: ScheduleItem[], year: number, month: number): CalendarEvent[] {
-  const events: CalendarEvent[] = [];
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  schedule.forEach((item, idx) => {
-    if (!item.time) return;
-    const parts = item.time.split(' ');
-    if (parts.length < 2) return;
-    const daysStr = parts[0];
-    const timeRange = parts.slice(1).join(' ');
-    const [startT, endT] = timeRange.split('-');
-    const activeDays = daysStr.split('-').map(d => DAYS_MAP[d.toUpperCase()]).filter(d => d !== undefined);
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      if (activeDays.includes(date.getDay())) {
-        events.push({
-          id: `class-${idx}-${day}`,
-          title: item.subject,
-          description: item.description,
-          type: 'class',
-          date: date,
-          startTime: startT,
-          endTime: endT,
-          location: item.room,
-          color: COLORS.class
-        });
-      }
-    }
-  });
-  return events;
-}
-
 function parsePaymentsToEvents(financials: Financials | undefined, year: number, month: number): CalendarEvent[] {
   const events: CalendarEvent[] = [];
   if (!financials?.installments) return events;
   financials.installments.forEach((inst, idx) => {
-    const dateParts = inst.dueDate.split('/');
+    // Handle MM/DD/YYYY or MM-DD-YYYY
+    const dateParts = inst.dueDate.split(/[\/\-]/);
     if (dateParts.length !== 3) return;
-    const m = parseInt(dateParts[0]) - 1;
-    const d = parseInt(dateParts[1]);
-    const y = parseInt(dateParts[2]);
+    
+    // Some formats are YYYY-MM-DD, others are MM/DD/YYYY
+    let m, d, y;
+    if (dateParts[0].length === 4) {
+      // YYYY-MM-DD
+      y = parseInt(dateParts[0]);
+      m = parseInt(dateParts[1]) - 1;
+      d = parseInt(dateParts[2]);
+    } else {
+      // MM/DD/YYYY
+      m = parseInt(dateParts[0]) - 1;
+      d = parseInt(dateParts[1]);
+      y = parseInt(dateParts[2]);
+    }
+
     if (y === year && m === month) {
       events.push({
         id: `pay-${idx}`,
@@ -157,7 +137,6 @@ export default function TestCalendarPage() {
   const [view, setView] = useState<'calendar' | 'agenda'>('calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isLinking, setIsLinking] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [isFetchingGoogle, setIsFetchingGoogle] = useState(false);
   const [linkedEmail, setLinkedEmail] = useState<string | null>(null);
   const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
@@ -202,6 +181,7 @@ export default function TestCalendarPage() {
 
   const fetchGoogleEvents = async (token: string) => {
     setIsFetchingGoogle(true);
+    console.log('Fetching Google events with token:', token.substring(0, 10) + '...');
     try {
       const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=50&orderBy=startTime&singleEvents=true', {
         headers: {
@@ -211,12 +191,40 @@ export default function TestCalendarPage() {
       
       if (response.ok) {
         const data = await response.json();
-        setGoogleEvents(data.items || []);
-        toast.success(`Retrieved ${data.items?.length || 0} events from Google Calendar`);
+        const items = data.items || [];
+        
+        // Filter out cancelled events and de-duplicate by ID or summary+date
+        const seenIds = new Set();
+        const seenSummaryDate = new Set();
+        
+        const filteredEvents = items.filter((event: any) => {
+          if (event.status === 'cancelled') return false;
+          
+          const dateStr = (event.start?.dateTime || event.start?.date || '').substring(0, 10);
+          const uniqueKey = event.recurringEventId || event.id;
+          const summaryDateKey = `${event.summary}-${dateStr}`;
+
+          if (seenIds.has(uniqueKey)) return false;
+          if (seenSummaryDate.has(summaryDateKey)) return false;
+
+          seenIds.add(uniqueKey);
+          seenSummaryDate.add(summaryDateKey);
+          return true;
+        });
+
+        setGoogleEvents(filteredEvents);
+        toast.success(`Retrieved ${filteredEvents.length} events from Google Calendar`);
       } else {
-        const err = await response.json();
-        console.error('Fetch Google Events Error:', err);
-        toast.error('Failed to fetch events from Google Calendar');
+        const status = response.status;
+        const errorText = await response.text();
+        console.error(`Google Calendar API Error ${status}:`, errorText);
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          toast.error(`Google API Error (${status}): ${errorJson.error?.message || 'Unknown error'}`);
+        } catch (e) {
+          toast.error(`Google API Error (${status}): See console for details`);
+        }
       }
     } catch (error) {
       console.error('Fetch Error:', error);
@@ -226,111 +234,10 @@ export default function TestCalendarPage() {
     }
   };
 
-  const handleSyncToGoogle = async () => {
-    if (!googleAccessToken) {
-      toast.error('Please verify your Google account first.');
-      return;
-    }
-
-    if (!student?.schedule) {
-      toast.error('No schedule found to sync.');
-      return;
-    }
-
-    setIsSyncing(true);
-    let successCount = 0;
-    let failCount = 0;
-
-    try {
-      // Sync only class events
-      const classEvents = events.filter(e => e.type === 'class');
-      
-      if (classEvents.length === 0) {
-        toast.info('No class events to sync for this month.');
-        setIsSyncing(false);
-        return;
-      }
-
-      toast.loading(`Syncing ${classEvents.length} events to Google Calendar...`, { id: 'sync-google' });
-
-      for (const event of classEvents) {
-        // Extract hours and minutes
-        const startMatch = event.startTime?.match(/(\d+):(\d+)(AM|PM)/i);
-        const endMatch = event.endTime?.match(/(\d+):(\d+)(AM|PM)/i);
-
-        if (!startMatch || !endMatch) continue;
-
-        let startH = parseInt(startMatch[1]);
-        const startM = parseInt(startMatch[2]);
-        const startAMPM = startMatch[3].toUpperCase();
-
-        let endH = parseInt(endMatch[1]);
-        const endM = parseInt(endMatch[2]);
-        const endAMPM = endMatch[3].toUpperCase();
-
-        if (startAMPM === 'PM' && startH !== 12) startH += 12;
-        if (startAMPM === 'AM' && startH === 12) startH = 0;
-        if (endAMPM === 'PM' && endH !== 12) endH += 12;
-        if (endAMPM === 'AM' && endH === 12) endH = 0;
-
-        const startDate = new Date(event.date);
-        startDate.setHours(startH, startM, 0);
-
-        const endDate = new Date(event.date);
-        endDate.setHours(endH, endM, 0);
-
-        const gEvent = {
-          summary: event.title,
-          description: event.description,
-          location: event.location,
-          start: {
-            dateTime: startDate.toISOString(),
-            timeZone: 'Asia/Manila',
-          },
-          end: {
-            dateTime: endDate.toISOString(),
-            timeZone: 'Asia/Manila',
-          },
-          reminders: {
-            useDefault: false,
-            overrides: [
-              { method: 'popup', minutes: 30 },
-            ],
-          },
-        };
-
-        const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${googleAccessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(gEvent),
-        });
-
-        if (response.ok) {
-          successCount++;
-        } else {
-          failCount++;
-          const err = await response.json();
-          console.error('Google Calendar Error:', err);
-        }
-      }
-
-      toast.success(`Successfully synced ${successCount} events! ${failCount > 0 ? `${failCount} failed.` : ''}`, { id: 'sync-google' });
-    } catch (error: any) {
-      console.error('Sync Error:', error);
-      toast.error('An error occurred during sync.', { id: 'sync-google' });
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
   const events = useMemo(() => {
     if (!student) return [];
-    const classEvents = parseScheduleToEvents(student.schedule || [], year, month);
     const payEvents = parsePaymentsToEvents(student.financials, year, month);
-    return [...classEvents, ...payEvents].sort((a, b) => a.date.getTime() - b.date.getTime());
+    return [...payEvents].sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [student, year, month]);
 
   const monthName = currentDate.toLocaleString('default', { month: 'long' });
@@ -411,18 +318,11 @@ export default function TestCalendarPage() {
                       Refresh
                     </button>
                     <button 
-                      onClick={handleSyncToGoogle}
-                      disabled={isSyncing}
-                      className="flex-1 md:flex-none px-8 py-3.5 bg-blue-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 shadow-lg shadow-blue-600/20"
+                      onClick={handleGoogleVerify}
+                      disabled={isLinking}
+                      className="flex-1 md:flex-none px-6 py-3.5 bg-white border border-slate-200 text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50"
                     >
-                      {isSyncing ? (
-                        <div className="h-4 w-4 border-2 border-white/30 border-t-white animate-spin rounded-full" />
-                      ) : (
-                        <>
-                          <Download className="h-4 w-4" />
-                          Push to Google
-                        </>
-                      )}
+                      Re-verify
                     </button>
                   </div>
                 </div>
@@ -481,12 +381,15 @@ export default function TestCalendarPage() {
                       return (
                         <div key={event.id} className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:border-emerald-200 hover:bg-emerald-50/20 transition-all group">
                           <div className="flex items-start gap-4">
-                            <div className="w-12 shrink-0 text-center">
+                            <div className="w-16 shrink-0 text-center border-r border-slate-100 pr-4">
                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
-                                {startDate?.toLocaleString('default', { weekday: 'short' })}
+                                {startDate?.toLocaleString('default', { month: 'short' })}
                               </p>
-                              <p className="text-lg font-black text-slate-900 leading-none mt-1">
+                              <p className="text-xl font-black text-slate-900 leading-none mt-1">
                                 {startDate?.getDate()}
+                              </p>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">
+                                {startDate?.toLocaleString('default', { weekday: 'short' })}
                               </p>
                             </div>
                             <div className="flex-1 min-w-0">
@@ -703,10 +606,6 @@ export default function TestCalendarPage() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-6 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-blue-500" />
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Academic Classes</span>
-            </div>
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-rose-500" />
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Payment Due Dates</span>

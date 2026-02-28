@@ -94,7 +94,7 @@ export async function getStudentFinancials(userId: string): Promise<Financials |
         total: data.total,
         balance: data.balance,
         dueToday: data.due_today,
-        ...data.details
+        installments: data.details?.installments || []
       };
     }
     return null;

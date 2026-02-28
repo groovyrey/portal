@@ -11,7 +11,9 @@ import {
   BrainCircuit,
   HelpCircle,
   MessageSquare,
-  ArrowLeft
+  ArrowLeft,
+  Globe,
+  Search
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -114,26 +116,95 @@ export default function AssistantPage() {
 
       const textDecoder = new TextDecoder();
       let isFirstChunk = true;
+      let buffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = textDecoder.decode(value, { stream: true });
         
-        if (isFirstChunk) {
-          isFirstChunk = false;
-          setMessages((prev) => 
-            prev.map((msg) => 
-              msg.id === assistantMessageId ? { ...msg, content: chunk } : msg
-            )
-          );
-        } else {
-          setMessages((prev) => 
-            prev.map((msg) => 
-              msg.id === assistantMessageId ? { ...msg, content: msg.content + chunk } : msg
-            )
-          );
+        if (value) {
+          buffer += textDecoder.decode(value, { stream: true });
+        }
+        
+        // Process buffer for tool calls
+        const toolCallPrefix = "TOOL_CALL:";
+        
+        while (true) {
+          const toolCallIndex = buffer.indexOf(toolCallPrefix);
+          
+          if (toolCallIndex === -1) {
+            // No tool call prefix found. 
+            // However, the buffer might end with a partial "TOOL_CALL:" prefix.
+            // We should only append text that is definitely not part of a prefix.
+            const safeLength = Math.max(0, buffer.length - toolCallPrefix.length);
+            const safeContent = buffer.substring(0, safeLength);
+            
+            if (safeContent) {
+              setMessages((prev) => 
+                prev.map((msg) => 
+                  msg.id === assistantMessageId ? { ...msg, content: msg.content + safeContent } : msg
+                )
+              );
+              buffer = buffer.substring(safeLength);
+            }
+            break; 
+          }
+
+          // We found a tool call prefix.
+          // 1. Append everything BEFORE the prefix to the message.
+          const contentBefore = buffer.substring(0, toolCallIndex);
+          if (contentBefore) {
+            setMessages((prev) => 
+              prev.map((msg) => 
+                msg.id === assistantMessageId ? { ...msg, content: msg.content + contentBefore } : msg
+              )
+            );
+          }
+          
+          // 2. Remove the contentBefore and the prefix from the buffer.
+          buffer = buffer.substring(toolCallIndex + toolCallPrefix.length);
+
+          // 3. Look for the end of the tool call (newline) or end of stream.
+          let endOfToolCall = buffer.indexOf('\n');
+          
+          if (endOfToolCall === -1 && done) {
+            // Stream ended, take the rest of the buffer as the tool call
+            endOfToolCall = buffer.length;
+          }
+
+          if (endOfToolCall !== -1) {
+            const toolCallStr = buffer.substring(0, endOfToolCall).trim();
+            if (toolCallStr) {
+              try {
+                const toolCall = JSON.parse(toolCallStr);
+                if (toolCall.name === 'show_toast' && toolCall.parameters) {
+                  const { message, type } = toolCall.parameters as { message: string; type: 'success' | 'error' | 'info' | 'warning' };
+                  toast[type || 'info'](message);
+                }
+              } catch (e) {
+                console.error('Failed to parse tool call', e, toolCallStr);
+                // If it's not valid JSON, maybe it was just text that looked like a tool call
+                // but we already committed to it being a tool call by removing the prefix.
+              }
+            }
+            buffer = buffer.substring(endOfToolCall + (done ? 0 : 1));
+          } else {
+            // Incomplete tool call, wait for more data.
+            // Put the prefix back so we can find it again or wait for the newline.
+            buffer = toolCallPrefix + buffer;
+            break;
+          }
+        }
+
+        if (done) {
+          // Final flush of any remaining buffer
+          if (buffer) {
+            setMessages((prev) => 
+              prev.map((msg) => 
+                msg.id === assistantMessageId ? { ...msg, content: msg.content + buffer } : msg
+              )
+            );
+          }
+          break;
         }
       }
     } catch (err: any) {
@@ -161,8 +232,8 @@ export default function AssistantPage() {
   const suggestions = [
     "What's my current balance?",
     "Show my schedule for today",
-    "How are my grades doing?",
-    "Explain my course requirements"
+    "Search for Latest AI Advancement",
+    "Summarize: https://example.com"
   ];
 
   return (
@@ -175,14 +246,28 @@ export default function AssistantPage() {
         >
           {messages.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto p-4">
-              <div className="bg-slate-50 p-3 rounded-xl mb-4 text-slate-400">
-                <Bot className="h-8 w-8" />
+              <div className="flex items-center gap-2 mb-6">
+                <div className="bg-slate-900 p-2.5 rounded-xl text-white shadow-lg shadow-slate-200">
+                  <Bot className="h-6 w-6" />
+                </div>
+                <div className="bg-blue-50 p-2.5 rounded-xl text-blue-600 border border-blue-100">
+                  <Globe className="h-6 w-6" />
+                </div>
+                <div className="bg-amber-50 p-2.5 rounded-xl text-amber-600 border border-amber-100">
+                  <Search className="h-6 w-6" />
+                </div>
               </div>
+              
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-900 text-white rounded-full text-[10px] font-bold tracking-wider uppercase mb-4 animate-pulse">
+                <Sparkles className="h-3 w-3" />
+                Web-Enabled Assistant
+              </div>
+
               <h2 className="text-xl font-bold text-slate-900 mb-2">How can I help?</h2>
               <p className="text-xs text-slate-500 mb-8 leading-relaxed">
                 Check your grades, schedule, or balance.
                 <br />
-                <span className="font-medium text-slate-400">Conversations are not saved.</span>
+                Now with <span className="text-slate-900 font-bold">Web Research</span> and <span className="text-slate-900 font-bold">URL Summarization</span>.
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">

@@ -4,16 +4,14 @@ import { pool } from '@/lib/turso';
 import { migrateCommunity, migrateNotifications, migrateActivityLogs } from '@/lib/db-migrate';
 
 export async function GET() {
-  // Wake up Turso and run migrations
+  // Wake up Turso and initialize tables
   try {
-    await pool.query('SELECT 1');
-    
-    // Run migrations (these check for table existence anyway)
-    migrateCommunity().catch(e => console.error('Community migration failed:', e));
-    migrateNotifications().catch(e => console.error('Notifications migration failed:', e));
-    migrateActivityLogs().catch(e => console.error('Activity logs migration failed:', e));
+    // Initialize tables if needed
+    migrateCommunity().catch(() => {});
+    migrateNotifications().catch(() => {});
+    migrateActivityLogs().catch(() => {});
   } catch (e) {
-    console.error('DB Warmup/Migration failed:', e);
+    // Fail silently or handle internal warming error
   }
 
   return NextResponse.json({ version: APP_VERSION });

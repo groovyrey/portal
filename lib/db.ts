@@ -19,6 +19,7 @@ const googleProvider = new GoogleAuthProvider();
 
 // Request additional scopes if we want to sync Calendar later
 googleProvider.addScope('https://www.googleapis.com/auth/calendar.events');
+googleProvider.addScope('https://www.googleapis.com/auth/calendar.events.readonly');
 
 try {
   const dbId = process.env.FIREBASE_DATABASE_ID || '(default)';
