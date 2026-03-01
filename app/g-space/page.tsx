@@ -20,18 +20,30 @@ import {
   GraduationCap,
   LogOut,
   DatabaseZap,
-  FileText
+  FileText,
+  StickyNote,
+  Plus,
+  Trash2,
+  X,
+  Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ScheduleItem, Financials } from '@/types';
 import Skeleton from '@/components/ui/Skeleton';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { auth, googleProvider, db } from '@/lib/db';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 
 // --- Types ---
+interface GoogleTask {
+  id: string;
+  title: string;
+  notes?: string;
+  status: 'needsAction' | 'completed';
+  updated: string;
+}
+
 interface CalendarEvent {
   id: string;
   title: string;
@@ -155,6 +167,7 @@ function generateICS(schedule: ScheduleItem[]) {
 
 export default function GSpacePage() {
   const { data: student, isLoading } = useStudentQuery();
+  const [activeTab, setActiveTab] = useState<'sync' | 'notes'>('sync');
   const [view, setView] = useState<'calendar' | 'agenda'>('calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isLinking, setIsLinking] = useState(false);
@@ -164,6 +177,11 @@ export default function GSpacePage() {
   const [googleEvents, setGoogleEvents] = useState<any[]>([]);
   const [classroomCourses, setClassroomCourses] = useState<ClassroomCourse[]>([]);
   const [classroomAssignments, setClassroomAssignments] = useState<ClassroomAssignment[]>([]);
+  
+  // Notes State
+  const [googleTasks, setGoogleTasks] = useState<GoogleTask[]>([]);
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [newNote, setNewNote] = useState({ title: '', notes: '' });
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -237,6 +255,7 @@ export default function GSpacePage() {
       setGoogleEvents([]);
       setClassroomCourses([]);
       setClassroomAssignments([]);
+      setGoogleTasks([]);
       
       toast.success('Signed out successfully');
     } catch (error) {
@@ -249,7 +268,8 @@ export default function GSpacePage() {
     try {
       await Promise.all([
         fetchGoogleEvents(token),
-        fetchClassroomData(token)
+        fetchClassroomData(token),
+        fetchGoogleTasks(token)
       ]);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -272,9 +292,93 @@ export default function GSpacePage() {
     }
   };
 
+  const fetchGoogleTasks = async (token: string) => {
+    try {
+      const response = await fetch('https://tasks.googleapis.com/v1/lists/@default/tasks', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setGoogleTasks(data.items || []);
+      }
+    } catch (error) {
+      console.error('Tasks Fetch Error:', error);
+    }
+  };
+
+  const handleAddNote = async () => {
+    if (!googleAccessToken || !newNote.title.trim()) return;
+    
+    setIsFetching(true);
+    try {
+      const response = await fetch('https://tasks.googleapis.com/v1/lists/@default/tasks', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${googleAccessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: newNote.title,
+          notes: newNote.notes
+        })
+      });
+
+      if (response.ok) {
+        toast.success('Note added to Google Tasks');
+        setNewNote({ title: '', notes: '' });
+        setIsAddingNote(false);
+        fetchGoogleTasks(googleAccessToken);
+      }
+    } catch (error) {
+      toast.error('Failed to add note');
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  const handleDeleteNote = async (taskId: string) => {
+    if (!googleAccessToken) return;
+
+    try {
+      const response = await fetch(`https://tasks.googleapis.com/v1/lists/@default/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${googleAccessToken}` }
+      });
+
+      if (response.ok) {
+        toast.success('Note deleted');
+        setGoogleTasks(prev => prev.filter(t => t.id !== taskId));
+      }
+    } catch (error) {
+      toast.error('Failed to delete note');
+    }
+  };
+
+  const handleToggleTaskStatus = async (task: GoogleTask) => {
+    if (!googleAccessToken) return;
+
+    const newStatus = task.status === 'completed' ? 'needsAction' : 'completed';
+    
+    try {
+      const response = await fetch(`https://tasks.googleapis.com/v1/lists/@default/tasks/${task.id}`, {
+        method: 'PATCH',
+        headers: { 
+          'Authorization': `Bearer ${googleAccessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response.ok) {
+        setGoogleTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus } : t));
+      }
+    } catch (error) {
+      toast.error('Failed to update task');
+    }
+  };
+
   const fetchClassroomData = async (token: string) => {
     try {
-      // 1. Fetch Courses
       const coursesResponse = await fetch('https://classroom.googleapis.com/v1/courses?courseStates=ACTIVE', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -282,7 +386,6 @@ export default function GSpacePage() {
       if (!coursesResponse.ok) return;
       const coursesData = await coursesResponse.json();
       
-      // Fetch owners in parallel
       const courses = await Promise.all((coursesData.courses || []).map(async (c: any) => {
         let ownerName = 'Unknown Teacher';
         try {
@@ -309,7 +412,6 @@ export default function GSpacePage() {
       
       setClassroomCourses(courses);
 
-      // 2. Fetch CourseWork for each course
       const allAssignments: ClassroomAssignment[] = [];
       await Promise.all(courses.map(async (course: any) => {
         const cwResponse = await fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?orderBy=dueDate asc&pageSize=10`, {
@@ -331,7 +433,6 @@ export default function GSpacePage() {
         }
       }));
 
-      // Sort by due date (closest first)
       allAssignments.sort((a, b) => {
         if (!a.dueDate) return 1;
         if (!b.dueDate) return -1;
@@ -398,7 +499,7 @@ export default function GSpacePage() {
           
           <h1 className="text-xl font-bold mb-2">G-Space Sync</h1>
           <p className="text-muted-foreground text-sm mb-8">
-            Connect your Google account to view your Classroom courses and Calendar events.
+            Connect your Google account to view your Classroom courses, Calendar events, and Notes.
           </p>
 
           <button 
@@ -435,16 +536,18 @@ export default function GSpacePage() {
         {/* G-Space Sub-navigation */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-6">
           {[
-            { id: 'sync', name: 'Sync Hub', icon: RefreshCw, active: true },
-            { id: 'drive', name: 'Drive', icon: DatabaseZap, active: false, future: true },
-            { id: 'meet', name: 'Meet', icon: Mail, active: false, future: true },
-            { id: 'docs', name: 'Docs', icon: FileText, active: false, future: true },
+            { id: 'sync', name: 'Sync Hub', icon: RefreshCw },
+            { id: 'notes', name: 'Notes', icon: StickyNote },
+            { id: 'drive', name: 'Drive', icon: DatabaseZap, future: true },
+            { id: 'meet', name: 'Meet', icon: Mail, future: true },
+            { id: 'docs', name: 'Docs', icon: FileText, future: true },
           ].map((item) => (
             <button
               key={item.id}
               disabled={item.future}
+              onClick={() => setActiveTab(item.id as any)}
               className={`flex items-center gap-2.5 px-5 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap ${
-                item.active 
+                activeTab === item.id 
                   ? 'bg-primary text-primary-foreground shadow-sm' 
                   : 'bg-card border border-border text-muted-foreground hover:bg-accent'
               } ${item.future ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
@@ -456,265 +559,398 @@ export default function GSpacePage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Sync Status Card */}
-            <div className="bg-card border border-border rounded-2xl p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-                  <CheckCircle2 className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold">Account Synced</h3>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">{linkedEmail?.split('@')[0]}</p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => fetchAllData(googleAccessToken!)}
-                  disabled={isFetching}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium transition-all disabled:opacity-50"
-                >
-                  <RefreshCw className={`h-3 w-3 ${isFetching ? 'animate-spin' : ''}`} />
-                  Sync
-                </button>
-                <button 
-                  onClick={handleSignOut}
-                  className="px-3 py-2 bg-accent text-rose-500 rounded-lg text-xs font-medium hover:bg-rose-500/10 transition-all flex items-center gap-2"
-                  title="Sign Out"
-                >
-                  <LogOut className="h-3 w-3" />
-                  Exit
-                </button>
-              </div>
-            </div>
-
-            {/* Courses Card */}
-            <div className="bg-card border border-border rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4 text-primary" />
-                  <h3 className="text-sm font-semibold">Courses</h3>
-                </div>
-                <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
-                  {classroomCourses.length}
-                </span>
-              </div>
-              
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 no-scrollbar">
-                {isFetching ? (
-                  Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)
-                ) : classroomCourses.length === 0 ? (
-                  <p className="text-xs text-center text-muted-foreground py-6">No classes found.</p>
-                ) : (
-                  classroomCourses.map((course) => (
-                    <a 
-                      key={course.id} 
-                      href={course.alternateLink} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between p-3 rounded-xl border border-border bg-accent/30 hover:bg-accent/50 hover:border-primary/30 transition-all group"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-foreground truncate">{course.name}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          {course.section && <p className="text-[9px] text-muted-foreground uppercase">{course.section}</p>}
-                          {course.ownerName && <span className="text-[9px] text-primary/70 font-medium">by {course.ownerName}</span>}
-                        </div>
-                      </div>
-                      <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0" />
-                    </a>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Assignments Card */}
-            <div className="bg-card border border-border rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-primary" />
-                  <h3 className="text-sm font-semibold">Tasks</h3>
-                </div>
-                <span className="text-[10px] bg-rose-500/10 text-rose-600 px-2 py-0.5 rounded-full font-bold">
-                  {classroomAssignments.length}
-                </span>
-              </div>
-              
-              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 no-scrollbar">
-                {isFetching ? (
-                  Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)
-                ) : classroomAssignments.length === 0 ? (
-                  <p className="text-xs text-center text-muted-foreground py-8">No tasks found.</p>
-                ) : (
-                  classroomAssignments.map((assignment) => (
-                    <a 
-                      key={assignment.id} 
-                      href={assignment.alternateLink} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="block p-3 rounded-xl border border-border bg-accent/30 hover:bg-accent/50 hover:border-primary/30 transition-all group"
-                    >
-                      <p className="text-[9px] text-primary font-bold uppercase tracking-wider mb-1">{assignment.courseName}</p>
-                      <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">{assignment.title}</p>
-                      {assignment.dueDate && (
-                        <div className="flex items-center gap-1.5 mt-2 text-[9px] text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          <span>Due: {assignment.dueDate.month}/{assignment.dueDate.day}</span>
-                        </div>
-                      )}
-                    </a>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <button 
-              onClick={downloadICS}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-card border border-border text-foreground rounded-2xl text-xs font-semibold hover:bg-accent transition-all shadow-sm"
+        <AnimatePresence mode="wait">
+          {activeTab === 'sync' ? (
+            <motion.div 
+              key="sync-hub"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="grid grid-cols-1 lg:grid-cols-3 gap-6"
             >
-              <Download className="h-4 w-4 text-muted-foreground" />
-              Export Schedule (.ics)
-            </button>
-          </div>
-
-          {/* Right Column */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1 bg-accent p-1 rounded-xl">
+              <div className="lg:col-span-1 space-y-6">
+                <div className="bg-card border border-border rounded-2xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                      <CheckCircle2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold">Account Synced</h3>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold">{linkedEmail?.split('@')[0]}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
                     <button 
-                      onClick={() => setView('calendar')}
-                      className={`p-2 rounded-lg transition-all ${view === 'calendar' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                      onClick={() => fetchAllData(googleAccessToken!)}
+                      disabled={isFetching}
+                      className="flex-1 flex items-center justify-center gap-2 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium transition-all disabled:opacity-50"
                     >
-                      <CalendarDays className="h-4 w-4" />
+                      <RefreshCw className={`h-3 w-3 ${isFetching ? 'animate-spin' : ''}`} />
+                      Sync
                     </button>
                     <button 
-                      onClick={() => setView('agenda')}
-                      className={`p-2 rounded-lg transition-all ${view === 'agenda' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                      onClick={handleSignOut}
+                      className="px-3 py-2 bg-accent text-rose-500 rounded-lg text-xs font-medium hover:bg-rose-500/10 transition-all flex items-center gap-2"
+                      title="Sign Out"
                     >
-                      <ListTodo className="h-4 w-4" />
+                      <LogOut className="h-3 w-3" />
+                      Exit
                     </button>
                   </div>
-                  <h2 className="text-sm font-bold uppercase tracking-widest">{monthName} {year}</h2>
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <button onClick={handlePrevMonth} className="p-2 hover:bg-accent rounded-lg transition-colors">
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button onClick={handleNextMonth} className="p-2 hover:bg-accent rounded-lg transition-colors">
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
+                <div className="bg-card border border-border rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4 text-primary" />
+                      <h3 className="text-sm font-semibold">Courses</h3>
+                    </div>
+                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
+                      {classroomCourses.length}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 no-scrollbar">
+                    {isFetching ? (
+                      Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)
+                    ) : classroomCourses.length === 0 ? (
+                      <p className="text-xs text-center text-muted-foreground py-6">No classes found.</p>
+                    ) : (
+                      classroomCourses.map((course) => (
+                        <a 
+                          key={course.id} 
+                          href={course.alternateLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-3 rounded-xl border border-border bg-accent/30 hover:bg-accent/50 hover:border-primary/30 transition-all group"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-foreground truncate">{course.name}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {course.section && <p className="text-[9px] text-muted-foreground uppercase">{course.section}</p>}
+                              {course.ownerName && <span className="text-[9px] text-primary/70 font-medium">by {course.ownerName}</span>}
+                            </div>
+                          </div>
+                          <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0" />
+                        </a>
+                      ))
+                    )}
+                  </div>
                 </div>
+
+                <div className="bg-card border border-border rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-4 w-4 text-primary" />
+                      <h3 className="text-sm font-semibold">Tasks</h3>
+                    </div>
+                    <span className="text-[10px] bg-rose-500/10 text-rose-600 px-2 py-0.5 rounded-full font-bold">
+                      {classroomAssignments.length}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 no-scrollbar">
+                    {isFetching ? (
+                      Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)
+                    ) : classroomAssignments.length === 0 ? (
+                      <p className="text-xs text-center text-muted-foreground py-8">No tasks found.</p>
+                    ) : (
+                      classroomAssignments.map((assignment) => (
+                        <a 
+                          key={assignment.id} 
+                          href={assignment.alternateLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="block p-3 rounded-xl border border-border bg-accent/30 hover:bg-accent/50 hover:border-primary/30 transition-all group"
+                        >
+                          <p className="text-[9px] text-primary font-bold uppercase tracking-wider mb-1">{assignment.courseName}</p>
+                          <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">{assignment.title}</p>
+                          {assignment.dueDate && (
+                            <div className="flex items-center gap-1.5 mt-2 text-[9px] text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              <span>Due: {assignment.dueDate.month}/{assignment.dueDate.day}</span>
+                            </div>
+                          )}
+                        </a>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <button 
+                  onClick={downloadICS}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-card border border-border text-foreground rounded-2xl text-xs font-semibold hover:bg-accent transition-all shadow-sm"
+                >
+                  <Download className="h-4 w-4 text-muted-foreground" />
+                  Export Schedule (.ics)
+                </button>
               </div>
 
-              <div className="p-6">
-                <AnimatePresence mode="wait">
-                  {view === 'calendar' ? (
-                    <motion.div 
-                      key="calendar"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      <div className="grid grid-cols-7 gap-px mb-2">
-                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                          <div key={d} className="text-center py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                            {d}
-                          </div>
-                        ))}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1 bg-accent p-1 rounded-xl">
+                        <button 
+                          onClick={() => setView('calendar')}
+                          className={`p-2 rounded-lg transition-all ${view === 'calendar' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                          <CalendarDays className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => setView('agenda')}
+                          className={`p-2 rounded-lg transition-all ${view === 'agenda' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                          <ListTodo className="h-4 w-4" />
+                        </button>
                       </div>
-                      <div className="grid grid-cols-7 gap-2">
-                        {Array.from({ length: firstDayOfMonth }).map((_, i) => (
-                          <div key={`pad-${i}`} className="aspect-square rounded-xl bg-accent/20" />
-                        ))}
-                        {Array.from({ length: daysInMonth }).map((_, i) => {
-                          const dayNum = i + 1;
-                          const date = new Date(year, month, dayNum);
-                          const isToday = date.toDateString() === new Date().toDateString();
-                          const dayEvents = events.filter(e => e.date.getDate() === dayNum);
-                          
-                          return (
-                            <div 
-                              key={dayNum} 
-                              className={`aspect-square rounded-xl border p-2 flex flex-col items-center justify-center gap-1 transition-all ${
-                                isToday 
-                                  ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/10' 
-                                  : 'bg-background border-border hover:border-muted-foreground/30'
-                              }`}
-                            >
-                              <span className={`text-xs font-semibold ${isToday ? 'text-primary' : 'text-foreground/70'}`}>
-                                {dayNum}
-                              </span>
-                              <div className="flex gap-0.5">
-                                {dayEvents.map(e => (
-                                  <div key={e.id} className={`h-1 w-1 rounded-full ${e.type === 'class' ? 'bg-blue-500' : 'bg-rose-500'}`} />
-                                ))}
+                      <h2 className="text-sm font-bold uppercase tracking-widest">{monthName} {year}</h2>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <button onClick={handlePrevMonth} className="p-2 hover:bg-accent rounded-lg transition-colors">
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button onClick={handleNextMonth} className="p-2 hover:bg-accent rounded-lg transition-colors">
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-6">
+                    <AnimatePresence mode="wait">
+                      {view === 'calendar' ? (
+                        <motion.div 
+                          key="calendar"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          <div className="grid grid-cols-7 gap-px mb-2">
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                              <div key={d} className="text-center py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                {d}
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div 
-                      key="agenda"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="space-y-3"
-                    >
-                      {events.length === 0 ? (
-                        <div className="text-center py-12">
-                          <p className="text-xs text-muted-foreground">No events this month.</p>
-                        </div>
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-7 gap-2">
+                            {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+                              <div key={`pad-${i}`} className="aspect-square rounded-xl bg-accent/20" />
+                            ))}
+                            {Array.from({ length: daysInMonth }).map((_, i) => {
+                              const dayNum = i + 1;
+                              const date = new Date(year, month, dayNum);
+                              const isToday = date.toDateString() === new Date().toDateString();
+                              const dayEvents = events.filter(e => e.date.getDate() === dayNum);
+                              
+                              return (
+                                <div 
+                                  key={dayNum} 
+                                  className={`aspect-square rounded-xl border p-2 flex flex-col items-center justify-center gap-1 transition-all ${
+                                    isToday 
+                                      ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/10' 
+                                      : 'bg-background border-border hover:border-muted-foreground/30'
+                                  }`}
+                                >
+                                  <span className={`text-xs font-semibold ${isToday ? 'text-primary' : 'text-foreground/70'}`}>
+                                    {dayNum}
+                                  </span>
+                                  <div className="flex gap-0.5">
+                                    {dayEvents.map(e => (
+                                      <div key={e.id} className={`h-1 w-1 rounded-full ${e.type === 'class' ? 'bg-blue-500' : 'bg-rose-500'}`} />
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
                       ) : (
-                        events.map((event) => (
-                          <div key={event.id} className="p-3 rounded-xl border border-border bg-accent/20 flex items-center gap-4 group transition-all">
-                            <div className="flex flex-col items-center justify-center w-10 shrink-0">
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase">{event.date.toLocaleString('default', { weekday: 'short' })}</span>
-                              <span className="text-sm font-bold">{event.date.getDate()}</span>
+                        <motion.div 
+                          key="agenda"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="space-y-3"
+                        >
+                          {events.length === 0 ? (
+                            <div className="text-center py-12">
+                              <p className="text-xs text-muted-foreground">No events this month.</p>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-xs font-semibold truncate group-hover:text-primary transition-colors">{event.title}</h4>
-                              <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
-                                {event.startTime && <div className="flex items-center gap-1"><Clock className="h-3 w-3" />{event.startTime}</div>}
-                                {event.amount && <div className="text-rose-500 font-medium">PHP {event.amount}</div>}
+                          ) : (
+                            events.map((event) => (
+                              <div key={event.id} className="p-3 rounded-xl border border-border bg-accent/20 flex items-center gap-4 group transition-all">
+                                <div className="flex flex-col items-center justify-center w-10 shrink-0">
+                                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{event.date.toLocaleString('default', { weekday: 'short' })}</span>
+                                  <span className="text-sm font-bold">{event.date.getDate()}</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="text-xs font-semibold truncate group-hover:text-primary transition-colors">{event.title}</h4>
+                                  <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
+                                    {event.startTime && <div className="flex items-center gap-1"><Clock className="h-3 w-3" />{event.startTime}</div>}
+                                    {event.amount && <div className="text-rose-500 font-medium">PHP {event.amount}</div>}
+                                  </div>
+                                </div>
+                                <div className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                                  event.type === 'class' ? 'bg-blue-500/10 text-blue-600' : 'bg-rose-500/10 text-rose-600'
+                                }`}>
+                                  {event.type}
+                                </div>
                               </div>
-                            </div>
-                            <div className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                              event.type === 'class' ? 'bg-blue-500/10 text-blue-600' : 'bg-rose-500/10 text-rose-600'
-                            }`}>
-                              {event.type}
-                            </div>
-                          </div>
-                        ))
+                            ))
+                          )}
+                        </motion.div>
                       )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-center gap-6 py-4 px-6 bg-card border border-border rounded-2xl">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-blue-500" />
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Classes</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-rose-500" />
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Payments</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-primary" />
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Today</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="notes-tab"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold">Google Tasks</h2>
+                  <p className="text-xs text-muted-foreground">Sync your notes and to-dos across Google.</p>
+                </div>
+                <button 
+                  onClick={() => setIsAddingNote(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-sm"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Note
+                </button>
+              </div>
+
+              {isAddingNote && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-card border-2 border-primary/20 rounded-2xl p-6 shadow-lg"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-bold flex items-center gap-2">
+                      <StickyNote className="h-4 w-4 text-primary" />
+                      New Note
+                    </h3>
+                    <button onClick={() => setIsAddingNote(false)} className="text-muted-foreground hover:text-foreground">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    <input 
+                      type="text"
+                      placeholder="Title"
+                      value={newNote.title}
+                      onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
+                      className="w-full bg-accent/50 border border-border rounded-xl px-4 py-2 text-sm font-semibold focus:outline-none focus:ring-2 ring-primary/20"
+                    />
+                    <textarea 
+                      placeholder="Start typing your note..."
+                      rows={4}
+                      value={newNote.notes}
+                      onChange={(e) => setNewNote({ ...newNote, notes: e.target.value })}
+                      className="w-full bg-accent/50 border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 ring-primary/20 resize-none"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button 
+                        onClick={() => setIsAddingNote(false)}
+                        className="px-4 py-2 text-xs font-bold text-muted-foreground hover:text-foreground"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={handleAddNote}
+                        disabled={!newNote.title.trim() || isFetching}
+                        className="px-6 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:opacity-90 disabled:opacity-50 transition-all"
+                      >
+                        {isFetching ? 'Saving...' : 'Save Note'}
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {isFetching && googleTasks.length === 0 ? (
+                  Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-40 w-full rounded-2xl" />)
+                ) : googleTasks.length === 0 ? (
+                  <div className="col-span-full py-20 text-center bg-card border border-dashed border-border rounded-2xl">
+                    <StickyNote className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">No notes found. Create your first one!</p>
+                  </div>
+                ) : (
+                  googleTasks.map((task) => (
+                    <motion.div 
+                      key={task.id}
+                      layout
+                      className={`group bg-card border border-border rounded-2xl p-5 hover:border-primary/30 transition-all relative ${task.status === 'completed' ? 'opacity-60' : ''}`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <button 
+                          onClick={() => handleToggleTaskStatus(task)}
+                          className={`h-5 w-5 rounded-full border flex items-center justify-center transition-all ${
+                            task.status === 'completed' 
+                              ? 'bg-emerald-500 border-emerald-500 text-white' 
+                              : 'border-muted-foreground/30 group-hover:border-primary'
+                          }`}
+                        >
+                          {task.status === 'completed' && <Check className="h-3 w-3" />}
+                        </button>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => handleDeleteNote(task.id)}
+                            className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <h4 className={`text-sm font-bold mb-2 line-clamp-2 ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
+                        {task.title}
+                      </h4>
+                      {task.notes && (
+                        <p className="text-xs text-muted-foreground line-clamp-3 mb-4 leading-relaxed">
+                          {task.notes}
+                        </p>
+                      )}
+                      <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
+                          {new Date(task.updated).toLocaleDateString()}
+                        </span>
+                        {task.status === 'completed' && (
+                          <span className="text-[9px] bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-full font-bold uppercase">Done</span>
+                        )}
+                      </div>
                     </motion.div>
-                  )}
-                </AnimatePresence>
+                  ))
+                )}
               </div>
-            </div>
-            
-            <div className="flex items-center justify-center gap-6 py-4 px-6 bg-card border border-border rounded-2xl">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-blue-500" />
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Classes</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-rose-500" />
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Payments</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-primary" />
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Today</span>
-              </div>
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

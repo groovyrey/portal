@@ -17,12 +17,13 @@ let db: any;
 let auth: any;
 const googleProvider = new GoogleAuthProvider();
 
-// Request additional scopes for Calendar and Classroom
+// Request additional scopes for Calendar, Classroom, and Tasks
 googleProvider.addScope('https://www.googleapis.com/auth/calendar.events');
 googleProvider.addScope('https://www.googleapis.com/auth/calendar.events.readonly');
 googleProvider.addScope('https://www.googleapis.com/auth/classroom.courses.readonly');
 googleProvider.addScope('https://www.googleapis.com/auth/classroom.coursework.me.readonly');
 googleProvider.addScope('https://www.googleapis.com/auth/classroom.rosters.readonly');
+googleProvider.addScope('https://www.googleapis.com/auth/tasks');
 
 try {
   const dbId = process.env.FIREBASE_DATABASE_ID || '(default)';
