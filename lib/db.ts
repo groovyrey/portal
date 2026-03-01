@@ -17,9 +17,12 @@ let db: any;
 let auth: any;
 const googleProvider = new GoogleAuthProvider();
 
-// Request additional scopes if we want to sync Calendar later
+// Request additional scopes for Calendar and Classroom
 googleProvider.addScope('https://www.googleapis.com/auth/calendar.events');
 googleProvider.addScope('https://www.googleapis.com/auth/calendar.events.readonly');
+googleProvider.addScope('https://www.googleapis.com/auth/classroom.courses.readonly');
+googleProvider.addScope('https://www.googleapis.com/auth/classroom.coursework.me.readonly');
+googleProvider.addScope('https://www.googleapis.com/auth/classroom.rosters.readonly');
 
 try {
   const dbId = process.env.FIREBASE_DATABASE_ID || '(default)';

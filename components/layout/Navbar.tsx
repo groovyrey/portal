@@ -23,7 +23,8 @@ import {
   BrainCircuit,
   DatabaseZap,
   RefreshCw,
-  Bell
+  Bell,
+  LayoutGrid
 } from 'lucide-react';
 import { ThemeToggle } from '../shared/ThemeToggle';
 import { toast } from 'sonner';
@@ -151,6 +152,7 @@ export default function Navbar() {
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
     { name: 'Profile', href: studentId ? `/profile/${obfuscateId(studentId)}` : '/profile', icon: UserIcon },
+    { name: 'G-Space', href: '/g-space', icon: LayoutGrid },
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
     { name: 'Subjects', href: '/subjects', icon: BookOpen },
     { name: 'Community', href: '/community', icon: MessageSquare },
@@ -170,6 +172,7 @@ export default function Navbar() {
   ] : [];
 
   const desktopMore = isLoggedIn ? [
+    { name: 'G-Space', href: '/g-space', icon: LayoutGrid },
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
     { name: 'Subjects', href: '/subjects', icon: BookOpen },
     { name: 'EAF', href: '/eaf', icon: FileText },
