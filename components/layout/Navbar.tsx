@@ -156,7 +156,6 @@ export default function Navbar() {
     { name: 'Community', href: '/community', icon: MessageSquare },
     { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
-    ...(isStaff ? [{ name: 'Knowledge', href: '/admin/knowledge', icon: DatabaseZap }] : []),
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'About', href: '/about', icon: Info },
   ];
@@ -173,7 +172,6 @@ export default function Navbar() {
   const desktopMore = isLoggedIn ? [
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
     { name: 'Subjects', href: '/subjects', icon: BookOpen },
-    ...(isStaff ? [{ name: 'Knowledge', href: '/admin/knowledge', icon: DatabaseZap }] : []),
     { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'About', href: '/about', icon: Info },

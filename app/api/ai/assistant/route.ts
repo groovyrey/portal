@@ -30,7 +30,6 @@ import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 import { getFullStudentData } from '@/lib/data-service';
 import { logActivity } from '@/lib/activity-service';
-import { searchKnowledge } from '@/lib/vector-store';
 import { 
   SCHOOL_INFO, 
   BUILDING_CODES, 
@@ -213,15 +212,14 @@ You are the "Portal Assistant", a specialized academic advisor for ${SCHOOL_INFO
 
 STRICT OPERATIONAL RULES:
 1. **NO PROACTIVE SUMMARIES:** Never start a conversation by summarizing the student's grades, GPA, or financial balance unless specifically asked.
-2. **PROACTIVE KNOWLEDGE SEARCH:** If the user asks about specific policies, grading, procedures, or any information that might be in your internal knowledge base, you SHOULD use the \`search_knowledge\` tool to find the most accurate information.
-3. **PROACTIVE WEB SEARCH:** If the user asks about ANY topic outside of the school's internal knowledge (e.g., general news, tech updates, external events), you MUST immediately call the \`web_search\` tool. Do not ask for permission.
-4. **PROACTIVE FEEDBACK (TOASTS):** You MUST use the \`show_toast\` tool to provide real-time feedback for your actions. 
+2. **PROACTIVE WEB SEARCH:** If the user asks about ANY topic outside of the school's internal knowledge (e.g., general news, tech updates, external events), you MUST immediately call the \`web_search\` tool. Do not ask for permission.
+3. **PROACTIVE FEEDBACK (TOASTS):** You MUST use the \`show_toast\` tool to provide real-time feedback for your actions. 
    - Use \`success\` when you've found specific data.
    - Use \`info\` for general status updates (e.g., "Starting web search...").
    Note: The UI shows "Thinking...", but your toasts provide specific context. Your toasts will be automatically prefixed with "[Assistant]: " in the UI.
-5. **PROACTIVE CLARIFICATION:** If a user request is ambiguous or requires more data that isn't in your student context, immediately use the \`ask_user\` tool to request the missing information.
-6. **CITE SOURCES:** When using \`web_search\` or \`web_fetch\`, synthesize results and provide Markdown links.
-7. **NO ASSUMPTIONS:** You MUST always use the \`ask_user\` and \`ask_user_choice\` tools to gather preferences, clarify requirements, or make decisions instead of making assumptions.
+4. **PROACTIVE CLARIFICATION:** If a user request is ambiguous or requires more data that isn't in your student context, immediately use the \`ask_user\` tool to request the missing information.
+5. **CITE SOURCES:** When using \`web_search\` or \`web_fetch\`, synthesize results and provide Markdown links.
+6. **NO ASSUMPTIONS:** You MUST always use the \`ask_user\` and \`ask_user_choice\` tools to gather preferences, clarify requirements, or make decisions instead of making assumptions.
 
 ---
 🛠️ TOOL CALLING CONFIGURATION
@@ -273,15 +271,6 @@ I'll check the web for that information.
     }
   },
   {
-    "name": "search_knowledge",
-    "description": "Search the official knowledge base for general information, policies, procedures, and context-specific data provided by administrators.",
-    "parameters": {
-      "type": "object",
-      "properties": { "query": { "type": "string" } },
-      "required": ["query"]
-    }
-  },
-  {
     "name": "web_search",
     "description": "Search the web for real-time information or general knowledge.",
     "parameters": {
@@ -314,8 +303,16 @@ ${financialContext}
 ${gradesContext}
 - Current Schedule:
 ${scheduleContext}
-- School: ${SCHOOL_INFO.name}
+- School: ${SCHOOL_INFO.name} (${SCHOOL_INFO.acronym})
+- Location: ${SCHOOL_INFO.location}
+- Motto: ${SCHOOL_INFO.motto}
 - Current Date/Time: ${dateStr}, ${timeStr}
+
+SCHOOL POLICIES & INFORMATION:
+Building Codes: ${JSON.stringify(BUILDING_CODES)}
+Grading System: ${GRADING_SYSTEM}
+Common Procedures: ${COMMON_PROCEDURES}
+Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
 `.trim();
 
     const model = new ChatGoogleGenerativeAI({
@@ -406,24 +403,10 @@ ${scheduleContext}
               // Pre-process jsonStr to fix common model mistakes
               const sanitizedJson = jsonStr.replace(/ask_user_choices/g, 'ask_user_choice');
               const toolCall = JSON.parse(sanitizedJson);
-              const isOurTool = ['search_knowledge', 'web_search', 'web_fetch', 'show_toast', 'ask_user', 'ask_user_choice'].includes(toolCall.name);
+              const isOurTool = ['web_search', 'web_fetch', 'show_toast', 'ask_user', 'ask_user_choice'].includes(toolCall.name);
               
               if (isOurTool) {
-                if (toolCall.name === 'search_knowledge' && toolCall.parameters?.query) {
-                  if (!isWriterClosed) {
-                    await writer.write(encoder.encode('STATUS:SEARCHING'));
-                    await writer.write(encoder.encode('\n📚 *Searching knowledge base for: "' + toolCall.parameters.query + '"...*\n\n'));
-                  }
-                  const results = await searchKnowledge(toolCall.parameters.query);
-                  const resultText = results.length > 0 
-                    ? results.map((r, i) => `[Result ${i+1}]: ${r.pageContent}`).join('\n\n')
-                    : "No specific information found in the knowledge base.";
-                  
-                  if (!isWriterClosed) await writer.write(encoder.encode('STATUS:PROCESSING'));
-                  history.push(new AIMessage(fullContent));
-                  currentInput = `TOOL_RESULT (Knowledge Base): ${resultText}\n\nBased on this information from the internal knowledge base, please answer the user's question accurately.`;
-                  continue;
-                } else if (toolCall.name === 'web_search' && toolCall.parameters?.query) {
+                if (toolCall.name === 'web_search' && toolCall.parameters?.query) {
                   if (!isWriterClosed) {
                     await writer.write(encoder.encode('STATUS:SEARCHING'));
                     await writer.write(encoder.encode('\n🔍 *Searching for: "' + toolCall.parameters.query + '"...*\n\n'));
