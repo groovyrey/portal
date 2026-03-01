@@ -21,7 +21,7 @@ export default function PostReviewModal({ isOpen }: PostReviewModalProps) {
         <div className="relative mb-8 flex items-center justify-center">
           <div className="absolute inset-0 bg-blue-500/10 rounded-full animate-pulse" />
           <div className="relative bg-card p-6 rounded-3xl border border-border shadow-xl">
-            <ShieldCheck className="h-10 w-10 text-blue-600" />
+            <ShieldCheck className="h-10 w-10 text-blue-600 dark:text-blue-400" />
           </div>
         </div>
 

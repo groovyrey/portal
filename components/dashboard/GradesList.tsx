@@ -140,17 +140,17 @@ export default function GradesList({ reports }: GradesListProps) {
                           </div>
                           <div className={`text-base font-bold px-3 py-1 rounded-lg border ${
                             isPassed
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                              : 'bg-rose-50 text-rose-700 border-rose-100'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50'
+                              : 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/50'
                           }`}>
                             {sub.grade}
                           </div>
                         </div>
-                        <div className="flex items-center justify-between pt-3 border-t border-slate-50">
+                        <div className="flex items-center justify-between pt-3 border-t border-border">
                           <div className="flex items-center gap-1.5">
                             <div className={`h-1.5 w-1.5 rounded-full ${isPassed ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                             <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                              isPassed ? 'text-emerald-600' : 'text-rose-600'
+                              isPassed ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                             }`}>
                               {sub.remarks}
                             </span>

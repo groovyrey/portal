@@ -97,7 +97,7 @@ export default function BadgeDisplay({ badgeIds, size = 'md', showName = false, 
       </AvatarGroup>
       
       {showName && userBadges.length === 1 && (
-        <span className={`font-black uppercase tracking-[0.1em] ${badgeIds.includes('staff') ? 'text-blue-600' : 'text-muted-foreground'} ${nameClasses[size]}`}>
+        <span className={`font-black uppercase tracking-[0.1em] ${badgeIds.includes('staff') ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'} ${nameClasses[size]}`}>
           {userBadges[0].name}
         </span>
       )}

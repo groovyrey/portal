@@ -1,5 +1,21 @@
 import { NextRequest } from 'next/server';
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+/**
+ * TOOL USAGE GUIDELINES FOR DEVELOPERS:
+ * 
+ * 1. IMPLEMENTATION:
+ *    - Server-side tools (like web_search, web_fetch) must be handled within the turn loop.
+ *    - Client-side tools (like show_toast, ask_user) should be signaled with 'TOOL_CALL:' prefix
+ *      so the frontend can intercept and execute them.
+ * 
+ * 2. PROMPT INSTRUCTIONS:
+ *    - The 'systemPrompt' must clearly define the tool schema and the calling convention (||| separator).
+ *    - Ensure the model is instructed NOT to use markdown blocks for JSON tool calls.
+ * 
+ * 3. PARSING:
+ *    - Use a robust parsing strategy (like the turn loop below) that can handle both explicit
+ *      markers (|||) and fallback JSON detection in case the model deviates.
+ */
 import { 
   ChatPromptTemplate, 
   MessagesPlaceholder,
@@ -224,19 +240,17 @@ You are the "Portal Assistant", a specialized academic advisor for ${SCHOOL_INFO
 
 STRICT OPERATIONAL RULES:
 1. **NO PROACTIVE SUMMARIES:** Never start a conversation by summarizing the student's grades, GPA, or financial balance unless specifically asked.
-2. **QUICK START INTENT:** If the user sends a suggestion like "Search for Latest AI Advancement" or "Search for...", you MUST immediately call the \`web_search\` tool.
-3. **WEB RESEARCH FIRST:** If the user asks about ANY topic outside of the school's internal knowledge, you MUST use the \`web_search\` tool immediately.
-4. **CITE SOURCES:** When using \`web_search\` or \`web_fetch\`, synthesize results and provide Markdown links.
-5. **ACTIVE FEEDBACK (TOASTS):** You MUST use the \`show_toast\` tool to provide real-time feedback for your actions. 
-   - Use \`success\` when you've found specific data the user requested.
-   - Use \`info\` for general status updates.
-   - Use \`warning\` if something is missing but you can still help.
-   - Use \`error\` ONLY for critical system failures.
-   Note: The UI already shows "Thinking...", "Searching for...", and "Processing results..." automatically. Use toasts for more specific feedback like "Found your 2024 grades!" or "Summarization complete". Your toasts will be automatically prefixed with "[Assistant]: " in the UI.
+2. **PROACTIVE WEB SEARCH:** If the user asks about ANY topic outside of the school's internal knowledge (e.g., general news, tech updates, external events), you MUST immediately call the \`web_search\` tool. Do not ask for permission.
+3. **PROACTIVE FEEDBACK (TOASTS):** You MUST use the \`show_toast\` tool to provide real-time feedback for your actions. 
+   - Use \`success\` when you've found specific data.
+   - Use \`info\` for general status updates (e.g., "Starting web search...").
+   Note: The UI shows "Thinking...", but your toasts provide specific context. Your toasts will be automatically prefixed with "[Assistant]: " in the UI.
+4. **PROACTIVE CLARIFICATION:** If a user request is ambiguous or requires more data that isn't in your student context, immediately use the \`ask_user\` tool to request the missing information.
+5. **CITE SOURCES:** When using \`web_search\` or \`web_fetch\`, synthesize results and provide Markdown links.
 
 ---
 🛠️ TOOL CALLING CONFIGURATION
-If you need to use a tool, append \`|||\` followed by the JSON tool call at the VERY END of your response. 
+To call a tool, append \`|||\` followed by the JSON tool call at the VERY END of your response. 
 **CRITICAL:** DO NOT wrap the tool call in markdown code blocks.
 
 **Example:**
@@ -265,6 +279,22 @@ I'll check the web for that information.
         "placeholder": { "type": "string", "description": "Hint text for the input field." }
       },
       "required": ["question"]
+    }
+  },
+  {
+    "name": "ask_user_choice",
+    "description": "Ask the user to choose from a list of options. Use this for clarifying intents or selecting from a limited set of possibilities.",
+    "parameters": {
+      "type": "object",
+      "properties": { 
+        "question": { "type": "string", "description": "The question or prompt for the choices." },
+        "options": { 
+          "type": "array", 
+          "items": { "type": "string" },
+          "description": "List of options for the user to select from." 
+        }
+      },
+      "required": ["question", "options"]
     }
   },
   {
@@ -328,9 +358,6 @@ ${scheduleContext}
 
     const input = messages[messages.length - 1].content;
 
-    // Log AI interaction
-    logActivity(userId, 'AI Assistant', `Asked: "${input.substring(0, 50)}${input.length > 50 ? '...' : ''}"`, '/assistant').catch(e => {});
-
     (async () => {
       let currentInput = input;
       const maxTurns = 3;
@@ -350,9 +377,15 @@ ${scheduleContext}
           let fullContent = '';
           const toolCallMarker = '|||';
 
-          for await (const chunk of responseStream) {
-            const content = chunk.content as string || '';
-            fullContent += content;
+          try {
+            for await (const chunk of responseStream) {
+              const content = chunk.content as string || '';
+              fullContent += content;
+            }
+          } catch (streamError: any) {
+            console.error("Stream reading interrupted:", streamError.message);
+            // If we have some content, try to proceed anyway as it might contain a complete tool call
+            if (!fullContent) throw streamError;
           }
 
           // Check if model called a tool
@@ -365,7 +398,7 @@ ${scheduleContext}
             toolCallPos = toolMarkerIndex;
           } else {
             // Fallback: search for tool-like JSON in the whole content
-            const toolPatterns = ['"web_search"', '"web_fetch"', '"show_toast"'];
+            const toolPatterns = ['"web_search"', '"web_fetch"', '"show_toast"', '"ask_user"', '"ask_user_choice"', '"ask_user_choices"'];
             if (toolPatterns.some(p => fullContent.includes(p))) {
               const startOfJsonIndex = fullContent.lastIndexOf('{');
               const endOfJsonIndex = fullContent.lastIndexOf('}');
@@ -386,8 +419,10 @@ ${scheduleContext}
             }
 
             try {
-              const toolCall = JSON.parse(jsonStr);
-              const isOurTool = ['web_search', 'web_fetch', 'show_toast', 'ask_user'].includes(toolCall.name);
+              // Pre-process jsonStr to fix common model mistakes
+              const sanitizedJson = jsonStr.replace(/ask_user_choices/g, 'ask_user_choice');
+              const toolCall = JSON.parse(sanitizedJson);
+              const isOurTool = ['web_search', 'web_fetch', 'show_toast', 'ask_user', 'ask_user_choice'].includes(toolCall.name);
               
               if (isOurTool) {
                 if (toolCall.name === 'web_search' && toolCall.parameters?.query) {

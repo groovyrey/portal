@@ -30,6 +30,7 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import Modal from '@/components/ui/Modal';
 
 type Message = {
   id: string;
@@ -102,6 +103,11 @@ export default function AssistantPage() {
   const [modalQuestion, setModalQuestion] = useState('');
   const [modalPlaceholder, setModalPlaceholder] = useState('');
   const [modalInput, setModalInput] = useState('');
+
+  // Choice modal state for ask_user_choice tool
+  const [isChoiceModalOpen, setIsChoiceModalOpen] = useState(false);
+  const [choiceQuestion, setChoiceQuestion] = useState('');
+  const [choiceOptions, setChoiceOptions] = useState<string[]>([]);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -221,13 +227,21 @@ export default function AssistantPage() {
                 const toolCall = JSON.parse(toolCallStr);
                 if (toolCall.name === 'show_toast' && toolCall.parameters) {
                   const { message, type } = toolCall.parameters as { message: string; type: 'success' | 'error' | 'info' | 'warning' };
-                  toast[type || 'info'](`[Assistant]: ${message}`);
+                  toast[type || 'info']("Assistant Message", {
+                    description: message,
+                    duration: 4000,
+                  });
                 } else if (toolCall.name === 'ask_user' && toolCall.parameters) {
                   const { question, placeholder } = toolCall.parameters as { question: string; placeholder?: string };
                   setModalQuestion(question);
                   setModalPlaceholder(placeholder || "Type your response here...");
                   setModalInput('');
                   setIsModalOpen(true);
+                } else if (toolCall.name === 'ask_user_choice' && toolCall.parameters) {
+                  const { question, options } = toolCall.parameters as { question: string; options: string[] };
+                  setChoiceQuestion(question);
+                  setChoiceOptions(options || []);
+                  setIsChoiceModalOpen(true);
                 }
               } catch (e) {}
             }
@@ -438,74 +452,104 @@ export default function AssistantPage() {
       </div>
 
       {/* Ask User Modal */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsModalOpen(false)}
-              className="absolute inset-0 bg-background/80 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
-            >
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-primary/10 p-2.5 rounded-xl text-primary">
-                    <HelpCircle className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-lg font-bold text-foreground">Assistant Request</h3>
-                </div>
-                
-                <p className="text-sm text-muted-foreground font-medium mb-6 leading-relaxed">
-                  {modalQuestion}
-                </p>
-
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (modalInput.trim()) {
-                      setIsModalOpen(false);
-                      sendMessage(modalInput.trim());
-                    }
-                  }}
-                >
-                  <input
-                    autoFocus
-                    type="text"
-                    value={modalInput}
-                    onChange={(e) => setModalInput(e.target.value)}
-                    placeholder={modalPlaceholder}
-                    className="w-full bg-accent border border-border focus:border-primary/50 focus:bg-card rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all mb-4"
-                  />
-                  
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setIsModalOpen(false)}
-                      className="flex-1 px-4 py-2.5 bg-accent border border-border hover:bg-accent/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={!modalInput.trim()}
-                      className="flex-1 px-4 py-2.5 bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-primary/20"
-                    >
-                      Submit
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </motion.div>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        maxWidth="max-w-md"
+        title={
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 p-2.5 rounded-xl text-primary">
+              <HelpCircle className="h-6 w-6" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground">Assistant Request</h3>
           </div>
-        )}
-      </AnimatePresence>
+        }
+      >
+        <div className="p-6">
+          <p className="text-sm text-muted-foreground font-medium mb-6 leading-relaxed">
+            {modalQuestion}
+          </p>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (modalInput.trim()) {
+                setIsModalOpen(false);
+                sendMessage(modalInput.trim());
+              }
+            }}
+          >
+            <input
+              autoFocus
+              type="text"
+              value={modalInput}
+              onChange={(e) => setModalInput(e.target.value)}
+              placeholder={modalPlaceholder}
+              className="w-full bg-accent border border-border focus:border-primary/50 focus:bg-card rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all mb-4"
+            />
+            
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="flex-1 px-4 py-2.5 bg-accent border border-border hover:bg-accent/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!modalInput.trim()}
+                className="flex-1 px-4 py-2.5 bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-primary/20"
+              >
+                Submit
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      {/* Choice Modal */}
+      <Modal
+        isOpen={isChoiceModalOpen}
+        onClose={() => setIsChoiceModalOpen(false)}
+        maxWidth="max-w-md"
+        title={
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 p-2.5 rounded-xl text-primary">
+              <HelpCircle className="h-6 w-6" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground">Assistant Suggestion</h3>
+          </div>
+        }
+      >
+        <div className="p-6">
+          <p className="text-sm text-muted-foreground font-medium mb-6 leading-relaxed">
+            {choiceQuestion}
+          </p>
+
+          <div className="flex flex-col gap-2 mb-6">
+            {choiceOptions.map((option, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  setIsChoiceModalOpen(false);
+                  sendMessage(option);
+                }}
+                className="w-full text-left p-3.5 bg-accent/40 border border-border hover:border-primary/40 hover:bg-accent rounded-xl transition-all text-xs font-bold text-foreground active:scale-[0.98]"
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+          
+          <button
+            onClick={() => setIsChoiceModalOpen(false)}
+            className="w-full px-4 py-2.5 bg-accent border border-border hover:bg-accent/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95"
+          >
+            Cancel
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

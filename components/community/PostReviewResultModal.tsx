@@ -28,7 +28,7 @@ export default function PostReviewResultModal({ isOpen, onClose, result, isError
       <div className="p-8 flex flex-col items-center text-center">
         {/* Icon */}
         <div className={`mb-6 p-4 rounded-2xl ${
-          isError ? 'bg-amber-50 text-amber-600' :
+          isError ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400' :
           isApproved ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
         }`}>
           {isError ? (

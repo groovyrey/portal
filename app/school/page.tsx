@@ -28,7 +28,7 @@ const SchoolInfoPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-accent font-sans text-foreground pb-20">
+    <div className="min-h-screen bg-background font-sans text-foreground pb-20">
       {/* Hero Section */}
       <div className="bg-slate-900 pt-16 pb-12 px-6">
         <div className="max-w-5xl mx-auto">
@@ -69,7 +69,7 @@ const SchoolInfoPage = () => {
                     className="group bg-card p-5 rounded-2xl border border-border hover:border-slate-400 transition-all flex items-center justify-between shadow-sm"
                   >
                     <div>
-                      <h3 className="font-bold text-foreground text-sm group-hover:text-blue-600 transition-colors">{link.name}</h3>
+                      <h3 className="font-bold text-foreground text-sm group-hover:text-blue-600 dark:text-blue-400 transition-colors">{link.name}</h3>
                       <p className="text-xs text-muted-foreground mt-0.5 font-medium">{link.description}</p>
                     </div>
                     <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-muted-foreground transition-colors" />

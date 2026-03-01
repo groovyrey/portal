@@ -45,7 +45,7 @@ export default function SubjectsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-accent p-8">
+      <div className="min-h-screen bg-background p-8">
         <div className="max-w-5xl mx-auto space-y-8">
           <div className="flex justify-between items-center">
             <Skeleton className="h-10 w-64" />
@@ -69,7 +69,7 @@ export default function SubjectsPage() {
 
   if (!student || !student.offeredSubjects) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-accent p-4 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
         <LottieAnimation 
           animationPath="/animations/error-404.json"
           className="w-48 h-48 mb-4"
@@ -87,7 +87,7 @@ export default function SubjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-accent font-sans text-foreground pb-12">
+    <div className="min-h-screen bg-background font-sans text-foreground pb-12">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
@@ -159,7 +159,7 @@ export default function SubjectsPage() {
                       className="hover:bg-accent/50 transition-all cursor-pointer group"
                     >
                       <td className="px-5 py-4 whitespace-nowrap">
-                        <span className="text-[10px] font-bold text-muted-foreground font-mono bg-accent px-2 py-1 rounded group-hover:bg-card group-hover:text-blue-600 border border-transparent group-hover:border-border transition-all">
+                        <span className="text-[10px] font-bold text-muted-foreground font-mono bg-accent px-2 py-1 rounded group-hover:bg-card group-hover:text-blue-600 dark:text-blue-400 border border-transparent group-hover:border-border transition-all">
                           {sub.code}
                         </span>
                       </td>

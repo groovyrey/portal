@@ -41,7 +41,7 @@ export default function EAFPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-accent py-10 px-4 sm:px-6 lg:px-8"
+      className="min-h-screen bg-background py-10 px-4 sm:px-6 lg:px-8"
     >
       <main className="max-w-5xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -104,7 +104,7 @@ export default function EAFPage() {
           </div>
         ) : (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-            <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl">
+            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 p-3 rounded-xl">
                 <p className="text-[10px] text-blue-700 font-bold text-center">
                     Official render of your Certificate of Matriculation.
                 </p>

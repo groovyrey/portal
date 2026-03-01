@@ -82,7 +82,7 @@ export default function GradesPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-accent p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
         <div className="max-w-5xl mx-auto space-y-6">
           <div className="flex justify-end">
             <Skeleton className="h-9 w-40 rounded-lg" />
@@ -107,7 +107,7 @@ export default function GradesPage() {
 
   if (!student || !student.availableReports) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-accent p-4 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
         <LottieAnimation 
           animationPath="/animations/error-404.json"
           className="w-48 h-48 mb-4"
@@ -122,7 +122,7 @@ export default function GradesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-accent font-sans text-foreground pb-12">
+    <div className="min-h-screen bg-background font-sans text-foreground pb-12">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
         <div className="flex justify-end mb-6">
           <button 

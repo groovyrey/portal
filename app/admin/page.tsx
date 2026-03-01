@@ -30,15 +30,15 @@ export default function AdminPage() {
   // Authentication check
   if (isUserLoading) {
     return (
-      <div className="min-h-screen bg-accent flex items-center justify-center">
-        <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-spin" />
       </div>
     );
   }
 
   if (!currentUser || !currentUser.badges?.includes('staff')) {
     return (
-      <div className="min-h-screen bg-accent flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="bg-card p-8 rounded-3xl border border-border shadow-xl max-w-md w-full text-center space-y-6">
           <div className="bg-red-50 p-4 rounded-full w-20 h-20 mx-auto flex items-center justify-center text-red-500">
             <ShieldAlert className="h-10 w-10" />
@@ -127,7 +127,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-accent py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <main className="max-w-5xl mx-auto">
         <div className="mb-8">
           <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">Badge Management</h1>
@@ -170,7 +170,7 @@ export default function AdminPage() {
                 {loading ? (
                   <tr>
                     <td colSpan={2} className="px-6 py-12 text-center">
-                      <Loader2 className="h-8 w-8 text-blue-600 animate-spin mx-auto mb-2" />
+                      <Loader2 className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-spin mx-auto mb-2" />
                       <span className="text-xs font-bold text-muted-foreground uppercase">Searching Registry...</span>
                     </td>
                   </tr>
@@ -199,7 +199,7 @@ export default function AdminPage() {
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => setSelectedStudent(student)}
-                          className="inline-flex items-center gap-2 bg-card border border-border hover:border-blue-300 hover:text-blue-600 text-muted-foreground font-black py-2 px-4 rounded-xl text-[10px] uppercase tracking-widest transition-all active:scale-95"
+                          className="inline-flex items-center gap-2 bg-card border border-border hover:border-blue-300 hover:text-blue-600 dark:text-blue-400 text-muted-foreground font-black py-2 px-4 rounded-xl text-[10px] uppercase tracking-widest transition-all active:scale-95"
                         >
                           <Settings2 className="h-3.5 w-3.5" />
                           Manage
@@ -220,7 +220,7 @@ export default function AdminPage() {
         onClose={() => setSelectedStudent(null)}
         title={
           <div className="flex items-center gap-3">
-            <div className="bg-blue-50 p-2 rounded-xl text-blue-600">
+            <div className="bg-blue-50 dark:bg-blue-950/30 p-2 rounded-xl text-blue-600 dark:text-blue-400">
               <User className="h-5 w-5" />
             </div>
             <div>
@@ -253,7 +253,7 @@ export default function AdminPage() {
                     disabled={isUpdating}
                     className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
                       isActive 
-                        ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm' 
+                        ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 text-blue-700 shadow-sm' 
                         : 'bg-card border-border text-muted-foreground hover:border-border hover:bg-accent'
                     }`}
                   >
@@ -282,7 +282,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-slate-50">
+          <div className="pt-6 border-t border-border">
              <button
               onClick={() => setSelectedStudent(null)}
               className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95"

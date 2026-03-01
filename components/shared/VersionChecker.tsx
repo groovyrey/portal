@@ -48,7 +48,7 @@ export default function VersionChecker() {
               label: "Refresh Now",
               onClick: () => window.location.reload(),
             },
-            icon: <RefreshCcw className="h-4 w-4 text-blue-600 animate-spin-slow" />,
+            icon: <RefreshCcw className="h-4 w-4 text-blue-600 dark:text-blue-400 animate-spin-slow" />,
           });
         }
       }

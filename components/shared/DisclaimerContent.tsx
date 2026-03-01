@@ -45,7 +45,7 @@ export default function DisclaimerContent() {
           <ShieldAlert size={120} />
         </div>
         <div className="relative z-10">
-          <div className="h-12 w-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600 mb-6">
+          <div className="h-12 w-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-6">
             <ShieldAlert className="h-6 w-6" />
           </div>
           <h2 className="text-2xl font-bold text-foreground mb-4">
@@ -82,7 +82,7 @@ export default function DisclaimerContent() {
           </p>
           <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20 flex items-start gap-3">
             <Info className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
-            <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+            <p className="text-sm text-blue-600 dark:text-blue-400 dark:text-blue-400 font-medium">
               We recommend checking important info (like fees or final grades) with the school registrar directly.
             </p>
           </div>

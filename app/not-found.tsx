@@ -6,7 +6,7 @@ import LottieAnimation from '@/components/ui/LottieAnimation';
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-accent flex items-center justify-center p-6">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="max-w-md w-full text-center">
         {/* Illustration/Icon */}
         <div className="relative mb-8 flex justify-center">

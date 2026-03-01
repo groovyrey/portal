@@ -332,7 +332,7 @@ function CommunityContent() {
                               <button 
                                 type="button" 
                                 onClick={() => setPollOptions([...pollOptions, ''])} 
-                                className="mt-1 flex items-center gap-1 text-[10px] font-bold text-blue-500 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                                className="mt-1 flex items-center gap-1 text-[10px] font-bold text-blue-500 uppercase tracking-wider hover:text-blue-600 dark:text-blue-400 transition-colors"
                               >
                                 <Plus className="h-3 w-3" />
                                 Add Option

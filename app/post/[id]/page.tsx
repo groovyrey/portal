@@ -36,10 +36,10 @@ import { useRealtime } from '@/components/shared/RealtimeProvider';
 
 const getTopicStyle = (topic: string) => {
   switch (topic) {
-    case 'Academics': return 'bg-blue-50 text-blue-600 border-blue-100';
+    case 'Academics': return 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/50';
     case 'Campus Life': return 'bg-purple-50 text-purple-600 border-purple-100';
-    case 'Career': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-    case 'Well-being': return 'bg-rose-50 text-rose-600 border-rose-100';
+    case 'Career': return 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50';
+    case 'Well-being': return 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/50';
     default: return 'bg-accent text-muted-foreground border-border';
   }
 };
@@ -249,7 +249,7 @@ export default function PostPage() {
 
   if (postError) {
     return (
-      <div className="min-h-screen bg-accent flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
         <div className="bg-card p-8 rounded-3xl border border-border shadow-sm max-w-sm w-full">
           <div className="h-16 w-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Trash2 className="h-8 w-8" />
@@ -269,7 +269,7 @@ export default function PostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-accent pb-32">
+    <div className="min-h-screen bg-background pb-32">
       {/* Header */}
       <div className="sticky top-0 z-[100] bg-card/80 backdrop-blur-md border-b border-border px-4 py-3">
         <div className="max-w-2xl mx-auto flex items-center gap-4">
@@ -304,7 +304,7 @@ export default function PostPage() {
                 </div>
                 <div>
                   <Link href={`/profile/${obfuscateId(post.userId)}`} className="block">
-                    <h2 className="text-sm font-bold text-foreground hover:text-blue-600 transition-colors">{post.userName}</h2>
+                    <h2 className="text-sm font-bold text-foreground hover:text-blue-600 dark:text-blue-400 transition-colors">{post.userName}</h2>
                   </Link>
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-[10px] font-medium text-muted-foreground">
@@ -314,7 +314,7 @@ export default function PostPage() {
                       {post.topic || 'General'}
                     </span>
                     {post.isUnreviewed && (
-                      <span className="bg-amber-50 text-amber-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-100">
+                      <span className="bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-100 dark:border-amber-900/50">
                         Pending
                       </span>
                     )}
@@ -357,7 +357,7 @@ export default function PostPage() {
                       {...props} 
                       target="_blank" 
                       rel="noopener noreferrer" 
-                      className="text-blue-600 font-bold underline hover:text-blue-700"
+                      className="text-blue-600 dark:text-blue-400 font-bold underline hover:text-blue-700"
                     >
                       {props.children}
                     </a>
@@ -385,7 +385,7 @@ export default function PostPage() {
                         onClick={() => handleVote(post.id, idx)}
                         className={`w-full relative h-10 rounded-xl overflow-hidden border transition-all ${
                           hasVoted 
-                            ? isSelected ? 'border-blue-200 bg-card' : 'border-slate-50 bg-transparent opacity-60'
+                            ? isSelected ? 'border-blue-200 bg-card' : 'border-border bg-transparent opacity-60'
                             : !student ? 'border-border bg-card/50 cursor-not-allowed' : 'border-border bg-card hover:border-blue-400'
                         }`}
                       >
@@ -415,7 +415,7 @@ export default function PostPage() {
               </div>
             )}
 
-            <div className="flex items-center gap-2 py-4 px-0.5 border-y border-slate-50">
+            <div className="flex items-center gap-2 py-4 px-0.5 border-y border-border">
                 <button 
                     onClick={() => handleLike(post.id, isLiked || false)}
                     onContextMenu={(e) => {
@@ -425,7 +425,7 @@ export default function PostPage() {
                     disabled={!student}
                     className={`flex items-center gap-2 px-4 py-1.5 rounded-lg transition-all
                         ${isLiked 
-                            ? 'bg-rose-50 text-rose-600 border border-rose-100' 
+                            ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50' 
                             : !student 
                               ? 'bg-accent text-slate-300 cursor-not-allowed'
                               : 'bg-accent text-muted-foreground hover:bg-accent'}`}
@@ -495,7 +495,7 @@ export default function PostPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5 gap-4">
                           <Link href={`/profile/${obfuscateId(comment.userId)}`} className="truncate">
-                            <span className={`text-xs font-bold truncate hover:text-blue-600 transition-colors ${isMe ? 'text-blue-600' : 'text-foreground'}`}>
+                            <span className={`text-xs font-bold truncate hover:text-blue-600 dark:text-blue-400 transition-colors ${isMe ? 'text-blue-600 dark:text-blue-400' : 'text-foreground'}`}>
                               {isMe ? 'You' : comment.userName}
                             </span>
                           </Link>
@@ -515,7 +515,7 @@ export default function PostPage() {
                               <button 
                                 onClick={() => setCommentToReport(comment.id)}
                                 disabled={reportingComment === comment.id}
-                                className={`p-1 rounded transition-colors ${reportingComment === comment.id ? 'text-blue-500 animate-pulse' : 'text-muted-foreground hover:text-amber-500 hover:bg-amber-50'}`}
+                                className={`p-1 rounded transition-colors ${reportingComment === comment.id ? 'text-blue-500 animate-pulse' : 'text-muted-foreground hover:text-amber-500 hover:bg-amber-50 dark:bg-amber-950/30'}`}
                                 title="Report comment"
                               >
                                 <Flag className="h-3 w-3" />
@@ -559,7 +559,7 @@ export default function PostPage() {
         ) : (
           <div className="max-w-2xl mx-auto flex items-center justify-between bg-accent p-3 rounded-xl border border-border">
             <p className="text-xs font-bold text-muted-foreground">Log in to join the discussion</p>
-            <Link href="/" className="text-xs font-bold text-blue-600 hover:underline">Sign In</Link>
+            <Link href="/" className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">Sign In</Link>
           </div>
         )}
       </div>
@@ -574,7 +574,7 @@ export default function PostPage() {
         <div className="max-h-60 overflow-y-auto p-2 space-y-1 custom-scrollbar">
           {loadingReactors ? (
             <div className="flex justify-center py-8">
-              <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+              <Loader2 className="h-5 w-5 text-blue-600 dark:text-blue-400 animate-spin" />
             </div>
           ) : (
             reactors?.map(user => (
@@ -674,8 +674,8 @@ export default function PostPage() {
           </div>
 
           <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-            <div className="bg-blue-50/50 rounded-2xl p-4 border border-blue-100/50 flex gap-3">
-              <Info className="h-5 w-5 text-blue-600 shrink-0" />
+            <div className="bg-blue-50 dark:bg-blue-950/30/50 rounded-2xl p-4 border border-blue-100 dark:border-blue-900/50/50 flex gap-3">
+              <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0" />
               <p className="text-xs text-muted-foreground font-medium leading-relaxed">
                 Aegis will review the reported comment based on our <span className="font-bold">Community Guidelines</span>. Excessive false reporting may result in account restrictions.
               </p>

@@ -177,7 +177,7 @@ export default function DevPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-accent text-foreground font-sans text-xs selection:bg-blue-100 pb-20">
+    <div className="min-h-screen bg-background text-foreground font-sans text-xs selection:bg-blue-100 pb-20">
       {/* Dev Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -196,7 +196,7 @@ export default function DevPage() {
         {/* Technical Summary */}
         <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-3 border border-border bg-card p-6 rounded-2xl shadow-sm">
-            <h2 className="font-bold uppercase flex items-center gap-2 text-foreground mb-4 text-[10px] tracking-wider border-b border-slate-50 pb-3">
+            <h2 className="font-bold uppercase flex items-center gap-2 text-foreground mb-4 text-[10px] tracking-wider border-b border-border pb-3">
               System Architecture
             </h2>
             <p className="text-muted-foreground leading-relaxed font-medium">
@@ -206,12 +206,12 @@ export default function DevPage() {
             </p>
           </div>
           <div className="border border-border bg-card p-6 rounded-2xl shadow-sm">
-            <h2 className="font-bold uppercase flex items-center gap-2 text-foreground mb-4 text-[10px] tracking-wider border-b border-slate-50 pb-3">
+            <h2 className="font-bold uppercase flex items-center gap-2 text-foreground mb-4 text-[10px] tracking-wider border-b border-border pb-3">
               Technology Stack
             </h2>
             <div className="space-y-3">
               {techStack.map(s => (
-                <div key={s.k} className="flex justify-between border-b border-slate-50 pb-1 last:border-0 last:pb-0">
+                <div key={s.k} className="flex justify-between border-b border-border pb-1 last:border-0 last:pb-0">
                   <span className="text-muted-foreground uppercase text-[9px] font-bold">{s.k}</span>
                   <span className="font-bold text-foreground">{s.v}</span>
                 </div>
@@ -233,7 +233,7 @@ export default function DevPage() {
             ].map((s, i) => (
               <div key={i} className="bg-card border border-border p-4 rounded-xl space-y-3 shadow-sm hover:border-slate-300 transition-all group">
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-muted-foreground group-hover:text-blue-600 transition-colors">{s.step}</span>
+                  <span className="text-[9px] font-bold text-muted-foreground group-hover:text-blue-600 dark:text-blue-400 transition-colors">{s.step}</span>
                   <div className="text-slate-300 group-hover:text-muted-foreground transition-colors">{s.icon}</div>
                 </div>
                 <p className="text-[10px] text-muted-foreground leading-tight font-bold">{s.desc}</p>
@@ -298,9 +298,9 @@ export default function DevPage() {
                           <tr key={j} className="hover:bg-accent/30 transition-colors">
                             <td className="px-5 py-4">
                               <span className={`font-bold px-2 py-0.5 rounded text-[9px] ${
-                                api.method === 'GET' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                                api.method === 'POST' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                                'bg-amber-50 text-amber-600 border border-amber-100'
+                                api.method === 'GET' ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50' :
+                                api.method === 'POST' ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50' :
+                                'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/50'
                               }`}>
                                 {api.method}
                               </span>

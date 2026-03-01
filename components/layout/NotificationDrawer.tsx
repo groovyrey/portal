@@ -198,7 +198,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             onClick={() => setActiveTab('unread')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
               activeTab === 'unread' 
-                ? 'bg-card text-blue-600 shadow-sm' 
+                ? 'bg-card text-blue-600 dark:text-blue-400 shadow-sm' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -215,7 +215,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             onClick={() => setActiveTab('all')}
             className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
               activeTab === 'all' 
-                ? 'bg-card text-blue-600 shadow-sm' 
+                ? 'bg-card text-blue-600 dark:text-blue-400 shadow-sm' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -228,7 +228,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             {activeTab === 'unread' ? (
               <button 
                 onClick={confirmMarkAllRead}
-                className="text-[10px] font-black text-blue-600 hover:text-blue-700 flex items-center gap-1.5 transition-colors uppercase tracking-widest"
+                className="text-[10px] font-black text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 transition-colors uppercase tracking-widest"
               >
                 <CheckCheck className="h-3 w-3" />
                 Mark all read
@@ -238,7 +238,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             )}
             <button 
               onClick={confirmClearAll}
-              className="text-[10px] font-black text-rose-500 hover:text-rose-600 flex items-center gap-1.5 transition-colors uppercase tracking-widest"
+              className="text-[10px] font-black text-rose-500 hover:text-rose-600 dark:text-rose-400 flex items-center gap-1.5 transition-colors uppercase tracking-widest"
             >
               <Trash2 className="h-3 w-3" />
               Clear all
@@ -252,7 +252,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
           title={
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                confirmConfig.variant === 'rose' ? 'bg-rose-50' : 'bg-blue-50'
+                confirmConfig.variant === 'rose' ? 'bg-rose-50 dark:bg-rose-950/30' : 'bg-blue-50 dark:bg-blue-950/30'
               }`}>
                 {confirmConfig.icon}
               </div>
@@ -329,7 +329,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                 className={`group relative p-4 rounded-2xl border transition-all cursor-pointer ${
                   notif.isRead 
                     ? 'bg-card border-border hover:border-border' 
-                    : 'bg-blue-50/50 border-blue-100 hover:border-blue-200 ring-1 ring-blue-100/50'
+                    : 'bg-blue-50 dark:bg-blue-950/30/50 border-blue-100 dark:border-blue-900/50 hover:border-blue-200 ring-1 ring-blue-100/50'
                 }`}
               >
                 <div className="flex gap-4">
@@ -359,7 +359,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                             e.stopPropagation();
                             confirmDelete(notif.id);
                           }}
-                          className="p-1.5 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-50 transition-all group-hover:opacity-100 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:bg-rose-950/30 transition-all group-hover:opacity-100 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                           title="Delete notification"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -379,7 +379,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                           e.stopPropagation();
                           onClose();
                         }}
-                        className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:underline"
+                        className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
                       >
                         View details
                         <ExternalLink className="h-3 w-3" />

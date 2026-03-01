@@ -261,7 +261,7 @@ export default function TestCalendarPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-accent p-8">
+      <div className="min-h-screen bg-background p-8">
         <div className="max-w-5xl mx-auto space-y-8">
           <Skeleton className="h-12 w-64" />
           <Skeleton className="h-[600px] w-full" />
@@ -273,7 +273,7 @@ export default function TestCalendarPage() {
   if (!student) return null;
 
   return (
-    <div className="min-h-screen bg-accent font-sans text-foreground pb-20">
+    <div className="min-h-screen bg-background font-sans text-foreground pb-20">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <DashboardHeader student={student} />
 
@@ -301,8 +301,8 @@ export default function TestCalendarPage() {
             <div className="z-10 w-full md:w-auto">
               {linkedEmail ? (
                 <div className="flex flex-col sm:flex-row items-center gap-3">
-                  <div className="px-6 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                    <span className="text-xs font-black text-emerald-600 uppercase tracking-widest">Verified</span>
+                  <div className="px-6 py-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 rounded-2xl">
+                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Verified</span>
                   </div>
                   <div className="flex gap-2 w-full md:w-auto">
                     <button 
@@ -348,7 +348,7 @@ export default function TestCalendarPage() {
           {/* Google Calendar Events List */}
           {linkedEmail && (
             <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-border flex items-center justify-between bg-emerald-50/30">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/30/30">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
                     <CalendarIcon className="h-5 w-5" />
@@ -379,7 +379,7 @@ export default function TestCalendarPage() {
                       const start = event.start?.dateTime || event.start?.date;
                       const startDate = start ? new Date(start) : null;
                       return (
-                        <div key={event.id} className="p-4 rounded-2xl border border-border bg-accent/50 hover:border-emerald-200 hover:bg-emerald-50/20 transition-all group">
+                        <div key={event.id} className="p-4 rounded-2xl border border-border bg-accent/50 hover:border-emerald-200 hover:bg-emerald-50 dark:bg-emerald-950/30/20 transition-all group">
                           <div className="flex items-start gap-4">
                             <div className="w-16 shrink-0 text-center border-r border-border pr-4">
                               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter">
@@ -393,7 +393,7 @@ export default function TestCalendarPage() {
                               </p>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-bold text-foreground truncate uppercase tracking-tight group-hover:text-emerald-600 transition-colors">
+                              <h4 className="text-sm font-bold text-foreground truncate uppercase tracking-tight group-hover:text-emerald-600 dark:text-emerald-400 transition-colors">
                                 {event.summary || 'Untitled Event'}
                               </h4>
                               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
@@ -581,7 +581,7 @@ export default function TestCalendarPage() {
                                   </div>
                                 )}
                                 {event.amount && (
-                                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-rose-600 uppercase">
+                                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase">
                                     <CreditCard className="h-3 w-3" />
                                     Outstanding: {event.amount}
                                   </div>
@@ -590,7 +590,7 @@ export default function TestCalendarPage() {
                             </div>
                             <div className="hidden sm:block">
                               <div className={`px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest ${
-                                event.type === 'class' ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600'
+                                event.type === 'class' ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400' : 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400'
                               }`}>
                                 {event.type}
                               </div>

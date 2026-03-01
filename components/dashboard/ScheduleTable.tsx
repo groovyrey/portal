@@ -19,14 +19,14 @@ const HOURS = [
 ];
 
 const SUBJECT_COLORS = [
-  'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100',
-  'bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100',
-  'bg-violet-50 text-violet-700 border-violet-100 hover:bg-violet-100',
-  'bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100',
-  'bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100',
-  'bg-cyan-50 text-cyan-700 border-cyan-100 hover:bg-cyan-100',
-  'bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100',
-  'bg-orange-50 text-orange-700 border-orange-100 hover:bg-orange-100',
+  'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900/40',
+  'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/40',
+  'bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-400 border-violet-100 dark:border-violet-900/50 hover:bg-violet-100 dark:hover:bg-violet-900/40',
+  'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/50 hover:bg-amber-100 dark:hover:bg-amber-900/40',
+  'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/40',
+  'bg-cyan-50 dark:bg-cyan-950/30 text-cyan-700 dark:text-cyan-400 border-cyan-100 dark:border-cyan-900/50 hover:bg-cyan-100 dark:hover:bg-cyan-900/40',
+  'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/40',
+  'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400 border-orange-100 dark:border-orange-900/50 hover:bg-orange-100 dark:hover:bg-orange-900/40',
 ];
 
 export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTableProps) {
@@ -114,8 +114,8 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
         </div>
       </div>
 
-      <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-start gap-3">
-        <div className="h-5 w-5 rounded bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl p-3 flex items-start gap-3">
+        <div className="h-5 w-5 rounded bg-blue-100 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
           <Info className="h-3 w-3" />
         </div>
         <p className="text-[11px] text-blue-700 font-medium leading-relaxed">
@@ -144,7 +144,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
 
                 return (
                   <tr key={hourStr} className="h-10">
-                    <td className="border-r border-b border-slate-50 text-center bg-accent/30">
+                    <td className="border-r border-b border-border text-center bg-accent/30">
                       <span className="text-[9px] font-bold text-muted-foreground tabular-nums">
                         {hourStr.split(' ')[0]}
                       </span>
@@ -171,7 +171,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                           <td
                             key={day}
                             rowSpan={duration}
-                            className="p-0.5 border-b border-l border-slate-50 align-top h-px"
+                            className="p-0.5 border-b border-l border-border align-top h-px"
                           >
                             <button
                               onClick={() => setSelectedItem(classToRender)}
@@ -194,7 +194,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                         );
                       }
 
-                      return <td key={day} className="border-b border-l border-slate-50 h-10"></td>;
+                      return <td key={day} className="border-b border-l border-border h-10"></td>;
                     })}
                   </tr>
                 );
@@ -227,7 +227,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
 
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-4 group">
-                <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center text-muted-foreground group-hover:text-blue-600 transition-colors">
+                <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center text-muted-foreground group-hover:text-blue-600 dark:text-blue-400 transition-colors">
                   <Clock className="h-4 w-4" />
                 </div>
                 <div>
@@ -237,7 +237,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
               </div>
 
               <div className="flex items-center gap-4 group">
-                <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center text-muted-foreground group-hover:text-emerald-600 transition-colors">
+                <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center text-muted-foreground group-hover:text-emerald-600 dark:text-emerald-400 transition-colors">
                   <MapPin className="h-4 w-4" />
                 </div>
                 <div>
@@ -246,7 +246,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center text-muted-foreground">
                     <Hash className="h-4 w-4" />

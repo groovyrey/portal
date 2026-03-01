@@ -116,7 +116,7 @@ export default function PostCard({
                 {...props} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="text-blue-500 font-bold underline hover:text-blue-600 transition-colors"
+                className="text-blue-500 font-bold underline hover:text-blue-600 dark:text-blue-400 transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
                 {props.children}

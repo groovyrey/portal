@@ -95,7 +95,7 @@ export default function SettingsPage() {
 
   if (loading) return (
     <div className="min-h-[80vh] flex items-center justify-center">
-      <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+      <Loader2 className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-spin" />
     </div>
   );
 

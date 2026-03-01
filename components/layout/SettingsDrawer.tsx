@@ -133,7 +133,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                 <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-lg text-foreground leading-tight truncate">{student?.name || '?'}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="px-1.5 py-0.5 bg-blue-50 text-[9px] font-bold text-blue-600 rounded border border-blue-100 uppercase">ID</span>
+                      <span className="px-1.5 py-0.5 bg-blue-50 dark:bg-blue-950/30 text-[9px] font-bold text-blue-600 dark:text-blue-400 rounded border border-blue-100 dark:border-blue-900/50 uppercase">ID</span>
                       <p className="text-[11px] text-muted-foreground font-mono font-bold">{student?.id || '?'}</p>
                     </div>
                 </div>
@@ -216,11 +216,11 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
               />
             </div>
 
-            <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start gap-3">
-              <div className="p-2 bg-card rounded-lg shadow-sm shrink-0 border border-emerald-100">
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-100 dark:border-emerald-900/50 flex items-start gap-3">
+              <div className="p-2 bg-card rounded-lg shadow-sm shrink-0 border border-emerald-100 dark:border-emerald-900/50">
                 <ShieldCheck className="h-4 w-4 text-emerald-500" />
               </div>
-              <p className="text-[10px] text-emerald-700 font-medium leading-relaxed">
+              <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium leading-relaxed">
                 We only send alerts for important school updates, grades, and community activity.
               </p>
             </div>
@@ -321,7 +321,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                     <Search className="h-5 w-5 text-slate-200" />
                   </div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No matches found</p>
-                  <button onClick={() => setSearchQuery('')} className="text-[10px] font-bold text-blue-600 mt-2 hover:underline">Clear search</button>
+                  <button onClick={() => setSearchQuery('')} className="text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-2 hover:underline">Clear search</button>
                 </div>
               ) : (
                 <div className="space-y-1.5">
@@ -336,11 +336,11 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                       let iconColor = "text-muted-foreground";
 
                       const action = log.action.toLowerCase();
-                      if (action.includes('login')) { Icon = Lock; iconBg = "bg-blue-50"; iconColor = "text-blue-500"; }
-                      else if (action.includes('security') || action.includes('password')) { Icon = Shield; iconBg = "bg-amber-50"; iconColor = "text-amber-500"; }
+                      if (action.includes('login')) { Icon = Lock; iconBg = "bg-blue-50 dark:bg-blue-950/30"; iconColor = "text-blue-500"; }
+                      else if (action.includes('security') || action.includes('password')) { Icon = Shield; iconBg = "bg-amber-50 dark:bg-amber-950/30"; iconColor = "text-amber-500"; }
                       else if (action.includes('settings')) { Icon = Info; iconBg = "bg-purple-50"; iconColor = "text-purple-500"; }
                       else if (action.includes('ai') || action.includes('assistant')) { Icon = Sparkles; iconBg = "bg-indigo-50"; iconColor = "text-indigo-500"; }
-                      else if (action.includes('community') || action.includes('post') || action.includes('comment')) { Icon = MessageSquare; iconBg = "bg-emerald-50"; iconColor = "text-emerald-500"; }
+                      else if (action.includes('community') || action.includes('post') || action.includes('comment')) { Icon = MessageSquare; iconBg = "bg-emerald-50 dark:bg-emerald-950/30"; iconColor = "text-emerald-500"; }
                       else if (action.includes('system') || action.includes('diagnostic')) { Icon = ShieldCheck; iconBg = "bg-slate-900"; iconColor = "text-white"; }
 
                       return (
@@ -359,7 +359,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
                             <div className="flex items-center justify-between gap-2">
                               <h4 className="text-[11px] font-bold text-foreground truncate uppercase tracking-tight">{log.action}</h4>
-                              <span className={`text-[9px] font-bold shrink-0 uppercase ${isToday ? 'text-blue-600' : 'text-slate-300'}`}>
+                              <span className={`text-[9px] font-bold shrink-0 uppercase ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-300'}`}>
                                 {isToday ? 'Today' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                               </span>
                             </div>

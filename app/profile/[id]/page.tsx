@@ -159,7 +159,7 @@ function ProfileContent() {
 
   if (loading) return (
     <div className="min-h-[80vh] flex items-center justify-center">
-      <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+      <Loader2 className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-spin" />
     </div>
   );
 
@@ -167,7 +167,7 @@ function ProfileContent() {
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-8 text-center">
       <IdCard className="h-12 w-12 text-slate-200 mb-4" />
       <h2 className="text-xl font-bold text-foreground">Profile Not Found</h2>
-      <Link href="/" className="mt-4 text-blue-600 font-semibold">Return Home</Link>
+      <Link href="/" className="mt-4 text-blue-600 dark:text-blue-400 font-semibold">Return Home</Link>
     </div>
   );
 
@@ -208,7 +208,7 @@ function ProfileContent() {
               <div className="space-y-1">
                 <h1 className="text-2xl font-bold text-foreground tracking-tight">{student.name || '?'}</h1>
                 <div className="flex items-center justify-center sm:justify-start gap-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-900/50">
                     {student.id || '?'}
                   </span>
                   <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
@@ -294,7 +294,7 @@ function ProfileContent() {
             ))}
             <Link 
               href="/community" 
-              className="block text-center py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-blue-600 transition-colors"
+              className="block text-center py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-blue-600 dark:text-blue-400 transition-colors"
             >
               Back to Community Feed
             </Link>
@@ -307,7 +307,7 @@ function ProfileContent() {
 
 export default function ProfilePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-accent"><Loader2 className="h-10 w-10 text-blue-600 animate-spin" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-10 w-10 text-blue-600 dark:text-blue-400 animate-spin" /></div>}>
       <ProfileContent />
     </Suspense>
   );

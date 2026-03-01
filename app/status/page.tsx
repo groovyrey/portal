@@ -46,7 +46,7 @@ export default function StatusPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-accent text-foreground font-sans text-xs selection:bg-blue-100 pb-20">
+    <div className="min-h-screen bg-background text-foreground font-sans text-xs selection:bg-blue-100 pb-20">
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -69,7 +69,7 @@ export default function StatusPage() {
         {/* System Overview */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2 border border-border bg-card p-6 rounded-2xl shadow-sm">
-            <h2 className="font-bold uppercase flex items-center gap-2 text-foreground mb-4 text-[10px] tracking-wider border-b border-slate-50 pb-3">
+            <h2 className="font-bold uppercase flex items-center gap-2 text-foreground mb-4 text-[10px] tracking-wider border-b border-border pb-3">
               Operational Overview
             </h2>
             <div className="space-y-4">
@@ -90,15 +90,15 @@ export default function StatusPage() {
             </div>
           </div>
           <div className="border border-border bg-card p-6 rounded-2xl shadow-sm">
-            <h2 className="font-bold uppercase flex items-center gap-2 text-foreground mb-4 text-[10px] tracking-wider border-b border-slate-50 pb-3">
+            <h2 className="font-bold uppercase flex items-center gap-2 text-foreground mb-4 text-[10px] tracking-wider border-b border-border pb-3">
               Metrics
             </h2>
             <div className="space-y-3">
-              <div className="flex justify-between border-b border-slate-50 pb-1">
+              <div className="flex justify-between border-b border-border pb-1">
                 <span className="text-muted-foreground uppercase text-[9px] font-bold">Timezone</span>
                 <span className="font-bold text-foreground">Manila (UTC+8)</span>
               </div>
-              <div className="flex justify-between border-b border-slate-50 pb-1">
+              <div className="flex justify-between border-b border-border pb-1">
                 <span className="text-muted-foreground uppercase text-[9px] font-bold">Services</span>
                 <span className="font-bold text-foreground">02 Active</span>
               </div>
@@ -140,11 +140,11 @@ export default function StatusPage() {
 
                     <div className="shrink-0">
                       {job.data?.status === 'success' ? (
-                        <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 font-bold uppercase text-[9px]">
+                        <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-100 dark:border-emerald-900/50 font-bold uppercase text-[9px]">
                           <CheckCircle2 size={10} /> COMPLETED
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 text-amber-600 rounded-full border border-amber-100 font-bold uppercase text-[9px]">
+                        <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-full border border-amber-100 dark:border-amber-900/50 font-bold uppercase text-[9px]">
                           <Clock size={10} /> PENDING
                         </div>
                       )}

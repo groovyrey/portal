@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 const DocsPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-accent text-foreground pb-20 font-sans">
+    <div className="min-h-screen bg-background text-foreground pb-20 font-sans">
       <div className="max-w-4xl mx-auto px-6 py-10">
         <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all text-xs font-bold mb-10 active:scale-95">
           <ArrowLeft size={14} />
@@ -33,7 +33,7 @@ const DocsPage: React.FC = () => {
                 <p className="text-sm text-muted-foreground leading-relaxed mb-4 font-medium">
                   Log in with your official student account. We establish a secure connection to sync your info without storing sensitive credentials permanently.
                 </p>
-                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-xl border border-blue-100 dark:border-blue-900/50">
                   <p className="text-[11px] text-blue-700 font-bold">
                     Pro-tip: Real-time syncing may take up to 60 seconds on your first login.
                   </p>

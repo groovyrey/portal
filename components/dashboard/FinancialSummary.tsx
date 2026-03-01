@@ -10,7 +10,7 @@ export default function FinancialSummary({ financials }: FinancialSummaryProps) 
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
       <div className="bg-card p-6 rounded-2xl border border-border shadow-sm group hover:border-muted-foreground transition-all duration-300">
         <div className="flex items-center gap-3 mb-4">
-          <div className="bg-blue-50 p-2 rounded-lg text-blue-600 border border-blue-100">
+          <div className="bg-blue-50 dark:bg-blue-950/30 p-2 rounded-lg text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50">
             <CreditCard className="h-4 w-4" />
           </div>
           <h3 className="text-muted-foreground font-bold uppercase text-[10px] tracking-wider">Total Assessment</h3>
@@ -52,7 +52,7 @@ export default function FinancialSummary({ financials }: FinancialSummaryProps) 
           <h3 className="text-muted-foreground font-bold uppercase text-[10px] tracking-wider">Remaining Balance</h3>
         </div>
         <div className="flex items-baseline gap-1">
-          <span className={`text-3xl font-bold tracking-tight ${financials.balance && financials.balance !== '₱0.00' ? 'text-red-600' : 'text-emerald-600'}`}>
+          <span className={`text-3xl font-bold tracking-tight ${financials.balance && financials.balance !== '₱0.00' ? 'text-red-600' : 'text-emerald-600 dark:text-emerald-400'}`}>
             {financials.balance || '₱0.00'}
           </span>
         </div>
@@ -60,7 +60,7 @@ export default function FinancialSummary({ financials }: FinancialSummaryProps) 
           <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider w-fit border ${
             financials.balance && financials.balance !== '₱0.00' 
               ? 'bg-red-50 text-red-600 border-red-100' 
-              : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+              : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50'
           }`}>
             {financials.balance && financials.balance !== '₱0.00' ? 'Unpaid' : 'Settled'}
           </div>

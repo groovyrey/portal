@@ -58,7 +58,7 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-10 gap-3">
-        <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+        <Loader2 className="h-6 w-6 text-blue-600 dark:text-blue-400 animate-spin" />
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Loading your rating...</p>
       </div>
     );
@@ -67,7 +67,7 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
   if (submitted) {
     return (
       <div className="text-center py-6">
-        <div className="h-12 w-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="h-12 w-12 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
           <Star className="h-6 w-6 fill-current" />
         </div>
         <p className="text-sm font-bold text-foreground">Thank you!</p>
@@ -101,7 +101,7 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
           ))}
         </div>
         {rating > 0 && (
-          <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest animate-in fade-in slide-in-from-top-1">
+          <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest animate-in fade-in slide-in-from-top-1">
             {['Terrible', 'Bad', 'Okay', 'Good', 'Amazing'][rating - 1]}
           </p>
         )}

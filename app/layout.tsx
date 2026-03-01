@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/shared/Providers";
 import VersionChecker from "@/components/shared/VersionChecker";
-import { Toaster } from 'sonner';
+import Toaster from '@/components/shared/Toaster';
 import { Suspense } from 'react';
 import ClientLayoutWrapper from "@/components/layout/ClientLayoutWrapper";
 import RealtimeProvider from "@/components/shared/RealtimeProvider";
@@ -35,7 +35,7 @@ export default function RootLayout({
                 {children}
               </ClientLayoutWrapper>
             </Suspense>
-            <Toaster position="top-center" richColors theme="system" />
+            <Toaster />
             <Analytics />
           </RealtimeProvider>
         </Providers>
