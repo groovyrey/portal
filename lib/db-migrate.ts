@@ -138,3 +138,20 @@ export async function migrateActivityLogs() {
     throw error;
   }
 }
+
+export async function migrateKnowledgeBase() {
+  try {
+    // Create assistant_knowledge table for vector search
+    await query(`
+      CREATE TABLE IF NOT EXISTS assistant_knowledge (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        content TEXT NOT NULL,
+        metadata TEXT,
+        embedding F32_BLOB(768)
+      );
+    `);
+  } catch (error) {
+    console.error("Migration Error (Knowledge Base):", error);
+    throw error;
+  }
+}

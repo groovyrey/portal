@@ -30,6 +30,7 @@ import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 import { getFullStudentData } from '@/lib/data-service';
 import { logActivity } from '@/lib/activity-service';
+import { searchKnowledge } from '@/lib/vector-store';
 import { 
   SCHOOL_INFO, 
   BUILDING_CODES, 
@@ -60,7 +61,7 @@ async function performWebSearch(query: string) {
   }
 
   try {
-    // 1. Initial Retrieval: Fetch 10 results
+    // 1. Retrieval: Fetch top 5 results
     const searchResponse = await fetch('https://api.langsearch.com/v1/web-search', {
       method: 'POST',
       headers: {
@@ -69,8 +70,9 @@ async function performWebSearch(query: string) {
       },
       body: JSON.stringify({
         query,
-        count: 10
-      })
+        count: 5
+      }),
+      signal: AbortSignal.timeout(15000) // 15s timeout
     });
 
     if (!searchResponse.ok) {
@@ -86,39 +88,7 @@ async function performWebSearch(query: string) {
       return `I searched for "${query}" but couldn't find any relevant results.`;
     }
 
-    // 2. Semantic Reranking: Prepare documents for the Rerank API
-    const documents = initialResults.map((item: any) => ({
-      title: item.name || item.title || "No Title",
-      url: item.url || item.link || "#",
-      text: item.snippet || item.summary || "No content available."
-    }));
-
-    const rerankResponse = await fetch('https://api.langsearch.com/v1/rerank', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        query,
-        documents: documents.map((doc: any) => `${doc.title}\n${doc.text}`),
-        top_n: 3,
-        return_text: false
-      })
-    });
-
-    let finalResults = initialResults.slice(0, 3);
-
-    if (rerankResponse.ok) {
-      const rerankData = await rerankResponse.json();
-      const rerankedIndices = rerankData.data?.results || rerankData.results || [];
-      
-      if (rerankedIndices.length > 0) {
-        finalResults = rerankedIndices.map((result: any) => initialResults[result.index]);
-      }
-    }
-
-    const resultsSummary = finalResults.map((item: any, index: number) => {
+    const resultsSummary = initialResults.map((item: any, index: number) => {
       const title = item.name || item.title || "No Title";
       const link = item.url || item.link || "#";
       const snippet = item.snippet || item.summary || "No snippet available.";
@@ -127,8 +97,9 @@ async function performWebSearch(query: string) {
     
     return `### Search results for "${query}":\n\n${resultsSummary}`;
 
-  } catch (error) {
-    console.error('Web search + rerank error:', error);
+  } catch (error: any) {
+    console.error('Web search error:', error);
+    if (error.name === 'TimeoutError') return "The search service timed out. Please try again or rephrase.";
     return "An error occurred while connecting to the search service.";
   }
 }
@@ -138,7 +109,8 @@ async function performWebFetch(url: string) {
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
+      },
+      signal: AbortSignal.timeout(15000) // 15s timeout
     });
 
     if (!response.ok) {
@@ -155,13 +127,14 @@ async function performWebFetch(url: string) {
     content = content.replace(/\s+/g, ' ').substring(0, 5000);
 
     return `### Content from: ${title}\nURL: ${url}\n\n${content}`;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Web fetch error:', error);
+    if (error.name === 'TimeoutError') return `Fetching the URL timed out: ${url}`;
     return `An error occurred while fetching the URL: ${url}`;
   }
 }
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -240,14 +213,15 @@ You are the "Portal Assistant", a specialized academic advisor for ${SCHOOL_INFO
 
 STRICT OPERATIONAL RULES:
 1. **NO PROACTIVE SUMMARIES:** Never start a conversation by summarizing the student's grades, GPA, or financial balance unless specifically asked.
-2. **PROACTIVE WEB SEARCH:** If the user asks about ANY topic outside of the school's internal knowledge (e.g., general news, tech updates, external events), you MUST immediately call the \`web_search\` tool. Do not ask for permission.
-3. **PROACTIVE FEEDBACK (TOASTS):** You MUST use the \`show_toast\` tool to provide real-time feedback for your actions. 
+2. **PROACTIVE KNOWLEDGE SEARCH:** If the user asks about specific policies, grading, procedures, or any information that might be in your internal knowledge base, you SHOULD use the \`search_knowledge\` tool to find the most accurate information.
+3. **PROACTIVE WEB SEARCH:** If the user asks about ANY topic outside of the school's internal knowledge (e.g., general news, tech updates, external events), you MUST immediately call the \`web_search\` tool. Do not ask for permission.
+4. **PROACTIVE FEEDBACK (TOASTS):** You MUST use the \`show_toast\` tool to provide real-time feedback for your actions. 
    - Use \`success\` when you've found specific data.
    - Use \`info\` for general status updates (e.g., "Starting web search...").
    Note: The UI shows "Thinking...", but your toasts provide specific context. Your toasts will be automatically prefixed with "[Assistant]: " in the UI.
-4. **PROACTIVE CLARIFICATION:** If a user request is ambiguous or requires more data that isn't in your student context, immediately use the \`ask_user\` tool to request the missing information.
-5. **CITE SOURCES:** When using \`web_search\` or \`web_fetch\`, synthesize results and provide Markdown links.
-6. **NO ASSUMPTIONS:** You MUST always use the \`ask_user\` and \`ask_user_choice\` tools to gather preferences, clarify requirements, or make decisions instead of making assumptions.
+5. **PROACTIVE CLARIFICATION:** If a user request is ambiguous or requires more data that isn't in your student context, immediately use the \`ask_user\` tool to request the missing information.
+6. **CITE SOURCES:** When using \`web_search\` or \`web_fetch\`, synthesize results and provide Markdown links.
+7. **NO ASSUMPTIONS:** You MUST always use the \`ask_user\` and \`ask_user_choice\` tools to gather preferences, clarify requirements, or make decisions instead of making assumptions.
 
 ---
 🛠️ TOOL CALLING CONFIGURATION
@@ -296,6 +270,15 @@ I'll check the web for that information.
         }
       },
       "required": ["question", "options"]
+    }
+  },
+  {
+    "name": "search_knowledge",
+    "description": "Search the official knowledge base for general information, policies, procedures, and context-specific data provided by administrators.",
+    "parameters": {
+      "type": "object",
+      "properties": { "query": { "type": "string" } },
+      "required": ["query"]
     }
   },
   {
@@ -423,10 +406,24 @@ ${scheduleContext}
               // Pre-process jsonStr to fix common model mistakes
               const sanitizedJson = jsonStr.replace(/ask_user_choices/g, 'ask_user_choice');
               const toolCall = JSON.parse(sanitizedJson);
-              const isOurTool = ['web_search', 'web_fetch', 'show_toast', 'ask_user', 'ask_user_choice'].includes(toolCall.name);
+              const isOurTool = ['search_knowledge', 'web_search', 'web_fetch', 'show_toast', 'ask_user', 'ask_user_choice'].includes(toolCall.name);
               
               if (isOurTool) {
-                if (toolCall.name === 'web_search' && toolCall.parameters?.query) {
+                if (toolCall.name === 'search_knowledge' && toolCall.parameters?.query) {
+                  if (!isWriterClosed) {
+                    await writer.write(encoder.encode('STATUS:SEARCHING'));
+                    await writer.write(encoder.encode('\n📚 *Searching knowledge base for: "' + toolCall.parameters.query + '"...*\n\n'));
+                  }
+                  const results = await searchKnowledge(toolCall.parameters.query);
+                  const resultText = results.length > 0 
+                    ? results.map((r, i) => `[Result ${i+1}]: ${r.pageContent}`).join('\n\n')
+                    : "No specific information found in the knowledge base.";
+                  
+                  if (!isWriterClosed) await writer.write(encoder.encode('STATUS:PROCESSING'));
+                  history.push(new AIMessage(fullContent));
+                  currentInput = `TOOL_RESULT (Knowledge Base): ${resultText}\n\nBased on this information from the internal knowledge base, please answer the user's question accurately.`;
+                  continue;
+                } else if (toolCall.name === 'web_search' && toolCall.parameters?.query) {
                   if (!isWriterClosed) {
                     await writer.write(encoder.encode('STATUS:SEARCHING'));
                     await writer.write(encoder.encode('\n🔍 *Searching for: "' + toolCall.parameters.query + '"...*\n\n'));

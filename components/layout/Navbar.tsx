@@ -21,6 +21,7 @@ import {
   Settings,
   Info,
   BrainCircuit,
+  DatabaseZap,
   RefreshCw,
   Bell
 } from 'lucide-react';
@@ -29,7 +30,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { APP_VERSION } from '@/lib/version';
 import NotificationDrawer from './NotificationDrawer';
-import { useNotificationsQuery } from '@/lib/hooks';
+import { useNotificationsQuery, useStudentQuery } from '@/lib/hooks';
 import { Notification } from '@/types';
 
 export default function Navbar() {
@@ -45,8 +46,11 @@ export default function Navbar() {
   const [lastSynced, setLastSynced] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  const { data: currentUser } = useStudentQuery();
   const { data: notifications = [] } = useNotificationsQuery(isLoggedIn);
   const unreadCount = notifications.filter((n: Notification) => !n.isRead).length;
+
+  const isStaff = currentUser?.badges?.includes('staff');
 
   useEffect(() => {
     // Check if logged in to show navbar
@@ -152,6 +156,7 @@ export default function Navbar() {
     { name: 'Community', href: '/community', icon: MessageSquare },
     { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
+    ...(isStaff ? [{ name: 'Knowledge', href: '/admin/knowledge', icon: DatabaseZap }] : []),
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'About', href: '/about', icon: Info },
   ];
@@ -168,6 +173,7 @@ export default function Navbar() {
   const desktopMore = isLoggedIn ? [
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
     { name: 'Subjects', href: '/subjects', icon: BookOpen },
+    ...(isStaff ? [{ name: 'Knowledge', href: '/admin/knowledge', icon: DatabaseZap }] : []),
     { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'About', href: '/about', icon: Info },
