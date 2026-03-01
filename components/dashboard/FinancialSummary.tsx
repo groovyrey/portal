@@ -21,45 +21,45 @@ export default function FinancialSummary({ financials }: FinancialSummaryProps) 
           </span>
         </div>
         <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-          <div className="h-1 w-1 rounded-full bg-slate-300" />
+          <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
           Current Cycle
         </div>
       </div>
 
       <div className="bg-card p-6 rounded-2xl border border-border shadow-sm group hover:border-muted-foreground transition-all duration-300">
         <div className="flex items-center gap-3 mb-4">
-          <div className="bg-orange-50 p-2 rounded-lg text-orange-600 border border-orange-100">
+          <div className="bg-orange-50 dark:bg-orange-950/30 p-2 rounded-lg text-orange-600 dark:text-orange-400 border border-orange-100 dark:border-orange-900/50">
             <Clock className="h-4 w-4" />
           </div>
           <h3 className="text-muted-foreground font-bold uppercase text-[10px] tracking-wider">Due Today</h3>
         </div>
         <div className="flex items-baseline gap-1">
-          <span className={`text-3xl font-bold tracking-tight ${financials.dueToday && financials.dueToday !== '₱0.00' ? 'text-orange-600' : 'text-foreground'}`}>
+          <span className={`text-3xl font-bold tracking-tight ${financials.dueToday && financials.dueToday !== '₱0.00' ? 'text-orange-600 dark:text-orange-400' : 'text-foreground'}`}>
             {financials.dueToday || '₱0.00'}
           </span>
         </div>
         <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-          <div className={`h-1 w-1 rounded-full ${financials.dueToday && financials.dueToday !== '₱0.00' ? 'bg-orange-500' : 'bg-slate-300'}`} />
+          <div className={`h-1 w-1 rounded-full ${financials.dueToday && financials.dueToday !== '₱0.00' ? 'bg-orange-500' : 'bg-muted-foreground/30'}`} />
           Outstanding
         </div>
       </div>
 
       <div className="bg-card p-6 rounded-2xl border border-border shadow-sm group hover:border-muted-foreground transition-all duration-300 sm:col-span-2 lg:col-span-1">
         <div className="flex items-center gap-3 mb-4">
-          <div className="bg-red-50 p-2 rounded-lg text-red-600 border border-red-100">
+          <div className="bg-red-50 dark:bg-red-950/30 p-2 rounded-lg text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/50">
             <TrendingDown className="h-4 w-4" />
           </div>
           <h3 className="text-muted-foreground font-bold uppercase text-[10px] tracking-wider">Remaining Balance</h3>
         </div>
         <div className="flex items-baseline gap-1">
-          <span className={`text-3xl font-bold tracking-tight ${financials.balance && financials.balance !== '₱0.00' ? 'text-red-600' : 'text-emerald-600 dark:text-emerald-400'}`}>
+          <span className={`text-3xl font-bold tracking-tight ${financials.balance && financials.balance !== '₱0.00' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
             {financials.balance || '₱0.00'}
           </span>
         </div>
         <div className="mt-4">
           <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider w-fit border ${
             financials.balance && financials.balance !== '₱0.00' 
-              ? 'bg-red-50 text-red-600 border-red-100' 
+              ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border-red-100 dark:border-red-900/50' 
               : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50'
           }`}>
             {financials.balance && financials.balance !== '₱0.00' ? 'Unpaid' : 'Settled'}

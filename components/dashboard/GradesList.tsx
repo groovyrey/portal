@@ -65,7 +65,7 @@ export default function GradesList({ reports }: GradesListProps) {
       <div className="space-y-6">
         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-6">
-            <div className="h-8 w-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
               <BookOpenCheck className="h-4 w-4" />
             </div>
             <div>
@@ -83,12 +83,12 @@ export default function GradesList({ reports }: GradesListProps) {
                   onClick={() => handleOpenReport(report.href, report.text)}
                   className={`group flex items-center justify-between p-4 rounded-xl text-[13px] font-bold transition-all border outline-none ${
                     isActive
-                      ? 'bg-slate-900 text-white border-slate-900'
-                      : 'bg-accent text-muted-foreground hover:bg-accent border-border'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                      : 'bg-accent text-muted-foreground hover:bg-accent/80 border-border hover:border-muted-foreground/30'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <FileText className={`h-4 w-4 ${isActive ? 'text-white' : 'text-muted-foreground'}`} />
+                    <FileText className={`h-4 w-4 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
                     <span className="truncate">{report.text.replace('Grades of ', '')}</span>
                   </div>
                   <ChevronRight className={`h-4 w-4 ${isActive ? 'opacity-100' : 'opacity-30 group-hover:opacity-100'}`} />
@@ -121,10 +121,10 @@ export default function GradesList({ reports }: GradesListProps) {
               </div>
             ) : grades ? (
               <div className="space-y-6">
-                <div className="bg-slate-900 p-4 rounded-xl">
+                <div className="bg-secondary p-4 rounded-xl border border-border/50">
                   <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     <span>Semester Summary</span>
-                    <span className="bg-slate-800 px-2 py-0.5 rounded text-white">{grades.length} Subjects</span>
+                    <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded shadow-sm">{grades.length} Subjects</span>
                   </div>
                 </div>
   
@@ -163,7 +163,7 @@ export default function GradesList({ reports }: GradesListProps) {
               </div>
             ) : (
               <div className="text-center py-16 bg-accent rounded-xl border border-dashed border-border">
-                <FileText className="h-8 w-8 mx-auto mb-3 text-slate-300" />
+                <FileText className="h-8 w-8 mx-auto mb-3 text-muted-foreground/30" />
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">No records available</p>
               </div>
             )}

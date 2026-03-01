@@ -256,7 +256,7 @@ export default function SecuritySettings() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white font-bold text-sm py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
+        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-secondary text-white font-bold text-sm py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
       >
         {loading ? (
           <>
@@ -287,7 +287,7 @@ export default function SecuritySettings() {
                   navigator.clipboard.writeText(debugHtml);
                   toast.success('Diagnostic data copied to clipboard');
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-slate-200 text-muted-foreground rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-secondary text-muted-foreground rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors"
               >
                 <Copy className="h-3 w-3" />
                 Copy HTML
@@ -302,9 +302,9 @@ export default function SecuritySettings() {
               <textarea
                 readOnly
                 value={debugHtml}
-                className="w-full h-48 bg-slate-900 text-slate-300 text-[10px] font-mono p-4 rounded-xl border border-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 resize-none custom-scrollbar"
+                className="w-full h-48 bg-secondary text-foreground text-[10px] font-mono p-4 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-blue-600/20 resize-none custom-scrollbar"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent pointer-events-none rounded-xl" />
+              <div className="absolute inset-0 bg-gradient-to-t from-secondary/50 to-transparent pointer-events-none rounded-xl" />
             </div>
           </motion.div>
         )}

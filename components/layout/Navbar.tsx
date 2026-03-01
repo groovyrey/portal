@@ -319,13 +319,13 @@ export default function Navbar() {
       >
         {/* Overlay */}
         <div 
-          className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+          className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
         ></div>
         
         {/* Drawer */}
         <div 
-          className={`absolute right-0 top-0 bottom-0 w-72 bg-background shadow-xl transition-transform duration-300 transform ${
+          className={`absolute right-0 top-0 bottom-0 w-72 bg-background shadow-2xl border-l border-border transition-transform duration-300 transform ${
             isOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
@@ -364,7 +364,7 @@ export default function Navbar() {
                     className={`p-2 rounded-xl border transition-all ${
                       isSyncing 
                         ? 'bg-accent border-border text-muted-foreground cursor-not-allowed' 
-                        : 'bg-primary border-primary text-primary-foreground hover:opacity-90'
+                        : 'bg-primary border-primary text-primary-foreground hover:opacity-90 shadow-sm shadow-primary/20'
                     }`}
                     title="Manual Sync"
                   >
@@ -396,7 +396,7 @@ export default function Navbar() {
             </div>
 
             <div className="p-6 border-t border-border text-center">
-              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Version {APP_VERSION}</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Version {APP_VERSION}</p>
             </div>
           </div>
         </div>

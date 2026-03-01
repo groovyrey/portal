@@ -19,7 +19,7 @@ export default function Skeleton({ className, variant = 'rounded' }: SkeletonPro
     <div 
       className={`
         relative overflow-hidden 
-        bg-slate-200/70 
+        bg-secondary/70 
         ${variantClasses[variant]} 
         ${className}
       `}

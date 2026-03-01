@@ -26,7 +26,7 @@ export default function Subjects({ subjects }: SubjectsProps) {
         </div>
         <Link 
           href="/subjects" 
-          className="px-4 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-600 transition-all text-center"
+          className="px-4 py-2 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest rounded-xl hover:opacity-90 transition-all text-center shadow-sm shadow-primary/20"
         >
           View Full Listing
         </Link>
@@ -42,20 +42,20 @@ export default function Subjects({ subjects }: SubjectsProps) {
               <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-50">
+          <tbody className="divide-y divide-border/50">
             {subjects.slice(0, 5).map((sub, idx) => (
               <tr 
                 key={idx} 
                 onClick={() => router.push(`/subjects/${encodeURIComponent(sub.code)}`)}
-                className="hover:bg-blue-50 dark:bg-blue-950/30/50 transition-all cursor-pointer group"
+                className="hover:bg-blue-50 dark:bg-blue-950/30 transition-all cursor-pointer group"
               >
                 <td className="px-6 py-5 whitespace-nowrap">
-                  <span className="text-[10px] font-black text-muted-foreground font-mono bg-accent px-2 py-1 rounded group-hover:bg-blue-100 group-hover:text-blue-600 dark:text-blue-400 transition-colors">
+                  <span className="text-[10px] font-black text-muted-foreground font-mono bg-accent px-2 py-1 rounded group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 group-hover:text-blue-600 dark:text-blue-400 transition-colors">
                     {sub.code}
                   </span>
                 </td>
                 <td className="px-6 py-5">
-                  <p className="text-xs font-bold text-foreground leading-tight uppercase group-hover:text-blue-900 transition-colors">{sub.description}</p>
+                  <p className="text-xs font-bold text-foreground leading-tight uppercase group-hover:text-primary transition-colors">{sub.description}</p>
                 </td>
                 <td className="px-6 py-5 text-center">
                   <span className="text-xs font-black text-muted-foreground">
@@ -64,7 +64,7 @@ export default function Subjects({ subjects }: SubjectsProps) {
                 </td>
                 <td className="px-6 py-5 text-right">
                   <div className="flex justify-end">
-                    <div className="h-8 w-8 rounded-lg bg-accent border border-border flex items-center justify-center text-muted-foreground group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all">
+                    <div className="h-8 w-8 rounded-lg bg-accent border border-border flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all shadow-sm">
                       <ChevronRight size={14} />
                     </div>
                   </div>

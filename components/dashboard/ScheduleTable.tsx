@@ -105,7 +105,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+          <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
             <Calendar className="h-4 w-4" />
           </div>
           <div>
@@ -273,7 +273,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                     const code = getSubjectCode(selectedItem.subject);
                     router.push(`/subjects/${encodeURIComponent(code)}`);
                   }}
-                  className="w-full py-2.5 bg-slate-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 group"
+                  className="w-full py-2.5 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-wider rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 group shadow-sm shadow-primary/20"
                 >
                   View Catalog
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />

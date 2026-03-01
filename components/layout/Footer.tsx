@@ -71,8 +71,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-border">
-          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+        <div className="pt-8 border-t border-border text-center md:text-left">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             &copy; {currentYear} LCC Hub • v{APP_VERSION}
           </p>
         </div>

@@ -126,7 +126,7 @@ export default function ImagePreviewModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-900/95 backdrop-blur-xl"
+            className="absolute inset-0 bg-slate-950/90 dark:bg-black/95 backdrop-blur-xl"
             onClick={onClose}
           />
           

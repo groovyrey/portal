@@ -205,7 +205,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             Unread
             {unreadCount > 0 && (
               <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black ${
-                activeTab === 'unread' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-muted-foreground'
+                activeTab === 'unread' ? 'bg-blue-600 text-white shadow-sm shadow-blue-200' : 'bg-secondary text-muted-foreground'
               }`}>
                 {unreadCount}
               </span>
@@ -307,7 +307,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
         ) : filteredNotifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
             <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mb-4">
-              <Bell className="h-8 w-8 text-slate-300" />
+              <Bell className="h-8 w-8 text-muted-foreground/30" />
             </div>
             <h3 className="text-base font-bold text-foreground mb-1">
               {activeTab === 'unread' && notifications.length > 0 

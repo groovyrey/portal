@@ -107,35 +107,35 @@ export default function DisclaimerContent() {
         </section>
 
         {/* Formal Terms of Service Section */}
-        <section className="bg-slate-900 text-white rounded-3xl p-8 mt-16 shadow-2xl">
+        <section className="bg-primary text-primary-foreground rounded-3xl p-8 mt-16 shadow-2xl shadow-primary/20">
           <div className="flex items-center gap-3 mb-6">
-            <Scale className="h-6 w-6 text-blue-400" />
+            <Scale className="h-6 w-6 text-primary-foreground/60" />
             <h2 className="text-2xl font-bold">Terms of Service</h2>
           </div>
           
-          <div className="grid gap-6 text-slate-300 text-sm leading-relaxed">
+          <div className="grid gap-6 text-primary-foreground/80 text-sm leading-relaxed">
             <div>
-              <h4 className="text-white font-bold mb-2">1. Agreeing to the Rules</h4>
+              <h4 className="text-primary-foreground font-bold mb-2">1. Agreeing to the Rules</h4>
               <p>By logging into LCC Hub, you agree to these rules. If you do not agree, please stop using the app right away.</p>
             </div>
             
             <div>
-              <h4 className="text-white font-bold mb-2">2. Your Responsibility</h4>
+              <h4 className="text-primary-foreground font-bold mb-2">2. Your Responsibility</h4>
               <p>You are responsible for keeping your school login safe. You agree not to use this app for any dishonest activity or to break school rules.</p>
             </div>
 
             <div>
-              <h4 className="text-white font-bold mb-2">3. Service as it is</h4>
+              <h4 className="text-primary-foreground font-bold mb-2">3. Service as it is</h4>
               <p>LCC Hub is a convenience tool. We can&apos;t guarantee it will always be online or always work with the school portal. We can change or stop the app at any time.</p>
             </div>
 
             <div>
-              <h4 className="text-white font-bold mb-2">4. Responsibility Limit</h4>
+              <h4 className="text-primary-foreground font-bold mb-2">4. Responsibility Limit</h4>
               <p>The app makers are not responsible for any school punishments, grade errors, or technical bugs that happen while using this app.</p>
             </div>
 
-            <div className="pt-4 border-t border-slate-800">
-              <p className="text-[10px] font-medium text-muted-foreground italic">
+            <div className="pt-4 border-t border-primary-foreground/10">
+              <p className="text-[10px] font-medium text-primary-foreground/60 italic">
                 Note: These terms exist to protect both the students and the independent makers of this project.
               </p>
             </div>

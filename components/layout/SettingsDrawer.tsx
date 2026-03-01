@@ -158,11 +158,11 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                 </div>
             </div>
 
-            <div className="p-4 bg-slate-900 rounded-xl text-white flex items-center gap-3 shadow-md shadow-slate-200">
-              <div className="p-2 bg-slate-800 rounded-lg">
-                <Shield className="h-4 w-4 text-blue-400" />
+            <div className="p-4 bg-primary rounded-xl text-primary-foreground flex items-center gap-3 shadow-md shadow-primary/20">
+              <div className="p-2 bg-primary-foreground/10 rounded-lg">
+                <Shield className="h-4 w-4 text-primary-foreground" />
               </div>
-              <p className="text-[10px] text-slate-300 font-medium leading-relaxed">Personal records are strictly private and only visible to you.</p>
+              <p className="text-[10px] text-primary-foreground/80 font-medium leading-relaxed">Personal records are strictly private and only visible to you.</p>
             </div>
           </div>
         );
@@ -269,7 +269,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
           <div className="space-y-6">
             <div className="flex flex-col gap-4 px-1">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white shadow-sm">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-sm">
                   <History className="h-4 w-4" />
                 </div>
                 <div>
@@ -311,14 +311,14 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
               ) : logs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
                   <div className="h-12 w-12 bg-accent rounded-full flex items-center justify-center mb-3 border border-border">
-                    <History className="h-5 w-5 text-slate-300" />
+                    <History className="h-5 w-5 text-muted-foreground/30" />
                   </div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No Recent Activity</p>
                 </div>
               ) : filteredLogs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <div className="h-12 w-12 bg-accent rounded-full flex items-center justify-center mb-3 border border-border">
-                    <Search className="h-5 w-5 text-slate-200" />
+                    <Search className="h-5 w-5 text-muted-foreground/20" />
                   </div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No matches found</p>
                   <button onClick={() => setSearchQuery('')} className="text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-2 hover:underline">Clear search</button>
@@ -359,7 +359,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
                             <div className="flex items-center justify-between gap-2">
                               <h4 className="text-[11px] font-bold text-foreground truncate uppercase tracking-tight">{log.action}</h4>
-                              <span className={`text-[9px] font-bold shrink-0 uppercase ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-300'}`}>
+                              <span className={`text-[9px] font-bold shrink-0 uppercase ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground/50'}`}>
                                 {isToday ? 'Today' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                               </span>
                             </div>
@@ -368,7 +368,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
 
                           {log.link && (
                             <div className="flex items-center pl-1">
-                               <a href={log.link} className="p-1.5 rounded-md hover:bg-card hover:shadow-sm text-slate-300 hover:text-foreground transition-all">
+                               <a href={log.link} className="p-1.5 rounded-md hover:bg-card hover:shadow-sm text-muted-foreground/50 hover:text-foreground transition-all">
                                   <ChevronRight className="h-3.5 w-3.5" />
                                </a>
                             </div>
