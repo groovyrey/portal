@@ -172,7 +172,7 @@ export default function DevPage() {
   const techStack = [
     { k: "Core", v: "Next.js 15 (App Router)" },
     { k: "Database", v: "PostgreSQL (Neon), Firebase (Firestore)" },
-    { k: "AI", v: "Google Gemini 2.0 Flash SDK" },
+    { k: "AI", v: "Google Gemma 3 27B-IT (v1beta)" },
     { k: "Realtime", v: "Ably (WebSocket/MQTT)" }
   ];
 

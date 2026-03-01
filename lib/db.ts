@@ -24,6 +24,8 @@ googleProvider.addScope('https://www.googleapis.com/auth/classroom.courses.reado
 googleProvider.addScope('https://www.googleapis.com/auth/classroom.coursework.me.readonly');
 googleProvider.addScope('https://www.googleapis.com/auth/classroom.rosters.readonly');
 googleProvider.addScope('https://www.googleapis.com/auth/tasks');
+googleProvider.addScope('https://www.googleapis.com/auth/youtube.readonly');
+googleProvider.addScope('https://www.googleapis.com/auth/books');
 
 try {
   const dbId = process.env.FIREBASE_DATABASE_ID || '(default)';

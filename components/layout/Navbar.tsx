@@ -16,6 +16,7 @@ import {
   Lock,
   MessageSquare,
   User as UserIcon,
+  Users,
   ChevronDown,
   Building2,
   Settings,
@@ -41,6 +42,10 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isPortalOpen, setIsPortalOpen] = useState(false);
+  const [isSocialOpen, setIsSocialOpen] = useState(false);
+  const [isPortalExpanded, setIsPortalExpanded] = useState(true);
+  const [isSocialExpanded, setIsSocialExpanded] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [studentName, setStudentName] = useState<string | null>(null);
@@ -136,46 +141,53 @@ export default function Navbar() {
 
   // Close more menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = () => setIsMoreOpen(false);
-    if (isMoreOpen) {
+    const handleClickOutside = () => {
+      setIsMoreOpen(false);
+      setIsPortalOpen(false);
+      setIsSocialOpen(false);
+    };
+    if (isMoreOpen || isPortalOpen || isSocialOpen) {
       window.addEventListener('click', handleClickOutside);
     }
     return () => window.removeEventListener('click', handleClickOutside);
-  }, [isMoreOpen]);
+  }, [isMoreOpen, isPortalOpen, isSocialOpen]);
 
   const publicLinks = [
     { name: 'About', href: '/about', icon: Info },
     { name: 'Disclaimer', href: '/disclaimer', icon: ShieldAlert },
   ];
 
-  const authLinks = [
+  const portalLinks = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
-    { name: 'Profile', href: studentId ? `/profile/${obfuscateId(studentId)}` : '/profile', icon: UserIcon },
-    { name: 'G-Space', href: '/g-space', icon: LayoutGrid },
-    { name: 'Accounts', href: '/accounts', icon: WalletCards },
     { name: 'Subjects', href: '/subjects', icon: BookOpen },
-    { name: 'Community', href: '/community', icon: MessageSquare },
-    { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
+    { name: 'Accounts', href: '/accounts', icon: WalletCards },
+    { name: 'EAF', href: '/eaf', icon: FileText },
+  ];
+
+  const socialLinks = [
+    { name: 'Profile', href: studentId ? `/profile/${obfuscateId(studentId)}` : '/profile', icon: UserIcon },
+    { name: 'Community', href: '/community', icon: MessageSquare },
+  ];
+
+  const authLinks = [
+    { name: 'Portal', icon: LayoutDashboard, children: portalLinks },
+    { name: 'Social', icon: Users, children: socialLinks },
+    { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
+    { name: 'G-Space', href: '/g-space', icon: LayoutGrid },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'About', href: '/about', icon: Info },
   ];
 
   // For desktop view: show a few primary links and the rest in "More"
   const desktopPrimary = isLoggedIn ? [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Portal', icon: LayoutDashboard, children: portalLinks },
+    { name: 'Social', icon: Users, children: socialLinks },
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
-    { name: 'Grades', href: '/grades', icon: GraduationCap },
-    { name: 'Community', href: '/community', icon: MessageSquare },
-    { name: 'Profile', href: studentId ? `/profile/${obfuscateId(studentId)}` : '/profile', icon: UserIcon },
   ] : [];
 
   const desktopMore = isLoggedIn ? [
     { name: 'G-Space', href: '/g-space', icon: LayoutGrid },
-    { name: 'Accounts', href: '/accounts', icon: WalletCards },
-    { name: 'Subjects', href: '/subjects', icon: BookOpen },
-    { name: 'EAF', href: '/eaf', icon: FileText },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'About', href: '/about', icon: Info },
   ] : [];
@@ -203,8 +215,68 @@ export default function Navbar() {
 
             {/* Desktop Menu */}
             <div className="hidden lg:flex items-center space-x-1">
-              {(isLoggedIn ? desktopPrimary : publicLinks).map((link) => {
+              {(isLoggedIn ? desktopPrimary : publicLinks).map((link: any) => {
                 const Icon = link.icon;
+                
+                if (link.children) {
+                  const isOpenState = link.name === 'Portal' ? isPortalOpen : isSocialOpen;
+                  const setOpenState = link.name === 'Portal' ? setIsPortalOpen : setIsSocialOpen;
+                  
+                  return (
+                    <div key={link.name} className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (link.name === 'Portal') {
+                            setIsPortalOpen(!isPortalOpen);
+                            setIsSocialOpen(false);
+                          } else {
+                            setIsSocialOpen(!isSocialOpen);
+                            setIsPortalOpen(false);
+                          }
+                          setIsMoreOpen(false);
+                        }}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
+                          isOpenState || link.children.some((child: any) => isActive(child.href))
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {link.name}
+                        <ChevronDown className={`h-4 w-4 transition-transform ${isOpenState ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {isOpenState && (
+                        <div className="absolute left-0 mt-2 w-48 bg-card border border-border rounded-2xl shadow-xl py-2 z-[110] animate-in fade-in zoom-in-95 duration-200">
+                          <div className="ml-4 border-l border-border/50">
+                            {link.children.map((child: any) => {
+                              const ChildIcon = child.icon;
+                              return (
+                                <Link
+                                  key={child.name}
+                                  href={child.href}
+                                  className={`flex items-center gap-3 px-4 py-2 text-sm font-bold transition-all relative ${
+                                    isActive(child.href)
+                                      ? 'text-foreground bg-accent'
+                                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                                  }`}
+                                >
+                                  {/* Connector Line */}
+                                  <div className="absolute -left-[1px] top-1/2 -translate-y-1/2 w-2 h-[1px] bg-border/50"></div>
+                                  
+                                  <ChildIcon className="h-4 w-4 text-muted-foreground" />
+                                  {child.name}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
                 return (
                   <Link
                     key={link.name}
@@ -247,6 +319,8 @@ export default function Navbar() {
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsMoreOpen(!isMoreOpen);
+                          setIsPortalOpen(false);
+                          setIsSocialOpen(false);
                         }}
                         className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
                           isMoreOpen || desktopMore.some(link => isActive(link.href))
@@ -382,8 +456,55 @@ export default function Navbar() {
             </div>
             
             <div className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-              {(isLoggedIn ? navLinks : publicLinks).map((link) => {
+              {(isLoggedIn ? navLinks : publicLinks).map((link: any) => {
                 const Icon = link.icon;
+                
+                if (link.children) {
+                  const isExpanded = link.name === 'Portal' ? isPortalExpanded : isSocialExpanded;
+                  const setIsExpanded = link.name === 'Portal' ? setIsPortalExpanded : setIsSocialExpanded;
+                  
+                  return (
+                    <div key={link.name} className="space-y-1 py-2">
+                      <button 
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] hover:text-foreground transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <Icon className="h-4 w-4" />
+                          {link.name}
+                        </div>
+                        <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${isExpanded ? '' : '-rotate-90'}`} />
+                      </button>
+                      
+                      {isExpanded && (
+                        <div className="ml-6 border-l border-border/50 pl-4 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                          {link.children.map((child: any) => {
+                            const ChildIcon = child.icon;
+                            return (
+                              <Link
+                                key={child.name}
+                                href={child.href}
+                                onClick={() => setIsOpen(false)}
+                                className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all relative ${
+                                  isActive(child.href)
+                                    ? 'bg-primary text-primary-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                                }`}
+                              >
+                                {/* Connector Line */}
+                                <div className="absolute -left-[1px] top-1/2 -translate-y-1/2 w-4 h-[1px] bg-border/50"></div>
+                                
+                                <ChildIcon className="h-5 w-5" />
+                                {child.name}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
                 return (
                   <Link
                     key={link.name}

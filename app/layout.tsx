@@ -17,6 +17,26 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "LCC Hub",
   description: "Secure Access to Schoolista Info",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "LCC Hub",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#020617" },
+  ],
 };
 
 export default function RootLayout({

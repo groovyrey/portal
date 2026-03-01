@@ -53,6 +53,39 @@ const showToastTool = tool(
   }
 );
 
+async function performYoutubeSearch(query: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  try {
+    const response = await fetch(`${baseUrl}/api/youtube?q=${encodeURIComponent(query)}`, {
+      signal: AbortSignal.timeout(15000)
+    });
+
+    if (!response.ok) {
+      return "YouTube search is currently unavailable.";
+    }
+
+    const data = await response.json();
+    const items = data.items || [];
+
+    if (items.length === 0) {
+      return `No videos found for "${query}".`;
+    }
+
+    const resultsSummary = items.map((item: any, index: number) => {
+      const title = item.snippet?.title || "No Title";
+      const videoId = item.id?.videoId;
+      const channel = item.snippet?.channelTitle || "Unknown Channel";
+      const description = item.snippet?.description || "";
+      return `[Video ${index + 1}] **${title}**\nChannel: ${channel}\nLink: https://www.youtube.com/watch?v=${videoId}\nDescription: ${description}\n`;
+    }).join('\n');
+
+    return `### YouTube results for "${query}":\n\n${resultsSummary}\n\n*Note: Students can watch these videos directly in the G-Space > Media tab.*`;
+  } catch (error) {
+    console.error('Youtube tool error:', error);
+    return "An error occurred while searching YouTube.";
+  }
+}
+
 async function performWebSearch(query: string) {
   const apiKey = process.env.LANGSEARCH_API_KEY;
   if (!apiKey) {
@@ -271,6 +304,15 @@ I'll check the web for that information.
     }
   },
   {
+    "name": "youtube_search",
+    "description": "Search for educational or informative videos on YouTube. Use this if the user specifically asks for videos, tutorials, or visual guides.",
+    "parameters": {
+      "type": "object",
+      "properties": { "query": { "type": "string" } },
+      "required": ["query"]
+    }
+  },
+  {
     "name": "web_search",
     "description": "Search the web for real-time information or general knowledge.",
     "parameters": {
@@ -403,7 +445,7 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
               // Pre-process jsonStr to fix common model mistakes
               const sanitizedJson = jsonStr.replace(/ask_user_choices/g, 'ask_user_choice');
               const toolCall = JSON.parse(sanitizedJson);
-              const isOurTool = ['web_search', 'web_fetch', 'show_toast', 'ask_user', 'ask_user_choice'].includes(toolCall.name);
+              const isOurTool = ['web_search', 'web_fetch', 'show_toast', 'ask_user', 'ask_user_choice', 'youtube_search'].includes(toolCall.name);
               
               if (isOurTool) {
                 if (toolCall.name === 'web_search' && toolCall.parameters?.query) {
@@ -415,6 +457,16 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
                   if (!isWriterClosed) await writer.write(encoder.encode('STATUS:PROCESSING'));
                   history.push(new AIMessage(fullContent));
                   currentInput = `TOOL_RESULT: ${result}\n\nBased on these search results, please provide a comprehensive answer and cite your sources.`;
+                  continue;
+                } else if (toolCall.name === 'youtube_search' && toolCall.parameters?.query) {
+                  if (!isWriterClosed) {
+                    await writer.write(encoder.encode('STATUS:SEARCHING'));
+                    await writer.write(encoder.encode('\n🎥 *Searching YouTube for: "' + toolCall.parameters.query + '"...*\n\n'));
+                  }
+                  const result = await performYoutubeSearch(toolCall.parameters.query);
+                  if (!isWriterClosed) await writer.write(encoder.encode('STATUS:PROCESSING'));
+                  history.push(new AIMessage(fullContent));
+                  currentInput = `TOOL_RESULT: ${result}\n\nBased on these YouTube results, please provide a summary of the found videos and their creators. Inform the user they can find these in the Media tab if they want to watch them inline.`;
                   continue;
                 } else if (toolCall.name === 'web_fetch' && toolCall.parameters?.url) {
                   if (!isWriterClosed) {

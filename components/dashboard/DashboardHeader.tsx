@@ -12,7 +12,7 @@ export default function DashboardHeader({ student }: DashboardHeaderProps) {
     return (
       <div className="mb-6 space-y-4">
         <div>
-          <h1 className="text-xl font-bold text-foreground tracking-tight">Dashboard</h1>
+          <h1 className="text-xl font-bold text-foreground tracking-tight">Portal</h1>
           <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Official Student Console</p>
         </div>
 

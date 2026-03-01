@@ -1,6 +1,7 @@
 {
-  "name": "app",
+  "name": "lcc-hub",
   "version": "1.2.0-BETA",
+  "description": "LCC Hub is a comprehensive student portal for La Consolacion College students, featuring G-Space integration, AI-powered study assistance, and academic management tools.",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -68,10 +69,24 @@
     "tailwindcss": "^4.1.18",
     "typescript": "^5"
   },
-  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
-  "main": "index.js",
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "lcc",
+    "portal",
+    "student",
+    "education",
+    "g-space",
+    "ai",
+    "nextjs"
+  ],
+  "author": "groovyrey",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/groovyrey/portal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/groovyrey/portal/issues"
+  },
+  "homepage": "https://github.com/groovyrey/portal#readme",
   "type": "commonjs"
 }
