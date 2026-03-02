@@ -62,6 +62,42 @@ function parsePaymentsToEvents(financials: Financials | undefined, year: number,
   return events;
 }
 
+function parseScheduleToEvents(schedule: ScheduleItem[] | undefined, year: number, month: number): CalendarEvent[] {
+  const events: CalendarEvent[] = [];
+  if (!schedule) return events;
+
+  schedule.forEach((item, idx) => {
+    const parts = item.time.split(' ');
+    if (parts.length < 2) return;
+    const daysStr = parts[0];
+    const timeRange = parts.slice(1).join(' ');
+    const [startT, endT] = timeRange.split('-');
+
+    const days = daysStr.split('-');
+    const numDays = new Date(year, month + 1, 0).getDate();
+
+    for (let d = 1; d <= numDays; d++) {
+      const date = new Date(year, month, d);
+      const dayName = date.toLocaleString('en-US', { weekday: 'short' }).toUpperCase();
+      if (days.includes(dayName)) {
+        events.push({
+          id: `class-${idx}-${d}`,
+          title: item.description,
+          type: 'class',
+          date: date,
+          startTime: startT,
+          endTime: endT,
+          location: item.room,
+          course: item.subject,
+          instructor: item.instructor,
+          color: 'bg-blue-500'
+        });
+      }
+    }
+  });
+  return events;
+}
+
 function generateICS(schedule: ScheduleItem[]) {
   let ics = [
     'BEGIN:VCALENDAR',
@@ -129,7 +165,8 @@ export default function SyncTab({
   const events = useMemo(() => {
     if (!student) return [];
     const payEvents = parsePaymentsToEvents(student.financials, year, month);
-    return [...payEvents].sort((a, b) => a.date.getTime() - b.date.getTime());
+    const classEvents = parseScheduleToEvents(student.schedule, year, month);
+    return [...payEvents, ...classEvents].sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [student, year, month]);
 
   const monthName = currentDate.toLocaleString('default', { month: 'long' });
@@ -349,6 +386,7 @@ export default function SyncTab({
                       type: 'assignment' as const,
                       date: a.dueDate ? new Date(a.dueDate.year, a.dueDate.month - 1, a.dueDate.day) : new Date(),
                       course: a.courseName,
+                      instructor: a.ownerName,
                       link: a.alternateLink
                     }))].sort((a, b) => a.date.getTime() - b.date.getTime()).map((item: any) => (
                       <div 
@@ -371,13 +409,18 @@ export default function SyncTab({
                             {item.course && <span className="text-[9px] font-bold text-muted-foreground truncate">{item.course}</span>}
                           </div>
                           <h4 className="text-xs font-bold truncate">{item.title}</h4>
+                          {item.instructor && (
+                            <p className="text-[9px] font-bold text-primary/80 uppercase tracking-tight mt-0.5">{item.instructor}</p>
+                          )}
                         </div>
                         {item.link ? (
                           <a href={item.link} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-all">
                             <ExternalLink className="h-3.5 w-3.5" />
                           </a>
-                        ) : item.amount && (
+                        ) : item.amount ? (
                           <span className="text-[10px] font-bold text-rose-500">P{item.amount}</span>
+                        ) : item.startTime && (
+                          <span className="text-[9px] font-bold text-muted-foreground whitespace-nowrap">{item.startTime}</span>
                         )}
                       </div>
                     ))}

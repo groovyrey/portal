@@ -224,6 +224,7 @@ export default function GSpacePage() {
             const assignments = (cwData.courseWork || []).map((cw: any) => ({
               id: cw.id,
               courseName: course.name,
+              ownerName: course.ownerName,
               title: cw.title,
               description: cw.description,
               dueDate: cw.dueDate,

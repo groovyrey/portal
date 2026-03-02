@@ -16,6 +16,7 @@ export interface CalendarEvent {
   location?: string;
   amount?: string;
   description?: string;
+  instructor?: string;
   color?: string;
   course?: string;
   link?: string;
@@ -24,6 +25,7 @@ export interface CalendarEvent {
 export interface ClassroomAssignment {
   id: string;
   courseName: string;
+  ownerName?: string;
   title: string;
   description?: string;
   dueDate?: {
