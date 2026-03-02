@@ -198,14 +198,14 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             onClick={() => setActiveTab('unread')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
               activeTab === 'unread' 
-                ? 'bg-card text-blue-600 dark:text-blue-400 shadow-sm' 
+                ? 'bg-card text-blue-600 dark:text-blue-400 shadow-sm border border-border/50' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             Unread
             {unreadCount > 0 && (
               <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black ${
-                activeTab === 'unread' ? 'bg-blue-600 text-white shadow-sm shadow-blue-200' : 'bg-secondary text-muted-foreground'
+                activeTab === 'unread' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'bg-secondary text-muted-foreground'
               }`}>
                 {unreadCount}
               </span>
@@ -215,7 +215,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             onClick={() => setActiveTab('all')}
             className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
               activeTab === 'all' 
-                ? 'bg-card text-blue-600 dark:text-blue-400 shadow-sm' 
+                ? 'bg-card text-blue-600 dark:text-blue-400 shadow-sm border border-border/50' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -252,7 +252,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
           title={
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                confirmConfig.variant === 'rose' ? 'bg-rose-50 dark:bg-rose-950/30' : 'bg-blue-50 dark:bg-blue-950/30'
+                confirmConfig.variant === 'rose' ? 'bg-rose-500/10 dark:bg-rose-500/20' : 'bg-blue-500/10 dark:bg-blue-500/20'
               }`}>
                 {confirmConfig.icon}
               </div>
@@ -270,7 +270,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
-                className="flex-1 py-3 px-4 rounded-xl text-[10px] font-black text-muted-foreground bg-accent hover:bg-slate-200 transition-colors uppercase tracking-widest"
+                className="flex-1 py-3 px-4 rounded-xl text-[10px] font-black text-muted-foreground bg-accent hover:bg-accent/80 transition-colors uppercase tracking-widest"
               >
                 Cancel
               </button>
@@ -278,8 +278,8 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                 onClick={confirmConfig.onConfirm}
                 className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black text-white transition-colors uppercase tracking-widest shadow-lg ${
                   confirmConfig.variant === 'rose' 
-                    ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' 
-                    : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'
+                    ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/20' 
+                    : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
                 }`}
               >
                 {confirmConfig.confirmText}
@@ -328,13 +328,13 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                 onClick={() => !notif.isRead && markAsRead(notif.id)}
                 className={`group relative p-4 rounded-2xl border transition-all cursor-pointer ${
                   notif.isRead 
-                    ? 'bg-card border-border hover:border-border' 
-                    : 'bg-blue-50 dark:bg-blue-950/30/50 border-blue-100 dark:border-blue-900/50 hover:border-blue-200 ring-1 ring-blue-100/50'
+                    ? 'bg-card border-border hover:border-primary/20' 
+                    : 'bg-blue-500/[0.03] dark:bg-blue-500/[0.05] border-blue-500/20 dark:border-blue-400/20 hover:border-blue-500/30 ring-1 ring-blue-500/5'
                 }`}
               >
                 <div className="flex gap-4">
                   <div className={`mt-0.5 shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
-                    notif.isRead ? 'bg-accent' : 'bg-card shadow-sm'
+                    notif.isRead ? 'bg-accent' : 'bg-card shadow-sm border border-blue-500/10'
                   }`}>
                     {getIcon(notif.type)}
                   </div>
@@ -342,7 +342,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3 mb-1">
                       <h4 className={`text-sm font-bold truncate ${
-                        notif.isRead ? 'text-foreground' : 'text-foreground'
+                        notif.isRead ? 'text-foreground' : 'text-blue-600 dark:text-blue-400'
                       }`}>
                         {notif.title}
                       </h4>
@@ -359,7 +359,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                             e.stopPropagation();
                             confirmDelete(notif.id);
                           }}
-                          className="p-1.5 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:bg-rose-950/30 transition-all group-hover:opacity-100 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all group-hover:opacity-100 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                           title="Delete notification"
                         >
                           <Trash2 className="h-3.5 w-3.5" />

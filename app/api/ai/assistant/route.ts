@@ -54,34 +54,71 @@ const showToastTool = tool(
 );
 
 async function performYoutubeSearch(query: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  try {
-    const response = await fetch(`${baseUrl}/api/youtube?q=${encodeURIComponent(query)}`, {
-      signal: AbortSignal.timeout(15000)
-    });
+  const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+  if (!apiKey) {
+    return "YouTube search is currently unavailable (API key missing).";
+  }
 
-    if (!response.ok) {
+  try {
+    // 1. Initial search to get video IDs and snippets
+    const searchResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=10&key=${apiKey}`,
+      { signal: AbortSignal.timeout(15000) }
+    );
+
+    if (!searchResponse.ok) {
+      const errorData = await searchResponse.json().catch(() => ({}));
+      console.error('YouTube Search API Error:', errorData);
       return "YouTube search is currently unavailable.";
     }
 
-    const data = await response.json();
-    const items = data.items || [];
+    const searchData = await searchResponse.json();
+    const items = searchData.items || [];
 
     if (items.length === 0) {
       return `No videos found for "${query}".`;
     }
 
-    const resultsSummary = items.map((item: any, index: number) => {
+    // 2. Fetch full details for these videos to get statistics, etc. (optional but better)
+    const videoIds = items.map((item: any) => item.id.videoId).filter(Boolean).join(',');
+    let finalItems = items;
+
+    if (videoIds) {
+      const detailsResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${apiKey}`,
+        { signal: AbortSignal.timeout(10000) }
+      ).catch(() => null);
+
+      if (detailsResponse && detailsResponse.ok) {
+        const detailsData = await detailsResponse.json();
+        finalItems = items.map((item: any) => {
+          const details = detailsData.items?.find((d: any) => d.id === item.id.videoId);
+          return {
+            ...item,
+            snippet: details?.snippet || item.snippet,
+            statistics: details?.statistics
+          };
+        });
+      }
+    }
+
+    const resultsSummary = finalItems.map((item: any, index: number) => {
       const title = item.snippet?.title || "No Title";
-      const videoId = item.id?.videoId;
+      const videoId = item.id?.videoId || item.id;
       const channel = item.snippet?.channelTitle || "Unknown Channel";
       const description = item.snippet?.description || "";
-      return `[Video ${index + 1}] **${title}**\nChannel: ${channel}\nLink: https://www.youtube.com/watch?v=${videoId}\nDescription: ${description}\n`;
+      const views = item.statistics?.viewCount ? Number(item.statistics.viewCount).toLocaleString() : null;
+      
+      let text = `[Video ${index + 1}] **${title}**\nChannel: ${channel}\nDirect Link: https://www.youtube.com/watch?v=${videoId}\n`;
+      if (views) text += `Views: ${views}\n`;
+      text += `Description: ${description.substring(0, 150)}...\n`;
+      return text;
     }).join('\n');
 
-    return `### YouTube results for "${query}":\n\n${resultsSummary}\n\n*Note: Students can watch these videos directly in the G-Space > Media tab.*`;
-  } catch (error) {
+    return `### YouTube results for "${query}":\n\n${resultsSummary}\n\n*Note: You can watch these videos directly on YouTube via the links above, or watch them inline in the G-Space > Media tab.*`;
+  } catch (error: any) {
     console.error('Youtube tool error:', error);
+    if (error.name === 'TimeoutError') return "The YouTube search service timed out. Please try again.";
     return "An error occurred while searching YouTube.";
   }
 }
@@ -253,6 +290,7 @@ STRICT OPERATIONAL RULES:
 4. **PROACTIVE CLARIFICATION:** If a user request is ambiguous or requires more data that isn't in your student context, immediately use the \`ask_user\` tool to request the missing information.
 5. **CITE SOURCES:** When using \`web_search\` or \`web_fetch\`, synthesize results and provide Markdown links.
 6. **NO ASSUMPTIONS:** You MUST always use the \`ask_user\` and \`ask_user_choice\` tools to gather preferences, clarify requirements, or make decisions instead of making assumptions.
+7. **YOUTUBE LEARNING:** When the user asks for "videos", "how-to", "tutorials", or "visual guides", prioritize the \`youtube_search\` tool.
 
 ---
 🛠️ TOOL CALLING CONFIGURATION
@@ -421,7 +459,7 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
             toolCallPos = toolMarkerIndex;
           } else {
             // Fallback: search for tool-like JSON in the whole content
-            const toolPatterns = ['"web_search"', '"web_fetch"', '"show_toast"', '"ask_user"', '"ask_user_choice"', '"ask_user_choices"'];
+            const toolPatterns = ['"web_search"', '"web_fetch"', '"show_toast"', '"ask_user"', '"ask_user_choice"', '"ask_user_choices"', '"youtube_search"'];
             if (toolPatterns.some(p => fullContent.includes(p))) {
               const startOfJsonIndex = fullContent.lastIndexOf('{');
               const endOfJsonIndex = fullContent.lastIndexOf('}');
