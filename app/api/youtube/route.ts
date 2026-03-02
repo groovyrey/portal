@@ -20,10 +20,20 @@ export async function GET(request: Request) {
     );
 
     if (!searchResponse.ok) {
-      const errorData = await searchResponse.json();
+      const errorData = await searchResponse.json().catch(() => ({}));
       console.error('YouTube API Error:', errorData);
+      const errorReason = errorData.error?.errors?.[0]?.reason || "";
+      const errorMessage = errorData.error?.message || 'Failed to fetch videos';
+      
+      if (errorReason === 'quotaExceeded') {
+        return NextResponse.json(
+          { error: "YouTube API quota exceeded. Please try again later." },
+          { status: 403 }
+        );
+      }
+      
       return NextResponse.json(
-        { error: errorData.error?.message || 'Failed to fetch videos' }, 
+        { error: errorMessage }, 
         { status: searchResponse.status }
       );
     }

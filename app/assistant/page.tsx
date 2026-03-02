@@ -392,6 +392,7 @@ export default function AssistantPage() {
                                 );
                               },
                               a: ({...props}) => <a className="text-blue-500 font-bold hover:underline transition-all" target="_blank" rel="noopener noreferrer" {...props} />,
+                              img: ({...props}) => <img className="rounded-xl border border-border shadow-sm my-4 max-w-full h-auto hover:opacity-90 transition-opacity" {...props} />,
                               ul: ({...props}) => <ul className="list-disc list-outside ml-5 my-4 space-y-2" {...props} />,
                               ol: ({...props}) => <ol className="list-decimal list-outside ml-5 my-4 space-y-2" {...props} />,
                               h1: ({children}) => <h1 className="text-lg font-bold text-foreground mt-8 mb-4 pb-2 border-b border-border/50 uppercase tracking-tight">{children}</h1>,

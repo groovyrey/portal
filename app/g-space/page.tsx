@@ -1,17 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useStudentQuery } from '@/lib/hooks';
 import { 
   GraduationCap, 
   RefreshCw, 
   StickyNote, 
-  Library, 
-  PlayCircle, 
-  LogOut,
-  ExternalLink
+  LogOut
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import Skeleton from '@/components/ui/Skeleton';
 import { auth, googleProvider, db } from '@/lib/db';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
@@ -23,31 +20,16 @@ import Modal from '@/components/ui/Modal';
 import { 
   GoogleTask, 
   ClassroomCourse, 
-  ClassroomAssignment, 
-  GoogleBook, 
-  YouTubeVideo,
-  Lobby,
-  ChatMessage 
+  ClassroomAssignment 
 } from '@/types/g-space';
-import { 
-  collection, 
-  query, 
-  onSnapshot, 
-  updateDoc, 
-  increment, 
-  serverTimestamp,
-  runTransaction 
-} from 'firebase/firestore';
 
 // Components
 import SyncTab from '@/components/g-space/SyncTab';
 import NotesTab from '@/components/g-space/NotesTab';
-import LibraryTab from '@/components/g-space/LibraryTab';
-import MediaTab from '@/components/g-space/MediaTab';
 
 export default function GSpacePage() {
   const { data: student, isLoading } = useStudentQuery();
-  const [activeTab, setActiveTab] = useState<'sync' | 'notes' | 'library' | 'media'>('sync');
+  const [activeTab, setActiveTab] = useState<'sync' | 'notes'>('sync');
   
   // Auth & Sync State
   const [isLinking, setIsLinking] = useState(false);
@@ -61,118 +43,10 @@ export default function GSpacePage() {
   const [classroomAssignments, setClassroomAssignments] = useState<ClassroomAssignment[]>([]);
   const [googleTasks, setGoogleTasks] = useState<GoogleTask[]>([]);
   const [taskListId, setTaskListId] = useState<string | null>(null);
-  const [books, setBooks] = useState<GoogleBook[]>([]);
-  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   
   // UI State
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', notes: '' });
-  const [activeBookId, setActiveBookId] = useState<string | null>(null);
-  const [bookQuery, setBookQuery] = useState('');
-  const [videoQuery, setVideoQuery] = useState('');
-  const [openVideos, setOpenVideos] = useState<YouTubeVideo[]>([]);
-  const [activeMediaSubTab, setActiveMediaSubTab] = useState<'search' | string>('search');
-  const [mediaMode, setMediaMode] = useState<'selection' | 'alone' | 'together'>('selection');
-  
-  // AI & Media Features
-  const [isSummarizing, setIsSummarizing] = useState(false);
-  const [videoSummaries, setVideoSummaries] = useState<Record<string, string>>({});
-  const [isViewingTimestamps, setIsViewingTimestamps] = useState<string | null>(null);
-  const [watchMode, setWatchMode] = useState<Record<string, 'alone' | 'together'>>({});
-  const [activeLobby, setActiveLobby] = useState<Record<string, string>>({});
-  const [lobbyParticipants, setLobbyParticipants] = useState<Record<string, number>>({});
-  const [activeLobbies, setActiveLobbies] = useState<Lobby[]>([]);
-  const [lobbyMessages, setLobbyMessages] = useState<Record<string, ChatMessage[]>>({});
-  
-  const ablyClientRef = useRef<any>(null);
-  const discoveryChannelRef = useRef<any>(null);
-
-  // Initialize Ably Discovery for Watch Together
-  useEffect(() => {
-    if (student?.id && ablyClientRef.current && mediaMode === 'together') {
-      const channel = ablyClientRef.current.channels.get('academy-lobby-discovery');
-      discoveryChannelRef.current = channel;
-
-      const updateLobbiesFromPresence = () => {
-        channel.presence.get((err: any, members: any[]) => {
-          if (err) return;
-          
-          // Group members by videoId to create lobby list
-          const lobbiesMap: Record<string, Lobby> = {};
-          members.forEach(member => {
-            const data = member.data;
-            if (data?.videoId) {
-              if (!lobbiesMap[data.videoId]) {
-                lobbiesMap[data.videoId] = {
-                  id: data.videoId,
-                  videoId: data.videoId,
-                  videoTitle: data.videoTitle,
-                  videoThumbnail: data.videoThumbnail,
-                  channelTitle: data.channelTitle,
-                  participants: 0,
-                  lastActivity: Date.now()
-                };
-              }
-              lobbiesMap[data.videoId].participants++;
-            }
-          });
-          setActiveLobbies(Object.values(lobbiesMap));
-        });
-      };
-
-      channel.presence.subscribe(['enter', 'leave', 'update', 'present'], updateLobbiesFromPresence);
-      channel.presence.enter(); // Initially enter with no data
-
-      return () => {
-        channel.presence.unsubscribe();
-        channel.presence.leave();
-        discoveryChannelRef.current = null;
-      };
-    }
-  }, [student?.id, mediaMode]);
-
-  // Update Presence Data when watching a video
-  useEffect(() => {
-    if (discoveryChannelRef.current) {
-      // Find the currently active shared video
-      const activeVideoId = Object.keys(watchMode).find(id => watchMode[id] === 'together' && activeMediaSubTab === id);
-      
-      if (activeVideoId) {
-        const video = openVideos.find(v => v.id.videoId === activeVideoId);
-        if (video) {
-          discoveryChannelRef.current.presence.update({
-            videoId: activeVideoId,
-            videoTitle: video.snippet.title,
-            videoThumbnail: video.snippet.thumbnails.medium.url,
-            channelTitle: video.snippet.channelTitle
-          });
-        }
-      } else {
-        // Not watching a shared video, clear presence data but stay in discovery
-        discoveryChannelRef.current.presence.update({});
-      }
-    }
-  }, [watchMode, activeMediaSubTab, openVideos]);
-
-  // Initialize Ably Client
-  useEffect(() => {
-    if (student?.id && !ablyClientRef.current) {
-      import('ably').then(({ Realtime }) => {
-        const client = new Realtime({ 
-          authUrl: '/api/ably/auth',
-          clientId: student.id 
-        });
-        ablyClientRef.current = client;
-      });
-    }
-
-    return () => {
-      if (ablyClientRef.current) {
-        ablyClientRef.current.close();
-        ablyClientRef.current = null;
-      }
-    };
-  }, [student?.id]);
 
   // Load Integration Data
   useEffect(() => {
@@ -242,8 +116,6 @@ export default function GSpacePage() {
       setClassroomAssignments([]);
       setGoogleTasks([]);
       setTaskListId(null);
-      setBooks([]);
-      setVideos([]);
       toast.success('Signed out successfully');
     } catch (error) {
       toast.error('Sign out failed');
@@ -378,38 +250,6 @@ export default function GSpacePage() {
     }
   };
 
-  const fetchBooks = async (query: string) => {
-    if (!query.trim()) return;
-    setIsFetching(true);
-    try {
-      const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=20`);
-      if (response.ok) {
-        const data = await response.json();
-        setBooks(data.items || []);
-      }
-    } catch (error) {
-      toast.error('Error fetching books');
-    } finally {
-      setIsFetching(false);
-    }
-  };
-
-  const fetchVideos = async (query: string) => {
-    if (!query.trim()) return;
-    setIsFetching(true);
-    try {
-      const response = await fetch(`/api/youtube?q=${encodeURIComponent(query)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setVideos(data.items || []);
-      }
-    } catch (error) {
-      toast.error('Error fetching videos');
-    } finally {
-      setIsFetching(false);
-    }
-  };
-
   const handleAddNote = async () => {
     if (!googleAccessToken || !taskListId || !newNote.title.trim()) return;
     setIsFetching(true);
@@ -472,214 +312,6 @@ export default function GSpacePage() {
     }
   };
 
-  // --- Media & Watch Together Logic ---
-
-  const handleVideoClick = (video: YouTubeVideo) => {
-    const alreadyOpen = openVideos.find(v => v.id.videoId === video.id.videoId);
-    if (!alreadyOpen) {
-      setOpenVideos(prev => [...prev, video]);
-    }
-    setActiveMediaSubTab(video.id.videoId);
-  };
-
-  const handleCloseVideoTab = (e: React.MouseEvent, videoId: string) => {
-    e.stopPropagation();
-    setOpenVideos(prev => prev.filter(v => v.id.videoId !== videoId));
-    if (activeMediaSubTab === videoId) setActiveMediaSubTab('search');
-    leaveLobby(videoId);
-  };
-
-  const toggleWatchMode = (videoId: string, mode: 'alone' | 'together') => {
-    if (mode === 'together' && !linkedEmail) {
-      toast.error('Please link your Google account for Watch Together.');
-      return;
-    }
-    setWatchMode(prev => ({ ...prev, [videoId]: mode }));
-    if (mode === 'together') {
-      const lobbyId = `lobby-${videoId}`;
-      setActiveLobby(prev => ({ ...prev, [videoId]: lobbyId }));
-      joinLobby(videoId, lobbyId);
-    } else {
-      leaveLobby(videoId);
-    }
-  };
-
-  const joinLobby = async (videoId: string, lobbyId: string) => {
-    if (!ablyClientRef.current) return;
-    const channel = ablyClientRef.current.channels.get(`watch-${lobbyId}`);
-    
-    channel.subscribe('sync', (message: any) => {
-      if (message.clientId === student?.id) return;
-      const { action, time } = message.data;
-      const iframe = document.getElementById(`yt-player-${videoId}`) as HTMLIFrameElement;
-      if (iframe?.contentWindow) {
-        if (action === 'play') iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
-        else if (action === 'pause') iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*');
-        else if (action === 'seek') iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [time, true] }), '*');
-      }
-    });
-
-    channel.subscribe('chat', (message: any) => {
-      const newMessage = message.data as ChatMessage;
-      setLobbyMessages(prev => ({
-        ...prev,
-        [videoId]: [...(prev[videoId] || []), newMessage]
-      }));
-    });
-
-    channel.presence.enter();
-    channel.presence.subscribe(['enter', 'leave', 'present'], () => {
-      channel.presence.get((err: any, members: any) => {
-        if (!err) setLobbyParticipants(prev => ({ ...prev, [videoId]: members.length }));
-      });
-    });
-
-    // Update Global Lobby in Firestore
-    try {
-      const video = openVideos.find(v => v.id.videoId === videoId);
-      if (video) {
-        const lobbyRef = doc(db, 'lobbies', videoId);
-        await runTransaction(db, async (transaction) => {
-          const lobbyDoc = await transaction.get(lobbyRef);
-          if (!lobbyDoc.exists()) {
-            transaction.set(lobbyRef, {
-              videoId: videoId,
-              videoTitle: video.snippet.title,
-              videoThumbnail: video.snippet.thumbnails.medium.url,
-              channelTitle: video.snippet.channelTitle,
-              participants: 1,
-              lastActivity: serverTimestamp()
-            });
-          } else {
-            transaction.update(lobbyRef, {
-              participants: increment(1),
-              lastActivity: serverTimestamp()
-            });
-          }
-        });
-      }
-    } catch (e) {
-      console.error('Error joining lobby in Firestore:', e);
-    }
-
-    toast.success('Joined Live Lobby');
-  };
-
-  const leaveLobby = async (videoId: string) => {
-    const lobbyId = activeLobby[videoId];
-    if (!lobbyId || !ablyClientRef.current) return;
-    const channel = ablyClientRef.current.channels.get(`watch-${lobbyId}`);
-    channel.presence.leave();
-    channel.unsubscribe();
-    setActiveLobby(prev => { const n = {...prev}; delete n[videoId]; return n; });
-    setLobbyParticipants(prev => { const n = {...prev}; delete n[videoId]; return n; });
-
-    // Update Global Lobby in Firestore
-    try {
-      const lobbyRef = doc(db, 'lobbies', videoId);
-      await runTransaction(db, async (transaction) => {
-        const lobbyDoc = await transaction.get(lobbyRef);
-        if (lobbyDoc.exists()) {
-          const currentParticipants = lobbyDoc.data().participants;
-          if (currentParticipants <= 1) {
-            transaction.delete(lobbyRef);
-          } else {
-            transaction.update(lobbyRef, {
-              participants: increment(-1)
-            });
-          }
-        }
-      });
-    } catch (e) {
-      console.error('Error leaving lobby in Firestore:', e);
-    }
-  };
-
-  const broadcastPlayback = (videoId: string, action: 'play' | 'pause' | 'seek', time?: number) => {
-    const lobbyId = activeLobby[videoId];
-    if (watchMode[videoId] !== 'together' || !lobbyId || !ablyClientRef.current) return;
-    ablyClientRef.current.channels.get(`watch-${lobbyId}`).publish('sync', { action, time });
-  };
-
-  const sendLobbyMessage = (videoId: string, text: string) => {
-    const lobbyId = activeLobby[videoId];
-    if (!lobbyId || !ablyClientRef.current || !student) return;
-    
-    const message: ChatMessage = {
-      id: Math.random().toString(36).substring(2, 11),
-      senderId: student.id,
-      senderName: student.name,
-      text,
-      timestamp: Date.now()
-    };
-    
-    ablyClientRef.current.channels.get(`watch-${lobbyId}`).publish('chat', message);
-  };
-
-  const seekToTimestamp = (videoId: string, timeStr: string) => {
-    const iframe = document.getElementById(`yt-player-${videoId}`) as HTMLIFrameElement;
-    if (!iframe?.contentWindow) return;
-    const parts = timeStr.split(':').map(Number);
-    let seconds = 0;
-    if (parts.length === 3) seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-    else if (parts.length === 2) seconds = parts[0] * 60 + parts[1];
-    iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [seconds, true] }), '*');
-    iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
-  };
-
-  const summarizeVideo = async (video: YouTubeVideo) => {
-    if (videoSummaries[video.id.videoId]) return;
-    setIsSummarizing(true);
-    try {
-      const response = await fetch('/api/ai/youtube/summarize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoId: video.id.videoId, title: video.snippet.title, description: video.snippet.description })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setVideoSummaries(prev => ({ ...prev, [video.id.videoId]: data.summary }));
-        toast.success('Summary generated!');
-      }
-    } catch (error) {
-      toast.error('Summarization failed');
-    } finally {
-      setIsSummarizing(false);
-    }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard');
-  };
-
-  const saveSummaryToTasks = (video: YouTubeVideo) => {
-    const summary = videoSummaries[video.id.videoId];
-    if (!summary) return;
-    setNewNote({ title: `Summary: ${video.snippet.title}`, notes: `Source: https://www.youtube.com/watch?v=${video.id.videoId}\n\n${summary}` });
-    setIsAddingNote(true);
-    setActiveTab('notes');
-  };
-
-  const timestamps = useMemo(() => {
-    return openVideos.reduce((acc, video) => {
-      const desc = video.snippet.description;
-      const lines = desc.split('\n');
-      const timestampRegex = /(\d{1,2}:\d{2}(?::\d{2})?)/;
-      const results: { time: string, label: string }[] = [];
-      lines.forEach(line => {
-        const match = line.match(timestampRegex);
-        if (match) {
-          const time = match[0];
-          const label = line.replace(time, '').trim().replace(/^[-–—]\s*/, '').substring(0, 50);
-          results.push({ time, label: label || 'Jump to' });
-        }
-      });
-      acc[video.id.videoId] = results;
-      return acc;
-    }, {} as Record<string, { time: string, label: string }[]>);
-  }, [openVideos]);
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -714,8 +346,6 @@ export default function GSpacePage() {
             {[
               { id: 'sync', name: 'Dashboard', icon: RefreshCw, desc: 'Sync & Classroom' },
               { id: 'notes', name: 'Notes', icon: StickyNote, desc: 'Google Tasks' },
-              { id: 'library', name: 'Library', icon: Library, desc: 'Google Books' },
-              { id: 'media', name: 'Media', icon: PlayCircle, desc: 'YouTube Learning' },
             ].map((item) => (
               <button
                 key={item.id}
@@ -768,8 +398,6 @@ export default function GSpacePage() {
             {[
               { id: 'sync', name: 'Sync', icon: RefreshCw },
               { id: 'notes', name: 'Notes', icon: StickyNote },
-              { id: 'library', name: 'Library', icon: Library },
-              { id: 'media', name: 'Media', icon: PlayCircle },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -811,72 +439,10 @@ export default function GSpacePage() {
                   handleDeleteNote={handleDeleteNote}
                 />
               )}
-              {activeTab === 'library' && (
-                <LibraryTab 
-                  bookQuery={bookQuery}
-                  setBookQuery={setBookQuery}
-                  fetchBooks={fetchBooks}
-                  books={books}
-                  setActiveBookId={setActiveBookId}
-                />
-              )}
-              {activeTab === 'media' && (
-                <MediaTab 
-                  mediaMode={mediaMode}
-                  setMediaMode={setMediaMode}
-                  videoQuery={videoQuery}
-                  setVideoQuery={setVideoQuery}
-                  fetchVideos={fetchVideos}
-                  isFetching={isFetching}
-                  linkedEmail={linkedEmail}
-                  setActiveTab={setActiveTab}
-                  activeMediaSubTab={activeMediaSubTab}
-                  setActiveMediaSubTab={setActiveMediaSubTab}
-                  openVideos={openVideos}
-                  handleCloseVideoTab={handleCloseVideoTab}
-                  videos={videos}
-                  handleVideoClick={handleVideoClick}
-                  toggleWatchMode={toggleWatchMode}
-                  watchMode={watchMode}
-                  lobbyParticipants={lobbyParticipants}
-                  activeLobbies={activeLobbies}
-                  broadcastPlayback={broadcastPlayback}
-                  lobbyMessages={lobbyMessages}
-                  sendLobbyMessage={sendLobbyMessage}
-                  student={student}
-                  videoSummaries={videoSummaries}
-                  copyToClipboard={copyToClipboard}
-                  saveSummaryToTasks={saveSummaryToTasks}
-                  summarizeVideo={summarizeVideo}
-                  isSummarizing={isSummarizing}
-                  timestamps={timestamps}
-                  setIsViewingTimestamps={setIsViewingTimestamps}
-                  seekToTimestamp={seekToTimestamp}
-                />
-              )}
             </AnimatePresence>
           </div>
         </div>
       </div>
-
-      {/* Shared Modals */}
-      <Modal 
-        isOpen={!!activeBookId} 
-        onClose={() => setActiveBookId(null)}
-        title={<h3 className="text-lg font-bold">Research Assistant</h3>}
-        maxWidth="max-w-6xl"
-      >
-        <div className="h-[70vh] flex flex-col">
-          <div className="p-4 border-b border-border flex items-center justify-end bg-muted/10">
-            <a href={`https://books.google.com/books?id=${activeBookId}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-lg">
-              <ExternalLink className="h-3.5 w-3.5" /> Open in Google Books
-            </a>
-          </div>
-          <div className="flex-1 bg-background relative">
-            {activeBookId && <iframe src={`https://books.google.com/books?id=${activeBookId}&newbks=1&printsec=frontcover&pg=1&output=embed`} title="Google Books" className="w-full h-full border-0" />}
-          </div>
-        </div>
-      </Modal>
 
       <Modal 
         isOpen={isAddingNote} 
@@ -893,17 +459,6 @@ export default function GSpacePage() {
               {isFetching ? 'Syncing...' : 'Save Note'}
             </button>
           </div>
-        </div>
-      </Modal>
-
-      <Modal isOpen={!!isViewingTimestamps} onClose={() => setIsViewingTimestamps(null)} title={<h3 className="text-lg font-bold">All Timestamps</h3>} maxWidth="max-w-lg">
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar max-h-[60vh]">
-          {isViewingTimestamps && timestamps[isViewingTimestamps]?.map((ts, i) => (
-            <button key={i} onClick={() => { seekToTimestamp(isViewingTimestamps!, ts.time); setIsViewingTimestamps(null); }} className="w-full flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left group">
-              <span className="font-bold text-xs text-primary bg-primary/10 px-2 py-1 rounded-md group-hover:bg-primary group-hover:text-white transition-colors">{ts.time}</span>
-              <span className="text-sm font-medium text-foreground truncate">{ts.label}</span>
-            </button>
-          ))}
         </div>
       </Modal>
     </div>

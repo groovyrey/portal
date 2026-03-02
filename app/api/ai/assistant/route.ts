@@ -54,7 +54,9 @@ const showToastTool = tool(
 );
 
 async function performYoutubeSearch(query: string) {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+  // Prioritize a dedicated YouTube key or the Firebase key which likely has generic services enabled.
+  // GEMINI_API_KEY is usually specific to Google AI Studio and doesn't support YouTube Data API.
+  const apiKey = process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
   if (!apiKey) {
     return "YouTube search is currently unavailable (API key missing).";
   }
@@ -69,7 +71,13 @@ async function performYoutubeSearch(query: string) {
     if (!searchResponse.ok) {
       const errorData = await searchResponse.json().catch(() => ({}));
       console.error('YouTube Search API Error:', errorData);
-      return "YouTube search is currently unavailable.";
+      const errorMessage = errorData.error?.message || "Unknown error";
+      const errorReason = errorData.error?.errors?.[0]?.reason || "";
+      
+      if (errorReason === 'quotaExceeded') {
+        return "YouTube search is currently unavailable due to API quota limits (100 units per search). Please try again later.";
+      }
+      return `YouTube search is currently unavailable (Error: ${errorMessage}).`;
     }
 
     const searchData = await searchResponse.json();
@@ -108,14 +116,17 @@ async function performYoutubeSearch(query: string) {
       const channel = item.snippet?.channelTitle || "Unknown Channel";
       const description = item.snippet?.description || "";
       const views = item.statistics?.viewCount ? Number(item.statistics.viewCount).toLocaleString() : null;
+      const thumbnail = item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url;
       
-      let text = `[Video ${index + 1}] **${title}**\nChannel: ${channel}\nDirect Link: https://www.youtube.com/watch?v=${videoId}\n`;
+      let text = `[Video ${index + 1}] **${title}**\n`;
+      if (thumbnail) text += `[![${title}](${thumbnail})](https://www.youtube.com/watch?v=${videoId})\n`;
+      text += `Channel: ${channel}\nDirect Link: https://www.youtube.com/watch?v=${videoId}\n`;
       if (views) text += `Views: ${views}\n`;
       text += `Description: ${description.substring(0, 150)}...\n`;
       return text;
     }).join('\n');
 
-    return `### YouTube results for "${query}":\n\n${resultsSummary}\n\n*Note: You can watch these videos directly on YouTube via the links above, or watch them inline in the G-Space > Media tab.*`;
+    return `### YouTube results for "${query}":\n\n${resultsSummary}\n\n*Note: You can watch these videos directly on YouTube via the links above.*`;
   } catch (error: any) {
     console.error('Youtube tool error:', error);
     if (error.name === 'TimeoutError') return "The YouTube search service timed out. Please try again.";
@@ -459,9 +470,11 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
             toolCallPos = toolMarkerIndex;
           } else {
             // Fallback: search for tool-like JSON in the whole content
-            const toolPatterns = ['"web_search"', '"web_fetch"', '"show_toast"', '"ask_user"', '"ask_user_choice"', '"ask_user_choices"', '"youtube_search"'];
+            const toolPatterns = ['"web_search"', '"web_fetch"', '"show_toast"', '"ask_user"', '"ask_user_choice"', '"youtube_search"'];
             if (toolPatterns.some(p => fullContent.includes(p))) {
-              const startOfJsonIndex = fullContent.lastIndexOf('{');
+              // Find the FIRST '{' that likely starts the tool call
+              // We search from the end but look for the outermost matching brace
+              const startOfJsonIndex = fullContent.indexOf('{');
               const endOfJsonIndex = fullContent.lastIndexOf('}');
               
               if (startOfJsonIndex !== -1 && endOfJsonIndex !== -1 && endOfJsonIndex > startOfJsonIndex) {
@@ -504,7 +517,7 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
                   const result = await performYoutubeSearch(toolCall.parameters.query);
                   if (!isWriterClosed) await writer.write(encoder.encode('STATUS:PROCESSING'));
                   history.push(new AIMessage(fullContent));
-                  currentInput = `TOOL_RESULT: ${result}\n\nBased on these YouTube results, please provide a summary of the found videos and their creators. Inform the user they can find these in the Media tab if they want to watch them inline.`;
+                  currentInput = `TOOL_RESULT: ${result}\n\nBased on these YouTube results, please provide a summary of the found videos and their creators. Inform the user they can watch these videos on YouTube via the links provided.`;
                   continue;
                 } else if (toolCall.name === 'web_fetch' && toolCall.parameters?.url) {
                   if (!isWriterClosed) {
