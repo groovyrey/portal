@@ -89,3 +89,21 @@ export interface YouTubeVideo {
     topicCategories?: string[];
   };
 }
+
+export interface Lobby {
+  id: string; // videoId
+  videoId: string;
+  videoTitle: string;
+  videoThumbnail: string;
+  channelTitle: string;
+  participants: number;
+  lastActivity: any;
+}
+
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  text: string;
+  timestamp: number;
+}

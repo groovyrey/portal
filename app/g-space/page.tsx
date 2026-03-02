@@ -25,8 +25,19 @@ import {
   ClassroomCourse, 
   ClassroomAssignment, 
   GoogleBook, 
-  YouTubeVideo 
+  YouTubeVideo,
+  Lobby,
+  ChatMessage 
 } from '@/types/g-space';
+import { 
+  collection, 
+  query, 
+  onSnapshot, 
+  updateDoc, 
+  increment, 
+  serverTimestamp,
+  runTransaction 
+} from 'firebase/firestore';
 
 // Components
 import SyncTab from '@/components/g-space/SyncTab';
@@ -70,10 +81,80 @@ export default function GSpacePage() {
   const [watchMode, setWatchMode] = useState<Record<string, 'alone' | 'together'>>({});
   const [activeLobby, setActiveLobby] = useState<Record<string, string>>({});
   const [lobbyParticipants, setLobbyParticipants] = useState<Record<string, number>>({});
+  const [activeLobbies, setActiveLobbies] = useState<Lobby[]>([]);
+  const [lobbyMessages, setLobbyMessages] = useState<Record<string, ChatMessage[]>>({});
   
   const ablyClientRef = useRef<any>(null);
+  const discoveryChannelRef = useRef<any>(null);
 
-  // Initialize Ably for Watch Together
+  // Initialize Ably Discovery for Watch Together
+  useEffect(() => {
+    if (student?.id && ablyClientRef.current && mediaMode === 'together') {
+      const channel = ablyClientRef.current.channels.get('academy-lobby-discovery');
+      discoveryChannelRef.current = channel;
+
+      const updateLobbiesFromPresence = () => {
+        channel.presence.get((err: any, members: any[]) => {
+          if (err) return;
+          
+          // Group members by videoId to create lobby list
+          const lobbiesMap: Record<string, Lobby> = {};
+          members.forEach(member => {
+            const data = member.data;
+            if (data?.videoId) {
+              if (!lobbiesMap[data.videoId]) {
+                lobbiesMap[data.videoId] = {
+                  id: data.videoId,
+                  videoId: data.videoId,
+                  videoTitle: data.videoTitle,
+                  videoThumbnail: data.videoThumbnail,
+                  channelTitle: data.channelTitle,
+                  participants: 0,
+                  lastActivity: Date.now()
+                };
+              }
+              lobbiesMap[data.videoId].participants++;
+            }
+          });
+          setActiveLobbies(Object.values(lobbiesMap));
+        });
+      };
+
+      channel.presence.subscribe(['enter', 'leave', 'update', 'present'], updateLobbiesFromPresence);
+      channel.presence.enter(); // Initially enter with no data
+
+      return () => {
+        channel.presence.unsubscribe();
+        channel.presence.leave();
+        discoveryChannelRef.current = null;
+      };
+    }
+  }, [student?.id, mediaMode]);
+
+  // Update Presence Data when watching a video
+  useEffect(() => {
+    if (discoveryChannelRef.current) {
+      // Find the currently active shared video
+      const activeVideoId = Object.keys(watchMode).find(id => watchMode[id] === 'together' && activeMediaSubTab === id);
+      
+      if (activeVideoId) {
+        const video = openVideos.find(v => v.id.videoId === activeVideoId);
+        if (video) {
+          discoveryChannelRef.current.presence.update({
+            videoId: activeVideoId,
+            videoTitle: video.snippet.title,
+            videoThumbnail: video.snippet.thumbnails.medium.url,
+            channelTitle: video.snippet.channelTitle
+          });
+        }
+      } else {
+        // Not watching a shared video, clear presence data but stay in discovery
+        discoveryChannelRef.current.presence.update({});
+      }
+    }
+  }, [watchMode, activeMediaSubTab, openVideos]);
+
+  // Initialize Ably Client
   useEffect(() => {
     if (student?.id && !ablyClientRef.current) {
       import('ably').then(({ Realtime }) => {
@@ -393,25 +474,10 @@ export default function GSpacePage() {
 
   // --- Media & Watch Together Logic ---
 
-  const handleVideoClick = async (video: YouTubeVideo) => {
+  const handleVideoClick = (video: YouTubeVideo) => {
     const alreadyOpen = openVideos.find(v => v.id.videoId === video.id.videoId);
     if (!alreadyOpen) {
-      try {
-        const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-        const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,topicDetails&id=${video.id.videoId}&key=${apiKey}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.items?.[0]) {
-            setOpenVideos(prev => [...prev, { ...video, ...data.items[0] }]);
-          } else {
-            setOpenVideos(prev => [...prev, video]);
-          }
-        } else {
-          setOpenVideos(prev => [...prev, video]);
-        }
-      } catch (e) {
-        setOpenVideos(prev => [...prev, video]);
-      }
+      setOpenVideos(prev => [...prev, video]);
     }
     setActiveMediaSubTab(video.id.videoId);
   };
@@ -438,7 +504,7 @@ export default function GSpacePage() {
     }
   };
 
-  const joinLobby = (videoId: string, lobbyId: string) => {
+  const joinLobby = async (videoId: string, lobbyId: string) => {
     if (!ablyClientRef.current) return;
     const channel = ablyClientRef.current.channels.get(`watch-${lobbyId}`);
     
@@ -453,16 +519,53 @@ export default function GSpacePage() {
       }
     });
 
+    channel.subscribe('chat', (message: any) => {
+      const newMessage = message.data as ChatMessage;
+      setLobbyMessages(prev => ({
+        ...prev,
+        [videoId]: [...(prev[videoId] || []), newMessage]
+      }));
+    });
+
     channel.presence.enter();
     channel.presence.subscribe(['enter', 'leave', 'present'], () => {
       channel.presence.get((err: any, members: any) => {
         if (!err) setLobbyParticipants(prev => ({ ...prev, [videoId]: members.length }));
       });
     });
+
+    // Update Global Lobby in Firestore
+    try {
+      const video = openVideos.find(v => v.id.videoId === videoId);
+      if (video) {
+        const lobbyRef = doc(db, 'lobbies', videoId);
+        await runTransaction(db, async (transaction) => {
+          const lobbyDoc = await transaction.get(lobbyRef);
+          if (!lobbyDoc.exists()) {
+            transaction.set(lobbyRef, {
+              videoId: videoId,
+              videoTitle: video.snippet.title,
+              videoThumbnail: video.snippet.thumbnails.medium.url,
+              channelTitle: video.snippet.channelTitle,
+              participants: 1,
+              lastActivity: serverTimestamp()
+            });
+          } else {
+            transaction.update(lobbyRef, {
+              participants: increment(1),
+              lastActivity: serverTimestamp()
+            });
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Error joining lobby in Firestore:', e);
+    }
+
     toast.success('Joined Live Lobby');
   };
 
-  const leaveLobby = (videoId: string) => {
+  const leaveLobby = async (videoId: string) => {
     const lobbyId = activeLobby[videoId];
     if (!lobbyId || !ablyClientRef.current) return;
     const channel = ablyClientRef.current.channels.get(`watch-${lobbyId}`);
@@ -470,12 +573,47 @@ export default function GSpacePage() {
     channel.unsubscribe();
     setActiveLobby(prev => { const n = {...prev}; delete n[videoId]; return n; });
     setLobbyParticipants(prev => { const n = {...prev}; delete n[videoId]; return n; });
+
+    // Update Global Lobby in Firestore
+    try {
+      const lobbyRef = doc(db, 'lobbies', videoId);
+      await runTransaction(db, async (transaction) => {
+        const lobbyDoc = await transaction.get(lobbyRef);
+        if (lobbyDoc.exists()) {
+          const currentParticipants = lobbyDoc.data().participants;
+          if (currentParticipants <= 1) {
+            transaction.delete(lobbyRef);
+          } else {
+            transaction.update(lobbyRef, {
+              participants: increment(-1)
+            });
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Error leaving lobby in Firestore:', e);
+    }
   };
 
   const broadcastPlayback = (videoId: string, action: 'play' | 'pause' | 'seek', time?: number) => {
     const lobbyId = activeLobby[videoId];
     if (watchMode[videoId] !== 'together' || !lobbyId || !ablyClientRef.current) return;
     ablyClientRef.current.channels.get(`watch-${lobbyId}`).publish('sync', { action, time });
+  };
+
+  const sendLobbyMessage = (videoId: string, text: string) => {
+    const lobbyId = activeLobby[videoId];
+    if (!lobbyId || !ablyClientRef.current || !student) return;
+    
+    const message: ChatMessage = {
+      id: Math.random().toString(36).substring(2, 11),
+      senderId: student.id,
+      senderName: student.name,
+      text,
+      timestamp: Date.now()
+    };
+    
+    ablyClientRef.current.channels.get(`watch-${lobbyId}`).publish('chat', message);
   };
 
   const seekToTimestamp = (videoId: string, timeStr: string) => {
@@ -689,6 +827,7 @@ export default function GSpacePage() {
                   videoQuery={videoQuery}
                   setVideoQuery={setVideoQuery}
                   fetchVideos={fetchVideos}
+                  isFetching={isFetching}
                   linkedEmail={linkedEmail}
                   setActiveTab={setActiveTab}
                   activeMediaSubTab={activeMediaSubTab}
@@ -700,7 +839,11 @@ export default function GSpacePage() {
                   toggleWatchMode={toggleWatchMode}
                   watchMode={watchMode}
                   lobbyParticipants={lobbyParticipants}
+                  activeLobbies={activeLobbies}
                   broadcastPlayback={broadcastPlayback}
+                  lobbyMessages={lobbyMessages}
+                  sendLobbyMessage={sendLobbyMessage}
+                  student={student}
                   videoSummaries={videoSummaries}
                   copyToClipboard={copyToClipboard}
                   saveSummaryToTasks={saveSummaryToTasks}
