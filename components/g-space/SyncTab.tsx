@@ -238,7 +238,10 @@ export default function SyncTab({
                       <p className="text-[13px] font-bold text-foreground group-hover:text-primary transition-colors truncate">{course.name}</p>
                       <ExternalLink className="h-3 w-3 text-muted-foreground/50 shrink-0" />
                     </div>
-                    <p className="text-[10px] font-medium text-muted-foreground mt-1">{course.section || 'General Section'}</p>
+                    <div className="flex flex-col mt-1">
+                      <p className="text-[10px] font-bold text-primary/80 uppercase tracking-tight">{course.ownerName || 'Unknown Teacher'}</p>
+                      <p className="text-[9px] font-medium text-muted-foreground">{course.section || 'General Section'}</p>
+                    </div>
                   </a>
                 ))
               )}

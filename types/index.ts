@@ -5,6 +5,7 @@ export interface ScheduleItem {
   units: string;
   time: string;
   room: string;
+  instructor?: string;
 }
 
 export interface Financials {

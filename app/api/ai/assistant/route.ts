@@ -270,7 +270,7 @@ export async function POST(req: NextRequest) {
       : 'No grades found.';
 
     const scheduleContext = scheduleItems.length > 0
-      ? scheduleItems.map(s => `- ${s.subject}: ${s.description} | Time: ${s.time} | Room: ${s.room}`).join('\n')
+      ? scheduleItems.map(s => `- ${s.subject}: ${s.description} | Time: ${s.time} | Room: ${s.room} | Instructor: ${s.instructor || 'N/A'}`).join('\n')
       : 'No schedule found.';
 
     const now = new Date();
@@ -323,6 +323,25 @@ I'll check the web for that information.
       "properties": { "message": { "type": "string" }, "type": { "type": "string", "enum": ["success", "error", "info", "warning"] } },
       "required": ["message"]
     }
+  },
+  {
+    "name": "get_today_schedule",
+    "description": "Get the student's schedule for today.",
+    "parameters": { "type": "object", "properties": {} }
+  },
+  {
+    "name": "get_day_schedule",
+    "description": "Get the student's schedule for a specific day.",
+    "parameters": {
+      "type": "object",
+      "properties": { "day": { "type": "string", "description": "Day of the week (e.g., MON, TUE, WED, THU, FRI, SAT, SUN)." } },
+      "required": ["day"]
+    }
+  },
+  {
+    "name": "get_weekly_schedule",
+    "description": "Get the student's full weekly schedule.",
+    "parameters": { "type": "object", "properties": {} }
   },
   {
     "name": "ask_user",
@@ -496,7 +515,7 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
               // Pre-process jsonStr to fix common model mistakes
               const sanitizedJson = jsonStr.replace(/ask_user_choices/g, 'ask_user_choice');
               const toolCall = JSON.parse(sanitizedJson);
-              const isOurTool = ['web_search', 'web_fetch', 'show_toast', 'ask_user', 'ask_user_choice', 'youtube_search'].includes(toolCall.name);
+              const isOurTool = ['web_search', 'web_fetch', 'show_toast', 'ask_user', 'ask_user_choice', 'youtube_search', 'get_today_schedule', 'get_day_schedule', 'get_weekly_schedule'].includes(toolCall.name);
               
               if (isOurTool) {
                 if (toolCall.name === 'web_search' && toolCall.parameters?.query) {
@@ -509,6 +528,35 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
                   history.push(new AIMessage(fullContent));
                   currentInput = `TOOL_RESULT: ${result}\n\nBased on these search results, please provide a comprehensive answer and cite your sources.`;
                   continue;
+                } else if (toolCall.name === 'get_today_schedule') {
+                    if (!isWriterClosed) await writer.write(encoder.encode('STATUS:FETCHING'));
+                    const dayMap = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                    const todayCode = dayMap[new Date().getDay()];
+                    const schedule = scheduleItems.filter((s: any) => s.time?.includes(todayCode));
+                    const result = schedule.length > 0 
+                      ? schedule.map((s: any) => `- ${s.description} (${s.time}) at ${s.room} with ${s.instructor || 'N/A'}`).join('\n')
+                      : "No classes scheduled for today.";
+                    history.push(new AIMessage(fullContent));
+                    currentInput = `TOOL_RESULT: Today's Schedule (${todayCode}):\n${result}`;
+                    continue;
+                } else if (toolCall.name === 'get_day_schedule' && toolCall.parameters?.day) {
+                    if (!isWriterClosed) await writer.write(encoder.encode('STATUS:FETCHING'));
+                    const targetDay = toolCall.parameters.day.toUpperCase().substring(0, 3);
+                    const schedule = scheduleItems.filter((s: any) => s.time?.includes(targetDay));
+                    const result = schedule.length > 0 
+                      ? schedule.map((s: any) => `- ${s.description} (${s.time}) at ${s.room} with ${s.instructor || 'N/A'}`).join('\n')
+                      : `No classes scheduled for ${toolCall.parameters.day}.`;
+                    history.push(new AIMessage(fullContent));
+                    currentInput = `TOOL_RESULT: Schedule for ${targetDay}:\n${result}`;
+                    continue;
+                } else if (toolCall.name === 'get_weekly_schedule') {
+                    if (!isWriterClosed) await writer.write(encoder.encode('STATUS:FETCHING'));
+                    const result = scheduleItems.length > 0
+                      ? scheduleItems.map((s: any) => `- ${s.description} (${s.time}) at ${s.room} with ${s.instructor || 'N/A'}`).join('\n')
+                      : "No schedule found.";
+                    history.push(new AIMessage(fullContent));
+                    currentInput = `TOOL_RESULT: Full Weekly Schedule:\n${result}`;
+                    continue;
                 } else if (toolCall.name === 'youtube_search' && toolCall.parameters?.query) {
                   if (!isWriterClosed) {
                     await writer.write(encoder.encode('STATUS:SEARCHING'));

@@ -31,6 +31,7 @@ export interface ScrapedScheduleItem {
   units: string;
   time: string;
   room: string;
+  instructor: string;
 }
 
 export interface ScrapedFinancials {
@@ -321,7 +322,8 @@ export class ScraperService {
             section: $eaf(cells[2]).text().trim(),
             units: units,
             time: $eaf(cells[4]).text().trim(),
-            room: $eaf(cells[5]).text().trim()
+            room: $eaf(cells[5]).text().trim(),
+            instructor: cells.length >= 7 ? $eaf(cells[6]).text().trim() : "Not specified"
           });
         }
       }
