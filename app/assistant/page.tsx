@@ -196,7 +196,7 @@ export default function AssistantPage() {
         const { done, value } = await reader.read();
         if (value) buffer += textDecoder.decode(value, { stream: true });
         
-        buffer = buffer.replace(/STATUS:(SEARCHING|PROCESSING|FINALIZING)/g, '');
+        buffer = buffer.replace(/STATUS:(SEARCHING|PROCESSING|FETCHING|FINALIZING)/g, '');
 
         const toolCallPrefix = "TOOL_CALL:";
         while (true) {
