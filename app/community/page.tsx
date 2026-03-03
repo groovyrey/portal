@@ -294,7 +294,7 @@ function CommunityContent() {
                       className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium placeholder:text-muted-foreground/50 resize-none min-h-[80px] outline-none text-foreground"
                     />
                     {showPollEditor && (
-                      <div className="mt-4 p-4 bg-accent rounded-xl border border-border animate-in fade-in zoom-in-95 duration-200">
+                      <div className="mt-4 p-4 bg-accent rounded-xl border border-border">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
                             <BarChart2 className="h-4 w-4 text-muted-foreground" />
