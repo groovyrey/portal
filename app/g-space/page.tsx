@@ -6,7 +6,8 @@ import {
   GraduationCap, 
   RefreshCw, 
   StickyNote, 
-  LogOut
+  LogOut,
+  FileText
 } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import Skeleton from '@/components/ui/Skeleton';
@@ -26,10 +27,11 @@ import {
 // Components
 import SyncTab from '@/components/g-space/SyncTab';
 import NotesTab from '@/components/g-space/NotesTab';
+import AssignmentsTab from '@/components/g-space/AssignmentsTab';
 
 export default function GSpacePage() {
   const { data: student, isLoading } = useStudentQuery();
-  const [activeTab, setActiveTab] = useState<'sync' | 'notes'>('sync');
+  const [activeTab, setActiveTab] = useState<'sync' | 'assignments' | 'notes'>('sync');
   
   // Auth & Sync State
   const [isLinking, setIsLinking] = useState(false);
@@ -216,21 +218,34 @@ export default function GSpacePage() {
       const allAssignments: ClassroomAssignment[] = [];
       await Promise.all(courses.map(async (course: any) => {
         try {
-          const cwResponse = await fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?orderBy=dueDate asc&pageSize=10`, {
+          const cwResponse = await fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?orderBy=dueDate asc&pageSize=20`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (cwResponse.ok) {
             const cwData = await cwResponse.json();
-            const assignments = (cwData.courseWork || []).map((cw: any) => ({
-              id: cw.id,
-              courseName: course.name,
-              ownerName: course.ownerName,
-              title: cw.title,
-              description: cw.description,
-              dueDate: cw.dueDate,
-              dueTime: cw.dueTime,
-              alternateLink: cw.alternateLink,
-              state: cw.state
+            const assignments = await Promise.all((cwData.courseWork || []).map(async (cw: any) => {
+              let submissionState = 'ASSIGNED';
+              try {
+                const subResponse = await fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/courseWork/${cw.id}/studentSubmissions?userId=me`, {
+                  headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (subResponse.ok) {
+                  const subData = await subResponse.json();
+                  submissionState = subData.studentSubmissions?.[0]?.state || 'ASSIGNED';
+                }
+              } catch (e) {}
+
+              return {
+                id: cw.id,
+                courseName: course.name,
+                ownerName: course.ownerName,
+                title: cw.title,
+                description: cw.description,
+                dueDate: cw.dueDate,
+                dueTime: cw.dueTime,
+                alternateLink: cw.alternateLink,
+                state: submissionState
+              };
             }));
             allAssignments.push(...assignments);
           }
@@ -346,6 +361,7 @@ export default function GSpacePage() {
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
             {[
               { id: 'sync', name: 'Dashboard', icon: RefreshCw, desc: 'Sync & Classroom' },
+              { id: 'assignments', name: 'Assignments', icon: FileText, desc: 'Academic Tasks' },
               { id: 'notes', name: 'Notes', icon: StickyNote, desc: 'Google Tasks' },
             ].map((item) => (
               <button
@@ -398,6 +414,7 @@ export default function GSpacePage() {
           <div className="lg:hidden flex items-center gap-1 bg-muted/30 p-2 border-b border-border overflow-x-auto no-scrollbar">
             {[
               { id: 'sync', name: 'Sync', icon: RefreshCw },
+              { id: 'assignments', name: 'Tasks', icon: FileText },
               { id: 'notes', name: 'Notes', icon: StickyNote },
             ].map((tab) => (
               <button
@@ -426,6 +443,16 @@ export default function GSpacePage() {
                   classroomAssignments={classroomAssignments}
                   handleGoogleVerify={handleGoogleVerify}
                   fetchAllData={fetchAllData}
+                />
+              )}
+              {activeTab === 'assignments' && (
+                <AssignmentsTab 
+                  student={student}
+                  linkedEmail={linkedEmail}
+                  isFetching={isFetching}
+                  assignments={classroomAssignments}
+                  courses={classroomCourses}
+                  handleGoogleVerify={handleGoogleVerify}
                 />
               )}
               {activeTab === 'notes' && (
