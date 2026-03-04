@@ -1,7 +1,7 @@
 'use client';
 
 import { Student } from '@/types';
-import { LogOut, GraduationCap, Calendar, UserCheck, LayoutDashboard, Hash, BookOpen } from 'lucide-react';
+import { Calendar, LayoutDashboard, Hash, BookOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface DashboardHeaderProps {
@@ -11,51 +11,6 @@ interface DashboardHeaderProps {
 export default function DashboardHeader({ student }: DashboardHeaderProps) {
     return (
       <div className="mb-8 space-y-6">
-        {/* Large Scrolling Subject Titles Marquee - Top Decorative Header */}
-        <div className="relative overflow-hidden pointer-events-none opacity-80 dark:opacity-90 py-2 -mx-4 sm:-mx-8 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)] mb-0">
-          <motion.div 
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{ 
-              duration: 120, 
-              repeat: Infinity, 
-              ease: "linear" 
-            }}
-            className="flex whitespace-nowrap items-center w-fit"
-          >
-            {/* Double the content for seamless looping */}
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="flex gap-20 pr-20">
-                {student.schedule?.map((item, idx) => {
-                  const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
-                  const fonts = [
-                    'font-black tracking-tighter italic', 
-                    'font-bold tracking-[0.3em]', 
-                    'font-medium tracking-tight', 
-                    'font-black tracking-widest uppercase',
-                    'font-light tracking-[0.5em] uppercase'
-                  ];
-                  const styleIdx = idx % fonts.length;
-                  const colorIdx = idx % colors.length;
-                  const randomColor = colors[colorIdx];
-                  const randomStyle = fonts[styleIdx];
-                  return (
-                    <span 
-                      key={idx} 
-                      className={`text-3xl sm:text-7xl uppercase ${randomStyle}`}
-                      style={{ 
-                        color: randomColor,
-                        textShadow: `2px 2px 0px ${randomColor}44`
-                      }}
-                    >
-                      {item.description}
-                    </span>
-                  );
-                })}
-              </div>
-            ))}
-          </motion.div>
-        </div>
-
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">Dashboard</h1>
