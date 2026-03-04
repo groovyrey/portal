@@ -43,16 +43,16 @@ export default function Footer() {
             <h3 className="text-[10px] font-bold text-foreground uppercase tracking-wider mb-4">Resources</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/school" className="text-xs text-muted-foreground hover:text-blue-500 transition-colors font-medium">Academic Info</Link>
+                <Link href="/school" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Academic Info</Link>
               </li>
               <li>
-                <Link href="/docs" className="text-xs text-muted-foreground hover:text-blue-500 transition-colors font-medium">System Docs</Link>
+                <Link href="/docs" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">System Docs</Link>
               </li>
               <li>
-                <Link href="/disclaimer" className="text-xs text-muted-foreground hover:text-blue-500 transition-colors font-medium">Legal Notice</Link>
+                <Link href="/disclaimer" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Legal Notice</Link>
               </li>
               <li>
-                <Link href="/status" className="text-xs text-muted-foreground hover:text-blue-500 transition-colors font-medium">Service Health</Link>
+                <Link href="/status" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Service Health</Link>
               </li>
             </ul>
           </div>
@@ -62,10 +62,10 @@ export default function Footer() {
             <h3 className="text-[10px] font-bold text-foreground uppercase tracking-wider mb-4">Community</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/community" className="text-xs text-muted-foreground hover:text-blue-500 transition-colors font-medium">Global Feed</Link>
+                <Link href="/community" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Global Feed</Link>
               </li>
               <li>
-                <Link href={studentId ? `/profile/${obfuscateId(studentId)}` : '/profile'} className="text-xs text-muted-foreground hover:text-blue-500 transition-colors font-medium">Personal Profile</Link>
+                <Link href={studentId ? `/profile/${obfuscateId(studentId)}` : '/profile'} className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Personal Profile</Link>
               </li>
             </ul>
           </div>

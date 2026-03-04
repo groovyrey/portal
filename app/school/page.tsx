@@ -30,7 +30,7 @@ const SchoolInfoPage = () => {
   return (
     <div className="min-h-screen bg-background font-sans text-foreground pb-20">
       {/* Hero Section */}
-      <div className="bg-slate-900 pt-16 pb-12 px-6">
+      <div className="bg-brand-dark pt-16 pb-12 px-6">
         <div className="max-w-5xl mx-auto">
           <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-white transition-all text-xs font-bold mb-8 active:scale-95">
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -66,10 +66,10 @@ const SchoolInfoPage = () => {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group bg-card p-5 rounded-2xl border border-border hover:border-slate-400 transition-all flex items-center justify-between shadow-sm"
+                    className="group bg-card p-5 rounded-2xl border border-border hover:border-accent-blue/50 transition-all flex items-center justify-between shadow-sm"
                   >
                     <div>
-                      <h3 className="font-bold text-foreground text-sm group-hover:text-blue-600 dark:text-blue-400 transition-colors">{link.name}</h3>
+                      <h3 className="font-bold text-foreground text-sm group-hover:text-accent-blue transition-colors">{link.name}</h3>
                       <p className="text-xs text-muted-foreground mt-0.5 font-medium">{link.description}</p>
                     </div>
                     <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-muted-foreground transition-colors" />
@@ -99,7 +99,7 @@ const SchoolInfoPage = () => {
                 <a 
                   href="https://www.facebook.com/laconcepcioncollege/photos" 
                   target="_blank"
-                  className="inline-flex items-center gap-2 px-5 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-all active:scale-95"
+                  className="inline-flex items-center gap-2 px-5 py-2 bg-brand-dark text-white text-xs font-bold rounded-lg hover:opacity-90 transition-all active:scale-95"
                 >
                   Full Calendar
                   <ExternalLink className="h-3.5 w-3.5" />
@@ -132,7 +132,7 @@ const SchoolInfoPage = () => {
                 <a 
                   href="https://www.facebook.com/laconcepcioncollege" 
                   target="_blank"
-                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition-all active:scale-95"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-600/20"
                 >
                   <Facebook className="h-3.5 w-3.5" />
                   Facebook Page

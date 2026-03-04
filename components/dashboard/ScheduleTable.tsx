@@ -19,14 +19,14 @@ const HOURS = [
 ];
 
 const SUBJECT_COLORS = [
-  'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900/40',
-  'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/40',
-  'bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-400 border-violet-100 dark:border-violet-900/50 hover:bg-violet-100 dark:hover:bg-violet-900/40',
-  'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/50 hover:bg-amber-100 dark:hover:bg-amber-900/40',
-  'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/40',
-  'bg-cyan-50 dark:bg-cyan-950/30 text-cyan-700 dark:text-cyan-400 border-cyan-100 dark:border-cyan-900/50 hover:bg-cyan-100 dark:hover:bg-cyan-900/40',
-  'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/40',
-  'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400 border-orange-100 dark:border-orange-900/50 hover:bg-orange-100 dark:hover:bg-orange-900/40',
+  'bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-200/50 dark:border-blue-800/50 hover:bg-blue-500/20 dark:hover:bg-blue-500/30',
+  'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200/50 dark:border-emerald-800/50 hover:bg-emerald-500/20 dark:hover:bg-emerald-500/30',
+  'bg-violet-500/10 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-200/50 dark:border-violet-800/50 hover:bg-violet-500/20 dark:hover:bg-violet-500/30',
+  'bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200/50 dark:border-amber-800/50 hover:bg-amber-500/20 dark:hover:bg-amber-500/30',
+  'bg-rose-500/10 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200/50 dark:border-rose-800/50 hover:bg-rose-500/20 dark:hover:bg-rose-500/30',
+  'bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-200/50 dark:border-cyan-800/50 hover:bg-cyan-500/20 dark:hover:bg-cyan-500/30',
+  'bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-200/50 dark:border-indigo-800/50 hover:bg-indigo-500/20 dark:hover:bg-indigo-500/30',
+  'bg-orange-500/10 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-200/50 dark:border-orange-800/50 hover:bg-orange-500/20 dark:hover:bg-orange-500/30',
 ];
 
 export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTableProps) {
@@ -114,11 +114,11 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
         </div>
       </div>
 
-      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl p-3 flex items-start gap-3">
-        <div className="h-5 w-5 rounded bg-blue-100 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+      <div className="bg-accent/50 border border-border rounded-xl p-3 flex items-start gap-3">
+        <div className="h-5 w-5 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
           <Info className="h-3 w-3" />
         </div>
-        <p className="text-[11px] text-blue-700 font-medium leading-relaxed">
+        <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
           Tap on any class to view full details and location.
         </p>
       </div>
@@ -144,7 +144,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
 
                 return (
                   <tr key={hourStr} className="h-10">
-                    <td className="border-r border-b border-border text-center bg-accent/30">
+                    <td className="border-r border-b border-border text-center bg-accent/20">
                       <span className="text-[9px] font-bold text-muted-foreground tabular-nums">
                         {hourStr.split(' ')[0]}
                       </span>
@@ -211,9 +211,9 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
       >
         {selectedItem && (
           <div className="overflow-hidden">
-            <div className={`p-5 ${getSubjectColor(selectedItem.subject)} border-b border-black/5`}>
+            <div className={`p-5 ${getSubjectColor(selectedItem.subject)} border-b border-border/10`}>
               <div className="flex justify-between items-start mb-3">
-                <div className="px-2 py-0.5 bg-card/40 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                <div className="px-2 py-0.5 bg-background/20 dark:bg-black/20 rounded-md text-[10px] font-bold uppercase tracking-wider">
                   {selectedItem.section || '?'}
                 </div>
               </div>
@@ -227,7 +227,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
 
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-4 group">
-                <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center text-muted-foreground group-hover:text-blue-600 dark:text-blue-400 transition-colors">
+                <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
                   <Clock className="h-4 w-4" />
                 </div>
                 <div>
@@ -237,7 +237,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
               </div>
 
               <div className="flex items-center gap-4 group">
-                <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center text-muted-foreground group-hover:text-emerald-600 dark:text-emerald-400 transition-colors">
+                <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
                   <MapPin className="h-4 w-4" />
                 </div>
                 <div>
@@ -280,7 +280,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                 </button>
                 <button 
                   onClick={() => setSelectedItem(null)}
-                  className="w-full py-2.5 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-accent transition-colors"
+                  className="w-full py-2.5 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-accent/80 transition-colors"
                 >
                   Close
                 </button>

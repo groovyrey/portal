@@ -61,7 +61,7 @@ export default function BadgeDisplay({ badgeIds, size = 'md', showName = false, 
             width: sizePx[size], 
             height: sizePx[size], 
             fontSize: sizePx[size] / 2.5,
-            border: '2px solid white',
+            border: '2px solid var(--card)',
             boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
           },
         }}
@@ -69,16 +69,16 @@ export default function BadgeDisplay({ badgeIds, size = 'md', showName = false, 
         {userBadges.map((badge) => {
           const Icon = ICON_MAP[badge.icon || 'Award'] || Award;
           
-          // Simple color mapping
-          let bgColor = '#f8fafc'; // slate-50
-          let iconColor = '#64748b'; // slate-500
+          // Use CSS variables defined in theme for consistency
+          let bgColor = 'var(--muted)';
+          let iconColor = 'var(--muted-foreground)';
 
           if (badge.color === 'blue') {
-            bgColor = '#eff6ff'; // blue-50
-            iconColor = '#2563eb'; // blue-600
+            bgColor = 'color-mix(in srgb, var(--accent-blue), transparent 90%)';
+            iconColor = 'var(--accent-blue)';
           } else if (badge.color === 'amber') {
-            bgColor = '#fffbeb'; // amber-50
-            iconColor = '#d97706'; // amber-600
+            bgColor = 'color-mix(in srgb, #f59e0b, transparent 90%)';
+            iconColor = '#f59e0b';
           }
 
           return (

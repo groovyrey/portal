@@ -35,8 +35,6 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
     .map(([grade, count]) => ({ grade, count }))
     .sort((a, b) => parseFloat(a.grade) - parseFloat(b.grade));
 
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-
   return (
     <div className="space-y-4 mb-8">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -65,22 +63,25 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
                 dataKey="grade" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fontSize: 9, fontWeight: 600, fill: '#94a3b8' }}
+                tick={{ fontSize: 9, fontWeight: 600, fill: 'var(--muted-foreground)' }}
               />
               <YAxis hide />
               <Tooltip 
-                cursor={{ fill: '#f8fafc' }}
+                cursor={{ fill: 'var(--accent)', opacity: 0.4 }}
                 contentStyle={{ 
+                  backgroundColor: 'var(--card)',
                   borderRadius: '12px', 
-                  border: '1px solid #e2e8f0', 
+                  border: '1px solid var(--border)', 
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                   fontSize: '10px',
-                  fontWeight: 600
+                  fontWeight: 600,
+                  color: 'var(--foreground)'
                 }}
+                itemStyle={{ color: 'var(--foreground)' }}
               />
               <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={20}>
                 {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill="#0f172a" />
+                  <Cell key={`cell-${index}`} fill="var(--primary)" />
                 ))}
               </Bar>
             </BarChart>

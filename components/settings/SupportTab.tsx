@@ -1,0 +1,99 @@
+'use client';
+
+import React from 'react';
+import { 
+  Star, 
+  Shield, 
+  ChevronRight,
+  ExternalLink,
+  MessageSquare,
+  BookOpen,
+  LifeBuoy
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import StarRating from '@/components/ui/StarRating';
+
+export default function SupportTab() {
+  const router = useRouter();
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4 p-6 bg-card rounded-2xl border border-border shadow-sm">
+        <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+          <LifeBuoy className="h-7 w-7 text-primary-foreground" />
+        </div>
+        <div>
+          <h3 className="font-bold text-lg text-foreground leading-tight">Help & Support</h3>
+          <p className="text-sm text-muted-foreground font-medium mt-1">Get assistance and share your feedback.</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center mb-4 border border-amber-500/20">
+                <Star className="h-6 w-6 text-amber-500" />
+            </div>
+            <h4 className="font-bold text-base text-foreground mb-2">Rate LCC Hub</h4>
+            <p className="text-xs text-muted-foreground font-medium mb-6">Your feedback helps us improve the experience for everyone.</p>
+            <div className="w-full bg-accent/50 p-4 rounded-xl border border-border">
+                <StarRating onSuccess={() => {}} />
+            </div>
+        </div>
+
+        <div className="space-y-4">
+            <SupportItem 
+                icon={<BookOpen />} 
+                title="Help Center" 
+                description="Browse documentation and FAQs"
+                onClick={() => router.push('/docs')}
+            />
+            <SupportItem 
+                icon={<MessageSquare />} 
+                title="Community Guidelines" 
+                description="Read our platform rules"
+                onClick={() => {}}
+            />
+            <SupportItem 
+                icon={<Shield />} 
+                title="Privacy Policy" 
+                description="How we handle your data"
+                onClick={() => {}}
+            />
+        </div>
+      </div>
+
+      <div className="p-6 bg-primary rounded-2xl text-primary-foreground relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700"></div>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="max-w-md">
+                <h4 className="text-lg font-bold mb-2">Found a bug?</h4>
+                <p className="text-sm text-primary-foreground/80 font-medium">Help us keep LCC Hub stable by reporting issues you encounter.</p>
+            </div>
+            <button className="px-6 py-3 bg-white text-primary rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-black/10 hover:bg-slate-100 transition-all active:scale-95 shrink-0">
+                Report Issue
+            </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SupportItem({ icon, title, description, onClick }: { icon: React.ReactNode, title: string, description: string, onClick: () => void }) {
+  return (
+    <button 
+      onClick={onClick}
+      className="w-full flex items-center justify-between p-4 bg-card hover:bg-accent/50 rounded-2xl border border-border transition-all group shadow-sm"
+    >
+      <div className="flex items-center gap-4 text-left">
+        <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center border border-border group-hover:bg-card transition-colors">
+          {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 18, className: "text-primary" }) : icon}
+        </div>
+        <div>
+          <p className="text-sm font-bold text-foreground leading-none mb-1">{title}</p>
+          <p className="text-[11px] text-muted-foreground font-medium">{description}</p>
+        </div>
+      </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+    </button>
+  );
+}
