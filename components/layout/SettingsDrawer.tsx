@@ -125,9 +125,9 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
             <div className="flex items-center gap-4 p-4 bg-card rounded-xl border border-border shadow-sm">
                 <div className="w-16 h-16 rounded-full bg-accent border border-border shrink-0 overflow-hidden">
                     <img 
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student!.name)}&background=f8fafc&color=334155&size=256&bold=true`}
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student!.name)}&background=0f172a&color=f8fafc&size=256&bold=true`}
                         alt={student!.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover dark:opacity-80"
                     />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -447,9 +447,9 @@ function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon:
     <button 
       onClick={handleToggle}
       className={`group w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
-        isOn 
-          ? 'bg-card border-muted-foreground shadow-sm' 
-          : 'bg-accent border-border text-muted-foreground hover:bg-card hover:border-muted-foreground'
+        isOn
+          ? 'bg-card border-primary/50 shadow-sm'
+          : 'bg-accent border-border text-muted-foreground hover:bg-card hover:border-border'
       }`}
     >
       <div className="flex items-center gap-3">
@@ -464,11 +464,10 @@ function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon:
         </div>
       </div>
       <div className={`w-10 h-5 rounded-full relative transition-colors shadow-inner ${isOn ? 'bg-primary' : 'bg-muted'}`}>
-        <motion.div 
+        <motion.div
           animate={{ x: isOn ? 22 : 2 }}
-          className="absolute top-1 w-3 h-3 bg-card rounded-full shadow-sm"
+          className="absolute top-1 w-3 h-3 bg-white dark:bg-slate-200 rounded-full shadow-sm"
         />
-      </div>
-    </button>
+      </div>    </button>
   );
 }

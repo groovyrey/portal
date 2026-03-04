@@ -272,6 +272,15 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    const structuredGrades: Record<string, any> = {};
+    allGrades.forEach((g: any) => {
+      structuredGrades[g.code] = {
+        description: g.description,
+        grade: g.grade,
+        remarks: g.remarks
+      };
+    });
+
     let financialContext = 'No financial data found.';
     if (financials) {
       financialContext = `
@@ -282,8 +291,8 @@ export async function POST(req: NextRequest) {
 `.trim();
     }
 
-    const gradesContext = allGrades.length > 0 
-      ? allGrades.map(g => `- ${g.code}: ${g.description} | Grade: ${g.grade} | Remarks: ${g.remarks}`).join('\n')
+    const gradesContext = Object.keys(structuredGrades).length > 0
+      ? JSON.stringify(structuredGrades, null, 2)
       : 'No grades found.';
 
     const scheduleContext = Object.keys(structuredSchedule).length > 0
