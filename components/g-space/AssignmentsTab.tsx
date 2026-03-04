@@ -61,32 +61,45 @@ export default function AssignmentsTab({
     }
   };
   const handleCopy = async () => {
-    if (!analysisResult) return;
+    if (!analysisResult) {
+      toast.error("No analysis to copy.");
+      return;
+    }
+
     try {
-      // Primary method: navigator.clipboard
+      // 1. Try modern Clipboard API
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(analysisResult);
-      } else {
-        // Fallback for non-secure contexts (HTTP) or older browsers
-        const textArea = document.createElement("textarea");
-        textArea.value = analysisResult;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-9999px";
-        textArea.style.top = "0";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        const successful = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        if (!successful) throw new Error("Fallback copy failed");
+        setCopied(true);
+        toast.success("Analysis copied to clipboard");
+        setTimeout(() => setCopied(false), 2000);
+        return;
       }
       
-      setCopied(true);
-      toast.success("Analysis copied to clipboard");
-      setTimeout(() => setCopied(false), 2000);
+      // 2. Fallback for non-secure contexts or older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = analysisResult;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      textArea.style.top = "0";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      if (successful) {
+        setCopied(true);
+        toast.success("Analysis copied to clipboard (fallback)");
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        throw new Error("Copy command failed");
+      }
     } catch (err) {
       console.error('Failed to copy: ', err);
-      toast.error("Failed to copy analysis to clipboard");
+      toast.error("Clipboard access denied or failed.");
     }
   };
   
