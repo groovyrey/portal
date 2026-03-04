@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Users, GraduationCap, Loader2, BarChart3, PieChart } from 'lucide-react';
+import { Users, GraduationCap, Loader2, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 interface CourseStat {
   name: string;
   count: number;
+  yearLevels: { level: string; count: number }[];
 }
 
 interface Stats {
@@ -104,18 +105,33 @@ export default function StatsTab() {
             {stats.courses.map((course, idx) => {
               const percentage = ((course.count / stats.totalStudents) * 100).toFixed(1);
               return (
-                <div key={idx} className="space-y-2">
+                <div key={idx} className="space-y-3 p-4 rounded-xl border border-border bg-accent/5 hover:bg-accent/10 transition-colors">
                   <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
                     <span className="text-foreground truncate max-w-[70%]">{course.name}</span>
                     <span className="text-muted-foreground">{course.count} Students ({percentage}%)</span>
                   </div>
-                  <div className="h-2 w-full bg-accent rounded-full overflow-hidden">
+                  
+                  <div className="h-1.5 w-full bg-accent rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${percentage}%` }}
                       transition={{ duration: 1, delay: idx * 0.1 }}
                       className="h-full bg-primary rounded-full"
                     />
+                  </div>
+
+                  {/* Year Levels Breakdown */}
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {course.yearLevels.map((yl, yIdx) => (
+                      <div 
+                        key={yIdx} 
+                        className="px-2 py-1 rounded-lg bg-card border border-border flex items-center gap-2"
+                      >
+                        <span className="text-[9px] font-black text-muted-foreground uppercase">{yl.level}</span>
+                        <div className="h-3 w-[1px] bg-border" />
+                        <span className="text-[9px] font-black text-primary">{yl.count}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               );

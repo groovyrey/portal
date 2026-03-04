@@ -21,16 +21,26 @@ export async function GET(req: NextRequest) {
     const allStudents = await getAllStudents();
     
     const totalStudents = allStudents.length;
-    const courseStats: Record<string, number> = {};
+    const courseStats: Record<string, { count: number, yearLevels: Record<string, number> }> = {};
 
     allStudents.forEach(student => {
       const course = student.course || 'Unknown';
-      courseStats[course] = (courseStats[course] || 0) + 1;
+      const year = student.yearLevel || 'N/A';
+      
+      if (!courseStats[course]) {
+        courseStats[course] = { count: 0, yearLevels: {} };
+      }
+      
+      courseStats[course].count++;
+      courseStats[course].yearLevels[year] = (courseStats[course].yearLevels[year] || 0) + 1;
     });
 
-    const courses = Object.entries(courseStats).map(([name, count]) => ({
+    const courses = Object.entries(courseStats).map(([name, data]) => ({
       name,
-      count
+      count: data.count,
+      yearLevels: Object.entries(data.yearLevels)
+        .map(([level, count]) => ({ level, count }))
+        .sort((a, b) => a.level.localeCompare(b.level))
     })).sort((a, b) => b.count - a.count);
 
     return NextResponse.json({ 
