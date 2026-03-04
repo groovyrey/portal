@@ -26,12 +26,23 @@ export default function Modal({
   // Disable background scrolling when modal is open
   useEffect(() => {
     if (isOpen) {
-      document.body.classList.add('overflow-hidden');
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.classList.remove('overflow-hidden');
+      // Only restore if no other modals might be open (simple check)
+      const otherModals = document.querySelectorAll('.fixed.inset-0.z-\\[700\\]').length;
+      if (otherModals <= 1) {
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+      }
     }
+    
     return () => {
-      document.body.classList.remove('overflow-hidden');
+      const otherModals = document.querySelectorAll('.fixed.inset-0.z-\\[700\\]').length;
+      if (otherModals <= 1) {
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+      }
     };
   }, [isOpen]);
 

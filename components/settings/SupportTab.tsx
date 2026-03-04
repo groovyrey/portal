@@ -61,19 +61,6 @@ export default function SupportTab() {
             />
         </div>
       </div>
-
-      <div className="p-6 bg-primary rounded-2xl text-primary-foreground relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700"></div>
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="max-w-md">
-                <h4 className="text-lg font-bold mb-2">Found a bug?</h4>
-                <p className="text-sm text-primary-foreground/80 font-medium">Help us keep LCC Hub stable by reporting issues you encounter.</p>
-            </div>
-            <button className="px-6 py-3 bg-white text-primary rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-black/10 hover:bg-slate-100 transition-all active:scale-95 shrink-0">
-                Report Issue
-            </button>
-        </div>
-      </div>
     </div>
   );
 }

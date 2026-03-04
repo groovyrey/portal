@@ -16,6 +16,7 @@ import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 import Modal from '@/components/ui/Modal';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 // Shared Types
 import { 
@@ -30,8 +31,27 @@ import NotesTab from '@/components/g-space/NotesTab';
 import AssignmentsTab from '@/components/g-space/AssignmentsTab';
 
 export default function GSpacePage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
   const { data: student, isLoading } = useStudentQuery();
   const [activeTab, setActiveTab] = useState<'sync' | 'assignments' | 'notes'>('sync');
+  
+  // Sync tab with URL
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['sync', 'assignments', 'notes'].includes(tab)) {
+      setActiveTab(tab as any);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tabId: 'sync' | 'assignments' | 'notes') => {
+    setActiveTab(tabId);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tabId);
+    router.replace(`${pathname}?${params.toString()}`);
+  };
   
   // Auth & Sync State
   const [isLinking, setIsLinking] = useState(false);
@@ -366,7 +386,7 @@ export default function GSpacePage() {
             ].map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id as any)}
+                onClick={() => handleTabChange(item.id as any)}
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${
                   activeTab === item.id 
                     ? 'bg-primary text-primary-foreground shadow-md shadow-primary/10' 
@@ -419,7 +439,7 @@ export default function GSpacePage() {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => handleTabChange(tab.id as any)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                   activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                 }`}

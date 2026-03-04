@@ -92,7 +92,7 @@ export default function Home() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
         <DashboardHeader student={student} />
         
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
           {student.financials && (
             <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:border-muted-foreground transition-all duration-300">
               <div className="flex items-center gap-4">

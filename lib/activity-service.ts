@@ -10,20 +10,27 @@ export interface ActivityLog {
 }
 
 /**
- * Logs a student activity to the PostgreSQL database
+ * Logs a student activity to the database with optional detailed data
  */
 export async function logActivity(
   userId: string, 
   action: string, 
-  details?: string, 
+  details?: string | object, 
   link?: string
 ) {
   try {
+    let finalDetails = details;
+    
+    // If details is an object, stringify it
+    if (details && typeof details === 'object') {
+      finalDetails = JSON.stringify(details);
+    }
+
     // 1. Insert the new log
     await query(`
       INSERT INTO activity_logs (user_id, action, details, link)
       VALUES ($1, $2, $3, $4)
-    `, [userId, action, details || null, link || null]);
+    `, [userId, action, finalDetails || null, link || null]);
     
     // 2. Enforce the 15-log limit: Delete oldest logs exceeding the limit
     await query(`

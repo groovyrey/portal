@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 import { logActivity } from '@/lib/activity-service';
 
 export async function POST(req: NextRequest) {
   try {
-    const { settings } = await req.json();
-    if (!settings) return NextResponse.json({ error: 'Settings required' }, { status: 400 });
+    const { settings: newSettings } = await req.json();
+    if (!newSettings) return NextResponse.json({ error: 'Settings required' }, { status: 400 });
 
     const sessionCookie = req.cookies.get('session_token');
     if (!sessionCookie || !sessionCookie.value) {
@@ -28,10 +28,40 @@ export async function POST(req: NextRequest) {
     if (!db) return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
 
     const studentRef = doc(db, 'students', userId);
-    await updateDoc(studentRef, { settings });
+    const studentSnap = await getDoc(studentRef);
+    const existingSettings = studentSnap.exists() ? studentSnap.data()?.settings || {} : {};
 
-    // Log settings update
-    logActivity(userId, 'Settings', 'Updated account settings').catch(e => {});
+    // Identify precisely which keys changed
+    const changedKeys: string[] = [];
+    const keyMap: Record<string, string> = {
+      notifications: 'App Alerts',
+      classReminders: 'Schedule Reminders',
+      paymentReminders: 'Financial Alerts',
+      isPublic: 'Public Profile',
+      showAcademicInfo: 'Academic Info',
+      showStudentId: 'Student ID'
+    };
+
+    Object.keys(newSettings).forEach(key => {
+      if (newSettings[key] !== existingSettings[key]) {
+        changedKeys.push(keyMap[key] || key);
+      }
+    });
+
+    await updateDoc(studentRef, { settings: newSettings });
+
+    // Only log if something actually changed
+    if (changedKeys.length > 0) {
+      logActivity(
+        userId, 
+        'Settings', 
+        { 
+          message: 'Updated account settings', 
+          changes: changedKeys.join(', '),
+          data: newSettings 
+        }
+      ).catch(e => {});
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

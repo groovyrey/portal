@@ -4,7 +4,13 @@ import { Student } from '@/types';
 import { 
   Mail, 
   ShieldCheck,
-  Hash
+  Hash,
+  GraduationCap,
+  Calendar,
+  Phone,
+  MapPin,
+  User,
+  BookOpen
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -14,11 +20,16 @@ interface PersonalInfoProps {
 }
 
 export default function PersonalInfo({ student, isPublic = false }: PersonalInfoProps) {
-  const showPersonal = !isPublic || (student.settings?.isPublic ?? true);
-
+  const showAcademic = !isPublic || (student.settings?.showAcademicInfo ?? true);
+  
   const details = [
-    { label: 'Email', value: student.email, icon: Mail, visible: !isPublic },
-  ];
+    { label: 'Full Name', value: student.name, icon: User, visible: true },
+    { label: 'Degree / Course', value: student.course, icon: GraduationCap, visible: showAcademic },
+    { label: 'Year & Semester', value: student.yearLevel && student.semester ? `${student.yearLevel} / ${student.semester}` : null, icon: Calendar, visible: showAcademic },
+    { label: 'Email Address', value: student.email, icon: Mail, visible: !isPublic },
+    { label: 'Mobile Number', value: student.mobile, icon: Phone, visible: !isPublic },
+    { label: 'Address', value: student.address, icon: MapPin, visible: !isPublic },
+  ].filter(d => d.visible && d.value);
 
   const initials = student.parsedName 
     ? (student.parsedName.firstName[0] + (student.parsedName.lastName[0] || '')).toUpperCase()
@@ -33,39 +44,49 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-2xl border border-border overflow-hidden"
+      className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm"
     >
       <div className="p-6">
         <div className="flex items-center gap-4 mb-8">
-          <div className="h-16 w-16 rounded-xl bg-accent flex items-center justify-center text-xl font-bold text-muted-foreground">
+          <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-xl font-black text-primary border border-primary/20">
             {initials}
           </div>
           <div>
-            <h3 className="text-lg font-bold text-foreground">Student Identity</h3>
+            <h3 className="text-base font-black text-foreground uppercase tracking-tight">Academic Profile</h3>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{student.course}</p>
           </div>
         </div>
 
-        <div className="space-y-6">
-          {details.filter(d => d.visible).map((detail, idx) => (
-            <div key={idx} className="flex items-start gap-4">
-              <div className="mt-1">
-                <detail.icon className="h-4 w-4 text-muted-foreground" />
+        <div className="grid grid-cols-1 gap-5">
+          {details.map((detail, idx) => (
+            <div key={idx} className="flex items-start gap-4 group">
+              <div className="mt-0.5 p-2 rounded-lg bg-accent text-muted-foreground group-hover:text-primary group-hover:bg-primary/5 transition-all border border-border">
+                <detail.icon className="h-3.5 w-3.5" />
               </div>
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">{detail.label}</p>
-                <p className="text-sm font-medium text-foreground break-words">{detail.value || '?'}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.15em] mb-1">{detail.label}</p>
+                <p className="text-sm font-bold text-foreground truncate leading-tight">{detail.value}</p>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-8 pt-6 border-t border-border">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Hash className="h-3.5 w-3.5" />
-              <span className="text-xs font-mono font-bold tracking-tight">{student.id}</span>
+        <div className="mt-8 pt-6 border-t border-border/50">
+          <div className="flex items-center justify-between p-3 bg-accent/30 rounded-xl border border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-card flex items-center justify-center border border-border shadow-sm">
+                <Hash className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em] leading-none mb-1">Student Identifier</p>
+                <p className="text-sm font-mono font-bold text-foreground leading-none">{student.id}</p>
+              </div>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider">Student ID</span>
+            {student.settings?.isPublic && (
+              <div className="p-1.5 bg-emerald-500/10 rounded-lg" title="Profile is public">
+                <ShieldCheck className="h-4 w-4 text-emerald-500" />
+              </div>
+            )}
           </div>
         </div>
       </div>

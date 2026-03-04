@@ -100,7 +100,7 @@ export default function ActivityTab() {
             <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">No matches for "{searchQuery}"</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3">
+          <div className="space-y-0 divide-y divide-border/50 border-t border-border/50 mt-4">
             <AnimatePresence mode="popLayout">
               {filteredLogs.map((log) => {
                 const date = new Date(log.createdAt);
@@ -125,20 +125,29 @@ export default function ActivityTab() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     key={log.id} 
-                    className="group flex gap-4 p-4 bg-card hover:bg-accent/50 rounded-2xl border border-border transition-all active:scale-[0.99] shadow-sm hover:shadow-md"
+                    className="group flex gap-4 py-5 px-1 hover:bg-accent/20 transition-all"
                   >
-                    <div className={`w-11 h-11 rounded-xl ${iconBg} ${iconColor} flex items-center justify-center shrink-0 border border-white/10 shadow-sm`}>
+                    <div className={`w-10 h-10 rounded-xl ${iconBg} ${iconColor} flex items-center justify-center shrink-0 border border-white/10 shadow-sm`}>
                       <Icon className="h-5 w-5" />
                     </div>
                     
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                       <div className="flex items-center justify-between gap-3 mb-1">
-                        <h4 className="text-sm font-bold text-foreground truncate uppercase tracking-tight">{log.action}</h4>
+                        <h4 className="text-sm font-bold text-foreground truncate uppercase tracking-tight">
+                          {typeof log.details === 'object' && log.details.message ? log.details.message : log.action}
+                        </h4>
                         <span className={`text-[10px] font-bold shrink-0 uppercase tracking-wider ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground/50'}`}>
                           {isToday ? 'Today' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-2">{log.details}</p>
+                      
+                      <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                        {typeof log.details === 'object' 
+                          ? (log.details.changes 
+                              ? `Changed: ${log.details.changes}` 
+                              : (log.details.post || log.details.comment || log.details.message || log.action))
+                          : log.details}
+                      </p>
                     </div>
 
                     {log.link && (

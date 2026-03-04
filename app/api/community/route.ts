@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/turso';
 import { decrypt } from '@/lib/auth';
 import { publishUpdate } from '@/lib/realtime';
-import { notifyAllStudents } from '@/lib/notification-service';
+import { createNotification, notifyAllStudents } from '@/lib/notification-service';
 import { SyncService } from '@/lib/sync-service';
 import { logActivity } from '@/lib/activity-service';
 
@@ -214,11 +214,16 @@ export async function POST(req: NextRequest) {
 
     await client.query('COMMIT');
 
-    // Log activity
+    // Log activity with details
     logActivity(
       userId, 
-      poll ? 'Created a poll' : 'Shared a post', 
-      poll ? `Created a poll: ${poll.question.substring(0, 50)}...` : `Posted: ${content?.substring(0, 50)}...`,
+      'Community', 
+      { 
+        message: poll ? 'Created a poll' : 'Shared a post', 
+        content: poll ? poll.question : content,
+        topic: topic || 'General',
+        postId: postId 
+      },
       `/post/${postId}`
     ).catch(e => console.error('Activity log error:', e));
 
@@ -326,7 +331,37 @@ export async function PATCH(req: NextRequest) {
         ON CONFLICT DO NOTHING
       `, [postId, userId]);
 
-      logActivity(userId, 'Liked a post', `Liked post #${postId}`, `/post/${postId}`).catch(e => {});
+      logActivity(
+        userId, 
+        'Community', 
+        { 
+          message: 'Liked a post', 
+          postId: postId 
+        }, 
+        `/post/${postId}`
+      ).catch(e => {});
+
+      // Notify the post owner
+      const postRes = await query('SELECT user_id, content FROM community_posts WHERE id = $1', [postId]);
+      if (postRes.rows.length > 0) {
+        const postOwnerId = postRes.rows[0].user_id;
+        const postPreview = postRes.rows[0].content?.substring(0, 30) || 'your post';
+        
+        // Don't notify if the owner is the one liking
+        if (postOwnerId !== userId) {
+          // Get liker name
+          const likerRes = await query('SELECT name FROM students WHERE id = $1', [userId]);
+          const likerName = likerRes.rows[0]?.name || 'A student';
+
+          createNotification({
+            userId: postOwnerId,
+            title: 'New Like',
+            message: `${likerName} liked your post: "${postPreview}..."`,
+            type: 'success',
+            link: `/post/${postId}`
+          }).catch(e => console.error('Like notification error:', e));
+        }
+      }
 
       await publishUpdate('community', { 
         type: 'LIKE_UPDATE', 
@@ -380,7 +415,16 @@ export async function PATCH(req: NextRequest) {
         VALUES ($1, $2)
       `, [targetOptionId, userId]);
 
-      logActivity(userId, 'Voted in a poll', `Voted in poll on post #${postId}`, `/post/${postId}`).catch(e => {});
+      logActivity(
+        userId, 
+        'Community', 
+        { 
+          message: 'Voted in a poll', 
+          postId: postId,
+          optionId: targetOptionId
+        }, 
+        `/post/${postId}`
+      ).catch(e => {});
 
       await publishUpdate('community', { 
         type: 'VOTE_UPDATE', 

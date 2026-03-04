@@ -94,11 +94,16 @@ export async function POST(req: NextRequest) {
       createdAt: commentRes.rows[0].created_at.toISOString()
     };
 
-    // Log activity
+    // Log activity with details
     logActivity(
       userId, 
-      'Commented on a post', 
-      `Commented on post #${postId}: ${content.substring(0, 50)}...`,
+      'Community', 
+      { 
+        message: `Commented on post #${postId}`, 
+        post: postRes.rows[0]?.content?.substring(0, 50),
+        comment: content.substring(0, 100),
+        postId: postId 
+      },
       `/post/${postId}`
     ).catch(e => console.error('Activity log error:', e));
 

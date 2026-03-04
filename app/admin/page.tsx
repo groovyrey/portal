@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldAlert, 
   Loader2, 
@@ -12,7 +12,7 @@ import {
   History
 } from 'lucide-react';
 import { useStudentQuery } from '@/lib/hooks';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 
 // Tabs
@@ -22,9 +22,27 @@ import StatsTab from '@/components/admin/StatsTab';
 import LogsTab from '@/components/admin/LogsTab';
 
 export default function AdminPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
   const [activeTab, setActiveTab] = useState<'manage' | 'knowledge' | 'stats' | 'logs'>('manage');
   const { data: currentUser, isLoading: isUserLoading } = useStudentQuery();
-  const router = useRouter();
+
+  // Sync tab with URL
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['manage', 'knowledge', 'stats', 'logs'].includes(tab)) {
+      setActiveTab(tab as any);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tabId: 'manage' | 'knowledge' | 'stats' | 'logs') => {
+    setActiveTab(tabId);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tabId);
+    router.replace(`${pathname}?${params.toString()}`);
+  };
 
   // Authentication check
   if (isUserLoading) {
@@ -85,7 +103,7 @@ export default function AdminPage() {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${
                   activeTab === tab.id 
                     ? 'bg-primary text-primary-foreground shadow-md shadow-primary/10' 
@@ -122,7 +140,7 @@ export default function AdminPage() {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                   activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                 }`}

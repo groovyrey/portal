@@ -25,8 +25,8 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    const { badges } = await req.json();
-    if (!Array.isArray(badges)) {
+    const { badges: newBadges } = await req.json();
+    if (!Array.isArray(newBadges)) {
       return NextResponse.json({ error: 'Badges must be an array.' }, { status: 400 });
     }
 
@@ -36,19 +36,30 @@ export async function POST(
       getStudentProfile(id)
     ]);
 
+    const existingBadges = targetProfile?.badges || [];
+    const added = newBadges.filter(b => !existingBadges.includes(b));
+    const removed = existingBadges.filter(b => !newBadges.includes(b));
+
     const studentRef = doc(db, 'students', id);
     await updateDoc(studentRef, {
-      badges: badges
+      badges: newBadges
     });
 
     // Log the action
+    let detailedAction = 'No changes';
+    if (added.length > 0 || removed.length > 0) {
+      detailedAction = "";
+      if (added.length > 0) detailedAction += `Added: ${added.join(', ')}. `;
+      if (removed.length > 0) detailedAction += `Removed: ${removed.join(', ')}. `;
+    }
+
     await logAdminAction({
       adminId,
       adminName: adminProfile?.name || 'Unknown Staff',
       targetId: id,
       targetName: targetProfile?.name || 'Unknown Student',
       action: 'Update Badges',
-      details: `Badges updated to: ${badges.length > 0 ? badges.join(', ') : 'None'}`
+      details: detailedAction.trim() || 'No changes made'
     });
 
     return NextResponse.json({ success: true, message: 'Badges updated successfully' });
