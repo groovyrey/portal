@@ -25,7 +25,8 @@ import {
   DatabaseZap,
   RefreshCw,
   Bell,
-  LayoutGrid
+  LayoutGrid,
+  ShieldCheck
 } from 'lucide-react';
 import { ThemeToggle } from '../shared/ThemeToggle';
 import { toast } from 'sonner';
@@ -44,8 +45,10 @@ export default function Navbar() {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isPortalOpen, setIsPortalOpen] = useState(false);
   const [isSocialOpen, setIsSocialOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isPortalExpanded, setIsPortalExpanded] = useState(true);
   const [isSocialExpanded, setIsSocialExpanded] = useState(true);
+  const [isAdminExpanded, setIsAdminExpanded] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [studentName, setStudentName] = useState<string | null>(null);
@@ -145,12 +148,13 @@ export default function Navbar() {
       setIsMoreOpen(false);
       setIsPortalOpen(false);
       setIsSocialOpen(false);
+      setIsAdminOpen(false);
     };
-    if (isMoreOpen || isPortalOpen || isSocialOpen) {
+    if (isMoreOpen || isPortalOpen || isSocialOpen || isAdminOpen) {
       window.addEventListener('click', handleClickOutside);
     }
     return () => window.removeEventListener('click', handleClickOutside);
-  }, [isMoreOpen, isPortalOpen, isSocialOpen]);
+  }, [isMoreOpen, isPortalOpen, isSocialOpen, isAdminOpen]);
 
   const publicLinks = [
     { name: 'About', href: '/about', icon: Info },
@@ -170,9 +174,14 @@ export default function Navbar() {
     { name: 'Community', href: '/community', icon: MessageSquare },
   ];
 
+  const adminLinks = [
+    { name: 'Panel', href: '/admin', icon: ShieldCheck },
+  ];
+
   const authLinks = [
     { name: 'Portal', icon: LayoutDashboard, children: portalLinks },
     { name: 'Social', icon: Users, children: socialLinks },
+    ...(isStaff ? [{ name: 'Admin', icon: ShieldCheck, children: adminLinks }] : []),
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
     { name: 'G-Space', href: '/g-space', icon: LayoutGrid },
     { name: 'Settings', href: '/settings', icon: Settings },
@@ -183,6 +192,7 @@ export default function Navbar() {
   const desktopPrimary = isLoggedIn ? [
     { name: 'Portal', icon: LayoutDashboard, children: portalLinks },
     { name: 'Social', icon: Users, children: socialLinks },
+    ...(isStaff ? [{ name: 'Admin', icon: ShieldCheck, children: adminLinks }] : []),
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
   ] : [];
 
@@ -230,24 +240,30 @@ export default function Navbar() {
                           if (link.name === 'Portal') {
                             setIsPortalOpen(!isPortalOpen);
                             setIsSocialOpen(false);
-                          } else {
+                            setIsAdminOpen(false);
+                          } else if (link.name === 'Social') {
                             setIsSocialOpen(!isSocialOpen);
                             setIsPortalOpen(false);
+                            setIsAdminOpen(false);
+                          } else if (link.name === 'Admin') {
+                            setIsAdminOpen(!isAdminOpen);
+                            setIsPortalOpen(false);
+                            setIsSocialOpen(false);
                           }
                           setIsMoreOpen(false);
                         }}
                         className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
-                          isOpenState || link.children.some((child: any) => isActive(child.href))
+                          (link.name === 'Portal' ? isPortalOpen : link.name === 'Social' ? isSocialOpen : isAdminOpen) || link.children.some((child: any) => isActive(child.href))
                             ? 'bg-primary text-primary-foreground shadow-sm'
                             : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                         }`}
                       >
                         <Icon className="h-4 w-4" />
                         {link.name}
-                        <ChevronDown className={`h-4 w-4 transition-transform ${isOpenState ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`h-4 w-4 transition-transform ${link.name === 'Portal' ? (isPortalOpen ? 'rotate-180' : '') : link.name === 'Social' ? (isSocialOpen ? 'rotate-180' : '') : (isAdminOpen ? 'rotate-180' : '')}`} />
                       </button>
 
-                      {isOpenState && (
+                      {(link.name === 'Portal' ? isPortalOpen : link.name === 'Social' ? isSocialOpen : isAdminOpen) && (
                         <div className="absolute left-0 mt-2 w-48 bg-card border border-border rounded-2xl shadow-xl py-2 z-[110] animate-in fade-in zoom-in-95 duration-200">
                           <div className="ml-4 border-l border-border/50">
                             {link.children.map((child: any) => {
@@ -321,6 +337,7 @@ export default function Navbar() {
                           setIsMoreOpen(!isMoreOpen);
                           setIsPortalOpen(false);
                           setIsSocialOpen(false);
+                          setIsAdminOpen(false);
                         }}
                         className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
                           isMoreOpen || desktopMore.some(link => isActive(link.href))
@@ -460,8 +477,8 @@ export default function Navbar() {
                 const Icon = link.icon;
                 
                 if (link.children) {
-                  const isExpanded = link.name === 'Portal' ? isPortalExpanded : isSocialExpanded;
-                  const setIsExpanded = link.name === 'Portal' ? setIsPortalExpanded : setIsSocialExpanded;
+                  const isExpanded = link.name === 'Portal' ? isPortalExpanded : link.name === 'Social' ? isSocialExpanded : isAdminExpanded;
+                  const setIsExpanded = link.name === 'Portal' ? setIsPortalExpanded : link.name === 'Social' ? setIsSocialExpanded : setIsAdminExpanded;
                   
                   return (
                     <div key={link.name} className="space-y-1 py-2">
