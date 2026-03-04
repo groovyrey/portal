@@ -8,7 +8,8 @@ import {
   BookOpen, 
   LayoutDashboard,
   ShieldCheck,
-  BarChart3
+  BarChart3,
+  History
 } from 'lucide-react';
 import { useStudentQuery } from '@/lib/hooks';
 import { useRouter } from 'next/navigation';
@@ -18,9 +19,10 @@ import { AnimatePresence } from 'framer-motion';
 import ManageTab from '@/components/admin/ManageTab';
 import KnowledgeTab from '@/components/admin/KnowledgeTab';
 import StatsTab from '@/components/admin/StatsTab';
+import LogsTab from '@/components/admin/LogsTab';
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'manage' | 'knowledge' | 'stats'>('manage');
+  const [activeTab, setActiveTab] = useState<'manage' | 'knowledge' | 'stats' | 'logs'>('manage');
   const { data: currentUser, isLoading: isUserLoading } = useStudentQuery();
   const router = useRouter();
 
@@ -58,6 +60,7 @@ export default function AdminPage() {
   const tabs = [
     { id: 'manage', name: 'Manage Users', icon: Users, desc: 'Badges & Registry' },
     { id: 'stats', name: 'Statistics', icon: BarChart3, desc: 'Growth & Metrics' },
+    { id: 'logs', name: 'Audit Logs', icon: History, desc: 'System Changes' },
     { id: 'knowledge', name: 'Knowledge', icon: BookOpen, desc: 'AI Knowledge Base' },
   ] as const;
 
@@ -144,6 +147,7 @@ export default function AdminPage() {
               <AnimatePresence mode="wait">
                 {activeTab === 'manage' && <ManageTab key="manage" />}
                 {activeTab === 'stats' && <StatsTab key="stats" />}
+                {activeTab === 'logs' && <LogsTab key="logs" />}
                 {activeTab === 'knowledge' && <KnowledgeTab key="knowledge" />}
               </AnimatePresence>
             </div>

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { decrypt } from '@/lib/auth';
 import { getStudentProfile } from '@/lib/data-service';
+import { logAdminAction } from '@/lib/admin-logs';
 
 export async function POST(
   req: NextRequest,
@@ -15,11 +16,11 @@ export async function POST(
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    let userId = "";
+    let adminId = "";
     try {
       const decrypted = decrypt(sessionCookie.value);
       const sessionData = JSON.parse(decrypted);
-      userId = sessionData.userId;
+      adminId = sessionData.userId;
     } catch (e) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
@@ -29,9 +30,25 @@ export async function POST(
       return NextResponse.json({ error: 'Badges must be an array.' }, { status: 400 });
     }
 
+    // Fetch Admin and Target Student Profiles for logging
+    const [adminProfile, targetProfile] = await Promise.all([
+      getStudentProfile(adminId),
+      getStudentProfile(id)
+    ]);
+
     const studentRef = doc(db, 'students', id);
     await updateDoc(studentRef, {
       badges: badges
+    });
+
+    // Log the action
+    await logAdminAction({
+      adminId,
+      adminName: adminProfile?.name || 'Unknown Staff',
+      targetId: id,
+      targetName: targetProfile?.name || 'Unknown Student',
+      action: 'Update Badges',
+      details: `Badges updated to: ${badges.length > 0 ? badges.join(', ') : 'None'}`
     });
 
     return NextResponse.json({ success: true, message: 'Badges updated successfully' });

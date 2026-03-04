@@ -255,6 +255,23 @@ export async function POST(req: NextRequest) {
     const allGrades = studentData.allGrades || [];
     const gpa = studentData.gpa || 'N/A';
 
+    // Group schedule by day for better LLM parsing
+    const structuredSchedule: Record<string, any[]> = {};
+    const dayCodes = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    
+    dayCodes.forEach(day => {
+      const daySched = scheduleItems.filter((item: any) => item.time?.includes(day));
+      if (daySched.length > 0) {
+        structuredSchedule[day] = daySched.map((s: any) => ({
+          subject: s.subject,
+          description: s.description,
+          time: s.time,
+          room: s.room,
+          instructor: s.instructor || 'N/A'
+        }));
+      }
+    });
+
     let financialContext = 'No financial data found.';
     if (financials) {
       financialContext = `
@@ -269,8 +286,8 @@ export async function POST(req: NextRequest) {
       ? allGrades.map(g => `- ${g.code}: ${g.description} | Grade: ${g.grade} | Remarks: ${g.remarks}`).join('\n')
       : 'No grades found.';
 
-    const scheduleContext = scheduleItems.length > 0
-      ? scheduleItems.map(s => `- ${s.subject}: ${s.description} | Time: ${s.time} | Room: ${s.room} | Instructor: ${s.instructor || 'N/A'}`).join('\n')
+    const scheduleContext = Object.keys(structuredSchedule).length > 0
+      ? JSON.stringify(structuredSchedule, null, 2)
       : 'No schedule found.';
 
     const now = new Date();
@@ -532,9 +549,8 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
                     if (!isWriterClosed) await writer.write(encoder.encode('STATUS:FETCHING'));
                     const dayMap = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
                     const todayCode = dayMap[new Date().getDay()];
-                    const schedule = scheduleItems.filter((s: any) => s.time?.includes(todayCode));
-                    const result = schedule.length > 0 
-                      ? schedule.map((s: any) => `- ${s.description} (${s.time}) at ${s.room} with ${s.instructor || 'N/A'}`).join('\n')
+                    const result = structuredSchedule[todayCode] 
+                      ? JSON.stringify({ [todayCode]: structuredSchedule[todayCode] }, null, 2)
                       : "No classes scheduled for today.";
                     history.push(new AIMessage(fullContent));
                     currentInput = `TOOL_RESULT: Today's Schedule (${todayCode}):\n${result}`;
@@ -542,17 +558,16 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
                 } else if (toolCall.name === 'get_day_schedule' && toolCall.parameters?.day) {
                     if (!isWriterClosed) await writer.write(encoder.encode('STATUS:FETCHING'));
                     const targetDay = toolCall.parameters.day.toUpperCase().substring(0, 3);
-                    const schedule = scheduleItems.filter((s: any) => s.time?.includes(targetDay));
-                    const result = schedule.length > 0 
-                      ? schedule.map((s: any) => `- ${s.description} (${s.time}) at ${s.room} with ${s.instructor || 'N/A'}`).join('\n')
+                    const result = structuredSchedule[targetDay]
+                      ? JSON.stringify({ [targetDay]: structuredSchedule[targetDay] }, null, 2)
                       : `No classes scheduled for ${toolCall.parameters.day}.`;
                     history.push(new AIMessage(fullContent));
                     currentInput = `TOOL_RESULT: Schedule for ${targetDay}:\n${result}`;
                     continue;
                 } else if (toolCall.name === 'get_weekly_schedule') {
                     if (!isWriterClosed) await writer.write(encoder.encode('STATUS:FETCHING'));
-                    const result = scheduleItems.length > 0
-                      ? scheduleItems.map((s: any) => `- ${s.description} (${s.time}) at ${s.room} with ${s.instructor || 'N/A'}`).join('\n')
+                    const result = Object.keys(structuredSchedule).length > 0
+                      ? JSON.stringify(structuredSchedule, null, 2)
                       : "No schedule found.";
                     history.push(new AIMessage(fullContent));
                     currentInput = `TOOL_RESULT: Full Weekly Schedule:\n${result}`;
