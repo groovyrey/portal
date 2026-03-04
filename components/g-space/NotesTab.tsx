@@ -54,7 +54,7 @@ export default function NotesTab({
         <button 
           onClick={handleGoogleVerify}
           disabled={isLinking}
-          className="flex items-center justify-center gap-4 px-8 py-4 bg-foreground text-background rounded-2xl text-xs font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-xl"
+          className="flex items-center justify-center gap-4 px-8 py-4 bg-primary text-primary-foreground rounded-2xl text-xs font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-primary/10"
         >
           {isLinking ? <RefreshCw className="h-4 w-4 animate-spin" /> : <DatabaseZap className="h-4 w-4" />}
           {isLinking ? 'Verifying...' : 'Link Google Account'}
@@ -83,7 +83,7 @@ export default function NotesTab({
         </div>
         <button 
           onClick={() => setIsAddingNote(true)}
-          className="flex items-center justify-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-full text-xs font-bold shadow-sm hover:opacity-90 transition-all"
+          className="flex items-center justify-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-full text-xs font-bold shadow-sm hover:opacity-90 transition-all shadow-primary/10"
         >
           <Plus className="h-4 w-4" />
           Add Task
@@ -121,7 +121,7 @@ export default function NotesTab({
                   </button>
                   <button 
                     onClick={(e) => { e.stopPropagation(); setTaskToDelete(task.id); }}
-                    className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full transition-all"
+                    className="p-1.5 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-full transition-all"
                     title="Delete task"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -154,7 +154,7 @@ export default function NotesTab({
         isOpen={!!taskToDelete}
         onClose={() => setTaskToDelete(null)}
         title={
-          <div className="flex items-center gap-2 text-rose-500">
+          <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
             <AlertCircle className="h-5 w-5" />
             <span className="font-bold">Confirm Deletion</span>
           </div>
@@ -168,13 +168,13 @@ export default function NotesTab({
           <div className="flex gap-3">
             <button 
               onClick={() => setTaskToDelete(null)}
-              className="flex-1 py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted rounded-xl transition-all"
+              className="flex-1 py-2.5 text-xs font-bold text-muted-foreground bg-accent hover:bg-accent/80 rounded-xl transition-all"
             >
               Cancel
             </button>
             <button 
               onClick={confirmDelete}
-              className="flex-1 py-2.5 bg-rose-500 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-rose-600 transition-all active:scale-95"
+              className="flex-1 py-2.5 bg-rose-600 text-white rounded-xl text-xs font-bold shadow-sm hover:opacity-90 transition-all active:scale-95 shadow-rose-600/20"
             >
               Delete Task
             </button>

@@ -58,7 +58,7 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-10 gap-3">
-        <Loader2 className="h-6 w-6 text-blue-600 dark:text-blue-400 animate-spin" />
+        <Loader2 className="h-6 w-6 text-primary animate-spin" />
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Loading your rating...</p>
       </div>
     );
@@ -67,7 +67,7 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
   if (submitted) {
     return (
       <div className="text-center py-6">
-        <div className="h-12 w-12 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="h-12 w-12 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
           <Star className="h-6 w-6 fill-current" />
         </div>
         <p className="text-sm font-bold text-foreground">Thank you!</p>
@@ -94,7 +94,7 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
                 className={`h-8 w-8 transition-colors ${
                   (hover || rating) >= star
                     ? 'fill-amber-400 text-amber-400'
-                    : 'text-slate-200'
+                    : 'text-muted-foreground/20'
                 }`}
               />
             </button>
@@ -112,12 +112,12 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
           placeholder="What do you think of LCC Hub? (Optional)"
-          className="w-full bg-accent border border-border rounded-2xl p-4 text-sm focus:bg-card focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none min-h-[100px] resize-none text-foreground"
+          className="w-full bg-accent/50 dark:bg-accent/20 border border-border rounded-2xl p-4 text-sm focus:bg-card focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none min-h-[100px] resize-none text-foreground placeholder:text-muted-foreground/50"
         />
         <button
           onClick={handleSubmit}
           disabled={isSubmitting || rating === 0}
-          className="w-full py-3 bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
+          className="w-full py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-primary/10 flex items-center justify-center gap-2 active:scale-[0.98]"
         >
           {isSubmitting ? (
             <>

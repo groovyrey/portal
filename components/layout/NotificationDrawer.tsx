@@ -97,7 +97,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
       onConfirm: markAllRead,
       confirmText: 'Mark all read',
       variant: 'blue',
-      icon: <CheckCheck className="h-5 w-5 text-blue-500" />
+      icon: <CheckCheck className="h-5 w-5 text-primary" />
     });
   };
 
@@ -166,7 +166,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
       case 'success': return <CheckCircle2 className="h-5 w-5 text-emerald-500" />;
       case 'warning': return <AlertCircle className="h-5 w-5 text-amber-500" />;
       case 'error': return <XCircle className="h-5 w-5 text-rose-500" />;
-      default: return <Info className="h-5 w-5 text-blue-500" />;
+      default: return <Info className="h-5 w-5 text-primary" />;
     }
   };
 
@@ -198,14 +198,14 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             onClick={() => setActiveTab('unread')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
               activeTab === 'unread' 
-                ? 'bg-card text-blue-600 dark:text-blue-400 shadow-sm border border-border/50' 
+                ? 'bg-card text-primary shadow-sm border border-border/50' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             Unread
             {unreadCount > 0 && (
               <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black ${
-                activeTab === 'unread' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'bg-secondary text-muted-foreground'
+                activeTab === 'unread' ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' : 'bg-secondary text-muted-foreground'
               }`}>
                 {unreadCount}
               </span>
@@ -215,7 +215,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             onClick={() => setActiveTab('all')}
             className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
               activeTab === 'all' 
-                ? 'bg-card text-blue-600 dark:text-blue-400 shadow-sm border border-border/50' 
+                ? 'bg-card text-primary shadow-sm border border-border/50' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -228,7 +228,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             {activeTab === 'unread' ? (
               <button 
                 onClick={confirmMarkAllRead}
-                className="text-[10px] font-black text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 transition-colors uppercase tracking-widest"
+                className="text-[10px] font-black text-primary hover:opacity-80 flex items-center gap-1.5 transition-colors uppercase tracking-widest"
               >
                 <CheckCheck className="h-3 w-3" />
                 Mark all read
@@ -238,7 +238,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
             )}
             <button 
               onClick={confirmClearAll}
-              className="text-[10px] font-black text-rose-500 hover:text-rose-600 dark:text-rose-400 flex items-center gap-1.5 transition-colors uppercase tracking-widest"
+              className="text-[10px] font-black text-rose-600 dark:text-rose-400 hover:opacity-80 flex items-center gap-1.5 transition-colors uppercase tracking-widest"
             >
               <Trash2 className="h-3 w-3" />
               Clear all
@@ -252,7 +252,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
           title={
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                confirmConfig.variant === 'rose' ? 'bg-rose-500/10 dark:bg-rose-500/20' : 'bg-blue-500/10 dark:bg-blue-500/20'
+                confirmConfig.variant === 'rose' ? 'bg-rose-500/10 dark:bg-rose-500/20' : 'bg-primary/10'
               }`}>
                 {confirmConfig.icon}
               </div>
@@ -278,8 +278,8 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                 onClick={confirmConfig.onConfirm}
                 className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black text-white transition-colors uppercase tracking-widest shadow-lg ${
                   confirmConfig.variant === 'rose' 
-                    ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/20' 
-                    : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
+                    ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20' 
+                    : 'bg-primary hover:opacity-90 shadow-primary/20'
                 }`}
               >
                 {confirmConfig.confirmText}
@@ -329,12 +329,12 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                 className={`group relative p-4 rounded-2xl border transition-all cursor-pointer ${
                   notif.isRead 
                     ? 'bg-card border-border hover:border-primary/20' 
-                    : 'bg-blue-500/[0.03] dark:bg-blue-500/[0.05] border-blue-500/20 dark:border-blue-400/20 hover:border-blue-500/30 ring-1 ring-blue-500/5'
+                    : 'bg-primary/[0.03] dark:bg-primary/[0.05] border-primary/20 dark:border-primary/20 hover:border-primary/30 ring-1 ring-primary/5'
                 }`}
               >
                 <div className="flex gap-4">
                   <div className={`mt-0.5 shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
-                    notif.isRead ? 'bg-accent' : 'bg-card shadow-sm border border-blue-500/10'
+                    notif.isRead ? 'bg-accent' : 'bg-card shadow-sm border border-primary/10'
                   }`}>
                     {getIcon(notif.type)}
                   </div>
@@ -342,7 +342,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3 mb-1">
                       <h4 className={`text-sm font-bold truncate ${
-                        notif.isRead ? 'text-foreground' : 'text-blue-600 dark:text-blue-400'
+                        notif.isRead ? 'text-foreground' : 'text-primary'
                       }`}>
                         {notif.title}
                       </h4>
@@ -352,14 +352,14 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                           {getTimeAgo(notif.createdAt)}
                         </span>
                         {!notif.isRead && (
-                          <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.4)]"></div>
+                          <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.4)]"></div>
                         )}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             confirmDelete(notif.id);
                           }}
-                          className="p-1.5 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all group-hover:opacity-100 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10 transition-all group-hover:opacity-100 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                           title="Delete notification"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -379,7 +379,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                           e.stopPropagation();
                           onClose();
                         }}
-                        className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                        className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-primary hover:underline"
                       >
                         View details
                         <ExternalLink className="h-3 w-3" />

@@ -5,34 +5,34 @@ export default function DisclaimerContent() {
   return (
     <div className="grid gap-8">
       {/* Your Data & How We Use It Section */}
-      <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-600/20 relative overflow-hidden">
+      <div className="bg-primary rounded-3xl p-8 text-primary-foreground shadow-xl shadow-primary/20 relative overflow-hidden border border-primary-foreground/5">
         <div className="absolute top-0 right-0 p-4 opacity-10">
           <ShieldCheck size={140} />
         </div>
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-card/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-full border border-white/20 mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-foreground/10 text-primary-foreground text-[10px] font-bold uppercase tracking-widest rounded-full border border-primary-foreground/20 mb-6">
             <Info className="h-3 w-3" />
             Your Data & How We Use It
           </div>
           <h2 className="text-2xl font-bold mb-4">How & Why We Use Your Data</h2>
-          <p className="text-blue-50 leading-relaxed font-medium mb-6">
+          <p className="text-primary-foreground/80 leading-relaxed font-medium mb-6">
             LCC Hub is made to make your student life easier. We use your data only to show your grades, schedule, and financial status in a better, mobile-friendly way.
           </p>
-          <ul className="grid md:grid-cols-2 gap-4 text-sm font-semibold text-blue-100">
+          <ul className="grid md:grid-cols-2 gap-4 text-sm font-semibold text-primary-foreground/90">
             <li className="flex items-start gap-3">
-              <div className="h-5 w-5 bg-card/10 rounded-full flex items-center justify-center text-white shrink-0">✓</div>
+              <div className="h-5 w-5 bg-primary-foreground/10 rounded-full flex items-center justify-center text-primary-foreground shrink-0">✓</div>
               <span>Securely processed without saving your passwords.</span>
             </li>
             <li className="flex items-start gap-3">
-              <div className="h-5 w-5 bg-card/10 rounded-full flex items-center justify-center text-white shrink-0">✓</div>
+              <div className="h-5 w-5 bg-primary-foreground/10 rounded-full flex items-center justify-center text-primary-foreground shrink-0">✓</div>
               <span>Encrypted sessions to keep your data safe.</span>
             </li>
             <li className="flex items-start gap-3">
-              <div className="h-5 w-5 bg-card/10 rounded-full flex items-center justify-center text-white shrink-0">✓</div>
+              <div className="h-5 w-5 bg-primary-foreground/10 rounded-full flex items-center justify-center text-primary-foreground shrink-0">✓</div>
               <span>Your info comes straight from the school and we never change it.</span>
             </li>
             <li className="flex items-start gap-3">
-              <div className="h-5 w-5 bg-card/10 rounded-full flex items-center justify-center text-white shrink-0">✓</div>
+              <div className="h-5 w-5 bg-primary-foreground/10 rounded-full flex items-center justify-center text-primary-foreground shrink-0">✓</div>
               <span>No Tracking: we do not sell or share your personal information.</span>
             </li>
           </ul>
@@ -65,7 +65,7 @@ export default function DisclaimerContent() {
       {/* Detailed Sections */}
       <div className="space-y-12 mt-8">
         <section>
-          <h3 className="text-xl font-bold text-foreground mb-4 border-l-4 border-blue-600 pl-4">
+          <h3 className="text-xl font-bold text-foreground mb-4 border-l-4 border-primary pl-4">
             1. Rules & Responsibility
           </h3>
           <p className="text-muted-foreground leading-relaxed">
@@ -74,22 +74,22 @@ export default function DisclaimerContent() {
         </section>
 
         <section>
-          <h3 className="text-xl font-bold text-foreground mb-4 border-l-4 border-blue-600 pl-4">
+          <h3 className="text-xl font-bold text-foreground mb-4 border-l-4 border-primary pl-4">
             2. How We Get Your Data
           </h3>
           <p className="text-muted-foreground leading-relaxed mb-4">
             The app acts as a secure web tool. it automatically gets your school info from the official portal and formats it for a better experience. We never change any data on the school&apos;s servers.
           </p>
-          <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20 flex items-start gap-3">
-            <Info className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
-            <p className="text-sm text-blue-600 dark:text-blue-400 dark:text-blue-400 font-medium">
+          <div className="bg-primary/5 p-4 rounded-xl border border-border flex items-start gap-3">
+            <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+            <p className="text-sm text-muted-foreground font-medium">
               We recommend checking important info (like fees or final grades) with the school registrar directly.
             </p>
           </div>
         </section>
 
         <section>
-          <h3 className="text-xl font-bold text-foreground mb-4 border-l-4 border-blue-600 pl-4">
+          <h3 className="text-xl font-bold text-foreground mb-4 border-l-4 border-primary pl-4">
             3. School Property
           </h3>
           <p className="text-muted-foreground leading-relaxed">
@@ -98,7 +98,7 @@ export default function DisclaimerContent() {
         </section>
 
         <section>
-          <h3 className="text-xl font-bold text-foreground mb-4 border-l-4 border-blue-600 pl-4">
+          <h3 className="text-xl font-bold text-foreground mb-4 border-l-4 border-primary pl-4">
             4. App Features & Who&apos;s Responsible
           </h3>
           <p className="text-muted-foreground leading-relaxed">

@@ -466,7 +466,7 @@ function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon:
       <div className={`w-10 h-5 rounded-full relative transition-colors shadow-inner ${isOn ? 'bg-primary' : 'bg-muted'}`}>
         <motion.div
           animate={{ x: isOn ? 22 : 2 }}
-          className="absolute top-1 w-3 h-3 bg-white dark:bg-slate-200 rounded-full shadow-sm"
+          className="absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm"
         />
       </div>    </button>
   );

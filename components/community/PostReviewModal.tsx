@@ -19,9 +19,9 @@ export default function PostReviewModal({ isOpen }: PostReviewModalProps) {
       <div className="py-12 flex flex-col items-center max-w-xs mx-auto">
         {/* Animated Icon */}
         <div className="relative mb-8 flex items-center justify-center">
-          <div className="absolute inset-0 bg-blue-500/10 rounded-full animate-pulse" />
+          <div className="absolute inset-0 bg-primary/10 rounded-full animate-pulse" />
           <div className="relative bg-card p-6 rounded-3xl border border-border shadow-xl">
-            <ShieldCheck className="h-10 w-10 text-blue-600 dark:text-blue-400" />
+            <ShieldCheck className="h-10 w-10 text-primary" />
           </div>
         </div>
 
@@ -45,7 +45,7 @@ export default function PostReviewModal({ isOpen }: PostReviewModalProps) {
                   repeat: Infinity,
                   delay: i * 0.2,
                 }}
-                className="w-1.5 h-1.5 bg-blue-600 rounded-full"
+                className="w-1.5 h-1.5 bg-primary rounded-full"
               />
             ))}
           </div>

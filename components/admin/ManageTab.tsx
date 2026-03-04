@@ -234,9 +234,9 @@ export default function ManageTab() {
                       isActive ? 'bg-primary border-primary' : 'border-border'
                     }`}>
                       {isUpdating ? (
-                        <Loader2 className="h-3 w-3 text-white animate-spin" />
+                        <Loader2 className="h-3 w-3 text-primary-foreground animate-spin" />
                       ) : isActive ? (
-                        <Check className="h-3 w-3 text-white" />
+                        <Check className="h-3 w-3 text-primary-foreground" />
                       ) : null}
                     </div>
                   </button>
@@ -248,7 +248,7 @@ export default function ManageTab() {
           <div className="pt-6 border-t border-border">
              <button
               onClick={() => setSelectedStudent(null)}
-              className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95"
+              className="w-full bg-primary text-primary-foreground font-black py-4 rounded-2xl text-[10px] uppercase tracking-[0.2em] hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/10"
             >
               Close Management
             </button>

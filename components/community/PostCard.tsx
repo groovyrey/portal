@@ -20,10 +20,10 @@ interface PostCardProps {
 
 const getTopicStyle = (topic: string) => {
   switch (topic) {
-    case 'Academics': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-    case 'Campus Life': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
-    case 'Career': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
-    case 'Well-being': return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
+    case 'Academics': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20';
+    case 'Campus Life': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20';
+    case 'Career': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+    case 'Well-being': return 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20';
     default: return 'bg-accent text-muted-foreground border-border';
   }
 };
@@ -86,7 +86,7 @@ export default function PostCard({
                 onClick={(e) => e.stopPropagation()}
                 className="block group/link"
               >
-                  <h4 className="text-sm font-bold text-foreground leading-none mb-1 group-hover/link:text-blue-500 transition-colors">{post.userName}</h4>
+                  <h4 className="text-sm font-bold text-foreground leading-none mb-1 group-hover/link:text-primary transition-colors">{post.userName}</h4>
               </Link>
             )}
             <div className="flex items-center gap-2 flex-wrap">
@@ -98,7 +98,7 @@ export default function PostCard({
                 {topic}
               </span>
               {post.isUnreviewed && (
-                <span className="bg-amber-500/10 text-amber-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/20">
+                <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/20">
                   Pending
                 </span>
               )}
@@ -116,7 +116,7 @@ export default function PostCard({
                 {...props} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="text-blue-500 font-bold underline hover:text-blue-600 dark:text-blue-400 transition-colors"
+                className="text-primary font-bold underline hover:opacity-80 transition-opacity"
                 onClick={(e) => e.stopPropagation()}
               >
                 {props.children}
@@ -129,7 +129,7 @@ export default function PostCard({
       </div>
 
       {post.poll && (
-        <div className="mb-6 p-4 bg-accent rounded-2xl border border-border space-y-3" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-6 p-4 bg-accent/50 dark:bg-accent/20 rounded-2xl border border-border space-y-3" onClick={(e) => e.stopPropagation()}>
           <h4 className="text-sm font-bold text-foreground tracking-tight mb-3">{post.poll.question}</h4>
           <div className="space-y-2">
             {post.poll.options.map((option, idx) => {
@@ -145,18 +145,18 @@ export default function PostCard({
                   onClick={() => onVote(post.id, idx)}
                   className={`w-full relative h-10 rounded-xl overflow-hidden border transition-all duration-300 ${
                     hasVoted 
-                      ? isSelected ? 'border-blue-500/50 bg-card' : 'border-border bg-transparent opacity-60'
-                      : !student ? 'border-border bg-card/50 cursor-not-allowed' : 'border-border bg-card hover:border-blue-500'
+                      ? isSelected ? 'border-primary/50 bg-card' : 'border-border bg-transparent opacity-60'
+                      : !student ? 'border-border bg-card/50 cursor-not-allowed' : 'border-border bg-card hover:border-primary'
                   }`}
                 >
                   {hasVoted && (
                     <div 
-                      className={`absolute inset-y-0 left-0 transition-all duration-1000 ${isSelected ? 'bg-blue-600/10' : 'bg-muted/20'}`}
+                      className={`absolute inset-y-0 left-0 transition-all duration-1000 ${isSelected ? 'bg-primary/10' : 'bg-muted/20'}`}
                       style={{ width: `${percentage}%` }}
                     />
                   )}
                   <div className="absolute inset-0 px-4 flex items-center justify-between">
-                    <span className={`text-xs font-bold ${isSelected ? 'text-blue-500' : 'text-muted-foreground'}`}>
+                    <span className={`text-xs font-bold ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>
                       {option.text}
                     </span>
                     {hasVoted && (
@@ -185,7 +185,7 @@ export default function PostCard({
               disabled={!student}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-lg transition-all duration-300
                   ${isLiked 
-                      ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' 
+                      ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' 
                       : !student 
                         ? 'bg-accent text-muted-foreground/30 cursor-not-allowed'
                         : 'bg-accent text-muted-foreground hover:bg-card hover:border-border'}`}
