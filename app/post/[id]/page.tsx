@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -21,7 +21,10 @@ import {
   GraduationCap,
   HeartHandshake,
   Info,
-  ArrowLeft
+  ArrowLeft,
+  Link as LinkIcon,
+  Share2,
+  User
 } from 'lucide-react';
 import Link from 'next/link';
 import Skeleton from '@/components/ui/Skeleton';
@@ -34,7 +37,7 @@ const getTopicStyle = (topic: string) => {
   switch (topic) {
     case 'Academics': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
     case 'Campus Life': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
-    case 'Career': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+    case 'Career': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
     case 'Well-being': return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
     default: return 'bg-accent text-muted-foreground border-border';
   }
@@ -52,11 +55,16 @@ export default function PostPage() {
   const [commenting, setCommenting] = useState(false);
   const [reportingComment, setReportingComment] = useState<string | null>(null);
   const [commentToReport, setCommentToReport] = useState<string | null>(null);
+  const [postToReport, setPostToReport] = useState<string | null>(null);
+  const [reportingPost, setReportingPost] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<{postId: string, commentId: string} | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [activeCommentMenu, setActiveCommentMenu] = useState<string | null>(null);
   const [reactors, setReactors] = useState<{id: string, name: string}[] | null>(null);
   const [loadingReactors, setLoadingReactors] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const commentMenuRef = useRef<HTMLDivElement>(null);
+  const postMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const savedStudent = localStorage.getItem('student_data');
@@ -64,6 +72,23 @@ export default function PostPage() {
     setActivePostId(postId);
     return () => setActivePostId(null);
   }, [postId, setActivePostId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (commentMenuRef.current && !commentMenuRef.current.contains(event.target as Node)) {
+        setActiveCommentMenu(null);
+      }
+      if (postMenuRef.current && !postMenuRef.current.contains(event.target as Node)) {
+        setActiveMenu(null);
+      }
+    };
+    if (activeCommentMenu || activeMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activeCommentMenu, activeMenu]);
 
   const { data: post, isLoading: loadingPost, error: postError } = useQuery({
     queryKey: ['post', postId],
@@ -87,6 +112,31 @@ export default function PostPage() {
   });
 
   const isLiked = post && (post.likes || []).includes(student?.id || '');
+
+  const handleCopyLink = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    toast.success('Link copied to clipboard!');
+    setActiveMenu(null);
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Post by ${post?.userName}`,
+          text: post?.content.substring(0, 100),
+          url: url,
+        });
+      } catch (err) {
+        console.error('Share failed:', err);
+      }
+    } else {
+      handleCopyLink();
+    }
+    setActiveMenu(null);
+  };
 
   const handleLike = async (id: string, currentlyLiked: boolean) => {
     if (!student) return;
@@ -153,6 +203,34 @@ export default function PostPage() {
       toast.error('Failed to delete post', { id: deleteToast });
     } finally {
       setPostToDelete(null);
+    }
+  };
+
+  const handleReportPost = async (id: string) => {
+    if (reportingPost) return;
+    setReportingPost(true);
+    const reportToast = toast.loading('Aegis is reviewing this post...');
+    try {
+      const res = await fetch('/api/community/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: id })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.decision === 'REJECTED') {
+          toast.success('Post removed. AI analysis confirmed community guideline violations.', { id: reportToast, duration: 5000 });
+          router.push('/community');
+        } else {
+          toast.info('Aegis found this post follows our guidelines.', { id: reportToast, duration: 5000 });
+        }
+      } else {
+        toast.error(data.error || 'Failed to report post', { id: reportToast });
+      }
+    } catch (error) {
+      toast.error('Failed to report post', { id: reportToast });
+    } finally {
+      setReportingPost(false);
     }
   };
 
@@ -306,30 +384,69 @@ export default function PostPage() {
                 </div>
               </div>
 
-              {student?.id === post.userId && (
-                <div className="relative">
-                  <button 
-                    onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}
-                    className="p-2 rounded-xl hover:bg-accent text-muted-foreground transition-all"
-                  >
-                    <MoreVertical className="h-5 w-5" />
-                  </button>
-                  {activeMenu === post.id && (
-                    <div className="absolute right-0 mt-2 w-48 bg-card rounded-2xl shadow-xl border border-border py-1.5 z-50 overflow-hidden">
+              <div className="relative" ref={postMenuRef}>
+                <button 
+                  onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}
+                  className="p-2 rounded-xl hover:bg-accent text-muted-foreground transition-all"
+                >
+                  <MoreVertical className="h-5 w-5" />
+                </button>
+                {activeMenu === post.id && (
+                  <div className="absolute right-0 mt-2 w-48 bg-card rounded-2xl shadow-xl border border-border py-1.5 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                    <Link 
+                      href={`/profile/${obfuscateId(post.userId)}`}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors uppercase tracking-wider"
+                    >
+                      <User className="h-4 w-4" />
+                      View Profile
+                    </Link>
+
+                    <button 
+                      onClick={handleCopyLink}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors uppercase tracking-wider"
+                    >
+                      <LinkIcon className="h-4 w-4" />
+                      Copy Link
+                    </button>
+
+                    <button 
+                      onClick={handleShare}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors uppercase tracking-wider"
+                    >
+                      <Share2 className="h-4 w-4" />
+                      Share
+                    </button>
+
+                    <div className="h-[1px] bg-border my-1.5 mx-2" />
+
+                    {student?.id === post.userId ? (
                       <button 
                         onClick={() => {
                           setPostToDelete(post.id);
                           setActiveMenu(null);
                         }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-500/10 transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-500/10 transition-colors uppercase tracking-wider"
                       >
                         <Trash2 className="h-4 w-4" />
                         Delete Post
                       </button>
-                    </div>
-                  )}
-                </div>
-              )}
+                    ) : (
+                      student && (
+                        <button 
+                          onClick={() => {
+                            setPostToReport(post.id);
+                            setActiveMenu(null);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-amber-500 hover:bg-amber-500/10 transition-colors uppercase tracking-wider"
+                        >
+                          <Flag className="h-4 w-4" />
+                          Report Post
+                        </button>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="prose prose-slate dark:prose-invert max-w-none prose-base font-normal text-muted-foreground leading-relaxed px-0.5">
@@ -466,7 +583,7 @@ export default function PostPage() {
                 {comments.map((comment) => {
                   const isMe = student && comment.userId === student.id;
                   return (
-                    <div key={comment.id} className="py-5 flex gap-4 items-start group">
+                    <div key={comment.id} className="py-5 flex gap-4 items-start group relative">
                       <Link 
                         href={`/profile/${obfuscateId(comment.userId)}`}
                         className="shrink-0"
@@ -486,23 +603,50 @@ export default function PostPage() {
                             <span className="text-[10px] font-bold text-muted-foreground/50 uppercase">
                               {new Date(comment.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                             </span>
-                            {isMe ? (
-                              <button 
-                                onClick={() => setCommentToDelete({ postId: postId, commentId: comment.id })}
-                                className="p-1.5 rounded-lg text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/10 transition-colors"
-                                title="Delete comment"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            ) : (
-                              <button 
-                                onClick={() => setCommentToReport(comment.id)}
-                                disabled={reportingComment === comment.id}
-                                className={`p-1.5 rounded-lg transition-colors ${reportingComment === comment.id ? 'text-blue-500 animate-pulse' : 'text-muted-foreground/30 hover:text-amber-500 hover:bg-amber-500/10'}`}
-                                title="Report comment"
-                              >
-                                <Flag className="h-3.5 w-3.5" />
-                              </button>
+                            
+                            {student && (
+                              <div className="relative" ref={activeCommentMenu === comment.id ? commentMenuRef : null}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveCommentMenu(activeCommentMenu === comment.id ? null : comment.id);
+                                  }}
+                                  className="p-1.5 rounded-lg text-muted-foreground/30 hover:text-foreground hover:bg-accent transition-all"
+                                >
+                                  <MoreVertical className="h-3.5 w-3.5" />
+                                </button>
+                                
+                                {activeCommentMenu === comment.id && (
+                                  <div className="absolute right-0 mt-1 w-36 bg-card border border-border rounded-xl shadow-xl z-10 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                                    {isMe ? (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setActiveCommentMenu(null);
+                                          setCommentToDelete({ postId: postId, commentId: comment.id });
+                                        }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-bold text-red-500 hover:bg-red-500/10 transition-colors uppercase tracking-wider"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                        Delete
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setActiveCommentMenu(null);
+                                          setCommentToReport(comment.id);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-bold text-amber-500 hover:bg-amber-500/10 transition-colors uppercase tracking-wider"
+                                        disabled={reportingComment === comment.id}
+                                      >
+                                        <Flag className={`h-3.5 w-3.5 ${reportingComment === comment.id ? 'animate-pulse' : ''}`} />
+                                        Report
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </div>
                         </div>
@@ -637,8 +781,8 @@ export default function PostPage() {
 
       {/* Report Confirmation & Guidelines Modal */}
       <Modal 
-        isOpen={!!commentToReport} 
-        onClose={() => setCommentToReport(null)}
+        isOpen={!!commentToReport || !!postToReport} 
+        onClose={() => { setCommentToReport(null); setPostToReport(null); }}
         maxWidth="max-w-md"
         className="p-0 overflow-hidden"
       >
@@ -660,7 +804,7 @@ export default function PostPage() {
             <div className="bg-blue-500/5 rounded-2xl p-5 border border-blue-500/10 flex gap-4">
               <Info className="h-6 w-6 text-blue-500 shrink-0" />
               <p className="text-xs text-muted-foreground font-bold leading-relaxed">
-                Aegis will review the reported comment based on our <span className="text-foreground">Community Guidelines</span>. Excessive false reporting may result in account restrictions.
+                Aegis will review the reported content based on our <span className="text-foreground">Community Guidelines</span>. Excessive false reporting may result in account restrictions.
               </p>
             </div>
 
@@ -691,9 +835,15 @@ export default function PostPage() {
           <div className="p-8 pt-0 flex flex-col gap-3">
             <button 
               onClick={() => {
-                const cId = commentToReport;
-                setCommentToReport(null);
-                if (cId) handleReportComment(cId);
+                if (commentToReport) {
+                  const cId = commentToReport;
+                  setCommentToReport(null);
+                  handleReportComment(cId);
+                } else if (postToReport) {
+                  const pId = postToReport;
+                  setPostToReport(null);
+                  handleReportPost(pId);
+                }
               }}
               className="w-full py-4 bg-foreground text-background hover:opacity-90 text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-3"
             >
@@ -701,7 +851,7 @@ export default function PostPage() {
               Confirm Violation
             </button>
             <button 
-              onClick={() => setCommentToReport(null)}
+              onClick={() => { setCommentToReport(null); setPostToReport(null); }}
               className="w-full py-4 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-[0.98]"
             >
               Cancel

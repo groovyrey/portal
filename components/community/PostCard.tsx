@@ -1,12 +1,25 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Heart, MessageSquare, ExternalLink, BarChart2, Eye } from 'lucide-react';
+import { 
+  Heart, 
+  MessageSquare, 
+  ExternalLink, 
+  BarChart2, 
+  Eye, 
+  Flag, 
+  MoreVertical, 
+  Trash2, 
+  Link as LinkIcon, 
+  Share2, 
+  User 
+} from 'lucide-react';
 import { CommunityPost, Student } from '@/types';
 import Link from 'next/link';
 import { obfuscateId } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface PostCardProps {
   post: CommunityPost;
@@ -15,6 +28,8 @@ interface PostCardProps {
   onVote: (postId: string, optionIndex: number) => void;
   onOpen: (post: CommunityPost) => void;
   onFetchReactors: (postId: string) => void;
+  onReport: (postId: string) => void;
+  onDelete?: (postId: string) => void;
   isProfileView?: boolean;
 }
 
@@ -35,11 +50,57 @@ export default function PostCard({
   onVote,
   onOpen,
   onFetchReactors,
+  onReport,
+  onDelete,
   isProfileView = false
 }: PostCardProps) {
   const isLiked = (post.likes || []).includes(student?.id || '');
   const topic = post.topic || 'General';
+  const isAuthor = student?.id === post.userId;
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
+
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/post/${post.id}`;
+    navigator.clipboard.writeText(url);
+    toast.success('Link copied to clipboard!');
+    setShowMenu(false);
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/post/${post.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Post by ${post.userName}`,
+          text: post.content.substring(0, 100),
+          url: url,
+        });
+      } catch (err) {
+        console.error('Share failed:', err);
+      }
+    } else {
+      handleCopyLink(e);
+    }
+    setShowMenu(false);
+  };
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
@@ -104,6 +165,77 @@ export default function PostCard({
               )}
             </div>
           </div>
+        </div>
+
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMenu(!showMenu);
+            }}
+            className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground transition-all"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+          
+          {showMenu && (
+            <div className="absolute right-0 mt-1 w-44 bg-card border border-border rounded-xl shadow-xl z-10 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+              <Link 
+                href={`/profile/${obfuscateId(post.userId)}`}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-[10px] font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors uppercase tracking-wider"
+              >
+                <User className="h-3.5 w-3.5" />
+                View Profile
+              </Link>
+              
+              <button
+                onClick={handleCopyLink}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-[10px] font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors uppercase tracking-wider"
+              >
+                <LinkIcon className="h-3.5 w-3.5" />
+                Copy Link
+              </button>
+
+              <button
+                onClick={handleShare}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-[10px] font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors uppercase tracking-wider"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+                Share
+              </button>
+
+              <div className="h-[1px] bg-border my-1" />
+
+              {student && !isAuthor && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(false);
+                    onReport(post.id);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-[10px] font-bold text-amber-500 hover:bg-amber-500/10 transition-colors uppercase tracking-wider"
+                >
+                  <Flag className="h-3.5 w-3.5" />
+                  Report Post
+                </button>
+              )}
+
+              {isAuthor && onDelete && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(false);
+                    onDelete(post.id);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-[10px] font-bold text-red-500 hover:bg-red-500/10 transition-colors uppercase tracking-wider"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete Post
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
       

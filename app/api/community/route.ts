@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
         userName: post.user_name,
         content: post.content,
         topic: post.topic,
+        imageUrl: post.image_url,
         isUnreviewed: post.is_unreviewed,
         createdAt: post.created_at.toISOString(),
         likes: post.likes || [],
@@ -151,6 +152,7 @@ export async function GET(req: NextRequest) {
         userName: post.user_name,
         content: post.content,
         topic: post.topic,
+        imageUrl: post.image_url,
         isUnreviewed: post.is_unreviewed,
         createdAt: post.created_at.toISOString(),
         likes: post.likes || [],
@@ -169,8 +171,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const client = await getClient();
   try {
-    const { content, userName, poll, isUnreviewed, topic } = await req.json();
-    if (!content && !poll) return NextResponse.json({ error: 'Content or Poll required' }, { status: 400 });
+    const { content, userName, poll, isUnreviewed, topic, imageUrl } = await req.json();
+    if (!content && !poll && !imageUrl) return NextResponse.json({ error: 'Content, Poll, or Image required' }, { status: 400 });
 
     const sessionCookie = req.cookies.get('session_token');
     if (!sessionCookie) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -189,14 +191,15 @@ export async function POST(req: NextRequest) {
     `, [userId, userName || 'Anonymous Student']);
 
     const postRes = await client.query(`
-      INSERT INTO community_posts (user_id, user_name, content, topic, is_unreviewed, poll_question)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO community_posts (user_id, user_name, content, topic, image_url, is_unreviewed, poll_question)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING id
     `, [
       userId, 
       userName || 'Anonymous Student', 
       content || '', 
       topic || 'General', 
+      imageUrl || null,
       isUnreviewed || false,
       poll?.question || null
     ]);

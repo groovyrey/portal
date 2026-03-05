@@ -23,11 +23,19 @@ export async function migrateCommunity() {
         user_name TEXT NOT NULL,
         content TEXT,
         topic TEXT DEFAULT 'General',
+        image_url TEXT,
         is_unreviewed INTEGER DEFAULT 0,
         poll_question TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Ensure image_url exists for older tables
+    try {
+      await query(`ALTER TABLE community_posts ADD COLUMN image_url TEXT;`);
+    } catch (e) {
+      // Column might already exist
+    }
 
     // 3. Create community_comments table
     await query(`

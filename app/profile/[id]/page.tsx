@@ -8,7 +8,8 @@ import {
   Loader2,
   Lock,
   MessageSquare,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -22,6 +23,7 @@ import { useStudent } from '@/lib/hooks';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
 import Skeleton from '@/components/ui/Skeleton';
 import BadgeDisplay from '@/components/shared/BadgeDisplay';
+import Modal from '@/components/ui/Modal';
 
 function ProfileContent() {
   const queryClient = useQueryClient();
@@ -41,6 +43,7 @@ function ProfileContent() {
   });
   const [loading, setLoading] = useState(true);
   const [isPublicView, setIsPublicView] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   const { data: posts = [], isLoading: loadingPosts } = useQuery({
     queryKey: ['user-posts', profileId],
@@ -131,6 +134,7 @@ function ProfileContent() {
       });
       if (!res.ok) throw new Error();
       queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
+      queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
     } catch (err) {
       toast.error('Failed to update reaction');
@@ -147,9 +151,64 @@ function ProfileContent() {
       });
       if (!res.ok) throw new Error();
       queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
+      queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
     } catch (err) {
       toast.error('Failed to cast vote');
+    }
+  };
+
+  const handleReport = async (postId: string) => {
+    if (!currentUserData) return;
+    
+    const toastId = toast.loading('Reporting post to AI...');
+    
+    try {
+      const res = await fetch('/api/community/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        if (data.decision === 'REJECTED') {
+          toast.success('Post removed: AI analysis confirmed community guideline violations.', { id: toastId });
+          queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
+          queryClient.invalidateQueries({ queryKey: ['community-posts'] });
+        } else {
+          toast.success('Report processed: AI determined this post follows community guidelines.', { id: toastId });
+        }
+      } else {
+        toast.error(data.error || 'Failed to report post', { id: toastId });
+      }
+    } catch (err) {
+      toast.error('Network error while reporting', { id: toastId });
+    }
+  };
+
+  const handleDeletePost = async () => {
+    if (!postToDelete) return;
+    const deleteToast = toast.loading('Deleting post...');
+    try {
+      const res = await fetch('/api/community', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: postToDelete })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Post deleted', { id: deleteToast });
+        queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
+        queryClient.invalidateQueries({ queryKey: ['community-posts'] });
+      } else {
+        toast.error(data.error || 'Failed to delete post', { id: deleteToast });
+      }
+    } catch (e) {
+      toast.error('Failed to delete post', { id: deleteToast });
+    } finally {
+      setPostToDelete(null);
     }
   };
 
@@ -289,6 +348,8 @@ function ProfileContent() {
                 onVote={handleVote}
                 onOpen={openPostModal}
                 onFetchReactors={() => {}}
+                onReport={handleReport}
+                onDelete={setPostToDelete}
                 isProfileView={true}
               />
             ))}
@@ -301,6 +362,34 @@ function ProfileContent() {
           </div>
         )}
       </div>
+
+      {/* Delete Post Confirmation */}
+      <Modal 
+        isOpen={!!postToDelete} 
+        onClose={() => setPostToDelete(null)}
+        maxWidth="max-w-xs"
+        className="p-8 text-center"
+      >
+        <div className="h-16 w-16 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <Trash2 className="h-8 w-8" />
+        </div>
+        <h3 className="text-lg font-bold text-foreground mb-2">Delete Post?</h3>
+        <p className="text-xs text-muted-foreground font-bold leading-relaxed mb-8">This action cannot be undone. Are you sure you want to remove this post?</p>
+        <div className="flex flex-col gap-3">
+            <button 
+                onClick={handleDeletePost}
+                className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-red-500/10 active:scale-95"
+            >
+                Delete Post
+            </button>
+            <button 
+                onClick={() => setPostToDelete(null)}
+                className="w-full py-3.5 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
+            >
+                Cancel
+            </button>
+        </div>
+      </Modal>
     </div>
   );
 }
