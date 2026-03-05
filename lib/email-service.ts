@@ -30,7 +30,7 @@ export async function sendEmail({ to, subject, text, html }: SendEmailParams) {
 
   try {
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM || '"LCC Hub Alerts" <noreply@portal.lcc.edu.ph>',
+      from: process.env.EMAIL_FROM || '"LCC Hub Alerts" <noreply@lcchub.vercel.app>',
       to,
       subject,
       text,

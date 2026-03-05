@@ -4,7 +4,10 @@ import { motion } from 'framer-motion';
 import { Student } from '@/types';
 
 interface MarqueeProps {
-  subjects: { description: string }[];
+  subjects: { 
+    description: string;
+    icon?: React.ElementType;
+  }[];
   className?: string;
 }
 
@@ -38,17 +41,21 @@ export default function Marquee({ subjects, className = "" }: MarqueeProps) {
               const colorIdx = idx % colors.length;
               const randomColor = colors[colorIdx];
               const randomStyle = fonts[styleIdx];
+              const Icon = item.icon;
+
               return (
-                <span 
-                  key={idx} 
-                  className={`text-3xl sm:text-7xl uppercase ${randomStyle}`}
-                  style={{ 
-                    color: randomColor,
-                    textShadow: `2px 2px 0px ${randomColor}44`
-                  }}
-                >
-                  {item.description}
-                </span>
+                <div key={idx} className="flex items-center gap-4">
+                  {Icon && <Icon className="h-8 w-8 sm:h-12 sm:w-12" style={{ color: randomColor }} />}
+                  <span 
+                    className={`text-3xl sm:text-7xl uppercase ${randomStyle}`}
+                    style={{ 
+                      color: randomColor,
+                      textShadow: `2px 2px 0px ${randomColor}44`
+                    }}
+                  >
+                    {item.description}
+                  </span>
+                </div>
               );
             })}
           </div>

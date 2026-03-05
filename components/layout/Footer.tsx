@@ -43,7 +43,7 @@ export default function Footer() {
             <h3 className="text-[10px] font-bold text-foreground uppercase tracking-wider mb-4">Resources</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/school" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Academic Info</Link>
+                <Link href="/school" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">School Info</Link>
               </li>
               <li>
                 <Link href="/docs" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">System Docs</Link>

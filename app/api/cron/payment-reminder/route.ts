@@ -34,9 +34,9 @@ export async function GET(req: NextRequest) {
     console.log(`Running payment reminder check for: ${targetDateStr} (Today: ${phTime.toLocaleDateString()})`);
 
     // 3. Fetch all students from Firestore
-    const protocol = req.headers.get('x-forwarded-proto') || 'http';
-    const host = req.headers.get('host');
-    const baseUrl = `${protocol}://${host}`;
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://lcchub.vercel.app' 
+      : `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('host')}`;
 
     const studentsSnap = await getDocs(collection(db, 'students'));
     let notificationCount = 0;

@@ -12,8 +12,8 @@ import {
   Award, 
   Lock,
   Calendar,
+  GraduationCap,
   MessageCircle,
-  Code2,
   CheckCircle2,
   Quote,
   ChevronRight,
@@ -21,7 +21,40 @@ import {
   ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import Marquee from '@/components/shared/Marquee';
+
+const FAQItem = ({ question, answer }: { question: string, answer: string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="border-b border-border last:border-0">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full py-6 flex items-center justify-between text-left group transition-all"
+      >
+        <span className="text-sm font-black uppercase tracking-wider text-foreground group-hover:text-primary transition-colors">{question}</span>
+        <div className={`p-1 rounded-full bg-accent transition-transform duration-300 ${isOpen ? 'rotate-180 bg-primary text-primary-foreground' : ''}`}>
+          <ChevronRight className="h-4 w-4" />
+        </div>
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <p className="pb-6 text-sm text-muted-foreground leading-relaxed font-medium">
+              {answer}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 export default function AboutPage() {
   const [stats, setStats] = useState({ count: 0, average: '0.0' });
@@ -111,6 +144,21 @@ export default function AboutPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Marquee Section */}
+      <div className="py-4 border-y border-border/50 bg-card/10">
+        <Marquee 
+          subjects={[
+            { description: 'Real-time Sync', icon: Zap },
+            { description: 'AI Assistant', icon: Sparkles },
+            { description: 'Community Feed', icon: Users },
+            { description: 'Smart Scheduler', icon: Calendar },
+            { description: 'Official Ledger', icon: Award },
+            { description: 'Grade Analytics', icon: GraduationCap },
+            { description: 'LCC Hub v2', icon: Target }
+          ]} 
+        />
+      </div>
 
       {/* Stats Section */}
       <section className="py-10 border-y border-border bg-accent/30">
@@ -214,6 +262,37 @@ export default function AboutPage() {
                 <p className="text-muted-foreground text-xs leading-relaxed font-medium">{feature.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-24 bg-accent/20 border-y border-border">
+        <div className="max-w-3xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mb-4">
+              Intelligence Base
+            </div>
+            <h2 className="text-3xl font-black uppercase tracking-tight text-foreground">Common Questions</h2>
+          </div>
+
+          <div className="bg-card border border-border rounded-3xl p-4 md:p-8 shadow-sm">
+            <FAQItem 
+              question="How does the Schoolista sync work?" 
+              answer="LCC Hub uses a secure proxy to connect to your Schoolista portal. It reads your academic data in real-time and formats it into the modern Hub interface. No data is stored permanently on our servers except for basic profile information." 
+            />
+            <FAQItem 
+              question="Is my account secure?" 
+              answer="Absolutely. We use industry-standard encryption and never store your Schoolista password. Authentication is handled through secure session tokens that expire automatically." 
+            />
+            <FAQItem 
+              question="Can school staff see my community posts?" 
+              answer="The community feed is moderated by student staff to ensure a safe environment. While posts are public to the Hub community, they are separate from your official academic record." 
+            />
+            <FAQItem 
+              question="What can the AI Assistant do?" 
+              answer="The AI is trained on your specific academic context. It can help explain complex subjects, summarize course descriptions, and provide study tips based on your current semester load." 
+            />
           </div>
         </div>
       </section>
