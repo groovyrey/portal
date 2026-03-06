@@ -9,6 +9,8 @@ export interface CreateNotificationParams {
   link?: string;
 }
 
+const MAX_NOTIFICATIONS = 25;
+
 /**
  * Creates a notification in the database and optionally publishes a real-time update.
  */
@@ -26,6 +28,18 @@ export async function createNotification({
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id, created_at
     `, [userId, title, message, type, link]);
+
+    // Enforce notification limit for the specific user
+    await query(`
+      DELETE FROM notifications 
+      WHERE user_id = $1 
+        AND id NOT IN (
+          SELECT id FROM notifications 
+          WHERE user_id = $1 
+          ORDER BY created_at DESC 
+          LIMIT $2
+        )
+    `, [userId, MAX_NOTIFICATIONS]);
 
     if (!skipRealtime) {
       // Notify the user via Ably if they are online
@@ -70,6 +84,17 @@ export async function notifyAllStudents({
       WHERE id != $5
     `, [title, message, type, link, excludeUserId]);
     
+    // Enforce notification limit for ALL users who might have exceeded it
+    await query(`
+      DELETE FROM notifications 
+      WHERE id IN (
+        SELECT id FROM (
+          SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) as rn
+          FROM notifications
+        ) WHERE rn > $1
+      )
+    `, [MAX_NOTIFICATIONS]);
+
     // Broadcast a general update to all students to check their notifications
     await publishUpdate('community', {
       type: 'GLOBAL_NOTIFICATION_RELOAD',

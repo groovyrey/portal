@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
       SELECT * FROM notifications 
       WHERE user_id = $1 
       ORDER BY created_at DESC 
-      LIMIT 100
+      LIMIT 25
     `, [userId]);
 
     const notifications = notifsRes.rows.map(n => ({

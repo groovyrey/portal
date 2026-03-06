@@ -258,65 +258,48 @@ export default function Navbar() {
                             : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                         }`}
                       >
-                        <Icon className={`h-3.5 w-3.5 transition-transform duration-500 ${isDropdownOpen ? 'rotate-12 scale-110' : ''}`} />
+                        <Icon className={`h-3.5 w-3.5 ${isDropdownOpen ? 'rotate-12 scale-110' : ''}`} />
                         {link.name}
-                        <ChevronDown className={`h-3 w-3 transition-transform duration-500 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`h-3 w-3 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                       </button>
 
-                      <AnimatePresence mode="wait">
-                        {isDropdownOpen && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                            className="absolute left-0 mt-3 w-56 bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl py-4 z-[110] overflow-hidden"
-                          >
-                            <div className="relative ml-6 space-y-0.5">
-                              {/* Vertical Tree Line */}
-                              <motion.div 
-                                initial={{ height: 0 }}
-                                animate={{ height: 'calc(100% - 1.5rem)' }}
-                                className="absolute left-0 top-0 w-[1.5px] bg-gradient-to-b from-primary/50 to-transparent"
-                              />
-                              
-                              {link.children.map((child: any, idx: number) => {
-                                const ChildIcon = child.icon;
-                                return (
-                                  <motion.div
-                                    key={child.name}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: idx * 0.04 }}
+                      {isDropdownOpen && (
+                        <div className="absolute left-0 mt-3 w-56 bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl py-4 z-[110] overflow-hidden">
+                          <div className="relative ml-6 space-y-0.5">
+                            {/* Vertical Tree Line */}
+                            <div className="absolute left-0 top-0 w-[1.5px] bg-primary/20 h-[calc(100%-1.5rem)]" />
+                            
+                            {link.children.map((child: any) => {
+                              const ChildIcon = child.icon;
+                              return (
+                                <div key={child.name}>
+                                  <Link
+                                    href={child.href}
+                                    className={`flex items-center gap-3.5 px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all relative group/item ${
+                                      isActive(child.href)
+                                        ? 'text-primary'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                    }`}
                                   >
-                                    <Link
-                                      href={child.href}
-                                      className={`flex items-center gap-3.5 px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all relative group/item ${
-                                        isActive(child.href)
-                                          ? 'text-primary'
-                                          : 'text-muted-foreground hover:text-foreground'
-                                      }`}
-                                    >
-                                      {/* Branch Connector */}
-                                      <div className="absolute -left-6 top-1/2 -translate-y-1/2 flex items-center">
-                                        <div className="w-6 h-[1.5px] bg-primary/20 group-hover/item:bg-primary/40 transition-colors" />
-                                        <div className={`w-2 h-2 rounded-full border-2 border-background shadow-sm transition-all duration-300 ${
-                                          isActive(child.href) 
-                                            ? 'bg-primary scale-110 shadow-[0_0_8px_rgba(var(--primary),0.5)]' 
-                                            : 'bg-border/60 group-hover/item:bg-primary/40'
-                                        }`} />
-                                      </div>
-                                      
-                                      <ChildIcon className={`h-4 w-4 transition-all duration-300 ${isActive(child.href) ? 'text-primary scale-110' : 'text-muted-foreground/40 group-hover/item:text-foreground'}`} />
-                                      {child.name}
-                                    </Link>
-                                  </motion.div>
-                                );
-                              })}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                                    {/* Branch Connector */}
+                                    <div className="absolute -left-6 top-1/2 -translate-y-1/2 flex items-center">
+                                      <div className="w-6 h-[1.5px] bg-primary/20 group-hover/item:bg-primary/40" />
+                                      <div className={`w-2 h-2 rounded-full border-2 border-background shadow-sm ${
+                                        isActive(child.href) 
+                                          ? 'bg-primary scale-110 shadow-[0_0_8px_rgba(var(--primary),0.5)]' 
+                                          : 'bg-border/60 group-hover/item:bg-primary/40'
+                                      }`} />
+                                    </div>
+                                    
+                                    <ChildIcon className={`h-4 w-4 transition-all duration-300 ${isActive(child.href) ? 'text-primary scale-110' : 'text-muted-foreground/40 group-hover/item:text-foreground'}`} />
+                                    {child.name}
+                                  </Link>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 }
@@ -518,62 +501,44 @@ export default function Navbar() {
                           <Icon className="h-4 w-4" />
                           {link.name}
                         </div>
-                        <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${isExpanded ? '' : '-rotate-90'}`} />
+                        <ChevronDown className={`h-3.5 w-3.5 ${isExpanded ? '' : '-rotate-90'}`} />
                       </button>
                       
-                      <AnimatePresence>
-                        {isExpanded && (
-                          <motion.div 
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="relative ml-8 space-y-1 py-1 overflow-hidden"
-                          >
-                            {/* Tree Vertical Line */}
-                            <motion.div 
-                              initial={{ height: 0 }}
-                              animate={{ height: 'calc(100% - 1rem)' }}
-                              className="absolute left-0 top-0 w-[1.5px] bg-gradient-to-b from-primary/40 via-primary/10 to-transparent" 
-                            />
-                            
-                            {link.children.map((child: any, idx: number) => {
-                              const ChildIcon = child.icon;
-                              return (
-                                <motion.div
-                                  key={child.name}
-                                  initial={{ x: -10, opacity: 0 }}
-                                  animate={{ x: 0, opacity: 1 }}
-                                  transition={{ delay: idx * 0.05 }}
+                      {isExpanded && (
+                        <div className="relative ml-8 space-y-1 py-1 overflow-hidden">
+                          {/* Tree Vertical Line */}
+                          <div className="absolute left-0 top-0 w-[1.5px] bg-primary/20 h-[calc(100%-1rem)]" />
+                          
+                          {link.children.map((child: any) => {
+                            const ChildIcon = child.icon;
+                            return (
+                              <div key={child.name}>
+                                <Link
+                                  href={child.href}
+                                  onClick={() => setIsOpen(false)}
+                                  className={`flex items-center gap-4 px-4 py-3 rounded-2xl transition-all relative group ${
+                                    isActive(child.href)
+                                      ? 'text-primary bg-primary/5'
+                                      : 'text-muted-foreground hover:text-foreground'
+                                  }`}
                                 >
-                                  <Link
-                                    href={child.href}
-                                    onClick={() => setIsOpen(false)}
-                                    className={`flex items-center gap-4 px-4 py-3 rounded-2xl transition-all relative group ${
-                                      isActive(child.href)
-                                        ? 'text-primary bg-primary/5'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                    }`}
-                                  >
-                                    {/* Tree Branch Connector */}
-                                    <div className="absolute -left-8 top-1/2 -translate-y-1/2 flex items-center">
-                                      <div className="w-8 h-[1.5px] bg-primary/20" />
-                                      <div className={`w-2.5 h-2.5 rounded-full border-2 border-background shadow-sm transition-all duration-300 ${
-                                        isActive(child.href) 
-                                          ? 'bg-primary scale-110 shadow-[0_0_10px_rgba(var(--primary),0.5)]' 
-                                          : 'bg-border/60 group-active:bg-primary/40'
-                                      }`} />
-                                    </div>
-                                    
-                                    <ChildIcon className={`h-5 w-5 transition-all duration-300 ${isActive(child.href) ? 'text-primary scale-110' : 'text-muted-foreground/40 group-active:text-foreground'}`} />
-                                    <span className="text-[13px] font-black uppercase tracking-wider">{child.name}</span>
-                                  </Link>
-                                </motion.div>
-                              );
-                            })}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                                  {/* Tree Branch Connector */}
+                                  <div className="absolute -left-8 top-1/2 -translate-y-1/2 flex items-center">
+                                    <div className="w-8 h-[1.5px] bg-primary/20" />
+                                    <div className={`w-2.5 h-2.5 rounded-full border-2 border-background shadow-sm ${
+                                      isActive(child.href) 
+                                        ? 'bg-primary scale-110 shadow-[0_0_10px_rgba(var(--primary),0.5)]' 
+                                        : 'bg-border/60 group-active:bg-primary/40'
+                                    }`} />
+                                  </div>                                  
+                                  <ChildIcon className={`h-5 w-5 transition-all duration-300 ${isActive(child.href) ? 'text-primary scale-110' : 'text-muted-foreground/40 group-active:text-foreground'}`} />
+                                  <span className="text-[13px] font-black uppercase tracking-wider">{child.name}</span>
+                                </Link>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 }
