@@ -8,16 +8,14 @@ import {
   Copy, 
   Check, 
   Trash2, 
-  ChevronLeft,
-  Calendar,
-  Clock,
-  Mic
+  ChevronLeft
 } from 'lucide-react';
 import { useStudentQuery } from '@/lib/hooks';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Skeleton from '@/components/ui/Skeleton';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SavedMeeting {
   id: number;
@@ -47,6 +45,7 @@ export default function MeetingDetailPage() {
   const [meeting, setMeeting] = useState<SavedMeeting | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<'summary' | 'transcript'>('summary');
 
   useEffect(() => {
     if (id && student?.id) {
@@ -113,13 +112,37 @@ export default function MeetingDetailPage() {
     return SUBJECT_COLORS[index];
   };
 
-  if (isLoading) return <div className="p-8"><Skeleton className="h-64 w-full rounded-xl" /></div>;
+  if (isLoading) return <div className="p-8"><Skeleton className="h-64 w-full rounded-lg" /></div>;
   if (!meeting) return null;
 
   const colorClass = getSubjectColor(meeting.subject);
 
+  // Format date: "February 7, 2026 1:00pm" (en-PH)
+  const formattedDate = (() => {
+    try {
+      const d = new Date(meeting.created_at || meeting.date);
+      if (isNaN(d.getTime())) return meeting.date;
+      
+      const dateStr = d.toLocaleDateString('en-PH', { 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+      
+      const timeStr = d.toLocaleTimeString('en-PH', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      }).toLowerCase().replace(/\s/g, '');
+      
+      return `${dateStr} ${timeStr}`;
+    } catch {
+      return meeting.date;
+    }
+  })();
+
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 font-sans">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         <button 
           onClick={() => router.push('/meetings')}
@@ -136,7 +159,7 @@ export default function MeetingDetailPage() {
                 <span className={`px-2 py-0.5 border text-[9px] font-black uppercase rounded ${colorClass}`}>
                   {meeting.subject.split(' - ')[0]}
                 </span>
-                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{meeting.date}</span>
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{formattedDate}</span>
               </div>
               <h1 className="text-3xl font-black text-foreground uppercase tracking-tight leading-tight">
                 {meeting.description || meeting.subject}
@@ -161,47 +184,78 @@ export default function MeetingDetailPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">AI Insight Report</h3>
-              </div>
-              <div className="bg-card border border-border/50 rounded-lg p-6 md:p-8 shadow-sm">
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <ReactMarkdown 
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      h3: ({node, ...props}) => <h3 className="text-sm font-black uppercase tracking-tight text-primary mt-6 first:mt-0" {...props} />,
-                      p: ({node, ...props}) => <p className="leading-relaxed font-medium text-foreground/80 mb-4 text-xs" {...props} />,
-                      ul: ({node, ...props}) => <ul className="space-y-2 my-4" {...props} />,
-                      li: ({node, ...props}) => (
-                        <li className="flex gap-2 text-xs" {...props}>
-                          <div className="h-1 w-1 rounded-full bg-primary/40 mt-1.5 shrink-0" />
-                          <span>{props.children}</span>
-                        </li>
-                      ),
-                      blockquote: ({node, ...props}) => (
-                        <blockquote className="border-l-2 border-primary/20 bg-primary/5 px-4 py-2 italic my-6 text-xs" {...props} />
-                      )
-                    }}
-                  >
-                    {meeting.summary}
-                  </ReactMarkdown>
-                </div>
-              </div>
+          <div className="space-y-6">
+            <div className="flex items-center gap-1 bg-muted/30 p-1.5 rounded-xl border border-border/50 w-fit">
+              <button
+                onClick={() => setActiveTab('summary')}
+                className={`flex items-center gap-2 px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                  activeTab === 'summary' 
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/10' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <TrendingUp className="h-3 w-3" />
+                Insight Report
+              </button>
+              <button
+                onClick={() => setActiveTab('transcript')}
+                className={`flex items-center gap-2 px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                  activeTab === 'transcript' 
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/10' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <FileText className="h-3 w-3" />
+                Audio Log
+              </button>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Raw Audio Log</h3>
-              </div>
-              <div className="bg-muted/5 border border-border/30 rounded-lg p-5 max-h-[400px] overflow-y-auto custom-scrollbar">
-                <p className="text-[10px] text-muted-foreground/70 leading-relaxed italic font-medium">
-                  {meeting.transcript}
-                </p>
-              </div>
+            <div className="min-h-[400px]">
+              <AnimatePresence mode="wait">
+                {activeTab === 'summary' ? (
+                  <motion.div
+                    key="summary"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-card border border-border/50 rounded-lg p-6 md:p-10 shadow-sm"
+                  >
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          h3: ({node, ...props}) => <h3 className="text-sm font-black uppercase tracking-tight text-primary mt-6 first:mt-0" {...props} />,
+                          p: ({node, ...props}) => <p className="leading-relaxed font-medium text-foreground/80 mb-4 text-xs" {...props} />,
+                          ul: ({node, ...props}) => <ul className="space-y-2 my-4" {...props} />,
+                          li: ({node, ...props}) => (
+                            <li className="flex gap-2 text-xs" {...props}>
+                              <div className="h-1.5 w-1.5 rounded-full bg-primary/40 mt-1.5 shrink-0" />
+                              <span>{props.children}</span>
+                            </li>
+                          ),
+                          blockquote: ({node, ...props}) => (
+                            <blockquote className="border-l-2 border-primary/20 bg-primary/5 px-4 py-2 italic my-6 text-xs" {...props} />
+                          )
+                        }}
+                      >
+                        {meeting.summary}
+                      </ReactMarkdown>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="transcript"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-muted/5 border border-border/30 rounded-lg p-6 md:p-10"
+                  >
+                    <p className="text-[10px] text-muted-foreground/70 leading-relaxed italic font-medium whitespace-pre-wrap">
+                      {meeting.transcript}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>

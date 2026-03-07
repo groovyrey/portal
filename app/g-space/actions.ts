@@ -145,18 +145,18 @@ export async function summarizeMeeting(
   const ACCOUNT_ID = "6fc752615c51f96c4ce397b92c40fdd6";
   const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"; 
 
-  if (!API_TOKEN) throw new Error("AI System configuration is missing.");
+  if (!API_TOKEN) throw new Error("Academic system configuration is missing.");
   if (!transcript) return "No transcript provided for analysis.";
 
   const systemPrompt = `
-    You are the "Academic Success AI". 
-    Provide a professional and structured "Meeting Insight Report" based on the provided class or meeting transcript.
+    You are the "Academic Recording System". 
+    Provide a professional and structured "Insight Report" based on the provided class or meeting transcript.
     
     GUIDELINES:
     - Tone: Strictly professional, objective, and academic.
     - Audience: Address the student directly and concisely.
     - Formatting: Use Markdown. Ensure clear section headers and bulleted lists.
-    - Constraint: Do not use emojis or informal language.
+    - Constraint: Do not use emojis, informal language, or mention that you are an AI.
     
     REPORT STRUCTURE:
     ### Meeting Summary
@@ -164,9 +164,6 @@ export async function summarizeMeeting(
     
     ### Key Points
     A structured list of the most critical concepts, data points, or announcements mentioned.
-    
-    ### Strategic Action Items
-    A prioritized list of specific tasks or follow-up actions the student must undertake based on the session content.
   `;
 
   const userPrompt = `

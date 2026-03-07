@@ -238,6 +238,29 @@ export default function MeetingsPage() {
     }
   };
 
+  const formatDate = (dateStr: string, createdAt?: string) => {
+    try {
+      const d = new Date(createdAt || dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      
+      const datePart = d.toLocaleDateString('en-PH', { 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+      
+      const timePart = d.toLocaleTimeString('en-PH', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      }).toLowerCase().replace(/\s/g, '');
+      
+      return `${datePart} ${timePart}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -290,7 +313,7 @@ export default function MeetingsPage() {
                       <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${colorClass}`}>
                         {meeting.subject.split(' - ')[0]}
                       </span>
-                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{meeting.date}</span>
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{formatDate(meeting.date, meeting.created_at)}</span>
                     </div>
                     
                     <h3 className="text-sm font-black text-foreground uppercase tracking-tight line-clamp-1 group-hover:text-primary transition-colors">
