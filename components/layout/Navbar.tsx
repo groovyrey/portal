@@ -164,6 +164,7 @@ export default function Navbar() {
 
   const publicLinks = [
     { name: 'About', href: '/about', icon: Info },
+    { name: 'Team', href: '/team', icon: Users },
     { name: 'Disclaimer', href: '/disclaimer', icon: ShieldAlert },
   ];
 
@@ -196,6 +197,7 @@ export default function Navbar() {
     { name: 'Social', icon: Users, children: socialLinks },
     ...(isStaff ? [{ name: 'Admin', icon: ShieldCheck, children: adminLinks }] : []),
     { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Team', href: '/team', icon: Users },
     { name: 'About', href: '/about', icon: Info },
   ];
 
@@ -209,6 +211,7 @@ export default function Navbar() {
 
   const desktopMore = isLoggedIn ? [
     { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Team', href: '/team', icon: Users },
     { name: 'About', href: '/about', icon: Info },
   ] : [];
 
