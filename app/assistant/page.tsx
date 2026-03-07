@@ -272,7 +272,7 @@ export default function AssistantPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-4 md:py-6 flex flex-col h-[calc(100vh-140px)]">
+    <div className="max-w-4xl mx-auto px-4 py-4 md:py-6 flex flex-col h-[calc(100dvh-140px)]">
       {/* Messages Area */}
       <div className="flex-1 bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col relative">
         {/* Development Mode Header Indicator */}
@@ -292,7 +292,7 @@ export default function AssistantPage() {
             <motion.div 
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="h-full flex flex-col items-center justify-center text-center max-w-xl mx-auto p-4"
+                className="min-h-full flex flex-col items-center justify-center text-center max-w-xl mx-auto p-4 py-8"
             >
               <div className="relative mb-6">
                 <div className="absolute inset-0 bg-primary/10 blur-2xl rounded-full" />

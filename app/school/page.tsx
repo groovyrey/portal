@@ -30,19 +30,26 @@ const SchoolInfoPage = () => {
   return (
     <div className="min-h-screen bg-background font-sans text-foreground pb-20">
       {/* Hero Section */}
-      <div className="bg-brand-dark pt-16 pb-12 px-6">
-        <div className="max-w-5xl mx-auto">
-          <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-white transition-all text-xs font-bold mb-8 active:scale-95">
+      <div className="relative bg-brand-dark pt-16 pb-12 px-6 overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
+          style={{ backgroundImage: 'url("/herobg.jpeg")' }}
+        />
+        <div className="absolute inset-0 z-10 bg-slate-950/70 backdrop-blur-[2px]" />
+
+        <div className="max-w-5xl mx-auto relative z-20">
+          <Link href="/" className="inline-flex items-center gap-2 text-slate-300 hover:text-white transition-all text-xs font-bold mb-8 active:scale-95">
             <ArrowLeft className="h-3.5 w-3.5" />
             Dashboard
           </Link>
           <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
-            <div className="h-20 w-20 bg-card rounded-2xl flex items-center justify-center shrink-0">
-              <GraduationCap className="h-10 w-10 text-foreground" />
+            <div className="h-20 w-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center shrink-0 border border-white/20 shadow-2xl">
+              <GraduationCap className="h-10 w-10 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">La Concepcion College</h1>
-              <p className="text-muted-foreground text-base max-w-2xl font-medium">
+              <h1 className="text-2xl md:text-3xl font-black text-white mb-2 tracking-tight uppercase">La Concepcion College</h1>
+              <p className="text-slate-300 text-sm md:text-base max-w-2xl font-bold uppercase tracking-wider leading-relaxed">
                 Changing Lives for the Better. Founded in 1998, LCC remains committed to providing quality education in the heart of Bulacan.
               </p>
             </div>

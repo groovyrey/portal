@@ -64,10 +64,11 @@ export default function AboutPage() {
       try {
         const res = await fetch('/api/ratings');
         const data = await res.json();
-        if (data.success) {
+        // The API returns { average, count, ... }
+        if (data.average !== undefined) {
           setStats({
-            count: data.totalRatings,
-            average: data.averageRating
+            count: data.count || 0,
+            average: data.average.toFixed(1) || '0.0'
           });
         }
       } catch (e) {}

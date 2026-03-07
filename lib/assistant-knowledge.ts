@@ -5,8 +5,8 @@ export const SCHOOL_INFO = {
   motto: "Changing Lives for the Better",
   coreValues: [
     "Leadership",
-    "Competence",
-    "Character"
+    "Competitiveness",
+    "Culture of Excellence"
   ],
   socials: {
     facebook: "https://www.facebook.com/laconcepcioncollege",

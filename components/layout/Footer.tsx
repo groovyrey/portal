@@ -51,9 +51,6 @@ export default function Footer() {
               <li>
                 <Link href="/disclaimer" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Legal Notice</Link>
               </li>
-              <li>
-                <Link href="/status" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Service Health</Link>
-              </li>
             </ul>
           </div>
 

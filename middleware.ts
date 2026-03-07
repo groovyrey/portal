@@ -15,10 +15,14 @@ const protectedRoutes = [
   '/api/student/grades',
   '/api/student/settings',
   '/api/student/change-password',
+  '/api/student/login',
+  '/api/student/logout',
+  '/api/ratings',
+  '/api/community',
   '/api/ai'
 ];
 
-export function proxy(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Check if the current route is protected
@@ -27,8 +31,8 @@ export function proxy(req: NextRequest) {
   if (isProtected) {
     const sessionToken = req.cookies.get('session_token');
 
-    // If no session token, show restriction (rewrite to /unauthorized)
-    if (!sessionToken) {
+    // If no session token or value is empty, show restriction
+    if (!sessionToken || !sessionToken.value) {
       // For API routes, return 401 instead of redirect
       if (pathname.startsWith('/api/')) {
         return NextResponse.json({ error: 'Unauthorized access' }, { status: 401 });
@@ -41,6 +45,13 @@ export function proxy(req: NextRequest) {
     }
     
     // Clear restricted cookie if user is authenticated
+    if (req.cookies.has('is_restricted')) {
+      const response = NextResponse.next();
+      response.cookies.delete('is_restricted');
+      return response;
+    }
+  } else {
+    // Also clear it if we are on a non-protected route (like Home)
     if (req.cookies.has('is_restricted')) {
       const response = NextResponse.next();
       response.cookies.delete('is_restricted');

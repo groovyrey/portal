@@ -20,7 +20,6 @@ export default function PageHeader() {
     if (path === '/eaf') return 'Assessment Form';
     if (path === '/about') return 'About Hub';
     if (path === '/disclaimer') return 'Legal Notice';
-    if (path === '/status') return 'Service Health';
     if (path === '/docs') return 'Documentation';
     if (path === '/school') return 'School Information';
     if (path.startsWith('/post')) return 'Post Details';
