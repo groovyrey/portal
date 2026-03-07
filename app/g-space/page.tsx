@@ -462,18 +462,6 @@ export default function GSpacePage() {
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col h-full overflow-hidden">
-          <header className="lg:hidden h-16 border-b border-border flex items-center justify-between px-4 bg-card">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-primary" />
-              <span className="font-bold text-sm">G-Space</span>
-            </div>
-            {linkedEmail && (
-              <button onClick={handleSignOut} className="p-2 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-500/10 rounded-full transition-colors">
-                <LogOut className="h-4 w-4" />
-              </button>
-            )}
-          </header>
-
           <div className="lg:hidden flex items-center gap-1 bg-muted/30 p-2 border-b border-border overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (
               <button
@@ -490,16 +478,7 @@ export default function GSpacePage() {
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8">
-            <div className="max-w-5xl mx-auto">
-              <div className="mb-8 hidden lg:block">
-                <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">
-                  {tabs.find(t => t.id === activeTab)?.name}
-                </h1>
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-1">
-                  {tabs.find(t => t.id === activeTab)?.desc}
-                </p>
-              </div>
-
+            <div className="max-w-5xl mx-auto pt-4 lg:pt-0">
               <AnimatePresence mode="wait">
                 {activeTab === 'sync' && (
                   <SyncTab 

@@ -10,7 +10,8 @@ export default function PageHeader() {
 
   const getPageTitle = (path: string) => {
     if (path === '/') return 'Dashboard';
-    if (path === '/assistant') return 'AI Assistant';
+    if (path === '/assistant') return 'Cato AI';
+    if (path === '/g-space') return 'G-Space Sync';
     if (path === '/grades') return 'Academic Registry';
     if (path === '/subjects') return 'Class Schedule';
     if (path === '/accounts') return 'Financial Ledger';

@@ -46,9 +46,11 @@ export default function Navbar() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isPortalOpen, setIsPortalOpen] = useState(false);
+  const [isDescaOpen, setIsDescaOpen] = useState(false);
   const [isSocialOpen, setIsSocialOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isPortalExpanded, setIsPortalExpanded] = useState(true);
+  const [isDescaExpanded, setIsDescaExpanded] = useState(true);
   const [isSocialExpanded, setIsSocialExpanded] = useState(true);
   const [isAdminExpanded, setIsAdminExpanded] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -149,14 +151,15 @@ export default function Navbar() {
     const handleClickOutside = () => {
       setIsMoreOpen(false);
       setIsPortalOpen(false);
+      setIsDescaOpen(false);
       setIsSocialOpen(false);
       setIsAdminOpen(false);
     };
-    if (isMoreOpen || isPortalOpen || isSocialOpen || isAdminOpen) {
+    if (isMoreOpen || isPortalOpen || isDescaOpen || isSocialOpen || isAdminOpen) {
       window.addEventListener('click', handleClickOutside);
     }
     return () => window.removeEventListener('click', handleClickOutside);
-  }, [isMoreOpen, isPortalOpen, isSocialOpen, isAdminOpen]);
+  }, [isMoreOpen, isPortalOpen, isDescaOpen, isSocialOpen, isAdminOpen]);
 
   const publicLinks = [
     { name: 'About', href: '/about', icon: Info },
@@ -169,7 +172,12 @@ export default function Navbar() {
     { name: 'Grades', href: '/grades', icon: GraduationCap },
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
     { name: 'EAF', href: '/eaf', icon: FileText },
-    { name: 'Meetings', href: '/meetings', icon: Mic },
+  ];
+
+  const descaLinks = [
+    { name: 'Cato', href: '/assistant', icon: BrainCircuit, desc: 'AI Study Buddy' },
+    { name: 'G-Space', href: '/g-space', icon: LayoutGrid, desc: 'Google Sync' },
+    { name: 'Meetings', href: '/meetings', icon: Mic, desc: 'Archive' },
   ];
 
   const socialLinks = [
@@ -183,10 +191,9 @@ export default function Navbar() {
 
   const authLinks = [
     { name: 'Portal', icon: LayoutDashboard, children: portalLinks },
+    { name: 'Desca', icon: DatabaseZap, children: descaLinks },
     { name: 'Social', icon: Users, children: socialLinks },
     ...(isStaff ? [{ name: 'Admin', icon: ShieldCheck, children: adminLinks }] : []),
-    { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
-    { name: 'G-Space', href: '/g-space', icon: LayoutGrid },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'About', href: '/about', icon: Info },
   ];
@@ -194,13 +201,12 @@ export default function Navbar() {
   // For desktop view: show a few primary links and the rest in "More"
   const desktopPrimary = isLoggedIn ? [
     { name: 'Portal', icon: LayoutDashboard, children: portalLinks },
+    { name: 'Desca', icon: DatabaseZap, children: descaLinks },
     { name: 'Social', icon: Users, children: socialLinks },
     ...(isStaff ? [{ name: 'Admin', icon: ShieldCheck, children: adminLinks }] : []),
-    { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
   ] : [];
 
   const desktopMore = isLoggedIn ? [
-    { name: 'G-Space', href: '/g-space', icon: LayoutGrid },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'About', href: '/about', icon: Info },
   ] : [];
@@ -232,7 +238,7 @@ export default function Navbar() {
                 const Icon = link.icon;
                 
                 if (link.children) {
-                  const isDropdownOpen = link.name === 'Portal' ? isPortalOpen : link.name === 'Social' ? isSocialOpen : isAdminOpen;
+                  const isDropdownOpen = link.name === 'Portal' ? isPortalOpen : link.name === 'Desca' ? isDescaOpen : link.name === 'Social' ? isSocialOpen : isAdminOpen;
                   
                   return (
                     <div key={link.name} className="relative">
@@ -241,15 +247,23 @@ export default function Navbar() {
                           e.stopPropagation();
                           if (link.name === 'Portal') {
                             setIsPortalOpen(!isPortalOpen);
+                            setIsDescaOpen(false);
+                            setIsSocialOpen(false);
+                            setIsAdminOpen(false);
+                          } else if (link.name === 'Desca') {
+                            setIsDescaOpen(!isDescaOpen);
+                            setIsPortalOpen(false);
                             setIsSocialOpen(false);
                             setIsAdminOpen(false);
                           } else if (link.name === 'Social') {
                             setIsSocialOpen(!isSocialOpen);
                             setIsPortalOpen(false);
+                            setIsDescaOpen(false);
                             setIsAdminOpen(false);
                           } else if (link.name === 'Admin') {
                             setIsAdminOpen(!isAdminOpen);
                             setIsPortalOpen(false);
+                            setIsDescaOpen(false);
                             setIsSocialOpen(false);
                           }
                           setIsMoreOpen(false);
@@ -490,8 +504,8 @@ export default function Navbar() {
                 const Icon = link.icon;
                 
                 if (link.children) {
-                  const isExpanded = link.name === 'Portal' ? isPortalExpanded : link.name === 'Social' ? isSocialExpanded : isAdminExpanded;
-                  const setIsExpanded = link.name === 'Portal' ? setIsPortalExpanded : link.name === 'Social' ? setIsSocialExpanded : setIsAdminExpanded;
+                  const isExpanded = link.name === 'Portal' ? isPortalExpanded : link.name === 'Desca' ? isDescaExpanded : link.name === 'Social' ? isSocialExpanded : isAdminExpanded;
+                  const setIsExpanded = link.name === 'Portal' ? setIsPortalExpanded : link.name === 'Desca' ? setIsDescaExpanded : link.name === 'Social' ? setIsSocialExpanded : setIsAdminExpanded;
                   
                   return (
                     <div key={link.name} className="space-y-1 py-2">

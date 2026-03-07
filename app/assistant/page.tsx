@@ -56,7 +56,7 @@ const TypingIndicator = () => (
       ))}
     </div>
     <span className="text-[10px] font-bold text-muted-foreground animate-pulse uppercase tracking-wider leading-none">
-      Assistant is thinking
+      Cato is thinking
     </span>
   </motion.div>
 );
@@ -305,12 +305,12 @@ export default function AssistantPage() {
               
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent border border-border rounded-full text-[10px] font-bold tracking-wider uppercase mb-4">
                 <Sparkles className="h-3 w-3 text-blue-500 animate-pulse" />
-                AI Assistant
+                Cato AI
               </div>
 
               <h2 className="text-2xl font-bold text-foreground mb-3 tracking-tight">How can I help?</h2>
               <p className="text-sm text-muted-foreground mb-8 leading-relaxed font-medium">
-                I'm connected to your academic records. Ask about your <span className="text-foreground font-bold">grades</span>, <span className="text-foreground font-bold">fees</span>, or <span className="text-foreground font-bold">schedules</span>.
+                I&apos;m Cato, your study buddy connected to your academic records. Ask about your <span className="text-foreground font-bold">grades</span>, <span className="text-foreground font-bold">fees</span>, or <span className="text-foreground font-bold">schedules</span>.
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
@@ -352,7 +352,7 @@ export default function AssistantPage() {
                     </div>
                     {m.role === 'assistant' && (
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-foreground uppercase tracking-widest">Assistant</span>
+                        <span className="text-[10px] font-bold text-foreground uppercase tracking-widest">Cato</span>
                         {m.content && !isLoading && <CopyButton content={m.content} />}
                       </div>
                     )}
