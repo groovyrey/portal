@@ -27,7 +27,8 @@ import {
   Bell,
   LayoutGrid,
   ShieldCheck,
-  Mic
+  Mic,
+  Monitor
 } from 'lucide-react';
 import { ThemeToggle } from '../shared/ThemeToggle';
 import { toast } from 'sonner';
@@ -191,7 +192,7 @@ export default function Navbar() {
 
   const authLinks = [
     { name: 'Portal', icon: LayoutDashboard, children: portalLinks },
-    { name: 'Desca', icon: DatabaseZap, children: descaLinks },
+    { name: 'Desca', icon: Monitor, children: descaLinks },
     { name: 'Social', icon: Users, children: socialLinks },
     ...(isStaff ? [{ name: 'Admin', icon: ShieldCheck, children: adminLinks }] : []),
     { name: 'Settings', href: '/settings', icon: Settings },

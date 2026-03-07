@@ -462,6 +462,18 @@ export default function GSpacePage() {
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col h-full overflow-hidden">
+          <header className="lg:hidden h-16 border-b border-border flex items-center justify-between px-4 bg-card">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-primary" />
+              <span className="font-bold text-sm">G-Space</span>
+            </div>
+            {linkedEmail && (
+              <button onClick={handleSignOut} className="p-2 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-500/10 rounded-full transition-colors">
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
+          </header>
+
           <div className="lg:hidden flex items-center gap-1 bg-muted/30 p-2 border-b border-border overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (
               <button
