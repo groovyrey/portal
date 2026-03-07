@@ -173,9 +173,17 @@ export async function migrateMeetings() {
         date TEXT NOT NULL,
         transcript TEXT,
         summary TEXT,
+        notes TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Ensure notes column exists
+    try {
+      await query(`ALTER TABLE student_meetings ADD COLUMN notes TEXT;`);
+    } catch (e) {
+      // Column might already exist
+    }
 
   } catch (error) {
     console.error("Migration Error (Meetings):", error);

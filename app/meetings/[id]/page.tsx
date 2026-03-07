@@ -8,7 +8,12 @@ import {
   Copy, 
   Check, 
   Trash2, 
-  ChevronLeft
+  ChevronLeft,
+  Share2,
+  PenLine,
+  Save,
+  Notebook,
+  Loader2
 } from 'lucide-react';
 import { useStudentQuery } from '@/lib/hooks';
 import { toast } from 'sonner';
@@ -24,6 +29,7 @@ interface SavedMeeting {
   date: string;
   transcript: string;
   summary: string;
+  notes?: string;
   created_at: string;
 }
 
@@ -45,7 +51,13 @@ export default function MeetingDetailPage() {
   const [meeting, setMeeting] = useState<SavedMeeting | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<'summary' | 'transcript'>('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'transcript' | 'notes'>('summary');
+
+  // Editing state
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedNotes, setEditedNotes] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (id && student?.id) {
@@ -61,6 +73,8 @@ export default function MeetingDetailPage() {
         const found = data.data.find((m: any) => m.id.toString() === id);
         if (found) {
           setMeeting(found);
+          setEditedTitle(found.description || found.subject);
+          setEditedNotes(found.notes || '');
         } else {
           toast.error("Meeting not found");
           router.push('/meetings');
@@ -70,6 +84,39 @@ export default function MeetingDetailPage() {
       toast.error("Failed to load record");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleUpdate = async (field: 'title' | 'notes') => {
+    if (!student?.id || !meeting) return;
+    setIsSaving(true);
+    try {
+      const res = await fetch('/api/student/meetings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: meeting.id,
+          userId: student.id,
+          description: field === 'title' ? editedTitle : undefined,
+          notes: field === 'notes' ? editedNotes : undefined
+        })
+      });
+
+      if (res.ok) {
+        toast.success("Updated.");
+        if (field === 'title') setIsEditingTitle(false);
+        setMeeting(prev => prev ? { 
+            ...prev, 
+            description: field === 'title' ? editedTitle : prev.description,
+            notes: field === 'notes' ? editedNotes : prev.notes
+        } : null);
+      } else {
+        throw new Error("Update failed");
+      }
+    } catch (error) {
+      toast.error("Failed to save changes.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -99,6 +146,28 @@ export default function MeetingDetailPage() {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       toast.error("Copy failed.");
+    }
+  };
+
+  const handleShare = async () => {
+    if (!meeting) return;
+    const shareData = {
+      title: `Meeting: ${meeting.description || meeting.subject}`,
+      text: `Insight Report for ${meeting.subject} - ${formattedDate}`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Link copied");
+      }
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') {
+        toast.error("Share failed");
+      }
     }
   };
 
@@ -161,12 +230,55 @@ export default function MeetingDetailPage() {
                 </span>
                 <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{formattedDate}</span>
               </div>
-              <h1 className="text-3xl font-black text-foreground uppercase tracking-tight leading-tight">
-                {meeting.description || meeting.subject}
-              </h1>
+              <div className="group/title relative">
+                {isEditingTitle ? (
+                  <div className="flex items-center gap-2 max-w-2xl">
+                    <input
+                      type="text"
+                      value={editedTitle}
+                      onChange={(e) => setEditedTitle(e.target.value)}
+                      className="bg-background border-b-2 border-primary outline-none text-2xl font-black text-foreground uppercase tracking-tight leading-tight w-full py-1"
+                      autoFocus
+                    />
+                    <button 
+                      onClick={() => handleUpdate('title')}
+                      disabled={isSaving}
+                      className="p-2 bg-primary text-primary-foreground rounded-lg disabled:opacity-50"
+                    >
+                      {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    </button>
+                    <button 
+                      onClick={() => { setIsEditingTitle(false); setEditedTitle(meeting.description || meeting.subject); }}
+                      className="p-2 bg-muted rounded-lg"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-3xl font-black text-foreground uppercase tracking-tight leading-tight">
+                      {meeting.description || meeting.subject}
+                    </h1>
+                    <button 
+                      onClick={() => setIsEditingTitle(true)}
+                      className="p-1.5 opacity-0 group-hover/title:opacity-100 hover:bg-muted rounded-md transition-all"
+                      title="Edit Title"
+                    >
+                      <PenLine className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="flex items-center gap-2">
+              <button 
+                onClick={handleShare}
+                className="p-3 bg-muted hover:bg-primary/10 hover:text-primary rounded-lg transition-all active:scale-95"
+                title="Share Meeting"
+              >
+                <Share2 className="h-4 w-4" />
+              </button>
               <button 
                 onClick={handleCopy}
                 className="p-3 bg-muted hover:bg-primary/10 hover:text-primary rounded-lg transition-all active:scale-95"
@@ -208,11 +320,22 @@ export default function MeetingDetailPage() {
                 <FileText className="h-3 w-3" />
                 Audio Log
               </button>
+              <button
+                onClick={() => setActiveTab('notes')}
+                className={`flex items-center gap-2 px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                  activeTab === 'notes' 
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/10' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Notebook className="h-3 w-3" />
+                My Notes
+              </button>
             </div>
 
             <div className="min-h-[400px]">
               <AnimatePresence mode="wait">
-                {activeTab === 'summary' ? (
+                {activeTab === 'summary' && (
                   <motion.div
                     key="summary"
                     initial={{ opacity: 0, y: 10 }}
@@ -242,17 +365,50 @@ export default function MeetingDetailPage() {
                       </ReactMarkdown>
                     </div>
                   </motion.div>
-                ) : (
+                )}
+                {activeTab === 'transcript' && (
                   <motion.div
                     key="transcript"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="bg-muted/5 border border-border/30 rounded-lg p-6 md:p-10"
+                    className="bg-card border border-border/50 rounded-lg p-6 md:p-10 shadow-sm"
                   >
-                    <p className="text-[10px] text-muted-foreground/70 leading-relaxed italic font-medium whitespace-pre-wrap">
-                      {meeting.transcript}
-                    </p>
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-black uppercase tracking-tight text-primary">Raw Transcript</h3>
+                      <p className="leading-relaxed font-medium text-foreground/80 text-xs whitespace-pre-wrap">
+                        {meeting.transcript}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+                {activeTab === 'notes' && (
+                  <motion.div
+                    key="notes"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-card border border-border/50 rounded-lg p-6 md:p-10 shadow-sm"
+                  >
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-black uppercase tracking-tight text-primary">Personal Notes</h3>
+                        <button
+                          onClick={() => handleUpdate('notes')}
+                          disabled={isSaving || editedNotes === (meeting.notes || '')}
+                          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-[10px] font-black uppercase tracking-widest disabled:opacity-50 transition-all active:scale-95 shadow-lg shadow-primary/10"
+                        >
+                          {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                          Save Notes
+                        </button>
+                      </div>
+                      <textarea
+                        value={editedNotes}
+                        onChange={(e) => setEditedNotes(e.target.value)}
+                        placeholder="Add your own thoughts, reminders, or study points here..."
+                        className="w-full min-h-[300px] bg-muted/20 border border-border/50 rounded-xl p-6 text-sm font-medium leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+                      />
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>

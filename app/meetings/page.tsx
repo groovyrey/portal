@@ -35,6 +35,7 @@ interface SavedMeeting {
   date: string;
   transcript: string;
   summary: string;
+  notes?: string;
   created_at: string;
 }
 

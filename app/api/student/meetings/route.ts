@@ -42,6 +42,45 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, userId, description, notes } = body;
+
+    if (!id || !userId) {
+      return NextResponse.json({ error: 'ID and User ID are required' }, { status: 400 });
+    }
+
+    const updates = [];
+    const values = [];
+
+    if (description !== undefined) {
+      updates.push('description = ?');
+      values.push(description);
+    }
+    if (notes !== undefined) {
+      updates.push('notes = ?');
+      values.push(notes);
+    }
+
+    if (updates.length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    }
+
+    values.push(id, userId);
+
+    await query(
+      `UPDATE student_meetings SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
+      values
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Update Meeting Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: Request) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
