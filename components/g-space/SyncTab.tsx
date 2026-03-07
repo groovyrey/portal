@@ -11,7 +11,8 @@ import {
   ChevronLeft, 
   ChevronRight, 
   Clock,
-  Download
+  Download,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ClassroomCourse, ClassroomAssignment, CalendarEvent } from '@/types/g-space';
@@ -173,8 +174,12 @@ export default function SyncTab({
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = new Date(year, month, 1).getDay();
 
-  const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const handlePrevMonth = () => {
+    if (month > 0) setCurrentDate(new Date(year, month - 1, 1));
+  };
+  const handleNextMonth = () => {
+    if (month < 11) setCurrentDate(new Date(year, month + 1, 1));
+  };
 
   const downloadICS = () => {
     if (!student?.schedule) return;
@@ -216,6 +221,13 @@ export default function SyncTab({
             {isFetching ? 'Syncing...' : 'Sync Now'}
           </button>
         </div>
+      </div>
+
+      <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-3">
+        <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+        <p className="text-[11px] font-bold text-amber-700/80 dark:text-amber-400/80 leading-relaxed uppercase tracking-widest">
+          Note: If data is missing, please re-link your Google account to refresh security tokens.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -289,11 +301,19 @@ export default function SyncTab({
               </div>
 
               <div className="flex items-center gap-1.5">
-                <button onClick={handlePrevMonth} className="p-1.5 hover:bg-muted rounded-full transition-all border border-border/50">
+                <button 
+                  onClick={handlePrevMonth} 
+                  disabled={month === 0}
+                  className="p-1.5 hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed rounded-full transition-all border border-border/50"
+                >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-full transition-all">Today</button>
-                <button onClick={handleNextMonth} className="p-1.5 hover:bg-muted rounded-full transition-all border border-border/50">
+                <button 
+                  onClick={handleNextMonth} 
+                  disabled={month === 11}
+                  className="p-1.5 hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed rounded-full transition-all border border-border/50"
+                >
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>

@@ -80,11 +80,11 @@ export default function MeetingsPage() {
 
   const handlePrevMonth = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentMonth(new Date(year, month - 1, 1));
+    if (month > 0) setCurrentMonth(new Date(year, month - 1, 1));
   };
   const handleNextMonth = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentMonth(new Date(year, month + 1, 1));
+    if (month < 11) setCurrentMonth(new Date(year, month + 1, 1));
   };
 
   // Filter schedule for the selected date
@@ -335,8 +335,20 @@ export default function MeetingsPage() {
                 <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{year}</span>
               </div>
               <div className="flex items-center gap-1">
-                <button onClick={handlePrevMonth} className="p-1.5 hover:bg-muted rounded-lg transition-all"><ChevronLeft className="h-4 w-4" /></button>
-                <button onClick={handleNextMonth} className="p-1.5 hover:bg-muted rounded-lg transition-all"><ChevronRight className="h-4 w-4" /></button>
+                <button 
+                  onClick={handlePrevMonth} 
+                  disabled={month === 0}
+                  className="p-1.5 hover:bg-muted disabled:opacity-20 disabled:cursor-not-allowed rounded-lg transition-all"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={handleNextMonth} 
+                  disabled={month === 11}
+                  className="p-1.5 hover:bg-muted disabled:opacity-20 disabled:cursor-not-allowed rounded-lg transition-all"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
             </div>
 

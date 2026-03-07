@@ -8,17 +8,14 @@ import {
   Star, 
   Target, 
   Heart, 
-  Globe, 
-  Award, 
-  Lock,
-  Calendar,
-  GraduationCap,
-  MessageCircle,
-  CheckCircle2,
-  Quote,
-  ChevronRight,
-  Sparkles,
-  ArrowRight
+  Quote, 
+  ChevronRight, 
+  Sparkles, 
+  ArrowRight,
+  Monitor,
+  Mic,
+  BrainCircuit,
+  LayoutGrid
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -64,7 +61,6 @@ export default function AboutPage() {
       try {
         const res = await fetch('/api/ratings');
         const data = await res.json();
-        // The API returns { average, count, ... }
         if (data.average !== undefined) {
           setStats({
             count: data.count || 0,
@@ -82,45 +78,41 @@ export default function AboutPage() {
     transition: { duration: 0.6 }
   };
 
-  const features = [
-    { title: 'Real-time Sync', desc: 'Instant access to your official school records from Schoolista.', icon: Zap },
-    { title: 'AI Assistant', desc: 'An intelligent academic companion that understands your course context.', icon: Sparkles },
-    { title: 'Student Feed', desc: 'A dedicated space for LCCians to share, poll, and connect.', icon: MessageCircle },
-    { title: 'Bank-grade Security', desc: 'Your data is encrypted and never stored on unauthorized servers.', icon: ShieldCheck },
+  const workspaceFeatures = [
+    { title: 'Cato AI', desc: 'Context-aware study buddy.', icon: BrainCircuit },
+    { title: 'G-Space', icon: LayoutGrid, desc: 'Google Sync & Tasks.' },
+    { title: 'Meetings', icon: Mic, desc: 'Smart Class Archives.' },
+    { title: 'Archive', icon: Monitor, desc: 'Central study library.' },
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground overflow-x-hidden pb-20">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground overflow-x-hidden pb-20 font-sans">
       {/* Hero Section */}
-      <section className="relative pt-20 pb-16 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
-        <div className="absolute top-0 right-0 -z-10 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 -z-10 w-[300px] h-[300px] bg-indigo-500/5 rounded-full blur-3xl" />
-        
+      <section className="relative pt-20 pb-16 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden text-center lg:text-left">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <motion.div {...fadeIn}>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent text-muted-foreground text-[10px] font-bold uppercase tracking-wider mb-6">
-              <Sparkles className="h-3 w-3 text-blue-500" />
-              The Future of LCC Portal
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-wider mb-6">
+              Strategic Academic Intelligence
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground leading-tight mb-6">
-              Empowering Every <span className="text-blue-500 italic">LCCian</span> with Intelligence.
+            <h1 className="text-4xl md:text-6xl font-black text-foreground leading-tight mb-6 uppercase tracking-tight italic">
+              Empowering <span className="text-primary">LCCians</span> with Desca.
             </h1>
-            <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-lg font-medium">
-              LCC Hub is more than just a portal—it's your ultimate academic companion, designed to streamline your school life with modern tools and real-time connectivity.
+            <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-lg font-medium mx-auto lg:mx-0">
+              LCC Hub is a specialized academic workspace designed to streamline your school life with AI integration and real-time connectivity.
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
               <Link 
                 href="/" 
-                className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-sm active:scale-95"
+                className="px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-black text-[10px] uppercase tracking-widest flex items-center gap-3 hover:opacity-90 transition-all shadow-xl active:scale-95"
               >
                 Access Portal
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link 
                 href="/docs" 
-                className="px-6 py-3 bg-card border border-border text-foreground rounded-xl font-bold hover:bg-accent transition-all active:scale-95"
+                className="px-8 py-4 bg-card border border-border text-foreground rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-accent transition-all active:scale-95"
               >
-                Read Documentation
+                Documentation
               </Link>
             </div>
           </motion.div>
@@ -129,52 +121,35 @@ export default function AboutPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
-            className="relative lg:h-[500px] bg-accent/30 rounded-3xl border border-border p-8 flex items-center justify-center overflow-hidden"
+            className="relative lg:h-[500px] bg-muted/30 rounded-lg border border-border p-8 flex items-center justify-center overflow-hidden shadow-inner"
           >
              <div className="grid grid-cols-2 gap-4 w-full relative z-10">
-                {features.map((f, i) => (
-                    <div key={i} className="p-6 bg-card rounded-2xl border border-border shadow-sm">
-                        <f.icon className="h-8 w-8 text-blue-500 mb-4" />
-                        <h4 className="font-bold text-sm mb-1">{f.title}</h4>
-                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{f.desc}</p>
+                {workspaceFeatures.map((f, i) => (
+                    <div key={i} className="p-6 bg-card rounded-lg border border-border shadow-sm group hover:border-primary/30 transition-all">
+                        <f.icon className="h-8 w-8 text-primary mb-4 group-hover:scale-110 transition-transform" />
+                        <h4 className="font-black text-sm mb-1 uppercase tracking-tight italic">{f.title}</h4>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{f.desc}</p>
                     </div>
                 ))}
              </div>
-             {/* Decorative element */}
-             <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl" />
           </motion.div>
         </div>
       </section>
 
-      {/* Marquee Section */}
-      <div className="py-4 border-y border-border/50 bg-card/10">
-        <Marquee 
-          subjects={[
-            { description: 'Real-time Sync', icon: Zap },
-            { description: 'AI Assistant', icon: Sparkles },
-            { description: 'Community Feed', icon: Users },
-            { description: 'Smart Scheduler', icon: Calendar },
-            { description: 'Official Ledger', icon: Award },
-            { description: 'Grade Analytics', icon: GraduationCap },
-            { description: 'LCC Hub v2', icon: Target }
-          ]} 
-        />
-      </div>
-
       {/* Stats Section */}
-      <section className="py-10 border-y border-border bg-accent/30">
+      <section className="py-12 border-y border-border bg-card/50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { label: 'Uptime', value: '99.9%', icon: Zap, color: 'text-blue-500' },
-              { label: 'Rating', value: stats.average || '0.0', icon: Star, color: 'text-amber-500' },
-              { label: 'Community', value: 'Active', icon: Users, color: 'text-emerald-500' },
-              { label: 'Security', value: 'AES-256', icon: Lock, color: 'text-indigo-500' },
+              { label: 'Uptime', value: '99.9%', icon: Zap, color: 'text-primary' },
+              { label: 'Avg Rating', value: stats.average || '0.0', icon: Star, color: 'text-amber-500' },
+              { label: 'Network', value: 'Global', icon: Users, color: 'text-blue-500' },
+              { label: 'Encryption', value: 'AES-256', icon: ShieldCheck, color: 'text-emerald-500' },
             ].map((stat, i) => (
               <div key={i} className="text-center group">
                 <stat.icon className={`h-5 w-5 mx-auto mb-3 ${stat.color} group-hover:scale-110 transition-transform`} />
-                <div className="text-2xl font-bold text-foreground mb-1">{stat.value}</div>
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</div>
+                <div className="text-2xl font-black text-foreground mb-1 uppercase italic tracking-tighter">{stat.value}</div>
+                <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -185,24 +160,22 @@ export default function AboutPage() {
       <section className="py-24 px-4 max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
           <div>
-            <div className="h-12 w-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center mb-6 shadow-lg shadow-primary/20">
-              <Target className="h-6 w-6" />
-            </div>
-            <h2 className="text-2xl font-bold text-foreground mb-6">Our Mission</h2>
-            <p className="text-base text-muted-foreground leading-relaxed font-medium mb-8">
-              We aim to eliminate the friction between students and their academic data. By providing a clean, fast, and intelligent interface, we empower students to focus on what truly matters: learning and personal growth.
+            <h2 className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-4 italic">Core Objectives</h2>
+            <h2 className="text-3xl font-black text-foreground mb-8 uppercase tracking-tight">Our Mission</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed font-medium mb-10">
+              To eliminate the complexity of academic administration. By providing an intelligent, unified workspace, we empower students to prioritize learning and personal advancement.
             </p>
             <div className="space-y-4">
               {[
-                { title: 'User-Centric Design', desc: 'Built by students, for students.' },
-                { title: 'Data Sovereignty', desc: 'Your data, your access, always.' },
-                { title: 'Community Growth', desc: 'Fostering a safer digital campus.' }
+                { title: 'Intelligence-First', desc: 'AI-driven insights for study management.' },
+                { title: 'Data Sovereignty', desc: 'Secure, student-owned academic records.' },
+                { title: 'Operational Speed', desc: 'Optimized for low-latency synchronization.' }
               ].map((item, i) => (
-                <div key={i} className="flex gap-3 p-4 rounded-xl bg-accent border border-border transition-colors">
-                  <CheckCircle2 className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                <div key={i} className="flex gap-4 p-5 rounded-lg bg-muted/20 border border-border">
+                  <div className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />
                   <div>
-                    <h4 className="font-bold text-foreground text-sm">{item.title}</h4>
-                    <p className="text-xs text-muted-foreground font-medium">{item.desc}</p>
+                    <h4 className="font-black text-foreground text-[11px] uppercase tracking-wider">{item.title}</h4>
+                    <p className="text-[11px] text-muted-foreground font-medium">{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -210,89 +183,59 @@ export default function AboutPage() {
           </div>
 
           <div className="relative">
-            <div className="bg-primary rounded-2xl p-8 md:p-10 text-primary-foreground relative overflow-hidden shadow-xl">
-              <Quote className="text-primary-foreground/20 h-8 w-8 mb-6" />
-              <p className="text-lg font-medium leading-relaxed mb-8 relative z-10 italic">
+            <div className="bg-slate-900 dark:bg-card border border-border rounded-lg p-10 text-white dark:text-foreground relative overflow-hidden shadow-2xl">
+              <Quote className="text-primary h-8 w-8 mb-8 opacity-50" />
+              <p className="text-lg font-bold leading-relaxed mb-10 relative z-10 italic">
                 "The greatness of a man is not in how much wealth he acquires, but in his integrity and his ability to affect those around him positively."
               </p>
               <div className="flex items-center gap-4 relative z-10">
-                <div className="w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center font-bold text-[10px]">
+                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center font-black text-[10px] text-white">
                   BM
                 </div>
                 <div>
-                  <h5 className="text-sm font-bold">Bob Marley</h5>
-                  <p className="text-[10px] text-primary-foreground/60">Human Rights Activist</p>
+                  <h5 className="text-sm font-black uppercase tracking-tight">Bob Marley</h5>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Activist</p>
                 </div>
               </div>
-              {/* Decorative circle */}
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-card/5 rounded-full" />
             </div>
             
-            <div className="mt-8 p-6 rounded-2xl border border-dashed border-border flex items-center gap-4 group hover:border-blue-500 transition-colors cursor-help">
-               <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
-                  <Heart className="h-5 w-5 group-hover:scale-110 transition-transform" />
+            <div className="mt-8 p-6 rounded-lg border border-dashed border-border flex items-center gap-4 group">
+               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                  <Heart className="h-5 w-5" />
                </div>
                <div>
-                  <h4 className="text-sm font-bold text-foreground">Community Funded</h4>
-                  <p className="text-xs text-muted-foreground font-medium">LCC Hub is maintained by student contributions.</p>
+                  <h4 className="text-[11px] font-black uppercase tracking-widest text-foreground">Community Initiative</h4>
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase">Maintained by student contributions.</p>
                </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature Grid */}
-      <section className="py-20 bg-accent/30 border-y border-border">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">Platform Features</h2>
-            <p className="text-muted-foreground text-sm font-medium">Tools designed to enhance your productivity.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { title: 'Ledger View', desc: 'Easily track your balance, payments, and assessment history.', icon: Award },
-              { title: 'Schedule Table', desc: 'A beautiful, responsive class schedule available offline.', icon: Calendar },
-              { title: 'Community Feed', desc: 'Connect with other students and share your thoughts.', icon: Users },
-            ].map((feature, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-card border border-border hover:border-muted-foreground transition-all shadow-sm">
-                <div className="h-10 w-10 rounded-lg bg-accent text-foreground flex items-center justify-center mb-4">
-                  <feature.icon className="h-5 w-5" />
-                </div>
-                <h3 className="text-base font-bold mb-2 text-foreground">{feature.title}</h3>
-                <p className="text-muted-foreground text-xs leading-relaxed font-medium">{feature.desc}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section className="py-24 bg-accent/20 border-y border-border">
+      <section className="py-24 bg-muted/10 border-y border-border">
         <div className="max-w-3xl mx-auto px-4">
           <div className="text-center mb-16">
-            <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mb-4">
-              Intelligence Base
-            </div>
-            <h2 className="text-3xl font-black uppercase tracking-tight text-foreground">Common Questions</h2>
+            <h2 className="text-3xl font-black uppercase tracking-tight text-foreground italic">Intelligence Base</h2>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mt-2">Frequently Asked Questions</p>
           </div>
 
-          <div className="bg-card border border-border rounded-3xl p-4 md:p-8 shadow-sm">
+          <div className="bg-card border border-border rounded-lg p-4 md:px-10 md:py-6 shadow-sm">
             <FAQItem 
-              question="How does the Schoolista sync work?" 
-              answer="LCC Hub uses a secure proxy to connect to your Schoolista portal. It reads your academic data in real-time and formats it into the modern Hub interface. No data is stored permanently on our servers except for basic profile information." 
+              question="How does synchronization work?" 
+              answer="LCC Hub uses a secure server-side proxy to interface with official school systems. It maps your data into our optimized workspace in real-time without storing your primary login credentials." 
             />
             <FAQItem 
-              question="Is my account secure?" 
-              answer="Absolutely. We use industry-standard encryption and never store your Schoolista password. Authentication is handled through secure session tokens that expire automatically." 
+              question="Is my academic data secure?" 
+              answer="Security is our baseline. We utilize AES-256 encryption and strictly ephemeral session management. Your schoolista password is never persisted on our database." 
             />
             <FAQItem 
-              question="Can school staff see my community posts?" 
-              answer="The community feed is moderated by student staff to ensure a safe environment. While posts are public to the Hub community, they are separate from your official academic record." 
+              question="What is the purpose of Cato?" 
+              answer="Cato is your context-aware research assistant. It can analyze your specific course load, summarize lectures, and perform educational web searches tailored to your curriculum." 
             />
             <FAQItem 
-              question="What can the AI Assistant do?" 
-              answer="The AI is trained on your specific academic context. It can help explain complex subjects, summarize course descriptions, and provide study tips based on your current semester load." 
+              question="Can I use Hub during classes?" 
+              answer="Yes. Our 'Meetings' feature is specifically designed for classroom use, enabling you to capture lectures and generate study reports on the fly." 
             />
           </div>
         </div>
@@ -300,28 +243,32 @@ export default function AboutPage() {
 
       {/* CTA Section */}
       <section className="py-20 px-4 max-w-5xl mx-auto">
-        <div className="bg-primary rounded-2xl p-10 md:p-16 text-primary-foreground text-center">
-          <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-6">Ready to upgrade your experience?</h2>
-          <p className="text-primary-foreground/70 mb-10 max-w-md mx-auto font-medium">
-            Join thousands of students who have already moved to the modern hub.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link 
-              href="/" 
-              className="px-8 py-3 bg-card text-foreground rounded-xl font-bold transition-all active:scale-95 shadow-sm hover:bg-accent"
-            >
-              Get Started Now
-            </Link>
-            <Link 
-              href="/docs" 
-              className="px-8 py-3 bg-primary-foreground/10 text-primary-foreground rounded-xl font-bold hover:bg-primary-foreground/20 transition-all active:scale-95"
-            >
-              Learn More
-            </Link>
+        <div className="bg-primary rounded-lg p-10 md:p-20 text-primary-foreground text-center shadow-2xl relative overflow-hidden">
+          <div className="relative z-10">
+            <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-6 italic leading-none">Access Strategic Intelligence.</h2>
+            <p className="text-primary-foreground/70 mb-12 max-w-md mx-auto font-black uppercase text-[10px] tracking-[0.2em]">
+              Join the new standard of LCCian study workflows.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link 
+                href="/" 
+                className="px-10 py-4 bg-white text-slate-900 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-xl"
+              >
+                Engage Portal
+              </Link>
+              <Link 
+                href="/docs" 
+                className="px-10 py-4 bg-white/10 text-white rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all active:scale-95 border border-white/20"
+              >
+                Documentation
+              </Link>
+            </div>
           </div>
+          {/* Subtle background graphic */}
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-black/10 to-transparent pointer-events-none" />
         </div>
-        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest text-center mt-12">
-          &copy; {new Date().getFullYear()} LCC Hub • Designed with pride in the Philippines
+        <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.4em] text-center mt-12">
+          &copy; {new Date().getFullYear()} LCC Hub • Strategic Intelligence Standard
         </p>
       </section>
     </div>
