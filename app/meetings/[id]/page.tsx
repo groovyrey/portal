@@ -146,14 +146,14 @@ export default function MeetingDetailPage() {
             <div className="flex items-center gap-2">
               <button 
                 onClick={handleCopy}
-                className="p-3 bg-muted hover:bg-primary/10 hover:text-primary rounded-xl transition-all active:scale-95"
+                className="p-3 bg-muted hover:bg-primary/10 hover:text-primary rounded-lg transition-all active:scale-95"
                 title="Copy Summary"
               >
                 {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
               </button>
               <button 
                 onClick={handleDelete}
-                className="p-3 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 rounded-xl transition-all active:scale-95"
+                className="p-3 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 rounded-lg transition-all active:scale-95"
                 title="Delete Record"
               >
                 <Trash2 className="h-4 w-4" />
@@ -167,22 +167,22 @@ export default function MeetingDetailPage() {
                 <TrendingUp className="h-4 w-4 text-primary" />
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">AI Insight Report</h3>
               </div>
-              <div className="bg-card border border-border/50 rounded-xl p-6 md:p-8 shadow-sm">
+              <div className="bg-card border border-border/50 rounded-lg p-6 md:p-8 shadow-sm">
                 <div className="prose prose-sm dark:prose-invert max-w-none">
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
                     components={{
                       h3: ({node, ...props}) => <h3 className="text-sm font-black uppercase tracking-tight text-primary mt-6 first:mt-0" {...props} />,
-                      p: ({node, ...props}) => <p className="leading-relaxed font-medium text-foreground/80 mb-4" {...props} />,
+                      p: ({node, ...props}) => <p className="leading-relaxed font-medium text-foreground/80 mb-4 text-xs" {...props} />,
                       ul: ({node, ...props}) => <ul className="space-y-2 my-4" {...props} />,
                       li: ({node, ...props}) => (
-                        <li className="flex gap-2" {...props}>
-                          <div className="h-1.5 w-1.5 rounded-full bg-primary/40 mt-1.5 shrink-0" />
+                        <li className="flex gap-2 text-xs" {...props}>
+                          <div className="h-1 w-1 rounded-full bg-primary/40 mt-1.5 shrink-0" />
                           <span>{props.children}</span>
                         </li>
                       ),
                       blockquote: ({node, ...props}) => (
-                        <blockquote className="border-l-2 border-primary/20 bg-primary/5 px-4 py-2 italic my-6" {...props} />
+                        <blockquote className="border-l-2 border-primary/20 bg-primary/5 px-4 py-2 italic my-6 text-xs" {...props} />
                       )
                     }}
                   >
@@ -197,8 +197,8 @@ export default function MeetingDetailPage() {
                 <FileText className="h-4 w-4 text-muted-foreground" />
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Raw Audio Log</h3>
               </div>
-              <div className="bg-muted/5 border border-border/30 rounded-xl p-5 max-h-[400px] overflow-y-auto custom-scrollbar">
-                <p className="text-[11px] text-muted-foreground/70 leading-relaxed italic font-medium">
+              <div className="bg-muted/5 border border-border/30 rounded-lg p-5 max-h-[400px] overflow-y-auto custom-scrollbar">
+                <p className="text-[10px] text-muted-foreground/70 leading-relaxed italic font-medium">
                   {meeting.transcript}
                 </p>
               </div>

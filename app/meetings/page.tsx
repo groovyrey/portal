@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   Mic, 
   Square, 
@@ -9,12 +9,10 @@ import {
   Clock, 
   CheckCircle2, 
   TrendingUp,
-  Copy,
-  Check,
   Plus,
-  History,
   Trash2,
   ChevronRight,
+  ChevronLeft,
   AlertCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -61,6 +59,10 @@ export default function MeetingsPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<ScheduleItem | null>(null);
   
+  // Day selection state
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [summary, setSummary] = useState<string | null>(null);
@@ -70,6 +72,35 @@ export default function MeetingsPage() {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
+
+  const handlePrevMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentMonth(new Date(year, month - 1, 1));
+  };
+  const handleNextMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentMonth(new Date(year, month + 1, 1));
+  };
+
+  // Filter schedule for the selected date
+  const filteredSchedule = useMemo(() => {
+    if (!student?.schedule || !selectedDate) return [];
+    
+    const dayName = selectedDate.toLocaleString('en-US', { weekday: 'short' }).toUpperCase();
+    
+    return student.schedule.filter(item => {
+      const parts = item.time.split(' ');
+      if (parts.length < 1) return false;
+      const daysStr = parts[0];
+      const days = daysStr.split('-');
+      return days.includes(dayName);
+    });
+  }, [student?.schedule, selectedDate]);
 
   const getSubjectColor = (subject: string) => {
     let hash = 0;
@@ -213,28 +244,28 @@ export default function MeetingsPage() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (studentLoading) return <div className="p-8"><Skeleton className="h-64 w-full" /></div>;
+  if (studentLoading) return <div className="p-8"><Skeleton className="h-64 w-full rounded-lg" /></div>;
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 font-sans">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         <div className="flex justify-between items-end gap-6 mb-10">
           <div className="space-y-1">
             <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">Archives</h1>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Meeting & Lecture Records</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Capture & Review Lectures</p>
           </div>
           <button 
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-3 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/10 active:scale-95 transition-all"
+            className="flex items-center gap-2 px-5 py-3 bg-primary text-primary-foreground rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/10 active:scale-95 transition-all"
           >
             <Plus className="h-4 w-4" />
-            New Session
+            New Record
           </button>
         </div>
 
         {isFetchingMeetings ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 rounded-lg" />)}
           </div>
         ) : meetings.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -243,7 +274,7 @@ export default function MeetingsPage() {
               return (
                 <div
                   key={meeting.id}
-                  className="bg-card border border-border/50 rounded-xl p-5 hover:border-primary/30 transition-all group relative overflow-hidden flex flex-col justify-between"
+                  className="bg-card border border-border/50 rounded-lg p-5 hover:border-primary/30 transition-all group relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
@@ -254,9 +285,9 @@ export default function MeetingsPage() {
                     </button>
                   </div>
                   
-                  <Link href={`/meetings/${meeting.id}`} className="space-y-4">
+                  <Link href={`/meetings/${meeting.id}`} className="block space-y-3">
                     <div className="flex items-center gap-2">
-                      <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${colorClass}`}>
+                      <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${colorClass}`}>
                         {meeting.subject.split(' - ')[0]}
                       </span>
                       <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{meeting.date}</span>
@@ -267,13 +298,13 @@ export default function MeetingsPage() {
                     </h3>
 
                     <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                      <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground">
                         <FileText className="h-3 w-3" />
-                        Log
+                        LOG
                       </div>
-                      <div className="flex items-center gap-1.5 text-[9px] font-bold text-primary uppercase tracking-widest">
+                      <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.2em] text-primary">
                         <TrendingUp className="h-3 w-3" />
-                        Insight
+                        INSIGHT
                       </div>
                     </div>
                   </Link>
@@ -282,12 +313,9 @@ export default function MeetingsPage() {
             })}
           </div>
         ) : (
-          <div className="bg-muted/10 border border-dashed border-border rounded-xl p-16 text-center flex flex-col items-center">
-            <Mic className="h-8 w-8 text-muted-foreground/30 mb-4" />
-            <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Empty Library</h3>
-            <p className="text-[10px] font-bold text-muted-foreground/60 mt-2 uppercase tracking-widest">
-              No sessions found. Start a new recording to begin.
-            </p>
+          <div className="bg-muted/5 border border-dashed border-border rounded-lg p-16 text-center flex flex-col items-center">
+            <Mic className="h-8 w-8 text-muted-foreground/20 mb-4" />
+            <h3 className="text-sm font-black text-foreground uppercase tracking-widest opacity-40 italic">Empty Vault</h3>
           </div>
         )}
       </div>
@@ -295,39 +323,88 @@ export default function MeetingsPage() {
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title={<span className="text-xs font-black uppercase tracking-widest text-primary">Active Session</span>}
+        title={<span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary px-2">Create Record</span>}
+        maxWidth="max-w-md"
       >
-        <div className="p-4 space-y-4">
-          <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-            {student?.schedule && student.schedule.length > 0 ? (
-              student.schedule.map((item, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setSelectedSchedule(item);
-                    setIsAddModalOpen(false);
-                    setIsDrawerOpen(true);
-                  }}
-                  className="w-full text-left p-4 rounded-xl border border-border/50 bg-muted/20 hover:bg-background hover:border-primary/30 transition-all flex items-center justify-between group"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${getSubjectColor(item.subject)}`}>
-                        {item.subject.split(' - ')[0]}
-                      </span>
-                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{item.time}</span>
-                    </div>
-                    <p className="text-xs font-black text-foreground uppercase tracking-tight truncate">{item.description || item.subject}</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-all" />
-                </button>
-              ))
-            ) : (
-              <div className="text-center py-10">
-                <AlertCircle className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Schedule Empty</p>
+        <div className="p-4 space-y-6">
+          {/* Day Selector */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-2">
+              <div className="flex flex-col">
+                <span className="text-xs font-black uppercase tracking-widest">{currentMonth.toLocaleString('default', { month: 'short' })}</span>
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{year}</span>
               </div>
-            )}
+              <div className="flex items-center gap-1">
+                <button onClick={handlePrevMonth} className="p-1.5 hover:bg-muted rounded-lg transition-all"><ChevronLeft className="h-4 w-4" /></button>
+                <button onClick={handleNextMonth} className="p-1.5 hover:bg-muted rounded-lg transition-all"><ChevronRight className="h-4 w-4" /></button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1">
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
+                <div key={d} className="text-center py-1 text-[8px] font-black text-muted-foreground/40">{d}</div>
+              ))}
+              {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+                <div key={`pad-${i}`} className="aspect-square" />
+              ))}
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const dayNum = i + 1;
+                const date = new Date(year, month, dayNum);
+                const isSelected = selectedDate.toDateString() === date.toDateString();
+                const isToday = date.toDateString() === new Date().toDateString();
+                
+                return (
+                  <button 
+                    key={dayNum} 
+                    onClick={() => setSelectedDate(date)}
+                    className={`aspect-square rounded-lg flex items-center justify-center text-[10px] font-black transition-all ${
+                      isSelected 
+                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110' 
+                        : isToday 
+                          ? 'bg-primary/10 text-primary border border-primary/20' 
+                          : 'hover:bg-muted text-foreground/60'
+                    }`}
+                  >
+                    {dayNum}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Filtered Schedule */}
+          <div className="space-y-2">
+            <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground px-2">Classes for {selectedDate.toLocaleDateString(undefined, { weekday: 'long' })}</h4>
+            <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+              {filteredSchedule.length > 0 ? (
+                filteredSchedule.map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setSelectedSchedule(item);
+                      setIsAddModalOpen(false);
+                      setIsDrawerOpen(true);
+                    }}
+                    className="w-full text-left p-4 rounded-lg border border-border/50 bg-muted/20 hover:bg-background hover:border-primary/30 transition-all flex items-center justify-between group"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${getSubjectColor(item.subject)}`}>
+                          {item.subject.split(' - ')[0]}
+                        </span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{item.time.split(' ').slice(1).join(' ')}</span>
+                      </div>
+                      <p className="text-xs font-black text-foreground uppercase tracking-tight truncate">{item.description || item.subject}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-all" />
+                  </button>
+                ))
+              ) : (
+                <div className="text-center py-10 bg-muted/10 rounded-lg border border-dashed border-border/50">
+                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">No Class Scheduled</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </Modal>
@@ -367,14 +444,14 @@ export default function MeetingsPage() {
                 {!isRecording ? (
                   <button
                     onClick={startRecording}
-                    className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"
+                    className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"
                   >
                     Start Recording
                   </button>
                 ) : (
                   <button
                     onClick={stopRecording}
-                    className="w-full py-4 bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-rose-500/20 active:scale-95 transition-all"
+                    className="w-full py-4 bg-rose-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl shadow-rose-500/20 active:scale-95 transition-all"
                   >
                     Stop & Process
                   </button>
@@ -391,7 +468,7 @@ export default function MeetingsPage() {
             </div>
           ) : (
             <div className="w-full space-y-6 max-w-lg mx-auto">
-              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 flex items-center gap-4">
+              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-5 flex items-center gap-4">
                 <CheckCircle2 className="h-6 w-6 text-emerald-500" />
                 <div>
                   <h4 className="text-xs font-black text-foreground uppercase">Synthesized</h4>
@@ -399,7 +476,7 @@ export default function MeetingsPage() {
                 </div>
               </div>
 
-              <div className="bg-card border border-border/50 rounded-xl p-6">
+              <div className="bg-card border border-border/50 rounded-lg p-6">
                 <div className="prose prose-sm dark:prose-invert max-w-none font-medium leading-relaxed">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{summary || ''}</ReactMarkdown>
                 </div>
@@ -407,7 +484,7 @@ export default function MeetingsPage() {
 
               <button 
                 onClick={() => setIsDrawerOpen(false)}
-                className="w-full py-4 bg-muted text-foreground rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                className="w-full py-4 bg-muted text-foreground rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
               >
                 Close
               </button>
