@@ -26,7 +26,8 @@ import {
   RefreshCw,
   Bell,
   LayoutGrid,
-  ShieldCheck
+  ShieldCheck,
+  Mic
 } from 'lucide-react';
 import { ThemeToggle } from '../shared/ThemeToggle';
 import { toast } from 'sonner';
@@ -168,6 +169,7 @@ export default function Navbar() {
     { name: 'Grades', href: '/grades', icon: GraduationCap },
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
     { name: 'EAF', href: '/eaf', icon: FileText },
+    { name: 'Meetings', href: '/meetings', icon: Mic },
   ];
 
   const socialLinks = [

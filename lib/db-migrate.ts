@@ -147,3 +147,38 @@ export async function migrateActivityLogs() {
     throw error;
   }
 }
+
+export async function migrateMeetings() {
+  try {
+    // Ensure students table exists
+    await query(`
+      CREATE TABLE IF NOT EXISTS students (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        course TEXT,
+        email TEXT,
+        year_level TEXT,
+        semester TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create student_meetings table
+    await query(`
+      CREATE TABLE IF NOT EXISTS student_meetings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+        subject TEXT NOT NULL,
+        description TEXT NOT NULL,
+        date TEXT NOT NULL,
+        transcript TEXT,
+        summary TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+  } catch (error) {
+    console.error("Migration Error (Meetings):", error);
+    throw error;
+  }
+}

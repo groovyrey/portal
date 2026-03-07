@@ -17,6 +17,7 @@ export default function PageHeader() {
     if (path === '/community') return 'Student Feed';
     if (path.startsWith('/profile')) return 'Student Profile';
     if (path === '/eaf') return 'Assessment Form';
+    if (path === '/meetings') return 'Meeting Lectures';
     if (path === '/about') return 'About Hub';
     if (path === '/disclaimer') return 'Legal Notice';
     if (path === '/docs') return 'Documentation';

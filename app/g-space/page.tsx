@@ -7,8 +7,7 @@ import {
   RefreshCw, 
   CheckCircle2, 
   LogOut,
-  FileText,
-  Mic
+  FileText
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Skeleton from '@/components/ui/Skeleton';
@@ -30,7 +29,6 @@ import {
 import SyncTab from '@/components/g-space/SyncTab';
 import TaskTab from '@/components/g-space/TaskTab';
 import AssignmentsTab from '@/components/g-space/AssignmentsTab';
-import MeetingsTab from '@/components/g-space/MeetingsTab';
 
 export default function GSpacePage() {
   const router = useRouter();
@@ -38,17 +36,17 @@ export default function GSpacePage() {
   const searchParams = useSearchParams();
   
   const { data: student, isLoading } = useStudentQuery();
-  const [activeTab, setActiveTab] = useState<'sync' | 'assignments' | 'tasks' | 'meetings'>('sync');
+  const [activeTab, setActiveTab] = useState<'sync' | 'assignments' | 'tasks'>('sync');
   
   // Sync tab with URL
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['sync', 'assignments', 'tasks', 'meetings'].includes(tab)) {
+    if (tab && ['sync', 'assignments', 'tasks'].includes(tab)) {
       setActiveTab(tab as any);
     }
   }, [searchParams]);
 
-  const handleTabChange = (tabId: 'sync' | 'assignments' | 'tasks' | 'meetings') => {
+  const handleTabChange = (tabId: 'sync' | 'assignments' | 'tasks') => {
     setActiveTab(tabId);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tabId);
@@ -367,7 +365,6 @@ export default function GSpacePage() {
     { id: 'sync', name: 'Dashboard', icon: RefreshCw, desc: 'Sync & Classroom' },
     { id: 'assignments', name: 'Assignments', icon: FileText, desc: 'Academic Tasks' },
     { id: 'tasks', name: 'Tasks', icon: CheckCircle2, desc: 'Google Tasks' },
-    { id: 'meetings', name: 'Meetings', icon: Mic, desc: 'Audio Notes' },
   ] as const;
 
   // Global Linking Screen if not connected
@@ -540,12 +537,6 @@ export default function GSpacePage() {
                     setIsAddingTask={setIsAddingTask}
                     handleToggleTaskStatus={handleToggleTaskStatus}
                     handleDeleteTask={handleDeleteTask}
-                  />
-                )}
-                {activeTab === 'meetings' && (
-                  <MeetingsTab 
-                    key="meetings"
-                    student={student}
                   />
                 )}
               </AnimatePresence>
