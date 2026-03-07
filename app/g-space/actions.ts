@@ -130,3 +130,83 @@ export async function analyzeAssignments(
     throw new Error(error.message || "The AI system is currently unavailable.");
   }
 }
+
+/**
+ * Meeting Transcription Summarizer
+ * 
+ * Logic:
+ * 1. Takes the raw transcript and summarizes it into a study guide.
+ */
+export async function summarizeMeeting(
+  transcript: string,
+  student?: Student
+) {
+  const API_TOKEN = process.env.AI_WORKER_API;
+  const ACCOUNT_ID = "6fc752615c51f96c4ce397b92c40fdd6";
+  const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"; 
+
+  if (!API_TOKEN) throw new Error("AI System configuration is missing.");
+  if (!transcript) return "No transcript provided for analysis.";
+
+  const systemPrompt = `
+    You are the "Academic Success AI". 
+    Summarize the following class/meeting transcript into a concise and strategic "Meeting Insight Report".
+    
+    GUIDELINES:
+    - Tone: Professional, supportive, and direct academic coach.
+    - Audience: Address the student as "you".
+    - Formatting: Use Markdown (Bullet points for key topics, Bold for emphasis, Blockquotes for pro-tips).
+    
+    REPORT STRUCTURE:
+    ### 📝 Meeting Summary
+    A brief 2-3 sentence overview of what was discussed.
+    
+    ### 🔑 Key Takeaways
+    Bullet points of the most important concepts, dates, or tasks mentioned.
+    
+    ### 💡 Action Items
+    Specific things the student should do next based on the meeting.
+  `;
+
+  const userPrompt = `
+    Summarize this meeting transcript for me:
+    ---
+    ${transcript}
+    ---
+    Student Name: ${student?.name || "Student"}
+  `;
+
+  try {
+    const response = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/ai/v1/chat/completions`,
+      {
+        headers: {
+          Authorization: `Bearer ${API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        body: JSON.stringify({ 
+          model: MODEL,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          temperature: 0.3,
+          max_tokens: 2500,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Cloudflare AI Error: ${response.status} ${errorText}`);
+    }
+
+    const result = await response.json();
+    return result.choices[0].message.content || "Summary complete.";
+
+  } catch (error: any) {
+    console.error("Meeting Summary Error:", error);
+    throw new Error(error.message || "The AI system is currently unavailable.");
+  }
+}
