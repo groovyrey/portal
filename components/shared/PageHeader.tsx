@@ -16,7 +16,6 @@ export default function PageHeader() {
     if (path === '/accounts') return 'Financial Ledger';
     if (path === '/community') return 'Student Feed';
     if (path.startsWith('/profile')) return 'Student Profile';
-    if (path === '/settings') return 'Preferences';
     if (path === '/eaf') return 'Assessment Form';
     if (path === '/about') return 'About Hub';
     if (path === '/disclaimer') return 'Legal Notice';

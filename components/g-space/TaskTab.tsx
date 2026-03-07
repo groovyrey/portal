@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { 
-  StickyNote, 
+  CheckCircle2, 
   RefreshCw, 
   DatabaseZap, 
   Plus, 
@@ -16,56 +16,33 @@ import { GoogleTask } from '@/types/g-space';
 import Skeleton from '@/components/ui/Skeleton';
 import Modal from '@/components/ui/Modal';
 
-interface NotesTabProps {
+interface TaskTabProps {
   linkedEmail: string | null;
   isLinking: boolean;
   isFetching: boolean;
   googleTasks: GoogleTask[];
   handleGoogleVerify: () => void;
-  setIsAddingNote: (val: boolean) => void;
+  setIsAddingTask: (val: boolean) => void;
   handleToggleTaskStatus: (task: GoogleTask) => void;
-  handleDeleteNote: (taskId: string) => void;
+  handleDeleteTask: (taskId: string) => void;
 }
 
-export default function NotesTab({
+export default function TaskTab({
   linkedEmail,
   isLinking,
   isFetching,
   googleTasks,
   handleGoogleVerify,
-  setIsAddingNote,
+  setIsAddingTask,
   handleToggleTaskStatus,
-  handleDeleteNote
-}: NotesTabProps) {
+  handleDeleteTask
+}: TaskTabProps) {
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
 
-  if (!linkedEmail) {
-    return (
-      <div className="relative min-h-[500px] flex flex-col items-center justify-center p-6 text-center">
-        <div className="absolute inset-0 bg-primary/5 rounded-3xl blur-3xl -z-10" />
-        <div className="h-16 w-16 bg-primary rounded-2xl flex items-center justify-center mb-6 shadow-2xl shadow-primary/20 -rotate-3">
-          <StickyNote className="h-8 w-8 text-primary-foreground" />
-        </div>
-        <h2 className="text-2xl font-black mb-3">Knowledge Base</h2>
-        <p className="text-muted-foreground text-sm font-medium max-w-sm mb-8">
-          Link your Google account to sync your study notes and tasks across all your devices.
-        </p>
-        <button 
-          onClick={handleGoogleVerify}
-          disabled={isLinking}
-          className="flex items-center justify-center gap-4 px-8 py-4 bg-primary text-primary-foreground rounded-2xl text-xs font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-primary/10"
-        >
-          {isLinking ? <RefreshCw className="h-4 w-4 animate-spin" /> : <DatabaseZap className="h-4 w-4" />}
-          {isLinking ? 'Verifying...' : 'Link Google Account'}
-        </button>
-      </div>
-    );
-  }
-
   const confirmDelete = () => {
     if (taskToDelete) {
-      handleDeleteNote(taskToDelete);
+      handleDeleteTask(taskToDelete);
       setTaskToDelete(null);
     }
   };
@@ -78,11 +55,11 @@ export default function NotesTab({
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">Knowledge Base</h2>
+          <h2 className="text-xl font-bold tracking-tight">Google Tasks</h2>
           <p className="text-xs text-muted-foreground font-medium">Syncing {googleTasks.length} tasks from your Google Account.</p>
         </div>
         <button 
-          onClick={() => setIsAddingNote(true)}
+          onClick={() => setIsAddingTask(true)}
           className="flex items-center justify-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-full text-xs font-bold shadow-sm hover:opacity-90 transition-all shadow-primary/10"
         >
           <Plus className="h-4 w-4" />
@@ -95,9 +72,9 @@ export default function NotesTab({
           Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-40 w-full rounded-3xl" />)
         ) : googleTasks.length === 0 ? (
           <div className="col-span-full py-20 text-center bg-muted/10 border border-dashed border-border rounded-3xl">
-            <StickyNote className="h-10 w-10 text-muted-foreground/20 mx-auto mb-4" />
+            <CheckCircle2 className="h-10 w-10 text-muted-foreground/20 mx-auto mb-4" />
             <h3 className="text-sm font-bold text-muted-foreground">Queue Empty</h3>
-            <p className="text-[11px] text-muted-foreground/60 mt-1">Add tasks or sync your notes to see them here.</p>
+            <p className="text-[11px] text-muted-foreground/60 mt-1">Add tasks to see them here.</p>
           </div>
         ) : (
           googleTasks.map((task) => {

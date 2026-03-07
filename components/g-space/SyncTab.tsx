@@ -188,29 +188,6 @@ export default function SyncTab({
     document.body.removeChild(link);
   };
 
-  if (!linkedEmail) {
-    return (
-      <div className="relative min-h-[500px] flex flex-col items-center justify-center p-6 text-center">
-        <div className="absolute inset-0 bg-primary/5 rounded-3xl blur-3xl -z-10" />
-        <div className="h-16 w-16 bg-primary rounded-2xl flex items-center justify-center mb-6 shadow-2xl shadow-primary/20 rotate-3">
-          <RefreshCw className="h-8 w-8 text-primary-foreground" />
-        </div>
-        <h2 className="text-2xl font-black mb-3">Sync Your Classroom</h2>
-        <p className="text-muted-foreground text-sm font-medium max-w-sm mb-8">
-          Link your Google account to access your courses, assignments, and schedule in real-time.
-        </p>
-        <button 
-          onClick={handleGoogleVerify}
-          disabled={isLinking}
-          className="flex items-center justify-center gap-4 px-8 py-4 bg-foreground text-background rounded-2xl text-xs font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-xl"
-        >
-          {isLinking ? <RefreshCw className="h-4 w-4 animate-spin" /> : <DatabaseZap className="h-4 w-4" />}
-          {isLinking ? 'Verifying...' : 'Link Google Account'}
-        </button>
-      </div>
-    );
-  }
-
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }}

@@ -5,11 +5,11 @@ import { useStudentQuery } from '@/lib/hooks';
 import { 
   GraduationCap, 
   RefreshCw, 
-  StickyNote, 
+  CheckCircle2, 
   LogOut,
   FileText
 } from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import Skeleton from '@/components/ui/Skeleton';
 import { auth, googleProvider, db } from '@/lib/db';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
@@ -27,7 +27,7 @@ import {
 
 // Components
 import SyncTab from '@/components/g-space/SyncTab';
-import NotesTab from '@/components/g-space/NotesTab';
+import TaskTab from '@/components/g-space/TaskTab';
 import AssignmentsTab from '@/components/g-space/AssignmentsTab';
 
 export default function GSpacePage() {
@@ -36,17 +36,17 @@ export default function GSpacePage() {
   const searchParams = useSearchParams();
   
   const { data: student, isLoading } = useStudentQuery();
-  const [activeTab, setActiveTab] = useState<'sync' | 'assignments' | 'notes'>('sync');
+  const [activeTab, setActiveTab] = useState<'sync' | 'assignments' | 'tasks'>('sync');
   
   // Sync tab with URL
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['sync', 'assignments', 'notes'].includes(tab)) {
+    if (tab && ['sync', 'assignments', 'tasks'].includes(tab)) {
       setActiveTab(tab as any);
     }
   }, [searchParams]);
 
-  const handleTabChange = (tabId: 'sync' | 'assignments' | 'notes') => {
+  const handleTabChange = (tabId: 'sync' | 'assignments' | 'tasks') => {
     setActiveTab(tabId);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tabId);
@@ -67,8 +67,8 @@ export default function GSpacePage() {
   const [taskListId, setTaskListId] = useState<string | null>(null);
   
   // UI State
-  const [isAddingNote, setIsAddingNote] = useState(false);
-  const [newNote, setNewNote] = useState({ title: '', notes: '' });
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [newTask, setNewTask] = useState({ title: '', notes: '' });
 
   // Load Integration Data
   useEffect(() => {
@@ -286,8 +286,8 @@ export default function GSpacePage() {
     }
   };
 
-  const handleAddNote = async () => {
-    if (!googleAccessToken || !taskListId || !newNote.title.trim()) return;
+  const handleAddTask = async () => {
+    if (!googleAccessToken || !taskListId || !newTask.title.trim()) return;
     setIsFetching(true);
     try {
       const response = await fetch(`https://www.googleapis.com/tasks/v1/lists/${taskListId}/tasks`, {
@@ -296,23 +296,23 @@ export default function GSpacePage() {
           'Authorization': `Bearer ${googleAccessToken}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ title: newNote.title, notes: newNote.notes })
+        body: JSON.stringify({ title: newTask.title, notes: newTask.notes })
       });
 
       if (response.ok) {
-        toast.success('Note added');
-        setNewNote({ title: '', notes: '' });
-        setIsAddingNote(false);
+        toast.success('Task added');
+        setNewTask({ title: '', notes: '' });
+        setIsAddingTask(false);
         fetchGoogleTasks(googleAccessToken);
       }
     } catch (error) {
-      toast.error('Error adding note');
+      toast.error('Error adding task');
     } finally {
       setIsFetching(false);
     }
   };
 
-  const handleDeleteNote = async (taskId: string) => {
+  const handleDeleteTask = async (taskId: string) => {
     if (!googleAccessToken || !taskListId) return;
     try {
       const response = await fetch(`https://www.googleapis.com/tasks/v1/lists/${taskListId}/tasks/${taskId}`, {
@@ -320,11 +320,11 @@ export default function GSpacePage() {
         headers: { 'Authorization': `Bearer ${googleAccessToken}` }
       });
       if (response.ok) {
-        toast.success('Note deleted');
+        toast.success('Task deleted');
         setGoogleTasks(prev => prev.filter(t => t.id !== taskId));
       }
     } catch (error) {
-      toast.error('Failed to delete note');
+      toast.error('Failed to delete task');
     }
   };
 
@@ -361,6 +361,53 @@ export default function GSpacePage() {
 
   if (!student) return null;
 
+  const tabs = [
+    { id: 'sync', name: 'Dashboard', icon: RefreshCw, desc: 'Sync & Classroom' },
+    { id: 'assignments', name: 'Assignments', icon: FileText, desc: 'Academic Tasks' },
+    { id: 'tasks', name: 'Tasks', icon: CheckCircle2, desc: 'Google Tasks' },
+  ] as const;
+
+  // Global Linking Screen if not connected
+  if (!linkedEmail) {
+    return (
+      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center font-sans">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full space-y-8"
+        >
+          <div className="relative mx-auto w-24 h-24">
+            <div className="absolute inset-0 bg-primary/10 rounded-3xl blur-2xl animate-pulse" />
+            <div className="relative h-full w-full bg-card border border-border rounded-3xl flex items-center justify-center shadow-xl shadow-primary/5 rotate-3">
+              <GraduationCap className="h-12 w-12 text-primary" />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h1 className="text-3xl font-black text-foreground tracking-tight uppercase">G-Space</h1>
+            <p className="text-sm font-bold text-muted-foreground leading-relaxed px-4">
+              We've integrated and optimized essential Google services to provide the best academic support tailored for you.
+            </p>
+          </div>
+
+          <div className="pt-4">
+            <button 
+              onClick={handleGoogleVerify}
+              disabled={isLinking}
+              className="w-full flex items-center justify-center gap-4 px-8 py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:opacity-90 active:scale-95 transition-all shadow-2xl shadow-primary/10 disabled:opacity-50"
+            >
+              {isLinking ? <RefreshCw className="h-4 w-4 animate-spin" /> : <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.16H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.84l3.66-2.75z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.16l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>}
+              {isLinking ? 'Securing Connection...' : 'Connect Google Account'}
+            </button>
+            <p className="mt-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
+              Security Protocol Active
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background font-sans text-foreground pb-20 lg:pb-0">
       <div className="flex h-screen overflow-hidden">
@@ -379,11 +426,7 @@ export default function GSpacePage() {
           </div>
 
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
-            {[
-              { id: 'sync', name: 'Dashboard', icon: RefreshCw, desc: 'Sync & Classroom' },
-              { id: 'assignments', name: 'Assignments', icon: FileText, desc: 'Academic Tasks' },
-              { id: 'notes', name: 'Notes', icon: StickyNote, desc: 'Google Tasks' },
-            ].map((item) => (
+            {tabs.map((item) => (
               <button
                 key={item.id}
                 onClick={() => handleTabChange(item.id as any)}
@@ -432,11 +475,7 @@ export default function GSpacePage() {
           </header>
 
           <div className="lg:hidden flex items-center gap-1 bg-muted/30 p-2 border-b border-border overflow-x-auto no-scrollbar">
-            {[
-              { id: 'sync', name: 'Sync', icon: RefreshCw },
-              { id: 'assignments', name: 'Tasks', icon: FileText },
-              { id: 'notes', name: 'Notes', icon: StickyNote },
-            ].map((tab) => (
+            {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id as any)}
@@ -451,60 +490,95 @@ export default function GSpacePage() {
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8">
-            <AnimatePresence mode="wait">
-              {activeTab === 'sync' && (
-                <SyncTab 
-                  student={student}
-                  linkedEmail={linkedEmail}
-                  isLinking={isLinking}
-                  isFetching={isFetching}
-                  googleAccessToken={googleAccessToken}
-                  classroomCourses={classroomCourses}
-                  classroomAssignments={classroomAssignments}
-                  handleGoogleVerify={handleGoogleVerify}
-                  fetchAllData={fetchAllData}
-                />
-              )}
-              {activeTab === 'assignments' && (
-                <AssignmentsTab 
-                  student={student}
-                  linkedEmail={linkedEmail}
-                  isFetching={isFetching}
-                  assignments={classroomAssignments}
-                  courses={classroomCourses}
-                  handleGoogleVerify={handleGoogleVerify}
-                />
-              )}
-              {activeTab === 'notes' && (
-                <NotesTab 
-                  linkedEmail={linkedEmail}
-                  isLinking={isLinking}
-                  isFetching={isFetching}
-                  googleTasks={googleTasks}
-                  handleGoogleVerify={handleGoogleVerify}
-                  setIsAddingNote={setIsAddingNote}
-                  handleToggleTaskStatus={handleToggleTaskStatus}
-                  handleDeleteNote={handleDeleteNote}
-                />
-              )}
-            </AnimatePresence>
+            <div className="max-w-5xl mx-auto">
+              <div className="mb-8 hidden lg:block">
+                <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">
+                  {tabs.find(t => t.id === activeTab)?.name}
+                </h1>
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                  {tabs.find(t => t.id === activeTab)?.desc}
+                </p>
+              </div>
+
+              <AnimatePresence mode="wait">
+                {activeTab === 'sync' && (
+                  <SyncTab 
+                    key="sync"
+                    student={student}
+                    linkedEmail={linkedEmail}
+                    isLinking={isLinking}
+                    isFetching={isFetching}
+                    googleAccessToken={googleAccessToken}
+                    classroomCourses={classroomCourses}
+                    classroomAssignments={classroomAssignments}
+                    handleGoogleVerify={handleGoogleVerify}
+                    fetchAllData={fetchAllData}
+                  />
+                )}
+                {activeTab === 'assignments' && (
+                  <AssignmentsTab 
+                    key="assignments"
+                    student={student}
+                    linkedEmail={linkedEmail}
+                    isFetching={isFetching}
+                    assignments={classroomAssignments}
+                    courses={classroomCourses}
+                    handleGoogleVerify={handleGoogleVerify}
+                  />
+                )}
+                {activeTab === 'tasks' && (
+                  <TaskTab 
+                    key="tasks"
+                    linkedEmail={linkedEmail}
+                    isLinking={isLinking}
+                    isFetching={isFetching}
+                    googleTasks={googleTasks}
+                    handleGoogleVerify={handleGoogleVerify}
+                    setIsAddingTask={setIsAddingTask}
+                    handleToggleTaskStatus={handleToggleTaskStatus}
+                    handleDeleteTask={handleDeleteTask}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
 
       <Modal 
-        isOpen={isAddingNote} 
-        onClose={() => setIsAddingNote(false)}
-        title={<h3 className="text-lg font-bold">Create New Note</h3>}
+        isOpen={isAddingTask} 
+        onClose={() => setIsAddingTask(false)}
+        title={<h3 className="text-lg font-bold">Create New Task</h3>}
         maxWidth="max-w-md"
       >
         <div className="p-6 space-y-4">
-          <input type="text" placeholder="Title" value={newNote.title} onChange={(e) => setNewNote({ ...newNote, title: e.target.value })} className="w-full bg-muted/30 border border-border rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-primary focus:bg-background transition-all" />
-          <textarea placeholder="Notes" rows={5} value={newNote.notes} onChange={(e) => setNewNote({ ...newNote, notes: e.target.value })} className="w-full bg-muted/30 border border-border rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-primary focus:bg-background transition-all resize-none" />
+          <input 
+            type="text" 
+            placeholder="Title" 
+            value={newTask.title} 
+            onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} 
+            className="w-full bg-muted/30 border border-border rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-primary focus:bg-background transition-all" 
+          />
+          <textarea 
+            placeholder="Notes" 
+            rows={5} 
+            value={newTask.notes} 
+            onChange={(e) => setNewTask({ ...newTask, notes: e.target.value })} 
+            className="w-full bg-muted/30 border border-border rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-primary focus:bg-background transition-all resize-none" 
+          />
           <div className="flex gap-3">
-            <button onClick={() => setIsAddingNote(false)} className="flex-1 py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted rounded-lg transition-all">Discard</button>
-            <button onClick={handleAddNote} disabled={!newNote.title.trim() || isFetching} className="flex-[2] py-2.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold shadow-sm hover:opacity-90 disabled:opacity-50 transition-all active:scale-95">
-              {isFetching ? 'Syncing...' : 'Save Note'}
+            <button 
+              onClick={() => setIsAddingTask(false)} 
+              className="flex-1 py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted rounded-lg transition-all"
+            >
+              Discard
+            </button>
+            <button 
+              onClick={handleAddTask} 
+              disabled={!newTask.title.trim() || isFetching} 
+              className="flex-[2] py-2.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold shadow-sm hover:opacity-90 disabled:opacity-50 transition-all active:scale-95"
+            >
+              {isFetching ? 'Syncing...' : 'Save Task'}
             </button>
           </div>
         </div>

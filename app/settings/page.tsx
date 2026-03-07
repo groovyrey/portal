@@ -14,6 +14,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { useStudent } from '@/lib/hooks';
