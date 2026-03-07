@@ -1,27 +1,29 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 
 export async function GET() {
   try {
-    const now = new Date();
-    const phTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"}));
-    const dateStr = phTime.toISOString().split('T')[0];
+    const runsRef = collection(db, 'cron_runs');
+    const q = query(runsRef, orderBy('lastRun', 'desc'), limit(20));
+    const snap = await getDocs(q);
+    
+    const allRuns = snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as any[];
 
-    const dailyScheduleRef = doc(db, 'cron_runs', `daily-schedule_${dateStr}`);
-    const paymentReminderRef = doc(db, 'cron_runs', `payment-reminder_${dateStr}`);
-
-    const [dailySnap, paymentSnap] = await Promise.all([
-      getDoc(dailyScheduleRef),
-      getDoc(paymentReminderRef)
-    ]);
+    // Find the latest for each jobId for the main cards
+    const daily = allRuns.find(r => r.jobId === 'daily-consolidated');
+    const maintenance = allRuns.find(r => r.jobId === 'maintenance-consolidated');
 
     return NextResponse.json({
-      date: dateStr,
+      date: new Date().toISOString().split('T')[0],
       jobs: {
-        dailySchedule: dailySnap.exists() ? dailySnap.data() : { status: 'pending' },
-        paymentReminder: paymentSnap.exists() ? paymentSnap.data() : { status: 'pending' }
-      }
+        daily: daily || { status: 'pending' },
+        maintenance: maintenance || { status: 'pending' }
+      },
+      history: allRuns
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

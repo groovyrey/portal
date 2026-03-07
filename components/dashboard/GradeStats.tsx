@@ -1,11 +1,28 @@
 import { SubjectGrade } from '@/types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { useState, useEffect } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface GradeStatsProps {
   allGrades: SubjectGrade[];
 }
 
 export default function GradeStats({ allGrades }: GradeStatsProps) {
+  const [showGwa, setShowGwa] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('hide_gwa');
+    // If explicitly set to 'false' (meaning user wants to show it), then show it
+    if (saved === 'false') setShowGwa(true);
+  }, []);
+
+  const toggleGwa = () => {
+    const newValue = !showGwa;
+    setShowGwa(newValue);
+    // Store whether it's hidden (newValue=true means hidden=false)
+    localStorage.setItem('hide_gwa', (!newValue).toString());
+  };
+
   if (!allGrades || allGrades.length === 0) return null;
 
   // Filter out non-numeric grades for GWA calculation
@@ -38,9 +55,18 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
   return (
     <div className="space-y-4 mb-8">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-card p-5 rounded-2xl border border-border flex flex-col items-center justify-center text-center shadow-sm">
+        <div className="bg-card p-5 rounded-2xl border border-border flex flex-col items-center justify-center text-center shadow-sm relative group">
+          <button 
+            onClick={toggleGwa}
+            className="absolute top-2 right-2 p-1.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-all sm:opacity-0 sm:group-hover:opacity-100 active:scale-95"
+            title={showGwa ? "Hide GWA" : "Show GWA"}
+          >
+            {showGwa ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+          </button>
           <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">GWA</span>
-          <p className="text-2xl font-bold text-foreground tracking-tight">{gwa}</p>
+          <p className="text-2xl font-bold text-foreground tracking-tight">
+            {showGwa ? gwa : gwa.replace(/[0-9]/g, '*')}
+          </p>
         </div>
 
         <div className="bg-card p-5 rounded-2xl border border-border flex flex-col items-center justify-center text-center shadow-sm">
