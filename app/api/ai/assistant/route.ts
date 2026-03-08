@@ -236,7 +236,7 @@ async function performMathExecution(code: string) {
   }
 }
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 interface Message {
   role: 'user' | 'assistant' | 'system';

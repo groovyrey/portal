@@ -8,6 +8,8 @@ import {
 import { z } from "zod";
 import { decrypt } from '@/lib/auth';
 
+export const maxDuration = 300;
+
 // Define schema for structured output
 const moderationSchema = z.object({
   decision: z.enum(["APPROVED", "REJECTED"]),

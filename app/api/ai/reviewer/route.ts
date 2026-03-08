@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { InferenceClient } from '@huggingface/inference';
 import { decrypt } from '@/lib/auth';
 
+export const maxDuration = 300;
+
 export async function POST(req: NextRequest) {
   try {
     const { content, userName, poll } = await req.json();
