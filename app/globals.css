@@ -134,7 +134,74 @@ body {
   opacity: 0.8;
 }
 
-/* AI Streaming Indicator */
+/* Bold Text Styling */
+.prose strong, .prose b {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+/* Number Styling */
+.hljs-number {
+  color: #ff9d00 !important; /* Amber/Orange for code numbers */
+}
+
+.katex .mn {
+  color: #3b82f6 !important; /* Blue for math numbers */
+}
+
+.dark .katex .mn {
+  color: #60a5fa !important;
+}
+
+/* List Numbers (Ordered Lists) */
+.prose ol > li::marker {
+  color: #3b82f6;
+  font-weight: 800;
+}
+
+.dark .prose ol > li::marker {
+  color: #60a5fa;
+}
+
+/* Table Numbers */
+.prose table td {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Utility for numbers in general text */
+.num-highlight {
+  color: var(--accent-blue);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* KaTeX Custom Styles */
+.katex-display {
+  margin: 1.5rem 0 !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 1.25rem !important;
+  background: color-mix(in srgb, var(--accent-blue), transparent 95%);
+  border: 1px solid color-mix(in srgb, var(--accent-blue), transparent 80%);
+  border-radius: var(--radius);
+}
+
+.katex {
+  font-size: 1.05em !important;
+  font-weight: 600;
+  padding: 0 2px;
+  color: var(--primary);
+}
+
+.prose .katex {
+  background: color-mix(in srgb, var(--accent-blue), transparent 92%);
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+
+.streaming-active .katex-display {
+  opacity: 0.8;
+}
 .streaming-active p:last-child::after {
   content: '';
   display: inline-block;

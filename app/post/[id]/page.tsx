@@ -6,6 +6,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github-dark.css';
 import { 
   Loader2, 
   Send, 
@@ -452,6 +455,7 @@ export default function PostPage() {
             <div className="prose prose-slate dark:prose-invert max-w-none prose-base font-normal text-muted-foreground leading-relaxed px-0.5">
               <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw, rehypeHighlight]}
                 components={{
                   a: ({ ...props }) => (
                     <a 

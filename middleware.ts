@@ -15,7 +15,6 @@ const protectedRoutes = [
   '/api/student/grades',
   '/api/student/settings',
   '/api/student/change-password',
-  '/api/student/login',
   '/api/student/logout',
   '/api/ratings',
   '/api/community',

@@ -20,22 +20,32 @@ import {
   Zap,
   Info,
   Calendar,
-  Wallet
+  Wallet,
+  Youtube,
+  Calculator,
+  Bell,
+  List,
+  FileText,
+  CalendarDays
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
+import 'highlight.js/styles/github-dark.css';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import Modal from '@/components/ui/Modal';
+import { Avatar, AvatarGroup, Tooltip } from '@mui/material';
 
 type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  tools?: string[];
 };
 
 // Modern Typing Indicator Component
@@ -91,6 +101,22 @@ export default function AssistantPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const getToolIcon = (toolName: string) => {
+    switch (toolName) {
+      case 'web_search': return Globe;
+      case 'web_fetch': return FileText;
+      case 'youtube_search': return Youtube;
+      case 'execute_math': return Calculator;
+      case 'ask_user': return HelpCircle;
+      case 'ask_user_choice': return List;
+      case 'get_today_schedule':
+      case 'get_day_schedule': return Calendar;
+      case 'get_weekly_schedule': return CalendarDays;
+      default: return Zap;
+    }
+  };
+
   const [suggestions, setSuggestions] = useState([
     { text: "What's my current balance?", icon: Wallet, color: "text-emerald-500", bg: "bg-emerald-500/10" },
     { text: "Show my schedule for today", icon: Calendar, color: "text-blue-500", bg: "bg-blue-500/10" },
@@ -123,8 +149,8 @@ export default function AssistantPage() {
             const subjectTitle = randomSubject.description || randomSubject.subject;
             if (subjectTitle) {
               setSuggestions(prev => [
-                ...prev.slice(0, 3),
-                { text: `Resources for "${subjectTitle}"`, icon: Sparkles, color: "text-indigo-500", bg: "bg-indigo-500/10" }
+                { text: `Resources for "${subjectTitle}"`, icon: Sparkles, color: "text-indigo-500", bg: "bg-indigo-500/10" },
+                ...prev
               ]);
             }
           }
@@ -196,7 +222,31 @@ export default function AssistantPage() {
         const { done, value } = await reader.read();
         if (value) buffer += textDecoder.decode(value, { stream: true });
         
-        buffer = buffer.replace(/STATUS:(SEARCHING|PROCESSING|FETCHING|FINALIZING)/g, '');
+        buffer = buffer.replace(/STATUS:(SEARCHING|PROCESSING|FETCHING|FINALIZING|COMPUTING)/g, '');
+
+        // NEW: Detect and extract TOOL_USED: markers
+        const toolUsedPrefix = "TOOL_USED:";
+        while (true) {
+          const usedIndex = buffer.indexOf(toolUsedPrefix);
+          if (usedIndex === -1) break;
+
+          let endOfUsed = buffer.indexOf('\n', usedIndex);
+          if (endOfUsed === -1 && done) endOfUsed = buffer.length;
+
+          if (endOfUsed !== -1) {
+            const toolName = buffer.substring(usedIndex + toolUsedPrefix.length, endOfUsed).trim();
+            if (toolName) {
+              setMessages((prev) => prev.map((msg) => 
+                msg.id === assistantMessageId 
+                  ? { ...msg, tools: [...(msg.tools || []), toolName] } 
+                  : msg
+              ));
+            }
+            buffer = buffer.substring(0, usedIndex) + buffer.substring(endOfUsed + (done ? 0 : 1));
+          } else {
+            break;
+          }
+        }
 
         const toolCallPrefix = "TOOL_CALL:";
         while (true) {
@@ -225,13 +275,7 @@ export default function AssistantPage() {
             if (toolCallStr) {
               try {
                 const toolCall = JSON.parse(toolCallStr);
-                if (toolCall.name === 'show_toast' && toolCall.parameters) {
-                  const { message, type } = toolCall.parameters as { message: string; type: 'success' | 'error' | 'info' | 'warning' };
-                  toast[type || 'info']("Assistant Message", {
-                    description: message,
-                    duration: 4000,
-                  });
-                } else if (toolCall.name === 'ask_user' && toolCall.parameters) {
+                if (toolCall.name === 'ask_user' && toolCall.parameters) {
                   const { question, placeholder } = toolCall.parameters as { question: string; placeholder?: string };
                   setModalQuestion(question);
                   setModalPlaceholder(placeholder || "Type your response here...");
@@ -321,7 +365,9 @@ export default function AssistantPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
                     onClick={() => sendMessage(s.text)}
-                    className="group flex flex-col items-start p-4 bg-accent/40 border border-border hover:border-primary/40 hover:bg-accent rounded-xl transition-all text-left relative overflow-hidden active:scale-[0.98]"
+                    className={`group flex flex-col items-start p-4 bg-accent/40 border border-border hover:border-primary/40 hover:bg-accent rounded-xl transition-all text-left relative overflow-hidden active:scale-[0.98] ${
+                      suggestions.length % 2 !== 0 && i === suggestions.length - 1 ? 'sm:col-span-2' : ''
+                    }`}
                   >
                     <div className={`${s.bg} ${s.color} p-2 rounded-lg mb-2.5 transition-transform group-hover:scale-110`}>
                         <s.icon className="h-3.5 w-3.5" />
@@ -343,22 +389,68 @@ export default function AssistantPage() {
                 className={`flex w-full ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={`flex gap-3.5 ${m.role === 'user' ? 'flex-row-reverse max-w-[85%] sm:max-w-[75%]' : 'flex-col w-full items-start'}`}>
-                  {/* Avatar & Label */}
-                  <div className={`flex items-center gap-2.5 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex-shrink-0 h-8 w-8 rounded-xl flex items-center justify-center border ${
-                      m.role === 'user' ? 'bg-primary border-primary text-primary-foreground' : 'bg-accent border-border text-primary'
-                    }`}>
-                      {m.role === 'user' ? <User className="h-4 w-4" /> : <BrainCircuit className="h-4 w-4" />}
-                    </div>
-                    {m.role === 'assistant' && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-foreground uppercase tracking-widest">Cato</span>
-                        {m.content && !isLoading && <CopyButton content={m.content} />}
+                  {/* Avatar & Label Area */}
+                  {m.role === 'user' ? (
+                    <div className="flex items-center gap-2.5 justify-end mb-1">
+                      <div className="flex-shrink-0 h-8 w-8 rounded-xl bg-primary border border-primary text-primary-foreground flex items-center justify-center">
+                        <User className="h-4 w-4" />
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="w-full flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 h-9 w-9 rounded-2xl bg-accent border border-border text-primary flex items-center justify-center shadow-sm">
+                          <BrainCircuit className="h-5 w-5" />
+                        </div>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-black text-foreground uppercase tracking-widest">Cato Assistant</span>
+                            <div className="h-1 w-1 rounded-full bg-blue-500 animate-pulse" />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        {/* Tool Stack */}
+                        {m.tools && m.tools.length > 0 && (
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Tools Engaged</span>
+                            <AvatarGroup 
+                              max={6}
+                              sx={{
+                                '& .MuiAvatar-root': { 
+                                  width: 20, 
+                                  height: 20, 
+                                  fontSize: 10,
+                                  border: '2px solid var(--card)',
+                                  bgcolor: 'color-mix(in srgb, var(--primary), transparent 90%)',
+                                  color: 'var(--primary)',
+                                  boxShadow: '0 2px 4px -1px rgb(0 0 0 / 0.1)'
+                                },
+                              }}
+                            >
+                              {m.tools.map((tool, i) => {
+                                const ToolIcon = getToolIcon(tool);
+                                return (
+                                  <Tooltip key={i} title={tool.replace(/_/g, ' ')} arrow>
+                                    <Avatar>
+                                      <ToolIcon className="h-2.5 w-2.5" />
+                                    </Avatar>
+                                  </Tooltip>
+                                );
+                              })}
+                            </AvatarGroup>
+                          </div>
+                        )}
+                        {m.content && !isLoading && (
+                          <div className="h-8 w-[1px] bg-border mx-1 hidden sm:block" />
+                        )}
+                        {m.content && !isLoading && <CopyButton content={m.content} className="scale-110" />}
+                      </div>
+                    </div>
+                  )}
 
-                  {/* Bubble */}
+                  {/* Bubble / Card */}
                   <div className={`leading-relaxed break-words overflow-hidden ${
                     m.role === 'user' 
                       ? 'p-3.5 rounded-2xl rounded-tr-none bg-primary text-primary-foreground font-medium shadow-md' 
@@ -368,46 +460,49 @@ export default function AssistantPage() {
                       <p className="whitespace-pre-wrap text-sm">{m.content}</p>
                     ) : (
                       m.content ? (
-                        <div className="relative w-full overflow-hidden bg-accent/20 p-4 rounded-2xl rounded-tl-none border border-border/50">
+                        <div className="relative w-full overflow-hidden bg-accent/10 p-5 md:p-7 rounded-2xl rounded-tl-none border border-border/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]">
                           <ReactMarkdown 
                             remarkPlugins={[remarkGfm, remarkMath]} 
-                            rehypePlugins={[rehypeHighlight, rehypeKatex]}
+                            rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
                             className={`prose prose-slate dark:prose-invert max-w-full leading-relaxed text-muted-foreground font-medium text-sm break-words ${
                               isLoading && idx === messages.length - 1 ? 'streaming-active' : ''
                             }`}
                             components={{
-                              p: ({children}) => <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>,
-                              table: ({...props}) => <div className="overflow-x-auto my-6 rounded-xl border border-border shadow-sm"><table className="w-full text-xs text-left" {...props} /></div>,
-                              thead: ({...props}) => <thead className="bg-accent text-foreground font-bold uppercase tracking-wider text-[9px]" {...props} />,
-                              th: ({...props}) => <th className="px-3 py-2" {...props} />,
-                              td: ({...props}) => <td className="px-3 py-2 border-t border-border/50" {...props} />,
+                              p: ({children}) => <p className="mb-5 last:mb-0 leading-relaxed text-sm/6">{children}</p>,
+                              table: ({...props}) => <div className="overflow-x-auto my-8 rounded-xl border border-border/60 shadow-sm bg-card/50"><table className="w-full text-xs text-left" {...props} /></div>,
+                              thead: ({...props}) => <thead className="bg-accent/80 text-foreground font-black uppercase tracking-widest text-[10px]" {...props} />,
+                              th: ({...props}) => <th className="px-4 py-3" {...props} />,
+                              td: ({...props}) => <td className="px-4 py-3 border-t border-border/40" {...props} />,
                               code: ({className, children, ...props}) => {
                                 const match = /language-(\w+)/.exec(className || '');
                                 return match ? (
-                                  <div className="relative group my-4">
-                                    <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                  <div className="relative group my-6">
+                                    <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
+                                      <div className="px-2 py-1 bg-slate-800 rounded text-[9px] font-black uppercase tracking-widest text-slate-400 border border-slate-700">
+                                        {match[1]}
+                                      </div>
                                       <CopyButton content={String(children).replace(/\n$/, '')} />
                                     </div>
-                                    <pre className="bg-slate-950 text-slate-50 rounded-xl p-4 overflow-x-auto text-xs scroll-smooth custom-scrollbar">
+                                    <pre className="bg-slate-950 text-slate-50 rounded-xl p-5 overflow-x-auto text-xs scroll-smooth custom-scrollbar border border-slate-800 shadow-xl">
                                       <code className={className} {...props}>
                                         {children}
                                       </code>
                                     </pre>
                                   </div>
                                 ) : (
-                                  <code className="bg-primary/5 text-primary rounded px-1.5 py-0.5 font-mono text-[0.9em] font-bold" {...props}>
+                                  <code className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 font-mono text-[0.9em] font-bold border border-primary/20" {...props}>
                                     {children}
                                   </code>
                                 );
                               },
-                              a: ({...props}) => <a className="text-blue-500 font-bold hover:underline transition-all" target="_blank" rel="noopener noreferrer" {...props} />,
-                              img: ({...props}) => <img className="rounded-xl border border-border shadow-sm my-4 max-w-full h-auto hover:opacity-90 transition-opacity" {...props} />,
-                              ul: ({...props}) => <ul className="list-disc list-outside ml-5 my-4 space-y-2" {...props} />,
-                              ol: ({...props}) => <ol className="list-decimal list-outside ml-5 my-4 space-y-2" {...props} />,
-                              h1: ({children}) => <h1 className="text-lg font-bold text-foreground mt-8 mb-4 pb-2 border-b border-border/50 uppercase tracking-tight">{children}</h1>,
-                              h2: ({children}) => <h2 className="text-base font-bold text-foreground mt-6 mb-3">{children}</h2>,
-                              h3: ({children}) => <h3 className="text-sm font-bold text-foreground mt-4 mb-2">{children}</h3>,
-                              blockquote: ({...props}) => <blockquote className="border-l-4 border-primary pl-4 py-2 my-6 text-muted-foreground italic bg-primary/5 rounded-r-lg" {...props} />,
+                              a: ({...props}) => <a className="text-blue-500 font-bold hover:text-blue-600 transition-all underline decoration-blue-500/30 underline-offset-4" target="_blank" rel="noopener noreferrer" {...props} />,
+                              img: ({...props}) => <img className="rounded-2xl border border-border shadow-lg my-8 max-w-full h-auto" {...props} />,
+                              ul: ({...props}) => <ul className="list-disc list-outside ml-6 my-5 space-y-2.5" {...props} />,
+                              ol: ({...props}) => <ol className="list-decimal list-outside ml-6 my-5 space-y-2.5" {...props} />,
+                              h1: ({children}) => <h1 className="text-xl font-black text-foreground mt-10 mb-5 pb-3 border-b border-border/60 uppercase tracking-tight">{children}</h1>,
+                              h2: ({children}) => <h2 className="text-lg font-bold text-foreground mt-8 mb-4 tracking-tight">{children}</h2>,
+                              h3: ({children}) => <h3 className="text-base font-bold text-foreground mt-6 mb-3">{children}</h3>,
+                              blockquote: ({...props}) => <blockquote className="border-l-4 border-primary/50 pl-5 py-3 my-8 text-muted-foreground italic bg-primary/5 rounded-r-2xl font-medium" {...props} />,
                             }}
                           >
                             {m.content}

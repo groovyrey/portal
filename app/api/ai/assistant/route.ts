@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { Sandbox } from '@vercel/sandbox';
 /**
  * TOOL USAGE GUIDELINES FOR DEVELOPERS:
  * 
@@ -21,7 +22,6 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { AIMessage, HumanMessage, BaseMessage } from "@langchain/core/messages";
-import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import * as cheerio from 'cheerio';
 
@@ -37,21 +37,6 @@ import {
   COMMON_PROCEDURES, 
   IMPORTANT_OFFICES 
 } from '@/lib/assistant-knowledge';
-
-// Define tools for LangChain (optional, we use manual parsing for Gemma compatibility)
-const showToastTool = tool(
-  async ({ message, type = "info" }) => {
-    return `Successfully triggered a ${type} toast with message: ${message}`;
-  },
-  {
-    name: "show_toast",
-    description: "Display a temporary notification (toast).",
-    schema: z.object({
-      message: z.string(),
-      type: z.enum(["success", "error", "info", "warning"]).default("info")
-    }),
-  }
-);
 
 async function performYoutubeSearch(query: string) {
   // Prioritize a dedicated YouTube key or the Firebase key which likely has generic services enabled.
@@ -214,6 +199,43 @@ async function performWebFetch(url: string) {
   }
 }
 
+async function performMathExecution(code: string) {
+  let sandbox;
+  try {
+    sandbox = await Sandbox.create({
+      runtime: 'python3.13',
+      timeout: 30000,
+    });
+
+    await sandbox.writeFiles([{
+      path: 'calculation.py',
+      content: Buffer.from(code),
+    }]);
+
+    const execution = await sandbox.runCommand({
+      cmd: 'python3',
+      args: ['calculation.py'],
+    });
+
+    const output = await execution.stdout();
+    const errorOutput = await execution.stderr();
+
+    const result = (output + (errorOutput ? `\nERRORS:\n${errorOutput}` : '')).trim();
+    return result || "Execution completed with no output.";
+  } catch (error: any) {
+    console.error('Sandbox Math execution error:', error);
+    return `Failed to execute calculation: ${error.message}`;
+  } finally {
+    if (sandbox) {
+      try {
+        await sandbox.stop();
+      } catch (e) {
+        console.error('Error stopping sandbox:', e);
+      }
+    }
+  }
+}
+
 export const maxDuration = 60;
 
 interface Message {
@@ -315,24 +337,38 @@ export async function POST(req: NextRequest) {
     });
 
     const systemPrompt = `
-You are the "Portal Assistant", a specialized academic advisor for ${SCHOOL_INFO.name}.
+You are the "Portal Assistant" (code-named Cato), a specialized academic advisor and computational assistant for ${SCHOOL_INFO.name}.
 
 STRICT OPERATIONAL RULES:
 1. **NO PROACTIVE SUMMARIES:** Never start a conversation by summarizing the student's grades, GPA, or financial balance unless specifically asked.
-2. **PROACTIVE WEB SEARCH:** If the user asks about ANY topic outside of the school's internal knowledge (e.g., general news, tech updates, external events), you MUST immediately call the \\\`web_search\\\` tool. Do not ask for permission.
-3. **PROACTIVE FEEDBACK (TOASTS):** You MUST use the \\\`show_toast\\\` tool to provide real-time feedback for your actions. 
-   - Use \\\`success\\\` when you've found specific data.
-   - Use \\\`info\\\` for general status updates (e.g., "Starting web search...").
-   - **IMPORTANT:** DO NOT include the toast message text (e.g., "[Assistant]: Success...") in your actual chat response bubble. The toast is handled separately by the system.
-   Note: The UI shows "Thinking...", but your toasts provide specific context. Your toasts will be automatically prefixed with "[Assistant]: " in the UI.
-4. **PROACTIVE CLARIFICATION:** If a user request is ambiguous or requires more data that isn't in your student context, immediately use the \\\`ask_user\\\` tool to request the missing information.
-5. **CITE SOURCES:** When using \\\`web_search\\\` or \\\`web_fetch\\\`, synthesize results and provide Markdown links.
-6. **NO ASSUMPTIONS:** You MUST always use the \\\`ask_user\\\` and \\\`ask_user_choice\\\` tools to gather preferences, clarify requirements, or make decisions instead of making assumptions.
-7. **YOUTUBE LEARNING:** When the user asks for "videos", "how-to", "tutorials", or "visual guides", prioritize the \\\`youtube_search\\\` tool.
+2. **PROACTIVE WEB SEARCH:** If the user asks about ANY topic outside of the school's internal knowledge (e.g., general news, tech updates, external events), you MUST immediately call the \`web_search\` tool. Do not ask for permission.
+3. **PROACTIVE CLARIFICATION:** If a user request is ambiguous or requires more data that isn't in your student context, immediately use the \`ask_user\` tool to request the missing information.
+4. **CITE SOURCES:** When using \`web_search\` or \`web_fetch\`, synthesize results and provide Markdown links.
+5. **NO ASSUMPTIONS:** You MUST always use the \`ask_user\` and \`ask_user_choice\` tools to gather preferences, clarify requirements, or make decisions instead of making assumptions.
+6. **YOUTUBE LEARNING:** When the user asks for "videos", "how-to", "tutorials", or "visual guides", prioritize the \`youtube_search\` tool.
+7. **ADVANCED MATH & LOGIC:** For any precise mathematical calculations, GPA forecasting, financial planning, or complex logic puzzles, you MUST use the \`execute_math\` tool. Do not estimate complex math. Cato is empowered to solve problems of **unlimited complexity** (Calculus, Linear Algebra, Statistics, Physics, etc.) by writing robust Python scripts. **After receiving the tool result, you MUST display the Python code you used in a Markdown code block so the student can verify the logic.**
+8. **STRICT MATHEMATICAL NOTATION:** You MUST use LaTeX for EVERY mathematical formula, equation, or numeric derivation without exception. 
+   - Inline math: Use single dollar signs like $E = mc^2$.
+   - Block math: Use double dollar signs like $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$.
+   - **CRITICAL:** Even simple arithmetic in your explanation must be wrapped in LaTeX (e.g., use $2 + 2 = 4$ instead of plain text "2 + 2 = 4").
+9. **STRICT RESPONSE CLEANLINESS:** NEVER include internal status markers like "STATUS:XYZ" or progress text like "Executing mathematical logic..." in your response bubble. These are internal system logs and must NOT be shown to the user.
+
+---
+💡 COMPUTATIONAL THINKING (CATO'S GUIDELINES):
+- **Unlimited Complexity:** You are expected to solve high-level academic problems (integrals, matrix operations, statistical distributions) by writing comprehensive Python logic.
+- **Library Usage:** Use the \`math\`, \`statistics\`, and \`json\` modules. For symbolic or complex numeric tasks, write your own algorithms if necessary to ensure correctness.
+- **Step-by-Step Logic:** Break down complex problems into manageable functions in your script.
+- **Presentation:** 
+  1. **MANDATORY:** Always show the mathematical formula/equation used in a LaTeX block ($$ ... $$) before and after any calculation.
+  2. Provide the full Python calculation script in a Markdown code block (\`\`\`python ... \`\`\`).
+  3. Explain the final result in clear terms for the student, using LaTeX for any numbers or math mentioned in the text.
+- **Formatting:** Ensure ALL mathematical derivations and final numeric results are formatted with LaTeX ($ or $$) for high-quality rendering. This applies to every turn where math is involved.
+- **Self-Correction:** If a script fails (e.g., division by zero, overflow), analyze the error and retry with a fixed version in the next turn.
+- **Output:** Always print the final result clearly so it can be parsed from the sandbox output. Use clear labeling in your print statements.
 
 ---
 🛠️ TOOL CALLING CONFIGURATION
-To call a tool, append \\\`|||\\\` followed by the JSON tool call at the VERY END of your response. 
+To call a tool, append \`|||\` followed by the JSON tool call at the VERY END of your response. 
 **CRITICAL:** DO NOT wrap the tool call in markdown code blocks.
 
 **Example:**
@@ -343,12 +379,12 @@ I'll check the web for that information.
 \`\`\`json
 [
   {
-    "name": "show_toast",
-    "description": "Display a temporary notification.",
+    "name": "execute_math",
+    "description": "Cato's high-performance computational engine. Execute Python 3.13 code for advanced math, complex logic, simulations, and precise data analysis. Can handle any mathematical complexity by writing complete scripts.",
     "parameters": {
       "type": "object",
-      "properties": { "message": { "type": "string" }, "type": { "type": "string", "enum": ["success", "error", "info", "warning"] } },
-      "required": ["message"]
+      "properties": { "code": { "type": "string", "description": "The complete Python script to solve the problem. Use print() for results." } },
+      "required": ["code"]
     }
   },
   {
@@ -479,7 +515,7 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
 
     (async () => {
       let currentInput = input;
-      const maxTurns = 3;
+      const maxTurns = 5;
       let turn = 0;
       let isWriterClosed = false;
 
@@ -517,7 +553,7 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
             toolCallPos = toolMarkerIndex;
           } else {
             // Fallback: search for tool-like JSON in the whole content
-            const toolPatterns = ['"web_search"', '"web_fetch"', '"show_toast"', '"ask_user"', '"ask_user_choice"', '"youtube_search"'];
+            const toolPatterns = ['"web_search"', '"web_fetch"', '"ask_user"', '"ask_user_choice"', '"youtube_search"'];
             if (toolPatterns.some(p => fullContent.includes(p))) {
               // Find the FIRST '{' that likely starts the tool call
               // We search from the end but look for the outermost matching brace
@@ -543,21 +579,25 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
               // Pre-process jsonStr to fix common model mistakes
               const sanitizedJson = jsonStr.replace(/ask_user_choices/g, 'ask_user_choice');
               const toolCall = JSON.parse(sanitizedJson);
-              const isOurTool = ['web_search', 'web_fetch', 'show_toast', 'ask_user', 'ask_user_choice', 'youtube_search', 'get_today_schedule', 'get_day_schedule', 'get_weekly_schedule'].includes(toolCall.name);
+              const isOurTool = ['web_search', 'web_fetch', 'ask_user', 'ask_user_choice', 'youtube_search', 'get_today_schedule', 'get_day_schedule', 'get_weekly_schedule', 'execute_math'].includes(toolCall.name);
               
               if (isOurTool) {
+                // Inform the client about tool usage
+                if (!isWriterClosed) {
+                  await writer.write(encoder.encode(`\nTOOL_USED:${toolCall.name}\n`));
+                }
+
                 if (toolCall.name === 'web_search' && toolCall.parameters?.query) {
-                  if (!isWriterClosed) {
-                    await writer.write(encoder.encode('STATUS:SEARCHING'));
-                    await writer.write(encoder.encode('\n🔍 *Searching for: "' + toolCall.parameters.query + '"...*\n\n'));
-                  }
                   const result = await performWebSearch(toolCall.parameters.query);
-                  if (!isWriterClosed) await writer.write(encoder.encode('STATUS:PROCESSING'));
                   history.push(new AIMessage(fullContent));
                   currentInput = `TOOL_RESULT: ${result}\n\nBased on these search results, please provide a comprehensive answer and cite your sources.`;
                   continue;
+                } else if (toolCall.name === 'execute_math' && toolCall.parameters?.code) {
+                  const result = await performMathExecution(toolCall.parameters.code);
+                  history.push(new AIMessage(fullContent));
+                  currentInput = `TOOL_RESULT (Sandbox Output):\n${result}\n\nINSTRUCTION: Provide the final answer. Start by presenting the math formula/equation in a LaTeX block ($$ ... $$), show your Python code in a \`\`\`python code block, and finally explain the logic clearly.`;
+                  continue;
                 } else if (toolCall.name === 'get_today_schedule') {
-                    if (!isWriterClosed) await writer.write(encoder.encode('STATUS:FETCHING'));
                     const dayMap = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
                     const todayCode = dayMap[new Date().getDay()];
                     const result = structuredSchedule[todayCode] 
@@ -567,7 +607,6 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
                     currentInput = `TOOL_RESULT: Today's Schedule (${todayCode}):\n${result}`;
                     continue;
                 } else if (toolCall.name === 'get_day_schedule' && toolCall.parameters?.day) {
-                    if (!isWriterClosed) await writer.write(encoder.encode('STATUS:FETCHING'));
                     const targetDay = toolCall.parameters.day.toUpperCase().substring(0, 3);
                     const result = structuredSchedule[targetDay]
                       ? JSON.stringify({ [targetDay]: structuredSchedule[targetDay] }, null, 2)
@@ -576,7 +615,6 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
                     currentInput = `TOOL_RESULT: Schedule for ${targetDay}:\n${result}`;
                     continue;
                 } else if (toolCall.name === 'get_weekly_schedule') {
-                    if (!isWriterClosed) await writer.write(encoder.encode('STATUS:FETCHING'));
                     const result = Object.keys(structuredSchedule).length > 0
                       ? JSON.stringify(structuredSchedule, null, 2)
                       : "No schedule found.";
@@ -584,31 +622,20 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
                     currentInput = `TOOL_RESULT: Full Weekly Schedule:\n${result}`;
                     continue;
                 } else if (toolCall.name === 'youtube_search' && toolCall.parameters?.query) {
-                  if (!isWriterClosed) {
-                    await writer.write(encoder.encode('STATUS:SEARCHING'));
-                    await writer.write(encoder.encode('\n🎥 *Searching YouTube for: "' + toolCall.parameters.query + '"...*\n\n'));
-                  }
                   const result = await performYoutubeSearch(toolCall.parameters.query);
-                  if (!isWriterClosed) await writer.write(encoder.encode('STATUS:PROCESSING'));
                   history.push(new AIMessage(fullContent));
                   currentInput = `TOOL_RESULT: ${result}\n\nBased on these YouTube results, please provide a summary of the found videos and their creators. Inform the user they can watch these videos on YouTube via the links provided.`;
                   continue;
                 } else if (toolCall.name === 'web_fetch' && toolCall.parameters?.url) {
-                  if (!isWriterClosed) {
-                    await writer.write(encoder.encode('STATUS:SEARCHING'));
-                    await writer.write(encoder.encode('\n📄 *Reading page: ' + toolCall.parameters.url + '...*\n\n'));
-                  }
                   const result = await performWebFetch(toolCall.parameters.url);
-                  if (!isWriterClosed) await writer.write(encoder.encode('STATUS:PROCESSING'));
                   history.push(new AIMessage(fullContent));
                   currentInput = `TOOL_RESULT: ${result}\n\nBased on this page content, please provide a comprehensive summary and cite the source.`;
                   continue;
                 } else {
-                  // Client-side tool (toast)
+                  // Other client-side tools (ask_user, ask_user_choice) DO break as they wait for input
                   const textBefore = fullContent.substring(0, toolCallPos).replace(/\|\|\|$/, '').trim();
                   if (textBefore && !isWriterClosed) await writer.write(encoder.encode(textBefore));
                   if (!isWriterClosed) {
-                    await writer.write(encoder.encode('STATUS:FINALIZING'));
                     await writer.write(encoder.encode('\nTOOL_CALL:' + JSON.stringify(toolCall) + '\n'));
                   }
                   break;
@@ -620,7 +647,6 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
               console.error('Tool parsing error:', e, 'Raw JSON string:', jsonStr);
               const cleanedContent = fullContent.split(toolCallMarker)[0].trim();
               if (!isWriterClosed) {
-                await writer.write(encoder.encode('STATUS:FINALIZING'));
                 await writer.write(encoder.encode(cleanedContent));
               }
               break;
@@ -629,7 +655,6 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
             // Final answer turn or no tool call
             const cleanedContent = fullContent.split(toolCallMarker)[0].trim();
             if (!isWriterClosed) {
-              await writer.write(encoder.encode('STATUS:FINALIZING'));
               await writer.write(encoder.encode(cleanedContent));
             }
             break;

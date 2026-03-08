@@ -20,15 +20,15 @@ const DocsPage: React.FC = () => {
         </header>
 
         <div className="space-y-16">
-          {/* Section: The Desca Workspace */}
+          {/* Section: The Workspace */}
           <section>
             <div className="flex items-center gap-3 mb-6">
               <div className="h-6 w-1 bg-primary rounded-full" />
-              <h2 className="text-xl font-bold tracking-tight uppercase">The Desca Workspace</h2>
+              <h2 className="text-xl font-bold tracking-tight uppercase">The Workspace</h2>
             </div>
             
             <p className="text-sm text-muted-foreground mb-6 leading-relaxed font-medium">
-              Desca is your secondary specialized workspace designed for advanced academic tasks and intelligence-gathering.
+              Workspace is your secondary specialized workspace designed for advanced academic tasks and intelligence-gathering.
             </p>
 
             <div className="grid gap-4">
