@@ -97,9 +97,77 @@ const CopyButton = ({ content, className = "" }: { content: string, className?: 
   );
 };
 
+// Sub-component for the input area to prevent full page re-renders on every keystroke
+const ChatInput = React.memo(({ 
+  onSend, 
+  isLoading, 
+  onClear,
+  hasMessages 
+}: { 
+  onSend: (content: string) => void, 
+  isLoading: boolean, 
+  onClear: () => void,
+  hasMessages: boolean
+}) => {
+  const [input, setInput] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim() && !isLoading) {
+      onSend(input);
+      setInput('');
+    }
+  };
+
+  return (
+    <div className="p-4 bg-card border-t border-border">
+      <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
+        <div className="relative flex items-center bg-accent border border-border focus-within:border-primary/50 focus-within:bg-card rounded-xl transition-all shadow-sm overflow-hidden">
+            <button
+                type="button"
+                onClick={onClear}
+                disabled={!hasMessages}
+                className="pl-3 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-30"
+                title="Clear Chat"
+            >
+                <RefreshCcw className="h-3.5 w-3.5" />
+            </button>
+            <input 
+                type="text" 
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                disabled={isLoading}
+                placeholder={isLoading ? "Processing..." : "Ask a question..."}
+                className="w-full bg-transparent px-3 py-3 text-sm font-medium transition-all outline-none disabled:opacity-60 text-foreground"
+            />
+            <div className="pr-1.5">
+                <button 
+                    type="submit"
+                    disabled={!input?.trim() || isLoading}
+                    className="bg-primary text-primary-foreground p-2 rounded-lg hover:opacity-90 disabled:opacity-30 transition-all shadow-sm active:scale-90"
+                >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
+            </div>
+        </div>
+        <div className="flex flex-col items-center gap-1 mt-2.5">
+          <p className="text-[9px] text-center text-muted-foreground font-bold uppercase tracking-widest leading-none">
+            AI may produce inaccurate information
+          </p>
+          <div className="flex items-center gap-1.5 opacity-60">
+            <div className="h-1 w-1 rounded-full bg-amber-500" />
+            <p className="text-[8px] text-amber-600 dark:text-amber-400 font-black uppercase tracking-[0.2em]">Still in Development Mode</p>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+});
+
+ChatInput.displayName = 'ChatInput';
+
 export default function AssistantPage() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const getToolIcon = (toolName: string) => {
@@ -176,7 +244,7 @@ export default function AssistantPage() {
     scrollToBottom();
   }, [messages, isLoading]);
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = React.useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
 
     const userMessage: Message = {
@@ -186,7 +254,6 @@ export default function AssistantPage() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput('');
     setIsLoading(true);
 
     const assistantMessageId = (Date.now() + 1).toString();
@@ -224,7 +291,7 @@ export default function AssistantPage() {
         
         buffer = buffer.replace(/STATUS:(SEARCHING|PROCESSING|FETCHING|FINALIZING|COMPUTING)/g, '');
 
-        // NEW: Detect and extract TOOL_USED: markers
+        // Detect and extract TOOL_USED: markers
         const toolUsedPrefix = "TOOL_USED:";
         while (true) {
           const usedIndex = buffer.indexOf(toolUsedPrefix);
@@ -307,13 +374,13 @@ export default function AssistantPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [messages, isLoading]);
 
-  const handleClear = () => {
+  const handleClear = React.useCallback(() => {
     if (messages.length === 0) return;
     setMessages([]);
     toast.success('Conversation cleared');
-  };
+  }, [messages.length]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-4 md:py-6 flex flex-col h-[calc(100dvh-140px)]">
@@ -520,46 +587,12 @@ export default function AssistantPage() {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-card border-t border-border">
-          <form onSubmit={(e) => { e.preventDefault(); sendMessage(input); }} className="max-w-3xl mx-auto">
-            <div className="relative flex items-center bg-accent border border-border focus-within:border-primary/50 focus-within:bg-card rounded-xl transition-all shadow-sm overflow-hidden">
-                <button
-                    type="button"
-                    onClick={handleClear}
-                    className="pl-3 text-muted-foreground hover:text-red-500 transition-colors"
-                    title="Clear Chat"
-                >
-                    <RefreshCcw className="h-3.5 w-3.5" />
-                </button>
-                <input 
-                    type="text" 
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    disabled={isLoading}
-                    placeholder={isLoading ? "Processing..." : "Ask a question..."}
-                    className="w-full bg-transparent px-3 py-3 text-sm font-medium transition-all outline-none disabled:opacity-60 text-foreground"
-                />
-                <div className="pr-1.5">
-                    <button 
-                        type="submit"
-                        disabled={!input?.trim() || isLoading}
-                        className="bg-primary text-primary-foreground p-2 rounded-lg hover:opacity-90 disabled:opacity-30 transition-all shadow-sm active:scale-90"
-                    >
-                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    </button>
-                </div>
-            </div>
-            <div className="flex flex-col items-center gap-1 mt-2.5">
-              <p className="text-[9px] text-center text-muted-foreground font-bold uppercase tracking-widest leading-none">
-                AI may produce inaccurate information
-              </p>
-              <div className="flex items-center gap-1.5 opacity-60">
-                <div className="h-1 w-1 rounded-full bg-amber-500" />
-                <p className="text-[8px] text-amber-600 dark:text-amber-400 font-black uppercase tracking-[0.2em]">Still in Development Mode</p>
-              </div>
-            </div>
-          </form>
-        </div>
+        <ChatInput 
+          onSend={sendMessage} 
+          isLoading={isLoading} 
+          onClear={handleClear}
+          hasMessages={messages.length > 0}
+        />
       </div>
 
       {/* Ask User Modal */}
