@@ -207,10 +207,22 @@ async function performMathExecution(code: string) {
       timeout: 30000,
     });
 
-    await sandbox.writeFiles([{
-      path: 'calculation.py',
-      content: Buffer.from(code),
-    }]);
+    await sandbox.writeFiles([
+      {
+        path: 'requirements.txt',
+        content: Buffer.from('sympy\nnumpy\nscipy\npandas\nmatplotlib'),
+      },
+      {
+        path: 'calculation.py',
+        content: Buffer.from(code),
+      }
+    ]);
+
+    // Install requirements silently before execution
+    await sandbox.runCommand({
+      cmd: 'pip',
+      args: ['install', '-r', 'requirements.txt', '--quiet'],
+    });
 
     const execution = await sandbox.runCommand({
       cmd: 'python3',
