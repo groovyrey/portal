@@ -57,7 +57,7 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const audioFile = formData.get("audio") as Blob;
-    const language = (formData.get("language") as string) || "fil";
+    const language = (formData.get("language") as string) || "tl";
 
     if (!audioFile) {
       return NextResponse.json(
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     const result = await deepgram.listen.v1.media.transcribeFile(
       buffer,
       {
-        model: "nova-2",
+        model: "nova-3",
         smart_format: true,
         language: language,
       }

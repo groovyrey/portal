@@ -55,12 +55,15 @@ const SUBJECT_COLORS = [
 ];
 
 const LANGUAGES = [
-  { code: 'fil', label: 'Filipino' },
+  { code: 'tl', label: 'Filipino/Tagalog' },
   { code: 'en', label: 'English' },
   { code: 'es', label: 'Spanish' },
-  { code: 'zh', label: 'Mandarin' },
+  { code: 'zh', label: 'Chinese' },
   { code: 'ja', label: 'Japanese' },
   { code: 'ko', label: 'Korean' },
+  { code: 'hi', label: 'Hindi' },
+  { code: 'fr', label: 'French' },
+  { code: 'de', label: 'German' },
   { code: 'multi', label: 'Auto (Multi)' },
 ];
 
@@ -73,7 +76,7 @@ export default function MeetingsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<ScheduleItem | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState('fil');
+  const [selectedLanguage, setSelectedLanguage] = useState('tl');
   
   // Day selection state
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -206,7 +209,7 @@ export default function MeetingsPage() {
       mediaRecorderRef.current = mediaRecorder;
       
       // 3. Setup WebSocket
-      const socket = new WebSocket(`wss://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&language=${selectedLanguage}`, ['token', key]);
+      const socket = new WebSocket(`wss://api.deepgram.com/v1/listen?model=nova-3&smart_format=true&language=${selectedLanguage}`, ['token', key]);
       socketRef.current = socket;
 
       const newSessionId = Date.now().toString();
