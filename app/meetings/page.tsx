@@ -13,9 +13,12 @@ import {
   Trash2,
   ChevronRight,
   ChevronLeft,
-  AlertCircle
+  AlertCircle,
+  Wifi,
+  WifiOff,
+  History
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useStudentQuery } from '@/lib/hooks';
 import { summarizeMeeting } from '@/app/g-space/actions';
 import { toast } from 'sonner';
@@ -27,6 +30,7 @@ import Modal from '@/components/ui/Modal';
 import { ScheduleItem } from '@/types';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { recordingDB } from '@/lib/indexed-db';
 
 interface SavedMeeting {
   id: number;
@@ -69,10 +73,16 @@ export default function MeetingsPage() {
   const [summary, setSummary] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState('');
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  
+  // New Live Transcription States
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isRecoverable, setIsRecoverable] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -114,10 +124,39 @@ export default function MeetingsPage() {
   };
 
   useEffect(() => {
+    checkRecoverableSession();
     if (student?.id) {
       fetchMeetings();
     }
   }, [student?.id]);
+
+  const checkRecoverableSession = async () => {
+    const sessions = await recordingDB.getAllSessions();
+    const active = sessions.find(s => s.status === 'recording' || s.status === 'failed');
+    if (active) {
+      setIsRecoverable(true);
+      setSessionId(active.id);
+    }
+  };
+
+  const recoverSession = async () => {
+    if (!sessionId) return;
+    const session = await recordingDB.getSession(sessionId);
+    if (session) {
+      setLiveTranscript(session.transcript);
+      setSelectedSchedule({ 
+        subject: session.subject, 
+        description: session.description, 
+        section: session.section,
+        units: session.units,
+        time: '', 
+        room: ''
+      });
+      setIsDrawerOpen(true);
+      setIsRecoverable(false);
+      toast.success("Restored session");
+    }
+  };
 
   const fetchMeetings = async () => {
     if (!student?.id) return;
@@ -137,61 +176,101 @@ export default function MeetingsPage() {
   };
 
   const startRecording = async () => {
+    if (!selectedSchedule) return;
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast.error("Recording not supported in this browser or context (needs HTTPS).");
+      return;
+    }
+
     try {
+      // 1. Get Temporary API Key
+      const keyRes = await fetch('/api/deepgram');
+      const { key } = await keyRes.json();
+      if (!key) throw new Error("Failed to authenticate with Deepgram");
+
+      // 2. Initialize MediaRecorder
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       mediaRecorderRef.current = mediaRecorder;
       
-      const chunks: BlobPart[] = [];
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        setAudioBlob(blob);
-        processRecording(blob);
+      // 3. Setup WebSocket
+      const socket = new WebSocket('wss://api.deepgram.com/v1/listen?model=nova-2&smart_format=true', ['token', key]);
+      socketRef.current = socket;
+
+      const newSessionId = Date.now().toString();
+      setSessionId(newSessionId);
+      setLiveTranscript('');
+
+      socket.onopen = () => {
+        setIsLiveConnected(true);
+        mediaRecorder.start(250); // Send data every 250ms
       };
 
-      mediaRecorder.start();
+      socket.onmessage = (message) => {
+        const received = JSON.parse(message.data);
+        const transcript = received.channel?.alternatives[0]?.transcript;
+        if (transcript && received.is_final) {
+          setLiveTranscript(prev => {
+            const updated = prev + ' ' + transcript;
+            // Persist incrementally to IndexedDB
+            recordingDB.saveSession(newSessionId, {
+              transcript: updated,
+              subject: selectedSchedule.subject,
+              description: selectedSchedule.description,
+              section: selectedSchedule.section,
+              units: selectedSchedule.units,
+              status: 'recording',
+              updated_at: Date.now()
+            });
+            return updated;
+          });
+        }
+      };
+
+      socket.onclose = () => setIsLiveConnected(false);
+      socket.onerror = () => toast.error("Live transcription error");
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0 && socket.readyState === 1) {
+          socket.send(e.data);
+        }
+      };
+
       setIsRecording(true);
       setRecordingTime(0);
+      timerRef.current = setInterval(() => setRecordingTime(prev => prev + 1), 1000);
       
-      timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-      
-      toast.info("Recording...");
+      toast.info("Recording & Streaming...");
     } catch (err) {
-      toast.error("Microphone access denied.");
+      console.error(err);
+      toast.error("Failed to start recording.");
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      socketRef.current?.close();
       setIsRecording(false);
       if (timerRef.current) clearInterval(timerRef.current);
+      
+      // Process the final transcript accumulated
+      if (liveTranscript.length > 10) {
+        processTranscript(liveTranscript);
+      }
     }
   };
 
-  const processRecording = async (blob: Blob) => {
-    if (!selectedSchedule || !student) return;
+  const processTranscript = async (transcript: string) => {
+    if (!selectedSchedule || !student || !sessionId) return;
     
     setIsProcessing(true);
-    setProcessingStatus('Transcribing...');
-    const formData = new FormData();
-    formData.append('audio', blob);
+    setProcessingStatus('Finalizing Report...');
 
     try {
-      const transcribeRes = await fetch('/api/deepgram', {
-        method: 'POST',
-        body: formData
-      });
-      const transcribeData = await transcribeRes.json();
-      
-      if (!transcribeData.transcript) throw new Error("Transcription failed");
-      const rawTranscript = transcribeData.transcript;
-
       setProcessingStatus('Summarizing...');
-      const aiSummary = await summarizeMeeting(rawTranscript, student);
+      const aiSummary = await summarizeMeeting(transcript, student);
       setSummary(aiSummary);
 
       setProcessingStatus('Saving...');
@@ -203,19 +282,32 @@ export default function MeetingsPage() {
           subject: selectedSchedule.subject,
           description: selectedSchedule.description,
           date: new Date().toLocaleDateString(),
-          transcript: rawTranscript,
+          transcript: transcript,
           summary: aiSummary
         })
       });
 
       if (saveRes.ok) {
         toast.success("Saved to Archive.");
+        // Clear from local IndexedDB on success
+        await recordingDB.deleteSession(sessionId);
+        setSessionId(null);
         fetchMeetings();
       } else {
         throw new Error("Save failed");
       }
     } catch (err: any) {
-      toast.error("Processing error.");
+      toast.error("Final processing failed.");
+      // Keep in IndexedDB so user can try again or copy manually
+      await recordingDB.saveSession(sessionId, {
+        transcript,
+        subject: selectedSchedule.subject,
+        description: selectedSchedule.description,
+        section: selectedSchedule.section,
+        units: selectedSchedule.units,
+        status: 'failed',
+        updated_at: Date.now()
+      });
     } finally {
       setIsProcessing(false);
       setProcessingStatus('');
@@ -273,6 +365,43 @@ export default function MeetingsPage() {
   return (
     <div className="min-h-screen bg-background pb-20 font-sans">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+        <AnimatePresence>
+          {isRecoverable && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="mb-8 overflow-hidden"
+            >
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-500/20 rounded-lg">
+                    <History className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-500">Unsaved Session Detected</h4>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase">A previous recording was interrupted.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => { recordingDB.deleteSession(sessionId!); setIsRecoverable(false); }}
+                    className="px-3 py-2 text-[8px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all"
+                  >
+                    Discard
+                  </button>
+                  <button 
+                    onClick={recoverSession}
+                    className="px-4 py-2 bg-amber-500 text-white rounded-lg text-[8px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
+                  >
+                    Restore
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="flex justify-between items-end gap-6 mb-10">
           <div className="space-y-1">
             <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">Archives</h1>
@@ -451,7 +580,7 @@ export default function MeetingsPage() {
             if (!isRecording && !isProcessing) {
                 setIsDrawerOpen(false);
                 setSelectedSchedule(null);
-                setAudioBlob(null);
+                setLiveTranscript('');
                 setSummary(null);
             }
         }}
@@ -459,21 +588,53 @@ export default function MeetingsPage() {
         title={selectedSchedule ? `Engaging: ${selectedSchedule.subject.split(' - ')[0]}` : 'Recorder'}
       >
         <div className="flex flex-col items-center space-y-8 pb-12">
-          {!audioBlob && !isProcessing ? (
+          {!summary && !isProcessing ? (
             <>
-              <div className={`h-24 w-24 rounded-2xl flex items-center justify-center transition-all ${
-                isRecording ? 'bg-rose-500 text-white shadow-xl shadow-rose-500/20' : 'bg-primary/10 text-primary border border-primary/20'
-              }`}>
-                {isRecording ? <Mic className="h-10 w-10 animate-pulse" /> : <Mic className="h-10 w-10 opacity-30" />}
+              <div className="flex items-center gap-6">
+                <div className={`h-24 w-24 rounded-2xl flex items-center justify-center transition-all ${
+                  isRecording ? 'bg-rose-500 text-white shadow-xl shadow-rose-500/20' : 'bg-primary/10 text-primary border border-primary/20'
+                }`}>
+                  {isRecording ? <Mic className="h-10 w-10 animate-pulse" /> : <Mic className="h-10 w-10 opacity-30" />}
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    {isLiveConnected ? (
+                       <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 text-emerald-500 rounded text-[8px] font-black uppercase tracking-widest">
+                         <Wifi className="h-3 w-3" />
+                         Live
+                       </div>
+                    ) : (
+                       <div className="flex items-center gap-1.5 px-2 py-1 bg-muted text-muted-foreground rounded text-[8px] font-black uppercase tracking-widest">
+                         <WifiOff className="h-3 w-3" />
+                         Offline
+                       </div>
+                    )}
+                    {isRecording && (
+                       <div className="flex items-center gap-1.5 px-2 py-1 bg-rose-500/10 text-rose-500 rounded text-[8px] font-black uppercase tracking-widest animate-pulse">
+                         <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                         Rec
+                       </div>
+                    )}
+                  </div>
+                  <h4 className="text-3xl font-black tracking-tight tabular-nums">
+                    {isRecording ? formatTime(recordingTime) : '0:00'}
+                  </h4>
+                </div>
               </div>
 
-              <div className="text-center space-y-2">
-                <h4 className="text-2xl font-black tracking-tight tabular-nums">
-                  {isRecording ? formatTime(recordingTime) : '0:00'}
-                </h4>
-                <p className="text-[10px] font-black uppercase tracking-widest text-primary">
-                    {isRecording ? 'Capturing Session' : 'Ready'}
-                </p>
+              {/* Live Transcript View */}
+              <div className="w-full max-w-xl bg-muted/20 border border-border/50 rounded-2xl p-6 min-h-[120px] max-h-[300px] overflow-y-auto custom-scrollbar">
+                {liveTranscript ? (
+                  <p className="text-xs font-medium leading-relaxed text-foreground/70 italic">
+                    {liveTranscript}...
+                  </p>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center opacity-20 space-y-2">
+                     <FileText className="h-6 w-6" />
+                     <p className="text-[9px] font-black uppercase tracking-widest">Waiting for speech</p>
+                  </div>
+                )}
               </div>
 
               <div className="w-full max-w-xs">
@@ -482,14 +643,14 @@ export default function MeetingsPage() {
                     onClick={startRecording}
                     className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"
                   >
-                    Start Recording
+                    Start Session
                   </button>
                 ) : (
                   <button
                     onClick={stopRecording}
                     className="w-full py-4 bg-rose-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl shadow-rose-500/20 active:scale-95 transition-all"
                   >
-                    Stop & Process
+                    Finish & Analyze
                   </button>
                 )}
               </div>
