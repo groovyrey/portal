@@ -195,7 +195,7 @@ export default function MeetingsPage() {
       mediaRecorderRef.current = mediaRecorder;
       
       // 3. Setup WebSocket
-      const socket = new WebSocket('wss://api.deepgram.com/v1/listen?model=nova-2&smart_format=true', ['token', key]);
+      const socket = new WebSocket('wss://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&detect_language=true', ['token', key]);
       socketRef.current = socket;
 
       const newSessionId = Date.now().toString();
