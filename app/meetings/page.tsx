@@ -54,6 +54,16 @@ const SUBJECT_COLORS = [
   'text-orange-500 bg-orange-500/5 border-orange-500/10',
 ];
 
+const LANGUAGES = [
+  { code: 'fil', label: 'Filipino' },
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Spanish' },
+  { code: 'zh', label: 'Mandarin' },
+  { code: 'ja', label: 'Japanese' },
+  { code: 'ko', label: 'Korean' },
+  { code: 'multi', label: 'Auto (Multi)' },
+];
+
 export default function MeetingsPage() {
   const router = useRouter();
   const { data: student, isLoading: studentLoading } = useStudentQuery();
@@ -63,6 +73,7 @@ export default function MeetingsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<ScheduleItem | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('fil');
   
   // Day selection state
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -195,7 +206,7 @@ export default function MeetingsPage() {
       mediaRecorderRef.current = mediaRecorder;
       
       // 3. Setup WebSocket
-      const socket = new WebSocket('wss://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&detect_language=true', ['token', key]);
+      const socket = new WebSocket(`wss://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&language=${selectedLanguage}`, ['token', key]);
       socketRef.current = socket;
 
       const newSessionId = Date.now().toString();
@@ -203,6 +214,7 @@ export default function MeetingsPage() {
       setLiveTranscript('');
 
       socket.onopen = () => {
+        console.log("Deepgram: WebSocket opened");
         setIsLiveConnected(true);
         mediaRecorder.start(250); // Send data every 250ms
       };
@@ -228,8 +240,15 @@ export default function MeetingsPage() {
         }
       };
 
-      socket.onclose = () => setIsLiveConnected(false);
-      socket.onerror = () => toast.error("Live transcription error");
+      socket.onclose = (event) => {
+        console.log("Deepgram: WebSocket closed", event.code, event.reason);
+        setIsLiveConnected(false);
+      };
+      
+      socket.onerror = (error) => {
+        console.error("Deepgram: WebSocket error", error);
+        toast.error("Live transcription error");
+      };
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0 && socket.readyState === 1) {
@@ -283,7 +302,8 @@ export default function MeetingsPage() {
           description: selectedSchedule.description,
           date: new Date().toLocaleDateString(),
           transcript: transcript,
-          summary: aiSummary
+          summary: aiSummary,
+          language: selectedLanguage
         })
       });
 
@@ -590,6 +610,25 @@ export default function MeetingsPage() {
         <div className="flex flex-col items-center space-y-8 pb-12">
           {!summary && !isProcessing ? (
             <>
+              {/* Language Selection */}
+              {!isRecording && (
+                <div className="flex flex-wrap justify-center gap-2 max-w-sm px-4">
+                  {LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => setSelectedLanguage(lang.code)}
+                      className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all border ${
+                        selectedLanguage === lang.code
+                          ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20'
+                          : 'bg-muted/50 text-muted-foreground border-border/50 hover:border-primary/30'
+                      }`}
+                    >
+                      {lang.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div className="flex items-center gap-6">
                 <div className={`h-24 w-24 rounded-2xl flex items-center justify-center transition-all ${
                   isRecording ? 'bg-rose-500 text-white shadow-xl shadow-rose-500/20' : 'bg-primary/10 text-primary border border-primary/20'

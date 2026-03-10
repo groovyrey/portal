@@ -24,15 +24,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { userId, subject, description, date, transcript, summary } = body;
+    const { userId, subject, description, date, transcript, summary, language } = body;
 
     if (!userId || !subject || !description || !date) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     await query(
-      'INSERT INTO student_meetings (user_id, subject, description, date, transcript, summary) VALUES (?, ?, ?, ?, ?, ?)',
-      [userId, subject, description, date, transcript, summary]
+      'INSERT INTO student_meetings (user_id, subject, description, date, transcript, summary, language) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [userId, subject, description, date, transcript, summary, language || 'fil']
     );
 
     return NextResponse.json({ success: true });

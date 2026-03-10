@@ -174,16 +174,19 @@ export async function migrateMeetings() {
         transcript TEXT,
         summary TEXT,
         notes TEXT,
+        language TEXT DEFAULT 'fil',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    // Ensure notes column exists
+    // Ensure columns exist
     try {
       await query(`ALTER TABLE student_meetings ADD COLUMN notes TEXT;`);
-    } catch (e) {
-      // Column might already exist
-    }
+    } catch (e) {}
+
+    try {
+      await query(`ALTER TABLE student_meetings ADD COLUMN language TEXT DEFAULT 'fil';`);
+    } catch (e) {}
 
   } catch (error) {
     console.error("Migration Error (Meetings):", error);

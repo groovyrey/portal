@@ -57,6 +57,7 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const audioFile = formData.get("audio") as Blob;
+    const language = (formData.get("language") as string) || "fil";
 
     if (!audioFile) {
       return NextResponse.json(
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
       {
         model: "nova-2",
         smart_format: true,
-        detect_language: true,
+        language: language,
       }
     );
 
