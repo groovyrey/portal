@@ -26,52 +26,6 @@ export default function DashboardHeader({ student }: DashboardHeaderProps) {
           animate={{ opacity: 1, y: 0 }}
           className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden group hover:border-muted-foreground transition-all duration-500"
         >
-          {/* Decorative Background Elements */}
-          <motion.div 
-            animate={{ 
-              y: [0, -25, 0],
-              x: [0, 15, 0],
-            }}
-            whileHover={{ scale: 1.15 }}
-            transition={{ 
-              y: { 
-                duration: 10, 
-                repeat: Infinity, 
-                ease: "easeInOut" 
-              },
-              x: { 
-                duration: 12, 
-                repeat: Infinity, 
-                ease: "easeInOut" 
-              },
-              scale: { duration: 0.5 }
-            }}
-            className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full -mr-32 -mt-32"
-          ></motion.div>
-          <motion.div 
-            animate={{ 
-              y: [0, 30, 0],
-              x: [0, -20, 0],
-            }}
-            whileHover={{ scale: 1.1 }}
-            transition={{ 
-              y: { 
-                duration: 15, 
-                repeat: Infinity, 
-                ease: "easeInOut",
-                delay: 1 
-              },
-              x: { 
-                duration: 13, 
-                repeat: Infinity, 
-                ease: "easeInOut",
-                delay: 0.5 
-              },
-              scale: { duration: 0.5 }
-            }}
-            className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full -ml-24 -mb-24"
-          ></motion.div>
-
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
               <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shrink-0 shadow-lg shadow-primary/20 transition-transform duration-500 group-hover:scale-105">

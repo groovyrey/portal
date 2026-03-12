@@ -26,7 +26,6 @@ import {
 } from 'lucide-react';
 import { CommunityPost, Student } from '@/types';
 import Link from 'next/link';
-import { obfuscateId } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface PostCardProps {
@@ -172,7 +171,7 @@ export default function PostCard({
                <h4 className="text-sm font-bold text-foreground leading-none mb-1">{post.userName}</h4>
             ) : (
               <Link 
-                href={`/profile/${obfuscateId(post.userId)}`} 
+                href={`/student/${post.userId}`} 
                 onClick={(e) => e.stopPropagation()}
                 className="block group/link"
               >
@@ -210,7 +209,7 @@ export default function PostCard({
           {showMenu && (
             <div className="absolute right-0 mt-1 w-44 bg-card border border-border rounded-xl shadow-xl z-10 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
               <Link 
-                href={`/profile/${obfuscateId(post.userId)}`}
+                href={`/student/${post.userId}`}
                 onClick={(e) => e.stopPropagation()}
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-[10px] font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors uppercase tracking-wider"
               >

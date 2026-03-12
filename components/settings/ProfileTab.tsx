@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   User, 
   Mail, 
@@ -8,15 +8,83 @@ import {
   MapPin, 
   GraduationCap, 
   Calendar, 
-  Shield 
+  Shield,
+  Save
 } from 'lucide-react';
 import { Student } from '@/types';
+import { 
+  FormControl, 
+  InputLabel, 
+  Select, 
+  MenuItem, 
+  SelectChangeEvent,
+  ThemeProvider,
+  createTheme
+} from '@mui/material';
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#3b82f6', // blue-500
+    },
+    background: {
+      paper: '#1e293b', // slate-800
+    },
+  },
+  typography: {
+    fontFamily: 'inherit',
+  },
+  components: {
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
+          borderRadius: '12px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+        }
+      }
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: '12px',
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+          },
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+          },
+        }
+      }
+    }
+  }
+});
 
 interface ProfileTabProps {
   student: Student;
+  updateSettings: (newSettings: any) => Promise<void>;
 }
 
-export default function ProfileTab({ student }: ProfileTabProps) {
+export default function ProfileTab({ student, updateSettings }: ProfileTabProps) {
+  const [selectedCampus, setSelectedCampus] = useState(student.settings?.campus || '');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleCampusChange = (event: SelectChangeEvent) => {
+    setSelectedCampus(event.target.value as string);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    await updateSettings({
+      ...(student.settings || {}),
+      campus: selectedCampus
+    });
+    setIsSaving(false);
+  };
+
+  const hasChanges = selectedCampus !== (student.settings?.campus || '');
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4 p-6 bg-card rounded-2xl border border-border shadow-sm">
@@ -60,6 +128,50 @@ export default function ProfileTab({ student }: ProfileTabProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <InfoItem icon={<GraduationCap />} label="Program" value={student.course} />
                   <InfoItem icon={<Calendar />} label="Year & Semester" value={`${student.yearLevel} / ${student.semester}`} />
+              </div>
+          </div>
+
+          <div className="pt-6 border-t border-border">
+              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Campus Location</h4>
+              <div className="space-y-4">
+                <ThemeProvider theme={darkTheme}>
+                  <FormControl fullWidth variant="outlined" size="medium">
+                    <InputLabel id="campus-select-label" sx={{ color: 'text.secondary', '&.Mui-focused': { color: 'primary.main' } }}>Select Campus</InputLabel>
+                    <Select
+                      labelId="campus-select-label"
+                      id="campus-select"
+                      value={selectedCampus}
+                      label="Select Campus"
+                      onChange={handleCampusChange}
+                      sx={{
+                        color: 'text.primary',
+                        '.MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255, 255, 255, 0.1)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'primary.main',
+                        },
+                      }}
+                    >
+                      <MenuItem value="Muzon Campus">Muzon Campus</MenuItem>
+                      <MenuItem value="Francisco Homes Campus">Francisco Homes Campus</MenuItem>
+                      <MenuItem value="Main Campus (CBAS)">Main Campus (CBAS)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </ThemeProvider>
+
+                <button
+                  onClick={handleSave}
+                  disabled={!hasChanges || isSaving}
+                  className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold transition-all ${
+                    hasChanges && !isSaving
+                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]'
+                      : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+                  }`}
+                >
+                  <Save size={18} className={isSaving ? 'animate-pulse' : ''} />
+                  {isSaving ? 'Saving Changes...' : 'Save Profile Settings'}
+                </button>
               </div>
           </div>
       </div>

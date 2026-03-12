@@ -39,7 +39,8 @@ export async function POST(req: NextRequest) {
       paymentReminders: 'Financial Alerts',
       isPublic: 'Public Profile',
       showAcademicInfo: 'Academic Info',
-      showStudentId: 'Student ID'
+      showStudentId: 'Student ID',
+      campus: 'Campus Location'
     };
 
     Object.keys(newSettings).forEach(key => {

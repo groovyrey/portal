@@ -33,7 +33,6 @@ import Link from 'next/link';
 import Skeleton from '@/components/ui/Skeleton';
 import Modal from '@/components/ui/Modal';
 import { CommunityPost, Student, CommunityComment } from '@/types';
-import { obfuscateId } from '@/lib/utils';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
 
 const getTopicStyle = (topic: string) => {
@@ -367,7 +366,7 @@ export default function PostPage() {
                   {post.userName.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <Link href={`/profile/${obfuscateId(post.userId)}`} className="block group">
+                  <Link href={`/student/${post.userId}`} className="block group">
                     <h2 className="text-base font-bold text-foreground group-hover:text-blue-500 transition-colors">{post.userName}</h2>
                   </Link>
                   <div className="flex items-center gap-2 flex-wrap mt-0.5">
@@ -397,7 +396,7 @@ export default function PostPage() {
                 {activeMenu === post.id && (
                   <div className="absolute right-0 mt-2 w-48 bg-card rounded-2xl shadow-xl border border-border py-1.5 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
                     <Link 
-                      href={`/profile/${obfuscateId(post.userId)}`}
+                      href={`/student/${post.userId}`}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors uppercase tracking-wider"
                     >
                       <User className="h-4 w-4" />
@@ -589,7 +588,7 @@ export default function PostPage() {
                   return (
                     <div key={comment.id} className="py-5 flex gap-4 items-start group relative">
                       <Link 
-                        href={`/profile/${obfuscateId(comment.userId)}`}
+                        href={`/student/${comment.userId}`}
                         className="shrink-0"
                       >
                         <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center text-muted-foreground font-bold text-sm border border-border group-hover:bg-card transition-colors">
@@ -598,7 +597,7 @@ export default function PostPage() {
                       </Link>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1 gap-4">
-                          <Link href={`/profile/${obfuscateId(comment.userId)}`} className="truncate">
+                          <Link href={`/student/${comment.userId}`} className="truncate">
                             <span className={`text-sm font-bold truncate hover:text-blue-500 transition-colors ${isMe ? 'text-blue-500' : 'text-foreground'}`}>
                               {isMe ? 'You' : comment.userName}
                             </span>
@@ -711,7 +710,7 @@ export default function PostPage() {
             reactors?.map(user => (
               <Link 
                 key={user.id} 
-                href={`/profile/${obfuscateId(user.id)}`}
+                href={`/student/${user.id}`}
                 onClick={() => setReactors(null)}
                 className="flex items-center gap-4 p-3 rounded-2xl hover:bg-accent transition-all"
               >

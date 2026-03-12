@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { GraduationCap } from 'lucide-react';
 import { APP_VERSION } from '@/lib/version';
-import { obfuscateId } from '@/lib/utils';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -62,7 +61,7 @@ export default function Footer() {
                 <Link href="/community" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Global Feed</Link>
               </li>
               <li>
-                <Link href={studentId ? `/profile/${obfuscateId(studentId)}` : '/profile'} className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Personal Profile</Link>
+                <Link href={studentId ? `/student/${studentId}` : '/student'} className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Personal Profile</Link>
               </li>
             </ul>
           </div>

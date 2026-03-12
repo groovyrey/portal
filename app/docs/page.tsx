@@ -35,28 +35,13 @@ const DocsPage: React.FC = () => {
               <div className="bg-card p-6 rounded-lg border border-border shadow-sm">
                 <div className="flex items-center gap-3 mb-3">
                   <BrainCircuit className="h-5 w-5 text-primary" />
-                  <h3 className="text-base font-bold text-foreground">Cato AI</h3>
+                  <h3 className="text-base font-bold text-foreground">Cici AI</h3>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-                  Your personalized study buddy. Cato is connected to your academic context, allowing you to ask about your grades, schedules, or complex subjects. Cato can also perform real-time web research and summarize educational content for you.
+                  Your personalized study buddy. Cici is connected to your academic context, allowing you to ask about your grades, schedules, or complex subjects. Cici can also perform real-time web research and summarize educational content for you.
                 </p>
               </div>
               
-              <div className="bg-card p-6 rounded-lg border border-border shadow-sm">
-                <div className="flex items-center gap-3 mb-3">
-                  <LayoutGrid className="h-5 w-5 text-primary" />
-                  <h3 className="text-base font-bold text-foreground">G-Space</h3>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-                  Seamlessly sync with Google Classroom and Tasks. Monitor your assignments, track deadlines, and manage your Google Tasks directly within the Hub interface. 
-                </p>
-                <div className="mt-4 bg-amber-500/5 p-3 rounded-lg border border-amber-500/20">
-                  <p className="text-[11px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-widest">
-                    Security Note: If classroom data is missing, re-link your Google account to refresh session tokens.
-                  </p>
-                </div>
-              </div>
-
               <div className="bg-card p-6 rounded-lg border border-border shadow-sm">
                 <div className="flex items-center gap-3 mb-3">
                   <Mic className="h-5 w-5 text-primary" />

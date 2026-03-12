@@ -13,7 +13,6 @@ import {
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Student } from '@/types';
-import { obfuscateId } from '@/lib/utils';
 import Skeleton from '@/components/ui/Skeleton';
 import BadgeDisplay from '@/components/shared/BadgeDisplay';
 
@@ -82,7 +81,7 @@ export default function TeamPage() {
                     <User className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                   <div className="min-w-0">
-                    <Link href={`/profile/${obfuscateId(member.id)}`}>
+                    <Link href={`/student/${member.id}`}>
                       <h4 className="font-black text-sm uppercase tracking-tight truncate hover:text-primary transition-colors">
                         {member.parsedName?.firstName} {member.parsedName?.lastName}
                       </h4>
@@ -97,7 +96,7 @@ export default function TeamPage() {
                 <div className="flex items-center gap-3 shrink-0">
                   <BadgeDisplay badgeIds={member.badges} size="md" />
                   <Link 
-                    href={`/profile/${obfuscateId(member.id)}`}
+                    href={`/student/${member.id}`}
                     className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
                   >
                     <ChevronRight className="h-4 w-4" />

@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { obfuscateId } from '@/lib/utils';
 import { 
   LayoutDashboard, 
   GraduationCap, 
@@ -162,6 +161,18 @@ export default function Navbar() {
     return () => window.removeEventListener('click', handleClickOutside);
   }, [isMoreOpen, isPortalOpen, isWorkspaceOpen, isSocialOpen, isAdminOpen]);
 
+  // Disable body scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   const publicLinks = [
     { name: 'About', href: '/about', icon: Info },
     { name: 'Team', href: '/team', icon: Users },
@@ -177,13 +188,12 @@ export default function Navbar() {
   ];
 
   const workspaceLinks = [
-    { name: 'Cato', href: '/assistant', icon: BrainCircuit, desc: 'AI Study Buddy' },
-    { name: 'G-Space', href: '/g-space', icon: LayoutGrid, desc: 'Google Sync' },
+    { name: 'Cici', href: '/assistant', icon: BrainCircuit, desc: 'AI Study Buddy' },
     { name: 'Meetings', href: '/meetings', icon: Mic, desc: 'Archive' },
   ];
 
   const socialLinks = [
-    { name: 'Profile', href: studentId ? `/profile/${obfuscateId(studentId)}` : '/profile', icon: UserIcon },
+    { name: 'Profile', href: studentId ? `/student/${studentId}` : '/student', icon: UserIcon },
     { name: 'Community', href: '/community', icon: MessageSquare },
   ];
 
@@ -272,49 +282,35 @@ export default function Navbar() {
                           }
                           setIsMoreOpen(false);
                         }}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all group ${
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all group ${
                           isDropdownOpen || link.children.some((child: any) => isActive(child.href))
-                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                            ? 'bg-primary/10 text-primary shadow-sm'
+                            : 'text-muted-foreground hover:bg-accent/80 hover:text-foreground'
                         }`}
                       >
-                        <Icon className={`h-3.5 w-3.5 ${isDropdownOpen ? 'rotate-12 scale-110' : ''}`} />
+                        <Icon className={`h-4 w-4 transition-transform duration-300 ${isDropdownOpen ? 'scale-110' : ''}`} />
                         {link.name}
-                        <ChevronDown className={`h-3 w-3 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                       </button>
 
                       {isDropdownOpen && (
-                        <div className="absolute left-0 mt-3 w-56 bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl py-4 z-[110] overflow-hidden">
-                          <div className="relative ml-6 space-y-0.5">
-                            {/* Vertical Tree Line */}
-                            <div className="absolute left-0 top-0 w-[1.5px] bg-primary/20 h-[calc(100%-1.5rem)]" />
-                            
+                        <div className="absolute left-0 mt-3 w-56 bg-background/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl py-2 z-[110] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                          <div className="px-1.5 space-y-0.5">
                             {link.children.map((child: any) => {
                               const ChildIcon = child.icon;
                               return (
-                                <div key={child.name}>
-                                  <Link
-                                    href={child.href}
-                                    className={`flex items-center gap-3.5 px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all relative group/item ${
-                                      isActive(child.href)
-                                        ? 'text-primary'
-                                        : 'text-muted-foreground hover:text-foreground'
-                                    }`}
-                                  >
-                                    {/* Branch Connector */}
-                                    <div className="absolute -left-6 top-1/2 -translate-y-1/2 flex items-center">
-                                      <div className="w-6 h-[1.5px] bg-primary/20 group-hover/item:bg-primary/40" />
-                                      <div className={`w-2 h-2 rounded-full border-2 border-background shadow-sm ${
-                                        isActive(child.href) 
-                                          ? 'bg-primary scale-110 shadow-[0_0_8px_rgba(var(--primary),0.5)]' 
-                                          : 'bg-border/60 group-hover/item:bg-primary/40'
-                                      }`} />
-                                    </div>
-                                    
-                                    <ChildIcon className={`h-4 w-4 transition-all duration-300 ${isActive(child.href) ? 'text-primary scale-110' : 'text-muted-foreground/40 group-hover/item:text-foreground'}`} />
-                                    {child.name}
-                                  </Link>
-                                </div>
+                                <Link
+                                  key={child.name}
+                                  href={child.href}
+                                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all group/item ${
+                                    isActive(child.href)
+                                      ? 'bg-primary/10 text-primary'
+                                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                                  }`}
+                                >
+                                  <ChildIcon className={`h-4 w-4 transition-colors ${isActive(child.href) ? 'text-primary' : 'text-muted-foreground group-hover/item:text-foreground'}`} />
+                                  {child.name}
+                                </Link>
                               );
                             })}
                           </div>
@@ -328,13 +324,13 @@ export default function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                       isActive(link.href)
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                        ? 'bg-primary/10 text-primary shadow-sm'
+                        : 'text-muted-foreground hover:bg-accent/80 hover:text-foreground'
                     }`}
                   >
-                    <Icon className="h-3.5 w-3.5" />
+                    <Icon className="h-4 w-4" />
                     {link.name}
                   </Link>
                 );
@@ -347,15 +343,15 @@ export default function Navbar() {
                   <>
                     <button
                       onClick={() => setIsNotifOpen(true)}
-                      className={`relative p-2 rounded-xl border transition-all duration-200 ${
+                      className={`relative p-2.5 rounded-full transition-all duration-200 ${
                         isNotifOpen 
-                          ? 'bg-primary border-primary text-primary-foreground shadow-sm' 
-                          : 'bg-background border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground'
+                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
+                          : 'bg-background text-muted-foreground hover:bg-accent/80 hover:text-foreground border border-border/60'
                       }`}
                     >
                       <Bell className="h-5 w-5" />
                       {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground ring-2 ring-background shadow-sm">
+                        <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground ring-2 ring-background shadow-sm">
                           {unreadCount > 99 ? '99+' : unreadCount}
                         </span>
                       )}
@@ -370,10 +366,10 @@ export default function Navbar() {
                           setIsSocialOpen(false);
                           setIsAdminOpen(false);
                         }}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                           isMoreOpen || desktopMore.some(link => isActive(link.href))
-                            ? 'bg-secondary text-foreground'
-                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-muted-foreground hover:bg-accent/80 hover:text-foreground'
                         }`}
                       >
                         More
@@ -381,24 +377,26 @@ export default function Navbar() {
                       </button>
 
                       {isMoreOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-2xl shadow-xl py-2 z-[110] animate-in fade-in zoom-in-95 duration-200">
-                          {desktopMore.map((link) => {
-                            const Icon = link.icon;
-                            return (
-                              <Link
-                                key={link.name}
-                                href={link.href}
-                                className={`flex items-center gap-3 px-4 py-2 text-sm font-bold transition-all ${
-                                  isActive(link.href)
-                                    ? 'text-foreground bg-accent'
-                                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                                }`}
-                              >
-                                <Icon className="h-4 w-4 text-muted-foreground" />
-                                {link.name}
-                              </Link>
-                            );
-                          })}
+                        <div className="absolute right-0 mt-3 w-48 bg-background/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl py-2 z-[110] animate-in fade-in zoom-in-95 duration-200">
+                          <div className="px-1.5 space-y-0.5">
+                            {desktopMore.map((link) => {
+                              const Icon = link.icon;
+                              return (
+                                <Link
+                                  key={link.name}
+                                  href={link.href}
+                                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                                    isActive(link.href)
+                                      ? 'bg-primary/10 text-primary'
+                                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                                  }`}
+                                >
+                                  <Icon className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                                  {link.name}
+                                </Link>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -512,49 +510,38 @@ export default function Navbar() {
                   const setIsExpanded = link.name === 'Portal' ? setIsPortalExpanded : link.name === 'Workspace' ? setIsWorkspaceExpanded : link.name === 'Social' ? setIsSocialExpanded : setIsAdminExpanded;
                   
                   return (
-                    <div key={link.name} className="space-y-1 py-2">
+                    <div key={link.name} className="space-y-1 py-1">
                       <button 
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] hover:text-foreground transition-colors"
+                        className="w-full flex items-center justify-between px-4 py-3 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        <div className="flex items-center gap-4">
-                          <Icon className="h-4 w-4" />
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-xl bg-accent group-active:bg-primary/10">
+                            <Icon className="h-5 w-5" />
+                          </div>
                           {link.name}
                         </div>
-                        <ChevronDown className={`h-3.5 w-3.5 ${isExpanded ? '' : '-rotate-90'}`} />
+                        <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                       </button>
                       
                       {isExpanded && (
-                        <div className="relative ml-8 space-y-1 py-1 overflow-hidden">
-                          {/* Tree Vertical Line */}
-                          <div className="absolute left-0 top-0 w-[1.5px] bg-primary/20 h-[calc(100%-1rem)]" />
-                          
+                        <div className="space-y-1 px-2 pb-2">
                           {link.children.map((child: any) => {
                             const ChildIcon = child.icon;
                             return (
-                              <div key={child.name}>
-                                <Link
-                                  href={child.href}
-                                  onClick={() => setIsOpen(false)}
-                                  className={`flex items-center gap-4 px-4 py-3 rounded-2xl transition-all relative group ${
-                                    isActive(child.href)
-                                      ? 'text-primary bg-primary/5'
-                                      : 'text-muted-foreground hover:text-foreground'
-                                  }`}
-                                >
-                                  {/* Tree Branch Connector */}
-                                  <div className="absolute -left-8 top-1/2 -translate-y-1/2 flex items-center">
-                                    <div className="w-8 h-[1.5px] bg-primary/20" />
-                                    <div className={`w-2.5 h-2.5 rounded-full border-2 border-background shadow-sm ${
-                                      isActive(child.href) 
-                                        ? 'bg-primary scale-110 shadow-[0_0_10px_rgba(var(--primary),0.5)]' 
-                                        : 'bg-border/60 group-active:bg-primary/40'
-                                    }`} />
-                                  </div>                                  
-                                  <ChildIcon className={`h-5 w-5 transition-all duration-300 ${isActive(child.href) ? 'text-primary scale-110' : 'text-muted-foreground/40 group-active:text-foreground'}`} />
-                                  <span className="text-[13px] font-black uppercase tracking-wider">{child.name}</span>
-                                </Link>
-                              </div>
+                              <Link
+                                key={child.name}
+                                href={child.href}
+                                onClick={() => setIsOpen(false)}
+                                className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all ${
+                                  isActive(child.href)
+                                    ? 'text-primary bg-primary/5'
+                                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                                }`}
+                              >
+                                <ChildIcon className={`h-5 w-5 transition-all ${isActive(child.href) ? 'text-primary' : 'text-muted-foreground/40'}`} />
+                                <span className="text-sm font-medium">{child.name}</span>
+                              </Link>
                             );
                           })}
                         </div>
@@ -568,9 +555,9 @@ export default function Navbar() {
                     key={link.name}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                    className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all ${
                       isActive(link.href)
-                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
                         : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                     }`}
                   >

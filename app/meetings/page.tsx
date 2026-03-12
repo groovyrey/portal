@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStudentQuery } from '@/lib/hooks';
-import { summarizeMeeting } from '@/app/g-space/actions';
+import { summarizeMeeting } from '@/lib/ai-service';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';

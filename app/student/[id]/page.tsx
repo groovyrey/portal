@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { db } from '@/lib/db';
 import { doc, getDoc } from 'firebase/firestore';
-import { parseStudentName, deobfuscateId } from '@/lib/utils';
+import { parseStudentName } from '@/lib/utils';
 import PostCard from '@/components/community/PostCard';
 import { toast } from 'sonner';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
@@ -31,8 +31,8 @@ function ProfileContent() {
   const { onlineUsers } = useRealtime();
   const params = useParams();
   const router = useRouter();
-  const profileId = deobfuscateId(params.id as string);
-  
+  const profileId = params.id as string;
+
   const isOnline = profileId ? onlineUsers.has(profileId) : false;
   
   const [student, setStudent] = useState<Student | null>(() => {

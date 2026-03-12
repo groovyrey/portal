@@ -215,7 +215,7 @@ export default function SettingsPage() {
 
               <AnimatePresence mode="wait">
                 <div key={activeTab} className="animate-fade-in-up">
-                  {activeTab === 'profile' && <ProfileTab student={student} />}
+                  {activeTab === 'profile' && <ProfileTab student={student} updateSettings={updateSettings} />}
                   {activeTab === 'security' && <SecurityTab />}
                   {activeTab === 'notifications' && <NotificationsTab student={student} updateSettings={updateSettings} />}
                   {activeTab === 'privacy' && <PrivacyTab student={student} updateSettings={updateSettings} />}

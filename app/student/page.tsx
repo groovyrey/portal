@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { obfuscateId } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
 export default function ProfileRedirect() {
@@ -13,7 +12,7 @@ export default function ProfileRedirect() {
     if (saved) {
       const student = JSON.parse(saved);
       if (student?.id) {
-        router.replace(`/profile/${obfuscateId(student.id)}`);
+        router.replace(`/student/${student.id}`);
       } else {
         router.replace('/');
       }

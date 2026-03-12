@@ -80,7 +80,7 @@ export default function AboutPage() {
 
   const workspaceFeatures = [
     { title: 'Academic Portal', desc: 'Live grades & schedules.', icon: LayoutGrid },
-    { title: 'Cato AI', desc: 'Context-aware study buddy.', icon: BrainCircuit },
+    { title: 'Cici AI', desc: 'Context-aware study buddy.', icon: BrainCircuit },
     { title: 'Meetings', icon: Mic, desc: 'Smart Class Archives.' },
     { title: 'Financials', icon: ShieldCheck, desc: 'Track fees and balances.' },
   ];
@@ -89,7 +89,7 @@ export default function AboutPage() {
     { description: 'Grades', icon: Star },
     { description: 'Schedules', icon: Calendar },
     { description: 'Financials', icon: Wallet },
-    { description: 'Cato AI', icon: BrainCircuit },
+    { description: 'Cici AI', icon: BrainCircuit },
     { description: 'Meetings', icon: Mic },
     { description: 'LCCians', icon: Users },
     { description: 'Community', icon: Globe },

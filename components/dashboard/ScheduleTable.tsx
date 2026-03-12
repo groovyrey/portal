@@ -1,10 +1,11 @@
 'use client';
 
 import { ScheduleItem, ProspectusSubject } from '@/types';
-import { useState, useMemo, useEffect } from 'react';
-import { X, MapPin, Clock, Hash, BookOpen, Info, Calendar, ArrowRight } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { X, MapPin, Clock, Hash, BookOpen, Info, Calendar, ArrowRight, Download, Camera } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface ScheduleTableProps {
   schedule: ScheduleItem[];
@@ -32,6 +33,110 @@ const SUBJECT_COLORS = [
 export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTableProps) {
   const router = useRouter();
   const [selectedItem, setSelectedItem] = useState<ScheduleItem | null>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const downloadImage = async () => {
+    if (!tableRef.current) return;
+    setIsExporting(true);
+    const downloadToast = toast.loading('Generating schedule image...');
+
+    try {
+      if (!(window as any).html2canvas) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+
+      // 1. Calculate the natural width of the content
+      const table = tableRef.current.querySelector('table');
+      const actualWidth = table ? Math.max(table.scrollWidth, 800) : 1000; 
+      const actualHeight = tableRef.current.scrollHeight;
+
+      // 2. Capture with the natural calculated width
+      const canvas = await (window as any).html2canvas(tableRef.current, {
+        backgroundColor: '#020617',
+        scale: 2,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        width: actualWidth,
+        height: actualHeight,
+        windowWidth: actualWidth, 
+        onclone: (clonedDoc: Document) => {
+          const clonedArea = clonedDoc.getElementById('schedule-capture-area');
+          if (clonedArea) {
+            clonedArea.style.width = `${actualWidth}px`;
+            clonedArea.style.height = 'auto';
+            clonedArea.style.overflow = 'visible';
+
+            const clonedScroll = clonedArea.querySelector('.overflow-x-auto');
+            if (clonedScroll) {
+              (clonedScroll as HTMLElement).style.overflow = 'visible';
+              (clonedScroll as HTMLElement).style.width = '100%';
+            }
+
+            const clonedTable = clonedArea.querySelector('table');
+            if (clonedTable) {
+              clonedTable.style.width = '100%';
+              clonedTable.style.minWidth = `${actualWidth}px`;
+              clonedTable.style.tableLayout = 'fixed';
+            }
+
+            // Still remove truncation to prevent text being cut off horizontally
+            const subjectButtons = clonedArea.querySelectorAll('button');
+            subjectButtons.forEach(btn => {
+              btn.style.overflow = 'visible';
+              btn.style.whiteSpace = 'normal';
+              btn.style.padding = '4px';
+              
+              const spans = btn.querySelectorAll('span');
+              spans.forEach(span => {
+                span.style.overflow = 'visible';
+                span.style.textOverflow = 'clip';
+                span.style.whiteSpace = 'normal';
+                span.classList.remove('truncate');
+              });
+            });
+          }
+
+          // Fix for modern CSS color functions not supported by html2canvas
+          const elements = clonedDoc.getElementsByTagName('*');
+          for (let i = 0; i < elements.length; i++) {
+            const el = elements[i] as HTMLElement;
+            const style = window.getComputedStyle(el);
+            
+            if (style.backgroundColor.includes('okl')) {
+               el.style.backgroundColor = '#0f172a';
+            }
+            if (style.color.includes('okl')) {
+               el.style.color = '#f8fafc';
+            }
+            if (style.borderColor.includes('okl')) {
+               el.style.borderColor = '#1e293b';
+            }
+          }
+        }
+      });
+      
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `LCC-Schedule-${new Date().getTime()}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+      toast.success('Schedule saved successfully!', { id: downloadToast });
+    } catch (err) {
+      console.error('Export failed', err);
+      toast.error('Failed to generate image. Please try again.', { id: downloadToast });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const getSubjectCode = (subject: string) => {
     // Extracts "CS 101" from "CS 101 - Computer Science"
@@ -112,6 +217,16 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
             <h2 className="text-lg font-bold text-foreground tracking-tight">Schedule</h2>
           </div>
         </div>
+
+        <button
+          onClick={downloadImage}
+          disabled={isExporting}
+          className="flex items-center gap-2 px-3 py-1.5 bg-accent hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
+          title="Save as Image"
+        >
+          {isExporting ? <Camera className="h-3.5 w-3.5 animate-pulse" /> : <Download className="h-3.5 w-3.5" />}
+          <span className="hidden sm:inline">Save Image</span>
+        </button>
       </div>
 
       <div className="bg-accent/50 border border-border rounded-xl p-3 flex items-start gap-3">
@@ -123,12 +238,12 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
         </p>
       </div>
 
-      <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-        <table className="w-full border-collapse table-fixed min-w-[600px]">
+      <div id="schedule-capture-area" ref={tableRef} className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+        <div className="overflow-x-auto custom-scrollbar">
+        <table className="w-full border-collapse table-fixed min-w-full sm:min-w-[800px]">
           <thead>
             <tr className="bg-accent/50">
-              <th className="w-14 py-2 border-b border-border"></th>
+              <th className="w-10 sm:w-14 py-2 border-b border-border"></th>
               {DAYS.map(day => (
                 <th key={day} className="py-2 px-1 border-b border-border text-center">
                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{day.substring(0, 3)}</span>
@@ -144,10 +259,12 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
 
                 return (
                   <tr key={hourStr} className="h-10">
-                    <td className="border-r border-b border-border text-center bg-accent/20">
-                      <span className="text-[9px] font-bold text-muted-foreground tabular-nums">
-                        {hourStr.split(' ')[0]}
-                      </span>
+                    <td className="border-r border-b border-border text-center bg-accent/10">
+                      {hIdx % 2 === 0 && (
+                        <span className="text-[9px] font-black text-muted-foreground/60 tabular-nums uppercase tracking-tighter">
+                          {hourStr.split(':')[0]} {hourStr.split(' ')[1]}
+                        </span>
+                      )}
                     </td>
                     
                     {DAYS.map((day, dayIdx) => {

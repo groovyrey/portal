@@ -161,6 +161,7 @@ export interface Student {
     showStudentId?: boolean;
     classReminders?: boolean;
     paymentReminders?: boolean;
+    campus?: string;
   };
 }
 

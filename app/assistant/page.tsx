@@ -66,7 +66,7 @@ const TypingIndicator = () => (
       ))}
     </div>
     <span className="text-[10px] font-bold text-muted-foreground animate-pulse uppercase tracking-wider leading-none">
-      Cato is thinking
+      Cici is thinking
     </span>
   </motion.div>
 );
@@ -154,10 +154,6 @@ const ChatInput = React.memo(({
           <p className="text-[9px] text-center text-muted-foreground font-bold uppercase tracking-widest leading-none">
             AI may produce inaccurate information
           </p>
-          <div className="flex items-center gap-1.5 opacity-60">
-            <div className="h-1 w-1 rounded-full bg-amber-500" />
-            <p className="text-[8px] text-amber-600 dark:text-amber-400 font-black uppercase tracking-[0.2em]">Still in Development Mode</p>
-          </div>
         </div>
       </form>
     </div>
@@ -305,7 +301,7 @@ export default function AssistantPage() {
             if (toolName) {
               setMessages((prev) => prev.map((msg) => 
                 msg.id === assistantMessageId 
-                  ? { ...msg, tools: [...(msg.tools || []), toolName] } 
+                  ? { ...msg, tools: Array.from(new Set([...(msg.tools || []), toolName])) } 
                   : msg
               ));
             }
@@ -386,15 +382,6 @@ export default function AssistantPage() {
     <div className="max-w-4xl mx-auto px-4 py-4 md:py-6 flex flex-col h-[calc(100dvh-140px)]">
       {/* Messages Area */}
       <div className="flex-1 bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col relative">
-        {/* Development Mode Header Indicator */}
-        <div className="flex items-center justify-between px-4 py-2 bg-amber-500/10 border-b border-amber-500/20">
-          <div className="flex items-center gap-2">
-            <Zap className="h-3 w-3 text-amber-500 animate-pulse" />
-            <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-[0.2em]">Development Mode</span>
-          </div>
-          <p className="text-[9px] font-bold text-amber-600/70 dark:text-amber-400/70 uppercase tracking-wider">Features may be limited</p>
-        </div>
-
         <div 
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scroll-smooth custom-scrollbar"
@@ -416,12 +403,12 @@ export default function AssistantPage() {
               
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent border border-border rounded-full text-[10px] font-bold tracking-wider uppercase mb-4">
                 <Sparkles className="h-3 w-3 text-blue-500 animate-pulse" />
-                Cato AI
+                Cici AI
               </div>
 
               <h2 className="text-2xl font-bold text-foreground mb-3 tracking-tight">How can I help?</h2>
               <p className="text-sm text-muted-foreground mb-8 leading-relaxed font-medium">
-                I&apos;m Cato, your study buddy connected to your academic records. Ask about your <span className="text-foreground font-bold">grades</span>, <span className="text-foreground font-bold">fees</span>, or <span className="text-foreground font-bold">schedules</span>.
+                I&apos;m Cici, your study buddy connected to your academic records. Ask about your <span className="text-foreground font-bold">grades</span>, <span className="text-foreground font-bold">fees</span>, or <span className="text-foreground font-bold">schedules</span>.
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
@@ -455,15 +442,9 @@ export default function AssistantPage() {
                 exit={{ opacity: 0, scale: 0.98 }}
                 className={`flex w-full ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`flex gap-3.5 ${m.role === 'user' ? 'flex-row-reverse max-w-[85%] sm:max-w-[75%]' : 'flex-col w-full items-start'}`}>
+                <div className={`flex gap-3.5 ${m.role === 'user' ? 'max-w-[85%] sm:max-w-[75%]' : 'flex-col w-full items-start'}`}>
                   {/* Avatar & Label Area */}
-                  {m.role === 'user' ? (
-                    <div className="flex items-center gap-2.5 justify-end mb-1">
-                      <div className="flex-shrink-0 h-8 w-8 rounded-xl bg-primary border border-primary text-primary-foreground flex items-center justify-center">
-                        <User className="h-4 w-4" />
-                      </div>
-                    </div>
-                  ) : (
+                  {m.role !== 'user' && (
                     <div className="w-full flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0 h-9 w-9 rounded-2xl bg-accent border border-border text-primary flex items-center justify-center shadow-sm">
@@ -471,7 +452,7 @@ export default function AssistantPage() {
                         </div>
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-black text-foreground uppercase tracking-widest">Cato Assistant</span>
+                            <span className="text-[11px] font-black text-foreground uppercase tracking-widest">Cici Assistant</span>
                             <div className="h-1 w-1 rounded-full bg-blue-500 animate-pulse" />
                           </div>
                         </div>
