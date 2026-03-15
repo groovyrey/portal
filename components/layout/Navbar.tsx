@@ -79,21 +79,12 @@ export default function Navbar() {
       const sessionActive = getCookie('portal_session_active') === '1';
       const data = localStorage.getItem('student_data');
       
-      // If session cookie is gone, we are logged out regardless of localStorage
-      if (!sessionActive) {
-        if (data) {
-          localStorage.removeItem('student_data');
-          window.dispatchEvent(new Event('local-storage-update'));
-        }
-        setIsLoggedIn(false);
-        setStudentId(null);
-        setStudentName(null);
-        setLastSynced(null);
-        return;
-      }
+      // If we have data but no session cookie, we might have just refreshed or be an existing user
+      // We'll trust localStorage for the UI until a request actually fails with 401
+      const effectiveLoggedIn = sessionActive || !!data;
 
-      setIsLoggedIn(!!data);
-      if (data) {
+      setIsLoggedIn(effectiveLoggedIn);
+      if (data && effectiveLoggedIn) {
         try {
           const parsed = JSON.parse(data);
           setStudentId(parsed.id);
@@ -126,6 +117,9 @@ export default function Navbar() {
         setStudentId(null);
         setStudentName(null);
         setLastSynced(null);
+        
+        // Only clear if cookie is explicitly missing AND we have data (forced logout)
+        // But for now, let's just let hooks.ts handle the 401 clearing for better UX
       }
     };
     
