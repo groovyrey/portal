@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { decrypt } from '@/lib/auth';
-import { getStudentProfile, getAllStudents } from '@/lib/data-service';
+import { decrypt, isStaff } from '@/lib/auth';
+import { getAllStudents } from '@/lib/data-service';
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,6 +16,11 @@ export async function GET(req: NextRequest) {
       userId = sessionData.userId;
     } catch (e) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
+    // Server-side authorization check
+    if (!(await isStaff(userId))) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     const { searchParams } = new URL(req.url);

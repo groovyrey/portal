@@ -88,28 +88,28 @@ const DocsPage: React.FC = () => {
               <h2 className="text-xl font-bold tracking-tight uppercase">Security & Privacy</h2>
             </div>
 
-            <div className="bg-slate-900 text-white rounded-lg p-8 shadow-md">
+            <div className="bg-foreground text-background rounded-lg p-8 shadow-md">
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
                   <h3 className="text-base font-bold mb-3 uppercase tracking-tight">Intelligence Standard</h3>
-                  <p className="text-xs text-slate-400 leading-relaxed mb-6 font-medium">
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-6 font-medium">
                     LCC Hub utilizes AES-256 encryption and secure proxy layers to protect your academic data. We prioritize "Data Sovereignty"—meaning your data belongs to you, and we only process it when you ask.
                   </p>
                 </div>
                 <div className="space-y-4">
-                  <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                  <div className="p-4 bg-background/10 rounded-lg border border-border/20">
                     <div className="flex items-center gap-2 mb-1">
-                        <ShieldCheck className="h-3 w-3 text-blue-400" />
-                        <h4 className="font-bold text-[10px] uppercase tracking-widest">Zero-Persistence</h4>
+                        <ShieldCheck className="h-3 w-3 text-primary" />
+                        <h4 className="font-bold text-[10px] uppercase tracking-tight">Zero-Persistence</h4>
                     </div>
-                    <p className="text-[10px] text-slate-400 font-medium">Passwords are never stored. We use temporary session tokens for Schoolista synchronization.</p>
+                    <p className="text-[10px] text-muted-foreground font-medium">Passwords are never stored. We use temporary session tokens for Schoolista synchronization.</p>
                   </div>
-                  <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                  <div className="p-4 bg-background/10 rounded-lg border border-border/20">
                     <div className="flex items-center gap-2 mb-1">
-                        <ShieldCheck className="h-3 w-3 text-blue-400" />
-                        <h4 className="font-bold text-[10px] uppercase tracking-widest">Secure Handshake</h4>
+                        <ShieldCheck className="h-3 w-3 text-primary" />
+                        <h4 className="font-bold text-[10px] uppercase tracking-tight">Secure Handshake</h4>
                     </div>
-                    <p className="text-[10px] text-slate-400 font-medium">All external integrations (Google, Deepgram) use encrypted server-side API calls.</p>
+                    <p className="text-[10px] text-muted-foreground font-medium">All external integrations (Google, Deepgram) use encrypted server-side API calls.</p>
                   </div>
                 </div>
               </div>
@@ -118,12 +118,12 @@ const DocsPage: React.FC = () => {
         </div>
 
         <footer className="mt-20 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-[0.3em]">
+          <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-tight">
             &copy; {new Date().getFullYear()} LCC Hub • Strategic Intelligence
           </p>
           <div className="flex gap-6">
-            <Link href="/disclaimer" className="text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest">Legal</Link>
-            <Link href="/" className="text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest">Access</Link>
+            <Link href="/disclaimer" className="text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-tight">Legal</Link>
+            <Link href="/" className="text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-tight">Access</Link>
           </div>
         </footer>
       </div>

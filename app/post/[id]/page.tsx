@@ -37,10 +37,10 @@ import { useRealtime } from '@/components/shared/RealtimeProvider';
 
 const getTopicStyle = (topic: string) => {
   switch (topic) {
-    case 'Academics': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+    case 'Academics': return 'bg-primary/10 text-primary border-primary/20';
     case 'Campus Life': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
     case 'Career': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
-    case 'Well-being': return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
+    case 'Well-being': return 'bg-destructive/10 text-destructive border-destructive/20';
     default: return 'bg-accent text-muted-foreground border-border';
   }
 };
@@ -327,14 +327,14 @@ export default function PostPage() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
         <div className="bg-card p-8 rounded-3xl border border-border shadow-sm max-w-sm w-full">
-          <div className="h-16 w-16 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Trash2 className="h-8 w-8" />
           </div>
           <h2 className="text-xl font-bold text-foreground mb-2">Post Not Found</h2>
           <p className="text-sm text-muted-foreground mb-6">This post may have been deleted or the link is invalid.</p>
           <Link 
             href="/community" 
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-bold uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-sm font-bold tracking-tight rounded-xl hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Community
@@ -367,7 +367,7 @@ export default function PostPage() {
                 </div>
                 <div>
                   <Link href={`/student/${post.userId}`} className="block group">
-                    <h2 className="text-base font-bold text-foreground group-hover:text-blue-500 transition-colors">{post.userName}</h2>
+                    <h2 className="text-base font-bold text-foreground group-hover:text-primary transition-colors">{post.userName}</h2>
                   </Link>
                   <div className="flex items-center gap-2 flex-wrap mt-0.5">
                     <p className="text-[10px] font-medium text-muted-foreground">
@@ -461,7 +461,7 @@ export default function PostPage() {
                       {...props} 
                       target="_blank" 
                       rel="noopener noreferrer" 
-                      className="text-blue-500 font-bold underline hover:text-blue-600 transition-colors"
+                      className="text-primary font-bold underline hover:text-primary/80 transition-colors"
                     >
                       {props.children}
                     </a>
@@ -489,18 +489,18 @@ export default function PostPage() {
                         onClick={() => handleVote(post.id, idx)}
                         className={`w-full relative h-12 rounded-2xl overflow-hidden border transition-all duration-300 ${
                           hasVoted 
-                            ? isSelected ? 'border-blue-500/50 bg-card' : 'border-border bg-transparent opacity-60'
-                            : !student ? 'border-border bg-card/50 cursor-not-allowed' : 'border-border bg-card hover:border-blue-500'
+                            ? isSelected ? 'border-primary/50 bg-card' : 'border-border bg-transparent opacity-60'
+                            : !student ? 'border-border bg-card/50 cursor-not-allowed' : 'border-border bg-card hover:border-primary'
                         }`}
                       >
                         {hasVoted && (
                           <div 
-                            className={`absolute inset-y-0 left-0 transition-all duration-1000 ${isSelected ? 'bg-blue-500/10' : 'bg-muted/20'}`}
+                            className={`absolute inset-y-0 left-0 transition-all duration-1000 ${isSelected ? 'bg-primary/10' : 'bg-muted/20'}`}
                             style={{ width: `${percentage}%` }}
                           />
                         )}
                         <div className="absolute inset-0 px-5 flex items-center justify-between">
-                          <span className={`text-sm font-bold ${isSelected ? 'text-blue-500' : 'text-muted-foreground'}`}>
+                          <span className={`text-sm font-bold ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>
                             {option.text}
                           </span>
                           {hasVoted && (
@@ -529,7 +529,7 @@ export default function PostPage() {
                     disabled={!student}
                     className={`flex items-center gap-2.5 px-5 py-2 rounded-xl transition-all duration-300 border
                         ${isLiked 
-                            ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' 
+                            ? 'bg-destructive/10 text-destructive border-destructive/20' 
                             : !student 
                               ? 'bg-accent/50 text-muted-foreground/30 cursor-not-allowed border-transparent'
                               : 'bg-accent/50 text-muted-foreground hover:bg-accent border-transparent'}`}
@@ -555,7 +555,7 @@ export default function PostPage() {
         {/* Comments Section */}
         <div className="space-y-6">
           <div className="flex items-center gap-3 px-1">
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+            <h3 className="text-xs font-bold uppercase tracking-tight text-muted-foreground">
               Discussion ({comments.length})
             </h3>
           </div>
@@ -598,7 +598,7 @@ export default function PostPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1 gap-4">
                           <Link href={`/student/${comment.userId}`} className="truncate">
-                            <span className={`text-sm font-bold truncate hover:text-blue-500 transition-colors ${isMe ? 'text-blue-500' : 'text-foreground'}`}>
+                            <span className={`text-sm font-bold truncate hover:text-primary transition-colors ${isMe ? 'text-primary' : 'text-foreground'}`}>
                               {isMe ? 'You' : comment.userName}
                             </span>
                           </Link>
@@ -667,7 +667,7 @@ export default function PostPage() {
           {/* Comment Input Part of flow */}
           <div className="pt-8">
             {student ? (
-              <div className="flex gap-3 items-center bg-accent/50 p-2 rounded-2xl border border-border focus-within:border-blue-500/50 focus-within:bg-card transition-all shadow-sm">
+              <div className="flex gap-3 items-center bg-accent/50 p-2 rounded-2xl border border-border focus-within:border-primary/50 focus-within:bg-card transition-all shadow-sm">
                 <input
                   type="text"
                   value={newComment}
@@ -687,7 +687,7 @@ export default function PostPage() {
             ) : (
               <div className="flex items-center justify-between bg-accent/50 px-5 py-4 rounded-2xl border border-border">
                 <p className="text-sm font-bold text-muted-foreground">Log in to join the discussion</p>
-                <Link href="/" className="text-sm font-bold text-blue-500 hover:underline">Sign In</Link>
+                <Link href="/" className="text-sm font-bold text-primary hover:underline">Sign In</Link>
               </div>
             )}
           </div>
@@ -699,12 +699,12 @@ export default function PostPage() {
         isOpen={!!reactors && reactors.length > 0} 
         onClose={() => setReactors(null)}
         maxWidth="max-w-xs"
-        title={<h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Hearts</h3>}
+        title={<h3 className="text-xs font-bold uppercase tracking-tight text-muted-foreground">Hearts</h3>}
       >
         <div className="max-h-80 overflow-y-auto p-2 space-y-1 custom-scrollbar">
           {loadingReactors ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="h-6 w-6 text-blue-500 animate-spin" />
+              <Loader2 className="h-6 w-6 text-primary animate-spin" />
             </div>
           ) : (
             reactors?.map(user => (
@@ -733,7 +733,7 @@ export default function PostPage() {
         maxWidth="max-w-xs"
         className="p-8 text-center"
       >
-        <div className="h-16 w-16 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
+        <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-3xl flex items-center justify-center mx-auto mb-6">
             <Trash2 className="h-8 w-8" />
         </div>
         <h3 className="text-lg font-bold text-foreground mb-2">Delete Post?</h3>
@@ -741,13 +741,13 @@ export default function PostPage() {
         <div className="flex flex-col gap-3">
             <button 
                 onClick={handleDeletePost}
-                className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-red-500/10 active:scale-95"
+                className="w-full py-3.5 bg-destructive hover:bg-destructive/90 text-white text-xs font-bold tracking-tight rounded-2xl transition-all shadow-lg shadow-destructive/10 active:scale-95"
             >
                 Delete Post
             </button>
             <button 
                 onClick={() => setPostToDelete(null)}
-                className="w-full py-3.5 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
+                className="w-full py-3.5 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-bold tracking-tight rounded-2xl transition-all active:scale-95"
             >
                 Cancel
             </button>
@@ -761,7 +761,7 @@ export default function PostPage() {
         maxWidth="max-w-xs"
         className="p-8 text-center"
       >
-        <div className="h-16 w-16 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
+        <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-3xl flex items-center justify-center mx-auto mb-6">
             <Trash2 className="h-8 w-8" />
         </div>
         <h3 className="text-lg font-bold text-foreground mb-2">Delete Comment?</h3>
@@ -769,13 +769,13 @@ export default function PostPage() {
         <div className="flex flex-col gap-3">
             <button 
                 onClick={confirmDeleteComment}
-                className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-red-500/10 active:scale-95"
+                className="w-full py-3.5 bg-destructive hover:bg-destructive/90 text-white text-xs font-bold tracking-tight rounded-2xl transition-all shadow-lg shadow-destructive/10 active:scale-95"
             >
                 Delete Comment
             </button>
             <button 
                 onClick={() => setCommentToDelete(null)}
-                className="w-full py-3.5 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
+                className="w-full py-3.5 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-bold tracking-tight rounded-2xl transition-all active:scale-95"
             >
                 Cancel
             </button>
@@ -804,20 +804,20 @@ export default function PostPage() {
           </div>
 
           <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
-            <div className="bg-blue-500/5 rounded-2xl p-5 border border-blue-500/10 flex gap-4">
-              <Info className="h-6 w-6 text-blue-500 shrink-0" />
+            <div className="bg-primary/5 rounded-2xl p-5 border border-primary/10 flex gap-4">
+              <Info className="h-6 w-6 text-primary shrink-0" />
               <p className="text-xs text-muted-foreground font-bold leading-relaxed">
                 Aegis will review the reported content based on our <span className="text-foreground">Community Guidelines</span>. Excessive false reporting may result in account restrictions.
               </p>
             </div>
 
             <div className="space-y-6">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Guidelines for Review</h4>
+              <h4 className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground/50">Guidelines for Review</h4>
               
               <div className="grid gap-6">
                 {[
-                  { icon: <GraduationCap className="h-5 w-5 text-blue-500" />, title: "Professionalism", desc: "No offensive content or excessive slang." },
-                  { icon: <HeartHandshake className="h-5 w-5 text-rose-500" />, title: "Peer Support", desc: "Is it helpful or supportive?" },
+                  { icon: <GraduationCap className="h-5 w-5 text-primary" />, title: "Professionalism", desc: "No offensive content or excessive slang." },
+                  { icon: <HeartHandshake className="h-5 w-5 text-destructive" />, title: "Peer Support", desc: "Is it helpful or supportive?" },
                   { icon: <AlertTriangle className="h-5 w-5 text-amber-500" />, title: "No Bullying", desc: "Zero tolerance for harassment or shaming." },
                   { icon: <ShieldCheck className="h-5 w-5 text-green-500" />, title: "Privacy", desc: "No personal info should be shared." }
                 ].map((item, i) => (
@@ -848,14 +848,14 @@ export default function PostPage() {
                   handleReportPost(pId);
                 }
               }}
-              className="w-full py-4 bg-foreground text-background hover:opacity-90 text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-3"
+              className="w-full py-4 bg-foreground text-background hover:opacity-90 text-xs font-bold tracking-tight rounded-2xl transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-3"
             >
               <CheckCircle className="h-5 w-5" />
               Confirm Violation
             </button>
             <button 
               onClick={() => { setCommentToReport(null); setPostToReport(null); }}
-              className="w-full py-4 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-[0.98]"
+              className="w-full py-4 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-bold tracking-tight rounded-2xl transition-all active:scale-[0.98]"
             >
               Cancel
             </button>

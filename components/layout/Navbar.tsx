@@ -66,34 +66,61 @@ export default function Navbar() {
   const isStaff = currentUser?.badges?.includes('staff');
 
   useEffect(() => {
+    // Helper to get cookie value
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift();
+      return null;
+    };
+
     // Check if logged in to show navbar
     const checkLogin = () => {
+      const sessionActive = getCookie('portal_session_active') === '1';
       const data = localStorage.getItem('student_data');
+      
+      // If session cookie is gone, we are logged out regardless of localStorage
+      if (!sessionActive) {
+        if (data) {
+          localStorage.removeItem('student_data');
+          window.dispatchEvent(new Event('local-storage-update'));
+        }
+        setIsLoggedIn(false);
+        setStudentId(null);
+        setStudentName(null);
+        setLastSynced(null);
+        return;
+      }
+
       setIsLoggedIn(!!data);
       if (data) {
-        const parsed = JSON.parse(data);
-        setStudentId(parsed.id);
-        const firstName = parsed.parsedName?.firstName || parsed.name.split(',')[0];
-        setStudentName(firstName);
-        
-        if (parsed.updated_at) {
-          try {
-            // Handle multiple possible date formats (Firebase Timestamp, ISO string, etc.)
-            let date: Date;
-            if (typeof parsed.updated_at === 'object' && parsed.updated_at.seconds) {
-              date = new Date(parsed.updated_at.seconds * 1000);
-            } else {
-              date = new Date(parsed.updated_at);
-            }
+        try {
+          const parsed = JSON.parse(data);
+          setStudentId(parsed.id);
+          const firstName = parsed.parsedName?.firstName || parsed.name.split(',')[0];
+          setStudentName(firstName);
+          
+          if (parsed.updated_at) {
+            try {
+              // Handle multiple possible date formats (Firebase Timestamp, ISO string, etc.)
+              let date: Date;
+              if (typeof parsed.updated_at === 'object' && parsed.updated_at.seconds) {
+                date = new Date(parsed.updated_at.seconds * 1000);
+              } else {
+                date = new Date(parsed.updated_at);
+              }
 
-            if (!isNaN(date.getTime())) {
-              setLastSynced(date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }));
-            } else {
+              if (!isNaN(date.getTime())) {
+                setLastSynced(date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }));
+              } else {
+                setLastSynced('Just now');
+              }
+            } catch (e) {
               setLastSynced('Just now');
             }
-          } catch (e) {
-            setLastSynced('Just now');
           }
+        } catch (e) {
+          setIsLoggedIn(false);
         }
       } else {
         setStudentId(null);
@@ -103,6 +130,8 @@ export default function Navbar() {
     };
     
     checkLogin();
+    // Also check on a timer as backup for cookie expiration
+    const interval = setInterval(checkLogin, 5000);
     // Also listen for storage changes (to handle login/logout)
     window.addEventListener('storage', checkLogin);
     // Custom event for same-tab login/logout
@@ -282,10 +311,10 @@ export default function Navbar() {
                           }
                           setIsMoreOpen(false);
                         }}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all group ${
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all group ${
                           isDropdownOpen || link.children.some((child: any) => isActive(child.href))
-                            ? 'bg-primary/10 text-primary shadow-sm'
-                            : 'text-muted-foreground hover:bg-accent/80 hover:text-foreground'
+                            ? 'bg-primary/5 text-primary'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                       >
                         <Icon className={`h-4 w-4 transition-transform duration-300 ${isDropdownOpen ? 'scale-110' : ''}`} />
@@ -324,10 +353,10 @@ export default function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
                       isActive(link.href)
-                        ? 'bg-primary/10 text-primary shadow-sm'
-                        : 'text-muted-foreground hover:bg-accent/80 hover:text-foreground'
+                        ? 'bg-primary/5 text-primary'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -366,10 +395,10 @@ export default function Navbar() {
                           setIsSocialOpen(false);
                           setIsAdminOpen(false);
                         }}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
                           isMoreOpen || desktopMore.some(link => isActive(link.href))
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-muted-foreground hover:bg-accent/80 hover:text-foreground'
+                            ? 'bg-primary/5 text-primary'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                       >
                         More
@@ -446,7 +475,7 @@ export default function Navbar() {
       >
         {/* Overlay */}
         <div 
-          className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm"
+          className="absolute inset-0 bg-foreground/40 dark:bg-card/60 backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
         ></div>
         
@@ -459,7 +488,7 @@ export default function Navbar() {
           <div className="flex flex-col h-full">
             <div className="p-6 border-b border-border">
               <div className="flex items-center justify-between mb-6">
-                <span className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Student Console</span>
+                <span className="font-bold text-[10px] uppercase tracking-tight text-muted-foreground">Student Console</span>
                 <button 
                   onClick={() => setIsOpen(false)}
                   className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
@@ -475,8 +504,8 @@ export default function Navbar() {
                       {studentName}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <div className={`h-1.5 w-1.5 rounded-full ${isSyncing ? 'bg-blue-500 animate-pulse' : 'bg-emerald-500'}`}></div>
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      <div className={`h-1.5 w-1.5 rounded-full ${isSyncing ? 'bg-primary animate-pulse' : 'bg-primary'}`}></div>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
                         {lastSynced || 'Just now'}
                       </span>
                     </div>
@@ -569,7 +598,7 @@ export default function Navbar() {
             </div>
 
             <div className="p-6 border-t border-border text-center">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Version {APP_VERSION}</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">Version {APP_VERSION}</p>
             </div>
           </div>
         </div>

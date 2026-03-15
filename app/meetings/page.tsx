@@ -44,11 +44,11 @@ interface SavedMeeting {
 }
 
 const SUBJECT_COLORS = [
-  'text-blue-500 bg-blue-500/5 border-blue-500/10',
+  'text-primary bg-primary/5 border-primary/10',
   'text-emerald-500 bg-emerald-500/5 border-emerald-500/10',
   'text-violet-500 bg-violet-500/5 border-violet-500/10',
   'text-amber-500 bg-amber-500/5 border-amber-500/10',
-  'text-rose-500 bg-rose-500/5 border-rose-500/10',
+  'text-destructive bg-destructive/5 border-destructive/10',
   'text-cyan-500 bg-cyan-500/5 border-cyan-500/10',
   'text-indigo-500 bg-indigo-500/5 border-indigo-500/10',
   'text-orange-500 bg-orange-500/5 border-orange-500/10',
@@ -402,20 +402,20 @@ export default function MeetingsPage() {
                     <History className="h-5 w-5 text-amber-500" />
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-500">Unsaved Session Detected</h4>
+                    <h4 className="text-[10px] font-bold tracking-tight text-amber-500">Unsaved Session Detected</h4>
                     <p className="text-[9px] font-bold text-muted-foreground uppercase">A previous recording was interrupted.</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button 
                     onClick={() => { recordingDB.deleteSession(sessionId!); setIsRecoverable(false); }}
-                    className="px-3 py-2 text-[8px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all"
+                    className="px-3 py-2 text-[8px] font-bold tracking-tight text-muted-foreground hover:text-foreground transition-all"
                   >
                     Discard
                   </button>
                   <button 
                     onClick={recoverSession}
-                    className="px-4 py-2 bg-amber-500 text-white rounded-lg text-[8px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
+                    className="px-4 py-2 bg-amber-500 text-white rounded-lg text-[8px] font-bold tracking-tight shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
                   >
                     Restore
                   </button>
@@ -427,12 +427,12 @@ export default function MeetingsPage() {
 
         <div className="flex justify-between items-end gap-6 mb-10">
           <div className="space-y-1">
-            <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">Archives</h1>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Capture & Review Lectures</p>
+            <h1 className="text-2xl font-bold text-foreground uppercase tracking-tight">Archives</h1>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">Capture & Review Lectures</p>
           </div>
           <button 
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-3 bg-primary text-primary-foreground rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/10 active:scale-95 transition-all"
+            className="flex items-center gap-2 px-5 py-3 bg-primary text-primary-foreground rounded-lg text-[10px] font-bold tracking-tight shadow-lg shadow-primary/10 active:scale-95 transition-all"
           >
             <Plus className="h-4 w-4" />
             New Record
@@ -455,7 +455,7 @@ export default function MeetingsPage() {
                   <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleDelete(meeting.id); }}
-                      className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
+                      className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-all"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -463,22 +463,22 @@ export default function MeetingsPage() {
                   
                   <Link href={`/meetings/${meeting.id}`} className="block space-y-3">
                     <div className="flex items-center gap-2">
-                      <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${colorClass}`}>
+                      <span className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${colorClass}`}>
                         {meeting.subject.split(' - ')[0]}
                       </span>
-                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{formatDate(meeting.date, meeting.created_at)}</span>
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight">{formatDate(meeting.date, meeting.created_at)}</span>
                     </div>
                     
-                    <h3 className="text-sm font-black text-foreground uppercase tracking-tight line-clamp-1 group-hover:text-primary transition-colors">
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-tight line-clamp-1 group-hover:text-primary transition-colors">
                       {meeting.description || meeting.subject}
                     </h3>
 
                     <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                      <div className="flex items-center gap-1 text-[8px] font-bold tracking-tight text-muted-foreground">
                         <FileText className="h-3 w-3" />
                         LOG
                       </div>
-                      <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.2em] text-primary">
+                      <div className="flex items-center gap-1 text-[8px] font-bold tracking-tight text-primary">
                         <TrendingUp className="h-3 w-3" />
                         INSIGHT
                       </div>
@@ -499,7 +499,7 @@ export default function MeetingsPage() {
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title={<span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary px-2">Create Record</span>}
+        title={<span className="text-[10px] font-bold uppercase tracking-tight text-primary px-2">Create Record</span>}
         maxWidth="max-w-md"
       >
         <div className="p-4 space-y-6">
@@ -507,8 +507,8 @@ export default function MeetingsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between px-2">
               <div className="flex flex-col">
-                <span className="text-xs font-black uppercase tracking-widest">{currentMonth.toLocaleString('default', { month: 'short' })}</span>
-                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{year}</span>
+                <span className="text-xs font-bold uppercase tracking-tight">{currentMonth.toLocaleString('default', { month: 'short' })}</span>
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight">{year}</span>
               </div>
               <div className="flex items-center gap-1">
                 <button 
@@ -530,7 +530,7 @@ export default function MeetingsPage() {
 
             <div className="grid grid-cols-7 gap-1">
               {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
-                <div key={d} className="text-center py-1 text-[8px] font-black text-muted-foreground/40">{d}</div>
+                <div key={d} className="text-center py-1 text-[8px] font-bold text-muted-foreground/40">{d}</div>
               ))}
               {Array.from({ length: firstDayOfMonth }).map((_, i) => (
                 <div key={`pad-${i}`} className="aspect-square" />
@@ -545,7 +545,7 @@ export default function MeetingsPage() {
                   <button 
                     key={dayNum} 
                     onClick={() => setSelectedDate(date)}
-                    className={`aspect-square rounded-lg flex items-center justify-center text-[10px] font-black transition-all ${
+                    className={`aspect-square rounded-lg flex items-center justify-center text-[10px] font-bold transition-all ${
                       isSelected 
                         ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110' 
                         : isToday 
@@ -562,7 +562,7 @@ export default function MeetingsPage() {
 
           {/* Filtered Schedule */}
           <div className="space-y-2">
-            <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground px-2">Classes for {selectedDate.toLocaleDateString(undefined, { weekday: 'long' })}</h4>
+            <h4 className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground px-2">Classes for {selectedDate.toLocaleDateString(undefined, { weekday: 'long' })}</h4>
             <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
               {filteredSchedule.length > 0 ? (
                 filteredSchedule.map((item, idx) => (
@@ -577,19 +577,19 @@ export default function MeetingsPage() {
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${getSubjectColor(item.subject)}`}>
+                        <span className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${getSubjectColor(item.subject)}`}>
                           {item.subject.split(' - ')[0]}
                         </span>
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{item.time.split(' ').slice(1).join(' ')}</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight">{item.time.split(' ').slice(1).join(' ')}</span>
                       </div>
-                      <p className="text-xs font-black text-foreground uppercase tracking-tight truncate">{item.description || item.subject}</p>
+                      <p className="text-xs font-bold text-foreground uppercase tracking-tight truncate">{item.description || item.subject}</p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-all" />
                   </button>
                 ))
               ) : (
                 <div className="text-center py-10 bg-muted/10 rounded-lg border border-dashed border-border/50">
-                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">No Class Scheduled</p>
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight">No Class Scheduled</p>
                 </div>
               )}
             </div>
@@ -620,7 +620,7 @@ export default function MeetingsPage() {
                     <button
                       key={lang.code}
                       onClick={() => setSelectedLanguage(lang.code)}
-                      className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all border ${
+                      className={`px-3 py-1.5 rounded-full text-[8px] font-bold uppercase tracking-tight transition-all border ${
                         selectedLanguage === lang.code
                           ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20'
                           : 'bg-muted/50 text-muted-foreground border-border/50 hover:border-primary/30'
@@ -634,7 +634,7 @@ export default function MeetingsPage() {
 
               <div className="flex items-center gap-6">
                 <div className={`h-24 w-24 rounded-2xl flex items-center justify-center transition-all ${
-                  isRecording ? 'bg-rose-500 text-white shadow-xl shadow-rose-500/20' : 'bg-primary/10 text-primary border border-primary/20'
+                  isRecording ? 'bg-destructive text-white shadow-xl shadow-destructive/20' : 'bg-primary/10 text-primary border border-primary/20'
                 }`}>
                   {isRecording ? <Mic className="h-10 w-10 animate-pulse" /> : <Mic className="h-10 w-10 opacity-30" />}
                 </div>
@@ -642,24 +642,24 @@ export default function MeetingsPage() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     {isLiveConnected ? (
-                       <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 text-emerald-500 rounded text-[8px] font-black uppercase tracking-widest">
+                       <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 text-emerald-500 rounded text-[8px] font-bold uppercase tracking-tight">
                          <Wifi className="h-3 w-3" />
                          Live
                        </div>
                     ) : (
-                       <div className="flex items-center gap-1.5 px-2 py-1 bg-muted text-muted-foreground rounded text-[8px] font-black uppercase tracking-widest">
+                       <div className="flex items-center gap-1.5 px-2 py-1 bg-muted text-muted-foreground rounded text-[8px] font-bold uppercase tracking-tight">
                          <WifiOff className="h-3 w-3" />
                          Offline
                        </div>
                     )}
                     {isRecording && (
-                       <div className="flex items-center gap-1.5 px-2 py-1 bg-rose-500/10 text-rose-500 rounded text-[8px] font-black uppercase tracking-widest animate-pulse">
-                         <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                       <div className="flex items-center gap-1.5 px-2 py-1 bg-destructive/10 text-destructive rounded text-[8px] font-bold uppercase tracking-tight animate-pulse">
+                         <div className="h-1.5 w-1.5 rounded-full bg-destructive" />
                          Rec
                        </div>
                     )}
                   </div>
-                  <h4 className="text-3xl font-black tracking-tight tabular-nums">
+                  <h4 className="text-3xl font-bold tracking-tight tabular-nums">
                     {isRecording ? formatTime(recordingTime) : '0:00'}
                   </h4>
                 </div>
@@ -674,7 +674,7 @@ export default function MeetingsPage() {
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center opacity-20 space-y-2">
                      <FileText className="h-6 w-6" />
-                     <p className="text-[9px] font-black uppercase tracking-widest">Waiting for speech</p>
+                     <p className="text-[9px] font-bold uppercase tracking-tight">Waiting for speech</p>
                   </div>
                 )}
               </div>
@@ -683,14 +683,14 @@ export default function MeetingsPage() {
                 {!isRecording ? (
                   <button
                     onClick={startRecording}
-                    className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"
+                    className="w-full py-4 bg-foreground text-background rounded-lg text-[10px] font-bold uppercase tracking-tight shadow-xl active:scale-95 transition-all"
                   >
                     Start Session
                   </button>
                 ) : (
                   <button
                     onClick={stopRecording}
-                    className="w-full py-4 bg-rose-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl shadow-rose-500/20 active:scale-95 transition-all"
+                    className="w-full py-4 bg-destructive text-white rounded-lg text-[10px] font-bold uppercase tracking-tight shadow-xl shadow-destructive/20 active:scale-95 transition-all"
                   >
                     Finish & Analyze
                   </button>
@@ -701,8 +701,8 @@ export default function MeetingsPage() {
             <div className="flex flex-col items-center py-12 space-y-6">
                <Loader2 className="h-8 w-8 text-primary animate-spin" />
                <div className="text-center space-y-2">
-                 <h4 className="text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">{processingStatus}</h4>
-                 <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Do not close drawer</p>
+                 <h4 className="text-[10px] font-bold tracking-tight text-primary animate-pulse">{processingStatus}</h4>
+                 <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-tight">Do not close drawer</p>
                </div>
             </div>
           ) : (
@@ -710,7 +710,7 @@ export default function MeetingsPage() {
               <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-5 flex items-center gap-4">
                 <CheckCircle2 className="h-6 w-6 text-emerald-500" />
                 <div>
-                  <h4 className="text-xs font-black text-foreground uppercase">Synthesized</h4>
+                  <h4 className="text-xs font-bold text-foreground uppercase">Synthesized</h4>
                   <p className="text-[9px] font-bold text-emerald-600/70 uppercase">Saved to library</p>
                 </div>
               </div>
@@ -723,7 +723,7 @@ export default function MeetingsPage() {
 
               <button 
                 onClick={() => setIsDrawerOpen(false)}
-                className="w-full py-4 bg-muted text-foreground rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
+                className="w-full py-4 bg-muted text-foreground rounded-lg text-[10px] font-bold tracking-tight transition-all"
               >
                 Close
               </button>

@@ -103,13 +103,13 @@ export default function Home() {
                   <Wallet className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1.5">Outstanding Balance</p>
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1.5">Outstanding Balance</p>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-black text-foreground tabular-nums tracking-tight">
+                    <span className="text-lg font-bold text-foreground tabular-nums tracking-tight">
                       {student.financials.balance || '₱0.00'}
                     </span>
                     {student.financials.dueToday && student.financials.dueToday !== '₱0.00' && (
-                      <span className="px-2 py-0.5 bg-rose-500/10 text-rose-500 text-[9px] font-black rounded border border-rose-500/20 uppercase tracking-widest">
+                      <span className="px-2 py-0.5 bg-destructive/10 text-destructive text-[9px] font-bold rounded border border-destructive/20 uppercase tracking-tight">
                         Due Today
                       </span>
                     )}
@@ -119,7 +119,7 @@ export default function Home() {
 
               <Link 
                 href="/accounts" 
-                className="flex items-center justify-center gap-2 bg-foreground text-background dark:bg-white dark:text-slate-900 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all active:scale-95 group"
+                className="flex items-center justify-center gap-2 bg-foreground text-background dark:bg-card dark:text-foreground px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-tight hover:opacity-90 transition-all active:scale-95 group"
               >
                 Financial Registry
                 <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />

@@ -41,7 +41,7 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
                   required
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
-                  className="block w-full px-4 py-2.5 border border-border rounded-xl bg-accent placeholder-muted-foreground/50 focus:outline-none focus:border-muted-foreground transition-all text-sm font-medium text-foreground"
+                  className="block w-full px-4 py-2.5 border border-border rounded-xl bg-muted placeholder-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-all text-sm font-medium text-foreground"
                   placeholder="ID Number"
                 />
               </div>
@@ -55,7 +55,7 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-4 pr-10 py-2.5 border border-border rounded-xl bg-accent placeholder-muted-foreground/50 focus:outline-none focus:border-muted-foreground transition-all text-sm font-medium text-foreground"
+                  className="block w-full pl-4 pr-10 py-2.5 border border-border rounded-xl bg-muted placeholder-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-all text-sm font-medium text-foreground"
                   placeholder="Password"
                 />
                 <button
@@ -75,7 +75,7 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
                 required
                 checked={agreedToTerms}
                 onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="mt-0.5 h-3.5 w-3.5 rounded border-border text-primary focus:ring-0 cursor-pointer bg-accent"
+                className="mt-0.5 h-3.5 w-3.5 rounded border-border text-primary focus:ring-0 cursor-pointer bg-muted"
               />
               <label htmlFor="terms" className="text-[10px] text-muted-foreground leading-normal font-medium cursor-pointer">
                 I agree to the <Link href="/disclaimer" className="text-foreground font-bold hover:underline">Notice of Disclaimer</Link> and data synchronization policy.
@@ -83,7 +83,7 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
             </div>
 
             {error && (
-              <div className="flex gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500">
+              <div className="flex gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive">
                 <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
                 <p className="text-[10px] font-bold leading-tight uppercase tracking-tight">{error}</p>
               </div>
@@ -92,7 +92,7 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
             <button
               type="submit"
               disabled={loading || !agreedToTerms}
-              className="w-full flex justify-center py-2.5 px-4 rounded-xl text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 shadow-sm"
+              className="w-full flex justify-center py-2.5 px-4 rounded-xl text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 shadow-lg shadow-primary/10"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -104,9 +104,9 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
               )}
             </button>
 
-            <div className="flex gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-              <Info className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
-              <p className="text-[9px] text-blue-500 font-bold leading-normal uppercase">
+            <div className="flex gap-3 p-3 bg-primary/5 border border-primary/10 rounded-xl">
+              <Info className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+              <p className="text-[9px] text-primary/80 font-bold leading-normal uppercase tracking-tight">
                 First login may take up to 60 seconds while we securely synchronize your official academic records.
               </p>
             </div>

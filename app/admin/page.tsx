@@ -59,16 +59,16 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="bg-card p-8 rounded-3xl border border-border shadow-xl max-w-md w-full text-center space-y-6">
-          <div className="bg-red-50 dark:bg-red-950/30 p-4 rounded-full w-20 h-20 mx-auto flex items-center justify-center text-red-500">
+          <div className="bg-destructive/10 p-4 rounded-full w-20 h-20 mx-auto flex items-center justify-center text-destructive">
             <ShieldAlert className="h-10 w-10" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-foreground uppercase tracking-tight mb-2">Access Denied</h1>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">You do not have permission to view this page.</p>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight mb-2">Access Denied</h1>
+            <p className="text-sm font-bold text-muted-foreground tracking-tight">You do not have permission to view this page.</p>
           </div>
           <button 
             onClick={() => router.push('/')}
-            className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-[0.2em] hover:bg-slate-800 transition-all active:scale-95"
+            className="w-full bg-foreground text-background font-bold py-4 rounded-2xl text-xs tracking-tight hover:opacity-90 transition-all active:scale-95"
           >
             Return Home
           </button>
@@ -157,10 +157,10 @@ export default function AdminPage() {
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8">
             <div className="max-w-5xl mx-auto">
               <div className="mb-8 hidden lg:block">
-                <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">
                   {tabs.find(t => t.id === activeTab)?.name}
                 </h1>
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                <p className="text-sm font-bold text-muted-foreground tracking-tight mt-1">
                   {tabs.find(t => t.id === activeTab)?.desc}
                 </p>
               </div>

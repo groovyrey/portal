@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { decrypt } from '@/lib/auth';
+import { decrypt, isStaff } from '@/lib/auth';
 import { getAllStudents } from '@/lib/data-service';
 
 export async function GET(req: NextRequest) {
@@ -9,13 +9,18 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
+    let userId = "";
     try {
       const decrypted = decrypt(sessionCookie.value);
       const sessionData = JSON.parse(decrypted);
-      // Basic check if user is staff should ideally be here too, 
-      // but let's assume the client-side check is sufficient for now or add it if we have a way to check from ID
+      userId = sessionData.userId;
     } catch (e) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
+    // Server-side authorization check
+    if (!(await isStaff(userId))) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     const allStudents = await getAllStudents();

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { decrypt } from '@/lib/auth';
+import { decrypt, isStaff } from '@/lib/auth';
 import { getAdminLogs } from '@/lib/admin-logs';
 
 export async function GET(req: NextRequest) {
@@ -9,12 +9,18 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
+    let userId = "";
     try {
       const decrypted = decrypt(sessionCookie.value);
       const sessionData = JSON.parse(decrypted);
-      // Admin check logic can be added here if needed
+      userId = sessionData.userId;
     } catch (e) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
+    // Server-side authorization check
+    if (!(await isStaff(userId))) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     const logs = await getAdminLogs(100);

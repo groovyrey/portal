@@ -58,45 +58,44 @@ const TypingIndicator = () => (
     <div className="flex gap-1">
       {[0, 1, 2].map((i) => (
         <motion.div
-          key={i}
-          animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-          className="h-1.5 w-1.5 rounded-full bg-blue-500"
+        key={i}
+        animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }}
+        transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+        className="h-1.5 w-1.5 rounded-full bg-primary"
         />
-      ))}
-    </div>
-    <span className="text-[10px] font-bold text-muted-foreground animate-pulse uppercase tracking-wider leading-none">
-      Cici is thinking
-    </span>
-  </motion.div>
-);
+        ))}
+        </div>
+        <span className="text-[10px] font-bold text-muted-foreground animate-pulse uppercase tracking-tight leading-none">
+        Cici is thinking
+        </span>
+        </motion.div>
+        );
 
-// Copy Button Component
-const CopyButton = ({ content, className = "" }: { content: string, className?: string }) => {
-  const [copied, setCopied] = useState(false);
+        // Copy Button Component
+        const CopyButton = ({ content, className = "" }: { content: string, className?: string }) => {
+        const [copied, setCopied] = useState(false);
 
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await navigator.clipboard.writeText(content);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
-    }
-  };
+        const handleCopy = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+        await navigator.clipboard.writeText(content);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+        console.error('Failed to copy text: ', err);
+        }
+        };
 
-  return (
-    <button
-      onClick={handleCopy}
-      className={`p-1.5 rounded-lg bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-all border border-border/50 shadow-sm active:scale-90 ${className}`}
-      title="Copy to clipboard"
-    >
-      {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-    </button>
-  );
-};
-
+        return (
+        <button
+        onClick={handleCopy}
+        className={`p-1.5 rounded-lg bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-all border border-border/50 shadow-sm active:scale-90 ${className}`}
+        title="Copy to clipboard"
+        >
+        {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+        </button>
+        );
+        };
 // Sub-component for the input area to prevent full page re-renders on every keystroke
 const ChatInput = React.memo(({ 
   onSend, 
@@ -151,7 +150,7 @@ const ChatInput = React.memo(({
             </div>
         </div>
         <div className="flex flex-col items-center gap-1 mt-2.5">
-          <p className="text-[9px] text-center text-muted-foreground font-bold uppercase tracking-widest leading-none">
+          <p className="text-[9px] text-center text-muted-foreground font-bold uppercase tracking-tight leading-none">
             AI may produce inaccurate information
           </p>
         </div>
@@ -182,10 +181,10 @@ export default function AssistantPage() {
   };
 
   const [suggestions, setSuggestions] = useState([
-    { text: "What's my current balance?", icon: Wallet, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { text: "Show my schedule for today", icon: Calendar, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { text: "Search for Latest AI Advancement", icon: Search, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { text: "Summarize: laconcepcioncollege.com", icon: Globe, color: "text-amber-500", bg: "bg-amber-500/10" }
+    { text: "What's my current balance?", icon: Wallet, color: "text-primary", bg: "bg-primary/10" },
+    { text: "Show my schedule for today", icon: Calendar, color: "text-primary", bg: "bg-primary/10" },
+    { text: "Search for Latest AI Advancement", icon: Search, color: "text-primary", bg: "bg-primary/10" },
+    { text: "Summarize: laconcepcioncollege.com", icon: Globe, color: "text-primary", bg: "bg-primary/10" }
   ]);
 
   // Modal state for ask_user tool
@@ -452,8 +451,8 @@ export default function AssistantPage() {
                         </div>
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-black text-foreground uppercase tracking-widest">Cici Assistant</span>
-                            <div className="h-1 w-1 rounded-full bg-blue-500 animate-pulse" />
+                            <span className="text-[11px] font-bold text-foreground uppercase tracking-tight">Cici Assistant</span>
+                            <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
                           </div>
                         </div>
                       </div>
@@ -462,7 +461,7 @@ export default function AssistantPage() {
                         {/* Tool Stack */}
                         {m.tools && m.tools.length > 0 && (
                           <div className="flex flex-col items-end gap-1">
-                            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Tools Engaged</span>
+                            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1">Tools Engaged</span>
                             <AvatarGroup 
                               max={6}
                               sx={{
@@ -518,7 +517,7 @@ export default function AssistantPage() {
                             components={{
                               p: ({children}) => <p className="mb-5 last:mb-0 leading-relaxed text-sm/6">{children}</p>,
                               table: ({...props}) => <div className="overflow-x-auto my-8 rounded-xl border border-border/60 shadow-sm bg-card/50"><table className="w-full text-xs text-left" {...props} /></div>,
-                              thead: ({...props}) => <thead className="bg-accent/80 text-foreground font-black uppercase tracking-widest text-[10px]" {...props} />,
+                              thead: ({...props}) => <thead className="bg-accent/80 text-foreground font-bold uppercase tracking-tight text-[10px]" {...props} />,
                               th: ({...props}) => <th className="px-4 py-3" {...props} />,
                               td: ({...props}) => <td className="px-4 py-3 border-t border-border/40" {...props} />,
                               code: ({className, children, ...props}) => {
@@ -526,12 +525,12 @@ export default function AssistantPage() {
                                 return match ? (
                                   <div className="relative group my-6">
                                     <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-                                      <div className="px-2 py-1 bg-slate-800 rounded text-[9px] font-black uppercase tracking-widest text-slate-400 border border-slate-700">
+                                      <div className="px-2 py-1 bg-secondary rounded text-[9px] font-bold uppercase tracking-tight text-secondary-foreground border border-border">
                                         {match[1]}
                                       </div>
                                       <CopyButton content={String(children).replace(/\n$/, '')} />
                                     </div>
-                                    <pre className="bg-slate-950 text-slate-50 rounded-xl p-5 overflow-x-auto text-xs scroll-smooth custom-scrollbar border border-slate-800 shadow-xl">
+                                    <pre className="bg-foreground text-background rounded-xl p-5 overflow-x-auto text-xs scroll-smooth custom-scrollbar border border-border shadow-xl">
                                       <code className={className} {...props}>
                                         {children}
                                       </code>
@@ -543,11 +542,11 @@ export default function AssistantPage() {
                                   </code>
                                 );
                               },
-                              a: ({...props}) => <a className="text-blue-500 font-bold hover:text-blue-600 transition-all underline decoration-blue-500/30 underline-offset-4" target="_blank" rel="noopener noreferrer" {...props} />,
+                              a: ({...props}) => <a className="text-primary font-bold hover:opacity-80 transition-all underline decoration-primary/30 underline-offset-4" target="_blank" rel="noopener noreferrer" {...props} />,
                               img: ({...props}) => <img className="rounded-2xl border border-border shadow-lg my-8 max-w-full h-auto" {...props} />,
                               ul: ({...props}) => <ul className="list-disc list-outside ml-6 my-5 space-y-2.5" {...props} />,
                               ol: ({...props}) => <ol className="list-decimal list-outside ml-6 my-5 space-y-2.5" {...props} />,
-                              h1: ({children}) => <h1 className="text-xl font-black text-foreground mt-10 mb-5 pb-3 border-b border-border/60 uppercase tracking-tight">{children}</h1>,
+                              h1: ({children}) => <h1 className="text-xl font-bold text-foreground mt-10 mb-5 pb-3 border-b border-border/60 uppercase tracking-tight">{children}</h1>,
                               h2: ({children}) => <h2 className="text-lg font-bold text-foreground mt-8 mb-4 tracking-tight">{children}</h2>,
                               h3: ({children}) => <h3 className="text-base font-bold text-foreground mt-6 mb-3">{children}</h3>,
                               blockquote: ({...props}) => <blockquote className="border-l-4 border-primary/50 pl-5 py-3 my-8 text-muted-foreground italic bg-primary/5 rounded-r-2xl font-medium" {...props} />,

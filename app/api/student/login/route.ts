@@ -157,6 +157,15 @@ export async function POST(req: NextRequest) {
         maxAge: 60 * 60 * 24 * 7,
         path: '/',
       });
+      
+      // Add a non-httpOnly cookie as a UI indicator that a session is active
+      response.cookies.set('portal_session_active', '1', {
+        httpOnly: false,
+        secure: isProd && !req.nextUrl.hostname.includes('localhost'),
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      });
       return response;
     }
 

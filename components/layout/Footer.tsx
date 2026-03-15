@@ -29,7 +29,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-lg tracking-tight text-foreground">LCC Hub</span>
-                <span className="px-1.5 py-0.5 rounded bg-secondary text-[9px] font-bold text-muted-foreground border border-border uppercase tracking-wider">Beta</span>
+                <span className="px-1.5 py-0.5 rounded bg-secondary text-[9px] font-bold text-muted-foreground border border-border uppercase tracking-tight">Beta</span>
               </div>
             </Link>
             <p className="text-muted-foreground text-xs max-w-xs leading-relaxed font-medium">
@@ -39,36 +39,36 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-[10px] font-bold text-foreground uppercase tracking-wider mb-4">Resources</h3>
+            <h3 className="text-[10px] font-bold text-foreground uppercase tracking-tight mb-4">Resources</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/school" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">School Info</Link>
+                <Link href="/school" className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">School Info</Link>
               </li>
               <li>
-                <Link href="/docs" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">System Docs</Link>
+                <Link href="/docs" className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">System Docs</Link>
               </li>
               <li>
-                <Link href="/disclaimer" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Legal Notice</Link>
+                <Link href="/disclaimer" className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">Legal Notice</Link>
               </li>
             </ul>
           </div>
 
           {/* Community */}
           <div>
-            <h3 className="text-[10px] font-bold text-foreground uppercase tracking-wider mb-4">Community</h3>
+            <h3 className="text-[10px] font-bold text-foreground uppercase tracking-tight mb-4">Community</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/community" className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Global Feed</Link>
+                <Link href="/community" className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">Global Feed</Link>
               </li>
               <li>
-                <Link href={studentId ? `/student/${studentId}` : '/student'} className="text-xs text-muted-foreground hover:text-accent-blue transition-colors font-medium">Personal Profile</Link>
+                <Link href={studentId ? `/student/${studentId}` : '/student'} className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">Personal Profile</Link>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="pt-8 border-t border-border text-center md:text-left">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
             &copy; {currentYear} LCC Hub • v{APP_VERSION}
           </p>
         </div>

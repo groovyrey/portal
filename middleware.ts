@@ -9,7 +9,9 @@ const protectedRoutes = [
   '/accounts',
   '/subjects',
   '/community',
-  '/profile', // Base profile path should be protected
+  '/profile',
+  '/admin', // Protect admin UI
+  '/api/admin', // Protect admin API
   '/api/student/me',
   '/api/student/eaf',
   '/api/student/grades',

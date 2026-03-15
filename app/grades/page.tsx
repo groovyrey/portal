@@ -114,7 +114,7 @@ export default function GradesPage() {
         />
         <h2 className="text-xl font-bold text-foreground mb-2">No reports available</h2>
         <p className="text-muted-foreground mb-6 text-sm font-medium">Please log in or refresh your data from the dashboard first.</p>
-        <Link href="/" className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg transition-colors text-sm">
+        <Link href="/" className="px-6 py-2.5 bg-primary text-primary-foreground font-bold rounded-lg transition-colors text-sm">
           Return to Dashboard
         </Link>
       </div>
@@ -128,15 +128,15 @@ export default function GradesPage() {
           <button 
             onClick={calculateStats}
             disabled={isCalculating}
-            className={`px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 ${
+            className={`px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-tight transition-all flex items-center gap-2 active:scale-95 ${
               isCalculating 
-                ? 'bg-slate-200 text-muted-foreground cursor-not-allowed' 
-                : 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm'
+                ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                : 'bg-foreground text-background hover:opacity-90 shadow-sm'
             }`}
           >
             {isCalculating ? (
               <>
-                <div className="animate-spin h-3 w-3 border-2 border-white/30 border-t-white rounded-full"></div>
+                <div className="animate-spin h-3 w-3 border-2 border-background/30 border-t-background rounded-full"></div>
                 Calculating...
               </>
             ) : (

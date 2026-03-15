@@ -129,7 +129,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h1 className="text-base font-bold tracking-tight uppercase">Settings</h1>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Preferences</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-tight font-bold">Preferences</p>
               </div>
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function SettingsPage() {
               <ChevronRight className="h-3 w-3 opacity-30 group-hover:opacity-100 transition-opacity" />
             </button>
             <div className="px-3 pt-2">
-              <p className="text-[10px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em] text-center">Version {APP_VERSION}</p>
+              <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-tight text-center">Version {APP_VERSION}</p>
             </div>
           </div>
         </aside>
@@ -183,7 +183,7 @@ export default function SettingsPage() {
               className="flex items-center gap-2 px-3 py-1.5 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
             >
               <LogOut className="h-4 w-4" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Sign Out</span>
+              <span className="text-[10px] font-bold uppercase tracking-tight">Sign Out</span>
             </button>
           </header>
 
@@ -205,10 +205,10 @@ export default function SettingsPage() {
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8">
             <div className="max-w-4xl mx-auto">
               <div className="mb-8 hidden lg:block">
-                <h1 className="text-2xl font-black text-foreground uppercase tracking-tight">
+                <h1 className="text-2xl font-bold text-foreground uppercase tracking-tight">
                   {tabs.find(t => t.id === activeTab)?.name}
                 </h1>
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                <p className="text-sm font-bold text-muted-foreground uppercase tracking-tight mt-1">
                   {tabs.find(t => t.id === activeTab)?.desc}
                 </p>
               </div>

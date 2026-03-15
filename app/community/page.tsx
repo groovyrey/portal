@@ -219,18 +219,18 @@ function CommunityContent() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-foreground tracking-tight">Community</h1>
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
           </div>
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsInfoDrawerOpen(true)}
-              className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider hover:text-blue-500 transition-colors flex items-center gap-1.5"
+              className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight hover:text-primary transition-colors flex items-center gap-1.5"
             >
               <Info className="h-3.5 w-3.5" />
               Formatting
             </button>
             <div className="w-[1px] h-3 bg-border" />
-            <button onClick={() => setShowGuidelines(true)} className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider hover:text-blue-500 transition-colors">
+            <button onClick={() => setShowGuidelines(true)} className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight hover:text-primary transition-colors">
               Guidelines
             </button>
           </div>
@@ -327,32 +327,32 @@ function CommunityContent() {
               Express yourself clearly using these formatting tools. All posts are rendered with GitHub Flavored Markdown and LaTeX support.
             </p>
             <div className="flex flex-wrap gap-2">
-               <span className="px-2 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[8px] font-black uppercase tracking-widest rounded border border-blue-500/20">Markdown</span>
-               <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[8px] font-black uppercase tracking-widest rounded border border-emerald-500/20">LaTeX</span>
-               <span className="px-2 py-0.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[8px] font-black uppercase tracking-widest rounded border border-purple-500/20">Syntax Highlighting</span>
+               <span className="px-2 py-0.5 bg-primary/10 text-primary text-[8px] font-bold uppercase tracking-tight rounded border border-primary/20">Markdown</span>
+               <span className="px-2 py-0.5 bg-primary/10 text-primary text-[8px] font-bold uppercase tracking-tight rounded border border-primary/20">LaTeX</span>
+               <span className="px-2 py-0.5 bg-secondary text-secondary-foreground text-[8px] font-bold uppercase tracking-tight rounded border border-border">Syntax Highlighting</span>
             </div>
           </div>
 
           <section className="space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+            <h3 className="text-[10px] font-bold uppercase tracking-tight text-primary flex items-center gap-2">
               <div className="h-1 w-1 rounded-full bg-primary" />
               Typography & Lists
             </h3>
             <div className="bg-accent/40 rounded-xl border border-border/50 overflow-hidden text-left shadow-sm">
               <div className="px-4 py-2 bg-accent/60 border-b border-border/50 flex justify-between items-center">
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Syntax</span>
+                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Syntax</span>
               </div>
               <pre className="p-4 text-[10px] font-mono text-foreground whitespace-pre-wrap leading-relaxed bg-accent/20">
 {"# Heading 1\n## Heading 2\n\n**Bold** and *Italic*\n~~Strikethrough~~\n\n- Unordered list\n1. Ordered list\n- [ ] Task incomplete\n- [x] Task completed"}
               </pre>
               <div className="px-4 py-2 bg-accent/60 border-t border-border/50 border-b border-border/50">
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Output</span>
+                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Output</span>
               </div>
               <div className="p-5 prose prose-sm dark:prose-invert max-w-none bg-card/30">
                 <ReactMarkdown 
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    h1: ({children}) => <h1 className="text-lg font-black text-foreground mt-4 mb-2 pb-1 border-b border-border/50 uppercase tracking-tight">{children}</h1>,
+                    h1: ({children}) => <h1 className="text-lg font-bold text-foreground mt-4 mb-2 pb-1 border-b border-border/50 uppercase tracking-tight">{children}</h1>,
                     h2: ({children}) => <h2 className="text-base font-bold text-foreground mt-3 mb-2 tracking-tight">{children}</h2>,
                     ul: ({...props}) => <ul className="list-disc list-outside ml-5 my-3 space-y-1" {...props} />,
                     ol: ({...props}) => <ol className="list-decimal list-outside ml-5 my-3 space-y-1" {...props} />,
@@ -366,19 +366,19 @@ function CommunityContent() {
           </section>
 
           <section className="space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+            <h3 className="text-[10px] font-bold uppercase tracking-tight text-primary flex items-center gap-2">
               <div className="h-1 w-1 rounded-full bg-primary" />
               Advanced Layout
             </h3>
             <div className="bg-accent/40 rounded-xl border border-border/50 overflow-hidden text-left shadow-sm">
               <div className="px-4 py-2 bg-accent/60 border-b border-border/50">
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Syntax</span>
+                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Syntax</span>
               </div>
               <pre className="p-4 text-[10px] font-mono text-foreground whitespace-pre-wrap leading-relaxed bg-accent/20">
 {"> Blockquote\n\n| Subject | Grade |\n| :--- | :---: |\n| Math | A+ |\n| Sci | A |"}
               </pre>
               <div className="px-4 py-2 bg-accent/60 border-t border-border/50 border-b border-border/50">
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Output</span>
+                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Output</span>
               </div>
               <div className="p-5 prose prose-sm dark:prose-invert max-w-none bg-card/30">
                 <ReactMarkdown 
@@ -386,7 +386,7 @@ function CommunityContent() {
                   components={{
                     blockquote: ({...props}) => <blockquote className="border-l-4 border-primary/50 pl-4 py-1 my-3 text-muted-foreground italic bg-primary/5 rounded-r-lg" {...props} />,
                     table: ({...props}) => <div className="overflow-x-auto my-4 rounded-xl border border-border/60 shadow-sm bg-card/50"><table className="w-full text-[10px] text-left" {...props} /></div>,
-                    thead: ({...props}) => <thead className="bg-accent/80 text-foreground font-black uppercase tracking-widest text-[8px]" {...props} />,
+                    thead: ({...props}) => <thead className="bg-accent/80 text-foreground font-bold uppercase tracking-tight text-[8px]" {...props} />,
                     th: ({...props}) => <th className="px-3 py-2" {...props} />,
                     td: ({...props}) => <td className="px-3 py-2 border-t border-border/40" {...props} />,
                   }}
@@ -398,19 +398,19 @@ function CommunityContent() {
           </section>
 
           <section className="space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+            <h3 className="text-[10px] font-bold uppercase tracking-tight text-primary flex items-center gap-2">
               <div className="h-1 w-1 rounded-full bg-primary" />
               Math & Equations
             </h3>
             <div className="bg-accent/40 rounded-xl border border-border/50 overflow-hidden text-left shadow-sm">
               <div className="px-4 py-2 bg-accent/60 border-b border-border/50">
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Inline & Display LaTeX</span>
+                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Inline & Display LaTeX</span>
               </div>
               <pre className="p-4 text-[10px] font-mono text-foreground whitespace-pre-wrap leading-relaxed bg-accent/20">
 {"Pythagorean: $a^2 + b^2 = c^2$\n\n$$ E = mc^2 $$"}
               </pre>
               <div className="px-4 py-2 bg-accent/60 border-t border-border/50 border-b border-border/50">
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Output</span>
+                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Output</span>
               </div>
               <div className="p-5 prose prose-sm dark:prose-invert max-w-none bg-card/30">
                 <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
@@ -421,19 +421,19 @@ function CommunityContent() {
           </section>
 
           <section className="space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+            <h3 className="text-[10px] font-bold uppercase tracking-tight text-primary flex items-center gap-2">
               <div className="h-1 w-1 rounded-full bg-primary" />
               Code & Media
             </h3>
             <div className="bg-accent/40 rounded-xl border border-border/50 overflow-hidden text-left shadow-sm">
               <div className="px-4 py-2 bg-accent/60 border-b border-border/50">
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Syntax</span>
+                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Syntax</span>
               </div>
               <pre className="p-4 text-[10px] font-mono text-foreground whitespace-pre-wrap leading-relaxed bg-accent/20">
 {"Inline \`code\` snippet\\n\\n[Link Text](https://example.com)\\n\\n\`\`\`python\\nprint(\\\"Hello Cici\\\")\\n\`\`\`"}
               </pre>
               <div className="px-4 py-2 bg-accent/60 border-t border-border/50 border-b border-border/50">
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Output</span>
+                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Output</span>
               </div>
               <div className="p-5 bg-card/30">
                 <ReactMarkdown 
@@ -444,7 +444,7 @@ function CommunityContent() {
                       const match = /language-(\w+)/.exec(className || '');
                       return match ? (
                         <div className="relative group my-2">
-                          <pre className="bg-slate-950 text-slate-50 rounded-lg p-3 overflow-x-auto text-[10px] border border-slate-800">
+                          <pre className="bg-foreground text-background rounded-lg p-3 overflow-x-auto text-[10px] border border-border">
                             <code className={className} {...props}>{children}</code>
                           </pre>
                         </div>
@@ -452,7 +452,7 @@ function CommunityContent() {
                         <code className="bg-primary/10 text-primary rounded px-1.5 py-0.5 font-mono text-[0.85em] font-bold border border-primary/20" {...props}>{children}</code>
                       );
                     },
-                    a: ({...props}) => <a className="text-blue-500 font-bold hover:underline underline-offset-4" {...props} />
+                    a: ({...props}) => <a className="text-primary font-bold hover:underline underline-offset-4" {...props} />
                   }}
                 >
 {"Inline \`code\` snippet\\n\\n[Link Text](https://example.com)\\n\\n\`\`\`python\\nprint(\\\"Hello Cici\\\")\\n\`\`\`"}
@@ -470,7 +470,7 @@ function CommunityContent() {
         maxWidth="max-w-xs"
         className="p-8 text-center"
       >
-        <div className="h-16 w-16 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
+        <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-3xl flex items-center justify-center mx-auto mb-6">
             <Trash2 className="h-8 w-8" />
         </div>
         <h3 className="text-lg font-bold text-foreground mb-2">Delete Post?</h3>
@@ -478,13 +478,13 @@ function CommunityContent() {
         <div className="flex flex-col gap-3">
             <button 
                 onClick={handleDeletePost}
-                className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-red-500/10 active:scale-95"
+                className="w-full py-3.5 bg-destructive hover:bg-destructive/90 text-destructive-foreground text-xs font-bold uppercase tracking-tight rounded-2xl transition-all shadow-lg shadow-destructive/10 active:scale-95"
             >
                 Delete Post
             </button>
             <button 
                 onClick={() => setPostToDelete(null)}
-                className="w-full py-3.5 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
+                className="w-full py-3.5 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-bold uppercase tracking-tight rounded-2xl transition-all active:scale-95"
             >
                 Cancel
             </button>

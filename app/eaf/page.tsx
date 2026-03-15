@@ -46,12 +46,12 @@ export default function EAFPage() {
       <main className="max-w-5xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="flex items-center gap-3">
-             <div className="bg-slate-900 p-2 rounded-xl text-white">
+             <div className="bg-foreground p-2 rounded-xl text-background">
                 <FileText className="h-5 w-5" />
              </div>
              <div>
                 <h1 className="text-xl font-bold text-foreground leading-none">Registration Form</h1>
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Academic Enrollment Record</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight mt-0.5">Academic Enrollment Record</p>
              </div>
           </div>
           
@@ -69,7 +69,7 @@ export default function EAFPage() {
                 <button
                   onClick={() => window.print()}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 px-4 rounded-xl transition-all disabled:opacity-50 text-xs active:scale-95 shadow-sm"
+                  className="flex items-center justify-center gap-2 bg-foreground hover:opacity-90 text-background font-bold py-2 px-4 rounded-xl transition-all disabled:opacity-50 text-xs active:scale-95 shadow-sm"
                 >
                   <Download className="h-3.5 w-3.5" />
                   Print
@@ -90,7 +90,7 @@ export default function EAFPage() {
             </p>
             <button
               onClick={fetchEAF}
-              className="bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-8 rounded-xl transition-all shadow-sm flex items-center gap-2 active:scale-95"
+              className="bg-foreground hover:opacity-90 text-background font-bold py-2.5 px-8 rounded-xl transition-all shadow-sm flex items-center gap-2 active:scale-95"
             >
               <Download className="h-4 w-4" />
               Load Record
@@ -100,12 +100,12 @@ export default function EAFPage() {
           <div className="bg-card rounded-2xl border border-border p-12 flex flex-col items-center justify-center text-center shadow-sm">
             <Loader2 className="h-8 w-8 text-foreground animate-spin mb-4" />
             <h3 className="text-base font-bold text-foreground">Fetching Record</h3>
-            <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider mt-1">Syncing with server...</p>
+            <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-tight mt-1">Syncing with server...</p>
           </div>
         ) : (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 p-3 rounded-xl">
-                <p className="text-[10px] text-blue-700 font-bold text-center">
+            <div className="bg-primary/10 border border-primary/20 p-3 rounded-xl text-center">
+                <p className="text-[10px] text-primary font-bold">
                     Official render of your Certificate of Matriculation.
                 </p>
             </div>

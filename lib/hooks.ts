@@ -57,14 +57,22 @@ export function useStudentQuery() {
   return useQuery<Student | null>({
     queryKey: ['student-data'],
     queryFn: async () => {
-      const res = await fetch('/api/student/me');
-      if (res.ok) {
-        const result = await res.json();
-        if (result.success && result.data) {
-          localStorage.setItem('student_data', JSON.stringify(result.data));
+      try {
+        const res = await fetch('/api/student/me');
+        if (res.ok) {
+          const result = await res.json();
+          if (result.success && result.data) {
+            localStorage.setItem('student_data', JSON.stringify(result.data));
+            window.dispatchEvent(new Event('local-storage-update'));
+            return result.data as Student;
+          }
+        } else if (res.status === 401 || res.status === 404) {
+          // Clear local storage if unauthorized or student not found
+          localStorage.removeItem('student_data');
           window.dispatchEvent(new Event('local-storage-update'));
-          return result.data as Student;
         }
+      } catch (err) {
+        console.error('Error in useStudentQuery:', err);
       }
       return null;
     },

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { decrypt } from '@/lib/auth';
+import { doc, updateDoc } from 'firebase/firestore';
+import { decrypt, isStaff } from '@/lib/auth';
 import { getStudentProfile } from '@/lib/data-service';
 import { logAdminAction } from '@/lib/admin-logs';
 
@@ -23,6 +23,11 @@ export async function POST(
       adminId = sessionData.userId;
     } catch (e) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
+    // Server-side authorization check
+    if (!(await isStaff(adminId))) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     const { badges: newBadges } = await req.json();

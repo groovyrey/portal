@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import { db } from './db';
+import { doc, getDoc } from 'firebase/firestore';
 
 const ALGORITHM = 'aes-256-cbc';
 const SECRET_KEY = process.env.SESSION_SECRET;
@@ -27,4 +29,21 @@ export function decrypt(text: string): string {
   let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
   decrypted += decipher.final('utf8');
   return decrypted;
+}
+
+/**
+ * Server-side check if a student ID has staff privileges
+ */
+export async function isStaff(userId: string): Promise<boolean> {
+  if (!userId) return false;
+  try {
+    const studentDoc = await getDoc(doc(db, 'students', userId));
+    if (!studentDoc.exists()) return false;
+    const data = studentDoc.data();
+    const badges = data.badges || [];
+    return badges.includes('staff');
+  } catch (error) {
+    console.error('Error in isStaff check:', error);
+    return false;
+  }
 }

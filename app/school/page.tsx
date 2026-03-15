@@ -36,10 +36,10 @@ const SchoolInfoPage = () => {
           className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
           style={{ backgroundImage: 'url("/herobg.jpeg")' }}
         />
-        <div className="absolute inset-0 z-10 bg-slate-950/70 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 z-10 bg-foreground/70 backdrop-blur-[2px]" />
 
         <div className="max-w-5xl mx-auto relative z-20">
-          <Link href="/" className="inline-flex items-center gap-2 text-slate-300 hover:text-white transition-all text-xs font-bold mb-8 active:scale-95">
+          <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-white transition-all text-xs font-bold mb-8 active:scale-95">
             <ArrowLeft className="h-3.5 w-3.5" />
             Dashboard
           </Link>
@@ -48,8 +48,8 @@ const SchoolInfoPage = () => {
               <GraduationCap className="h-10 w-10 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-black text-white mb-2 tracking-tight uppercase">La Concepcion College</h1>
-              <p className="text-slate-300 text-sm md:text-base max-w-2xl font-bold uppercase tracking-wider leading-relaxed">
+              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight uppercase">La Concepcion College</h1>
+              <p className="text-muted-foreground text-sm md:text-base max-w-2xl font-bold uppercase tracking-tight leading-relaxed">
                 Changing Lives for the Better. Founded in 1998, LCC remains committed to providing quality education in the heart of Bulacan.
               </p>
             </div>
@@ -65,7 +65,7 @@ const SchoolInfoPage = () => {
             
             {/* Portals */}
             <section>
-              <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-4 ml-1">Official Portals</h2>
+              <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight mb-4 ml-1">Official Portals</h2>
               <div className="grid gap-3">
                 {officialLinks.map((link) => (
                   <a 
@@ -73,13 +73,13 @@ const SchoolInfoPage = () => {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group bg-card p-5 rounded-2xl border border-border hover:border-accent-blue/50 transition-all flex items-center justify-between shadow-sm"
+                    className="group bg-card p-5 rounded-2xl border border-border hover:border-primary/50 transition-all flex items-center justify-between shadow-sm"
                   >
                     <div>
-                      <h3 className="font-bold text-foreground text-sm group-hover:text-accent-blue transition-colors">{link.name}</h3>
+                      <h3 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">{link.name}</h3>
                       <p className="text-xs text-muted-foreground mt-0.5 font-medium">{link.description}</p>
                     </div>
-                    <ExternalLink className="h-4 w-4 text-slate-300 group-hover:text-muted-foreground transition-colors" />
+                    <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-muted-foreground transition-colors" />
                   </a>
                 ))}
               </div>
@@ -139,7 +139,7 @@ const SchoolInfoPage = () => {
                 <a 
                   href="https://www.facebook.com/laconcepcioncollege" 
                   target="_blank"
-                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-600/20"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20"
                 >
                   <Facebook className="h-3.5 w-3.5" />
                   Facebook Page
