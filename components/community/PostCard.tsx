@@ -53,7 +53,7 @@ const CopyButton = ({ content }: { content: string }) => {
   return (
     <button
       onClick={handleCopy}
-      className="p-1.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-slate-100 transition-all border border-slate-700/50 shadow-sm active:scale-90"
+      className="p-1.5 rounded-lg bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-all border border-border/50 shadow-sm active:scale-90"
       title="Copy to clipboard"
     >
       {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
@@ -311,12 +311,12 @@ export default function PostCard({
               return match ? (
                 <div className="relative group my-4" onClick={(e) => e.stopPropagation()}>
                   <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-                    <div className="px-2 py-1 bg-slate-800 rounded text-[8px] font-black uppercase tracking-widest text-slate-400 border border-slate-700">
+                    <div className="px-2 py-1 bg-accent rounded text-[8px] font-black uppercase tracking-widest text-muted-foreground border border-border">
                       {match[1]}
                     </div>
                     <CopyButton content={String(children).replace(/\n$/, '')} />
                   </div>
-                  <pre className="bg-slate-950 text-slate-50 rounded-xl p-4 overflow-x-auto text-xs scroll-smooth custom-scrollbar border border-slate-800 shadow-lg">
+                  <pre className="bg-muted text-foreground rounded-xl p-4 overflow-x-auto text-xs scroll-smooth custom-scrollbar border border-border shadow-lg">
                     <code className={className} {...props}>
                       {children}
                     </code>

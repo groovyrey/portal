@@ -47,7 +47,7 @@ export default function SubjectDetailPage() {
           <p className="text-muted-foreground mb-8 font-medium">We couldn&apos;t find the subject code &quot;{subjectCode}&quot; in your record.</p>
           <button 
             onClick={() => router.push('/subjects')}
-            className="w-full px-6 py-4 bg-slate-900 text-white font-bold rounded-2xl transition-all hover:bg-slate-800 active:opacity-70 flex items-center justify-center gap-2"
+            className="w-full px-6 py-4 bg-foreground text-background font-bold rounded-2xl transition-all hover:opacity-90 active:opacity-70 flex items-center justify-center gap-2"
           >
             <ArrowLeft size={18} />
             Back to Subjects
@@ -71,7 +71,7 @@ export default function SubjectDetailPage() {
         <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden mb-8">
           <div className="p-8 md:p-10 border-b border-border bg-card">
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className="px-2.5 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black font-mono tracking-wider">
+              <span className="px-2.5 py-1 bg-foreground text-background rounded-lg text-[10px] font-black font-mono tracking-wider">
                 {subject.code}
               </span>
               <span className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-lg text-[10px] font-black uppercase tracking-wider">

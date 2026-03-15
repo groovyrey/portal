@@ -525,12 +525,12 @@ export default function AssistantPage() {
                                 return match ? (
                                   <div className="relative group my-6">
                                     <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-                                      <div className="px-2 py-1 bg-secondary rounded text-[9px] font-bold uppercase tracking-tight text-secondary-foreground border border-border">
+                                      <div className="px-2 py-1 bg-accent rounded text-[9px] font-bold uppercase tracking-tight text-muted-foreground border border-border">
                                         {match[1]}
                                       </div>
                                       <CopyButton content={String(children).replace(/\n$/, '')} />
                                     </div>
-                                    <pre className="bg-foreground text-background rounded-xl p-5 overflow-x-auto text-xs scroll-smooth custom-scrollbar border border-border shadow-xl">
+                                    <pre className="bg-muted text-foreground rounded-xl p-5 overflow-x-auto text-xs scroll-smooth custom-scrollbar border border-border shadow-xl">
                                       <code className={className} {...props}>
                                         {children}
                                       </code>

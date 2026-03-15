@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   User, 
   Mail, 
@@ -21,45 +21,7 @@ import {
   ThemeProvider,
   createTheme
 } from '@mui/material';
-
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: '#3b82f6', // blue-500
-    },
-    background: {
-      paper: '#1e293b', // slate-800
-    },
-  },
-  typography: {
-    fontFamily: 'inherit',
-  },
-  components: {
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundImage: 'none',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-        }
-      }
-    },
-    MuiOutlinedInput: {
-      styleOverrides: {
-        root: {
-          borderRadius: '12px',
-          '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'rgba(255, 255, 255, 0.1)',
-          },
-          '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'rgba(255, 255, 255, 0.2)',
-          },
-        }
-      }
-    }
-  }
-});
+import { useTheme } from '@/components/shared/ThemeProvider';
 
 interface ProfileTabProps {
   student: Student;
@@ -69,6 +31,77 @@ interface ProfileTabProps {
 export default function ProfileTab({ student, updateSettings }: ProfileTabProps) {
   const [selectedCampus, setSelectedCampus] = useState(student.settings?.campus || '');
   const [isSaving, setIsSaving] = useState(false);
+  const { resolvedTheme } = useTheme();
+
+  const muiTheme = useMemo(() => createTheme({
+    palette: {
+      mode: resolvedTheme,
+      primary: {
+        main: '#3b82f6', // blue-500
+      },
+      background: {
+        paper: resolvedTheme === 'dark' ? '#1e293b' : '#ffffff', // slate-800 or white
+      },
+      text: {
+        primary: resolvedTheme === 'dark' ? '#f8fafc' : '#0f172a',
+        secondary: resolvedTheme === 'dark' ? '#94a3b8' : '#64748b',
+      }
+    },
+    typography: {
+      fontFamily: 'inherit',
+    },
+    components: {
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            backgroundImage: 'none',
+            borderRadius: '12px',
+            border: resolvedTheme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+          }
+        }
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            borderRadius: '12px',
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: resolvedTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            },
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+              borderColor: resolvedTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+            },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#3b82f6',
+            },
+          }
+        }
+      },
+      MuiInputLabel: {
+        styleOverrides: {
+          root: {
+            fontSize: '0.875rem',
+            fontWeight: 500,
+          }
+        }
+      },
+      MuiSelect: {
+        styleOverrides: {
+          select: {
+            fontSize: '0.875rem',
+            fontWeight: 500,
+          }
+        }
+      },
+      MuiMenuItem: {
+        styleOverrides: {
+          root: {
+            fontSize: '0.875rem',
+            fontWeight: 500,
+          }
+        }
+      }
+    }
+  }), [resolvedTheme]);
 
   const handleCampusChange = (event: SelectChangeEvent) => {
     setSelectedCampus(event.target.value as string);
@@ -134,24 +167,15 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
           <div className="pt-6 border-t border-border">
               <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Campus Location</h4>
               <div className="space-y-4">
-                <ThemeProvider theme={darkTheme}>
+                <ThemeProvider theme={muiTheme}>
                   <FormControl fullWidth variant="outlined" size="medium">
-                    <InputLabel id="campus-select-label" sx={{ color: 'text.secondary', '&.Mui-focused': { color: 'primary.main' } }}>Select Campus</InputLabel>
+                    <InputLabel id="campus-select-label">Select Campus</InputLabel>
                     <Select
                       labelId="campus-select-label"
                       id="campus-select"
                       value={selectedCampus}
                       label="Select Campus"
                       onChange={handleCampusChange}
-                      sx={{
-                        color: 'text.primary',
-                        '.MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'rgba(255, 255, 255, 0.1)',
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'primary.main',
-                        },
-                      }}
                     >
                       <MenuItem value="Muzon Campus">Muzon Campus</MenuItem>
                       <MenuItem value="Francisco Homes Campus">Francisco Homes Campus</MenuItem>
@@ -175,6 +199,18 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
               </div>
           </div>
       </div>
+
+      <div className="p-4 bg-primary rounded-xl text-primary-foreground flex items-center gap-4 shadow-lg shadow-primary/20">
+        <div className="p-2.5 bg-primary-foreground/10 rounded-lg">
+          <Shield className="h-5 w-5 text-primary-foreground" />
+        </div>
+        <p className="text-xs text-primary-foreground/80 font-medium leading-relaxed">
+          Your personal data is encrypted and strictly private. Only you can view these records.
+        </p>
+      </div>
+    </div>
+  );
+}
 
       <div className="p-4 bg-primary rounded-xl text-primary-foreground flex items-center gap-4 shadow-lg shadow-primary/20">
         <div className="p-2.5 bg-primary-foreground/10 rounded-lg">

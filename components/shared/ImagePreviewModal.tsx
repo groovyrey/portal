@@ -126,7 +126,7 @@ export default function ImagePreviewModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-950/90 dark:bg-black/95 backdrop-blur-xl"
+            className="absolute inset-0 bg-card/90 backdrop-blur-xl"
             onClick={onClose}
           />
           
@@ -140,7 +140,7 @@ export default function ImagePreviewModal({
             <div className="absolute top-6 right-6 z-[1010] pointer-events-auto">
               <button
                 onClick={onClose}
-                className="p-3 bg-black/40 hover:bg-red-500/40 text-white rounded-2xl border border-white/10 backdrop-blur-xl transition-all shadow-2xl"
+                className="p-3 bg-accent/40 hover:bg-red-500/40 text-foreground rounded-2xl border border-border/50 backdrop-blur-xl transition-all shadow-2xl"
               >
                 <X size={24} />
               </button>
@@ -171,16 +171,16 @@ export default function ImagePreviewModal({
 
             {/* Toolbar - Bottom Center */}
             {(scale !== 1 || onDownload) && (
-              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur-xl p-2 rounded-[2rem] border border-white/10 pointer-events-auto z-[1010] shadow-2xl">
-                <div className="px-4 py-1.5 min-w-[60px] text-center border-r border-white/10">
-                  <span className="text-[10px] font-black text-white/90 tracking-widest uppercase">
+              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-accent/40 backdrop-blur-xl p-2 rounded-[2rem] border border-border/50 pointer-events-auto z-[1010] shadow-2xl">
+                <div className="px-4 py-1.5 min-w-[60px] text-center border-r border-border/50">
+                  <span className="text-[10px] font-black text-foreground/90 tracking-widest uppercase">
                     {Math.round(scale * 100)}%
                   </span>
                 </div>
 
                 <button
                   onClick={handleReset}
-                  className="p-3 text-white/70 hover:text-white hover:bg-card/10 rounded-full transition-all flex items-center gap-2"
+                  className="p-3 text-foreground/70 hover:text-foreground hover:bg-card/10 rounded-full transition-all flex items-center gap-2"
                   title="Reset"
                 >
                   <RotateCcw size={20} />
@@ -192,7 +192,7 @@ export default function ImagePreviewModal({
                     <div className="w-px h-6 bg-card/10 mx-1" />
                     <button
                       onClick={onDownload}
-                      className="p-3 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-full transition-all"
+                      className="p-3 text-primary hover:text-primary/80 hover:bg-primary/10 rounded-full transition-all"
                       title="Download"
                     >
                       <Download size={20} />
@@ -204,7 +204,7 @@ export default function ImagePreviewModal({
             
             {/* Gesture Hint for Mobile */}
             {scale === 1 && (
-              <div className="absolute bottom-24 left-1/2 -translate-x-1/2 text-white/30 text-[9px] font-black uppercase tracking-[0.3em] pointer-events-none sm:hidden">
+              <div className="absolute bottom-24 left-1/2 -translate-x-1/2 text-foreground/30 text-[9px] font-black uppercase tracking-[0.3em] pointer-events-none sm:hidden">
                 Pinch to Zoom
               </div>
             )}

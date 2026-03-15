@@ -341,7 +341,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                       else if (action.includes('settings')) { Icon = Info; iconBg = "bg-purple-50"; iconColor = "text-purple-500"; }
                       else if (action.includes('ai') || action.includes('assistant')) { Icon = Sparkles; iconBg = "bg-indigo-50"; iconColor = "text-indigo-500"; }
                       else if (action.includes('community') || action.includes('post') || action.includes('comment')) { Icon = MessageSquare; iconBg = "bg-emerald-50 dark:bg-emerald-950/30"; iconColor = "text-emerald-500"; }
-                      else if (action.includes('system') || action.includes('diagnostic')) { Icon = ShieldCheck; iconBg = "bg-slate-900"; iconColor = "text-white"; }
+                      else if (action.includes('system') || action.includes('diagnostic')) { Icon = ShieldCheck; iconBg = "bg-foreground"; iconColor = "text-background"; }
 
                       return (
                         <motion.div 

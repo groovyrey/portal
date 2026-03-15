@@ -330,7 +330,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
           <div className="overflow-hidden">
             <div className={`p-5 ${getSubjectColor(selectedItem.subject)} border-b border-border/10`}>
               <div className="flex justify-between items-start mb-3">
-                <div className="px-2 py-0.5 bg-background/20 dark:bg-black/20 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                <div className="px-2 py-0.5 bg-muted rounded-md text-[10px] font-bold uppercase tracking-wider">
                   {selectedItem.section || '?'}
                 </div>
               </div>

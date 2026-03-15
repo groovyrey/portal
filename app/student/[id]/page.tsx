@@ -294,7 +294,7 @@ function ProfileContent() {
           {student.badges && student.badges.length > 0 && (
             <div className="mt-10 pt-8 border-t border-border">
                <div className="flex items-center gap-2 mb-4">
-                <div className="h-6 w-6 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+                <div className="h-6 w-6 rounded-lg bg-foreground text-background flex items-center justify-center">
                   <IdCard className="h-3.5 w-3.5" />
                 </div>
                 <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Academic Badges</h3>
@@ -314,7 +314,7 @@ function ProfileContent() {
       <div className="mt-10">
         <div className="flex items-center justify-between mb-6 px-2">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+            <div className="h-6 w-6 rounded-lg bg-foreground text-background flex items-center justify-center">
               <MessageSquare className="h-3.5 w-3.5" />
             </div>
             <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Activity Feed</h3>

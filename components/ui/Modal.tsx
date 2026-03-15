@@ -70,7 +70,7 @@ export default function Modal({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={() => showCloseButton && onClose()}
-            className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-foreground/40 dark:bg-card/60 backdrop-blur-sm"
           />
 
           {/* Modal Content with Fade */}

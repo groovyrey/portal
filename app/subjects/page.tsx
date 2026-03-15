@@ -1,19 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Student } from '../../types';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Search, X, ChevronRight } from 'lucide-react';
+import { Search, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import LottieAnimation from '@/components/ui/LottieAnimation';
 import Skeleton from '@/components/ui/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+const ITEMS_PER_PAGE = 20;
 
 export default function SubjectsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: student, isLoading: loading } = useQuery({
     queryKey: ['student-data'],
@@ -27,6 +30,10 @@ export default function SubjectsPage() {
       throw new Error(result.error || 'Failed to fetch student data');
     }
   });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const handleRefresh = async () => {
     const refreshToast = toast.loading('Refreshing subject listing...');
@@ -42,6 +49,12 @@ export default function SubjectsPage() {
     sub.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
     sub.description.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
+
+  const totalPages = Math.ceil(filteredSubjects.length / ITEMS_PER_PAGE);
+  const currentSubjects = filteredSubjects.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   if (loading) {
     return (
@@ -123,7 +136,7 @@ export default function SubjectsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
-            <div className="bg-slate-900 text-white text-[10px] font-bold px-3 py-2 rounded-xl uppercase tracking-wider">
+            <div className="bg-foreground text-background text-[10px] font-bold px-3 py-2 rounded-xl uppercase tracking-wider">
               {filteredSubjects.length} {searchQuery ? 'Found' : 'Total'}
             </div>
           </div>
@@ -131,7 +144,7 @@ export default function SubjectsPage() {
 
         <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
           <div className="p-5 border-b border-border flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-foreground text-background flex items-center justify-center">
               <ChevronRight className="h-4 w-4 rotate-90" />
             </div>
             <div>
@@ -150,9 +163,9 @@ export default function SubjectsPage() {
                   <th className="px-5 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredSubjects.length > 0 ? (
-                  filteredSubjects.map((sub, idx) => (
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                {currentSubjects.length > 0 ? (
+                  currentSubjects.map((sub, idx) => (
                     <tr 
                       key={idx} 
                       onClick={() => router.push(`/subjects/${encodeURIComponent(sub.code)}`)}
@@ -173,7 +186,7 @@ export default function SubjectsPage() {
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex justify-end">
-                          <div className="h-7 w-7 rounded-lg bg-accent text-muted-foreground group-hover:bg-slate-900 group-hover:text-white transition-all flex items-center justify-center">
+                          <div className="h-7 w-7 rounded-lg bg-accent text-muted-foreground group-hover:bg-foreground group-hover:text-background transition-all flex items-center justify-center">
                             <ChevronRight size={14} />
                           </div>
                         </div>
@@ -190,6 +203,61 @@ export default function SubjectsPage() {
               </tbody>
             </table>
           </div>
+
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 bg-accent/20">
+              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredSubjects.length)} of {filteredSubjects.length}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg border border-border bg-card text-muted-foreground disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent transition-all"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <div className="flex items-center gap-1">
+                  {[...Array(totalPages)].map((_, i) => {
+                    const page = i + 1;
+                    // Show first, last, current, and pages around current
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`h-8 w-8 rounded-lg text-xs font-bold transition-all ${
+                            currentPage === page
+                              ? 'bg-foreground text-background shadow-sm'
+                              : 'bg-card text-muted-foreground border border-border hover:border-muted-foreground/30'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    } else if (
+                      (page === 2 && currentPage > 3) ||
+                      (page === totalPages - 1 && currentPage < totalPages - 2)
+                    ) {
+                      return <span key={page} className="text-muted-foreground px-1">...</span>;
+                    }
+                    return null;
+                  })}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg border border-border bg-card text-muted-foreground disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent transition-all"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
