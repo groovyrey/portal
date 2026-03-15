@@ -212,18 +212,6 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
   );
 }
 
-      <div className="p-4 bg-primary rounded-xl text-primary-foreground flex items-center gap-4 shadow-lg shadow-primary/20">
-        <div className="p-2.5 bg-primary-foreground/10 rounded-lg">
-          <Shield className="h-5 w-5 text-primary-foreground" />
-        </div>
-        <p className="text-xs text-primary-foreground/80 font-medium leading-relaxed">
-          Your personal data is encrypted and strictly private. Only you can view these records.
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function InfoItem({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string }) {
   return (
     <div className="flex items-start gap-4">
