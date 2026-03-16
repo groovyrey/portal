@@ -430,7 +430,7 @@ function CommunityContent() {
                 <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Syntax</span>
               </div>
               <pre className="p-4 text-[10px] font-mono text-foreground whitespace-pre-wrap leading-relaxed bg-accent/20">
-{"Inline \`code\` snippet\\n\\n[Link Text](https://example.com)\\n\\n\`\`\`python\\nprint(\\\"Hello Cici\\\")\\n\`\`\`"}
+{"Inline `code` snippet\\n\\n[Link Text](https://example.com)\\n\\n```python\\nprint(\\\"Hello Assistant\\\")\\n```"}
               </pre>
               <div className="px-4 py-2 bg-accent/60 border-t border-border/50 border-b border-border/50">
                 <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Output</span>
@@ -455,7 +455,7 @@ function CommunityContent() {
                     a: ({...props}) => <a className="text-primary font-bold hover:underline underline-offset-4" {...props} />
                   }}
                 >
-{"Inline \`code\` snippet\\n\\n[Link Text](https://example.com)\\n\\n\`\`\`python\\nprint(\\\"Hello Cici\\\")\\n\`\`\`"}
+{"Inline `code` snippet\\n\\n[Link Text](https://example.com)\\n\\n```python\\nprint(\\\"Hello Assistant\\\")\\n```"}
                 </ReactMarkdown>
               </div>
             </div>

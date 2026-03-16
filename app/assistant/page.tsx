@@ -66,7 +66,7 @@ const TypingIndicator = () => (
         ))}
         </div>
         <span className="text-[10px] font-bold text-muted-foreground animate-pulse uppercase tracking-tight leading-none">
-        Cici is thinking
+        Assistant is thinking
         </span>
         </motion.div>
         );
@@ -402,12 +402,12 @@ export default function AssistantPage() {
               
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent border border-border rounded-full text-[10px] font-bold tracking-wider uppercase mb-4">
                 <Sparkles className="h-3 w-3 text-blue-500 animate-pulse" />
-                Cici AI
+                Assistant AI
               </div>
 
               <h2 className="text-2xl font-bold text-foreground mb-3 tracking-tight">How can I help?</h2>
               <p className="text-sm text-muted-foreground mb-8 leading-relaxed font-medium">
-                I&apos;m Cici, your study buddy connected to your academic records. Ask about your <span className="text-foreground font-bold">grades</span>, <span className="text-foreground font-bold">fees</span>, or <span className="text-foreground font-bold">schedules</span>.
+                I&apos;m Assistant, your study buddy connected to your academic records. Ask about your <span className="text-foreground font-bold">grades</span>, <span className="text-foreground font-bold">fees</span>, or <span className="text-foreground font-bold">schedules</span>.
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
@@ -451,7 +451,7 @@ export default function AssistantPage() {
                         </div>
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-bold text-foreground uppercase tracking-tight">Cici Assistant</span>
+                            <span className="text-[11px] font-bold text-foreground uppercase tracking-tight">Assistant</span>
                             <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
                           </div>
                         </div>

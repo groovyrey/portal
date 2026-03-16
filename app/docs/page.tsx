@@ -35,10 +35,10 @@ const DocsPage: React.FC = () => {
               <div className="bg-card p-6 rounded-lg border border-border shadow-sm">
                 <div className="flex items-center gap-3 mb-3">
                   <BrainCircuit className="h-5 w-5 text-primary" />
-                  <h3 className="text-base font-bold text-foreground">Cici AI</h3>
+                  <h3 className="text-base font-bold text-foreground">Assistant AI</h3>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-                  Your personalized study buddy. Cici is connected to your academic context, allowing you to ask about your grades, schedules, or complex subjects. Cici can also perform real-time web research and summarize educational content for you.
+                  Your personalized study buddy. Assistant is connected to your academic context, allowing you to ask about your grades, schedules, or complex subjects. Assistant can also perform real-time web research and summarize educational content for you.
                 </p>
               </div>
               

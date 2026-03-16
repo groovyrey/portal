@@ -211,7 +211,7 @@ export default function Navbar() {
   ];
 
   const workspaceLinks = [
-    { name: 'Cici', href: '/assistant', icon: BrainCircuit, desc: 'AI Study Buddy' },
+    { name: 'Assistant', href: '/assistant', icon: BrainCircuit, desc: 'AI Study Buddy' },
     { name: 'Meetings', href: '/meetings', icon: Mic, desc: 'Archive' },
   ];
 
