@@ -1,512 +1,342 @@
 import { NextRequest } from 'next/server';
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { Sandbox } from '@vercel/sandbox';
-/**
- * TOOL USAGE GUIDELINES FOR DEVELOPERS:
- * 
- * 1. IMPLEMENTATION:
- *    - Server-side tools (like web_search, web_fetch) must be handled within the turn loop.
- *    - Client-side tools (like show_toast, ask_user) should be signaled with 'TOOL_CALL:' prefix
- *      so the frontend can intercept and execute them.
- * 
- * 2. PROMPT INSTRUCTIONS:
- *    - The 'systemPrompt' must clearly define the tool schema and the calling convention (||| separator).
- *    - Ensure the model is instructed NOT to use markdown blocks for JSON tool calls.
- * 
- * 3. PARSING:
- *    - Use a robust parsing strategy (like the turn loop below) that can handle both explicit
- *      markers (|||) and fallback JSON detection in case the model deviates.
- */
 import { 
   ChatPromptTemplate, 
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
-import { AIMessage, HumanMessage, BaseMessage } from "@langchain/core/messages";
-import { z } from "zod";
+import { AIMessage, HumanMessage, SystemMessage, BaseMessage } from "@langchain/core/messages";
 import * as cheerio from 'cheerio';
 
 import { db } from '@/lib/db';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
-import { getFullStudentData } from '@/lib/data-service';
-import { logActivity } from '@/lib/activity-service';
+import { 
+  getStudentProfile, 
+  getStudentSchedule, 
+  getStudentFinancials, 
+  getStudentGrades 
+} from '@/lib/data-service';
 import { 
   SCHOOL_INFO, 
+  ACADEMIC_PROGRAMS,
   BUILDING_CODES, 
   GRADING_SYSTEM, 
   COMMON_PROCEDURES, 
   IMPORTANT_OFFICES 
 } from '@/lib/assistant-knowledge';
 
+export const maxDuration = 300;
+
+/**
+ * TOOLS IMPLEMENTATION
+ */
+
 async function performYoutubeSearch(query: string) {
-  // Prioritize a dedicated YouTube key or the Firebase key which likely has generic services enabled.
-  // GEMINI_API_KEY is usually specific to Google AI Studio and doesn't support YouTube Data API.
   const apiKey = process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-  if (!apiKey) {
-    return "YouTube search is currently unavailable (API key missing).";
-  }
+  if (!apiKey) return "YouTube search is currently unavailable (API key missing).";
 
   try {
-    // 1. Initial search to get video IDs and snippets
-    const searchResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=10&key=${apiKey}`,
-      { signal: AbortSignal.timeout(15000) }
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=5&key=${apiKey}`,
+      { signal: AbortSignal.timeout(10000) }
     );
-
-    if (!searchResponse.ok) {
-      const errorData = await searchResponse.json().catch(() => ({}));
-      console.error('YouTube Search API Error:', errorData);
-      const errorMessage = errorData.error?.message || "Unknown error";
-      const errorReason = errorData.error?.errors?.[0]?.reason || "";
-      
-      if (errorReason === 'quotaExceeded') {
-        return "YouTube search is currently unavailable due to API quota limits (100 units per search). Please try again later.";
-      }
-      return `YouTube search is currently unavailable (Error: ${errorMessage}).`;
-    }
-
-    const searchData = await searchResponse.json();
-    const items = searchData.items || [];
-
-    if (items.length === 0) {
-      return `No videos found for "${query}".`;
-    }
-
-    // 2. Fetch full details for these videos to get statistics, etc. (optional but better)
-    const videoIds = items.map((item: any) => item.id.videoId).filter(Boolean).join(',');
-    let finalItems = items;
-
-    if (videoIds) {
-      const detailsResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${apiKey}`,
-        { signal: AbortSignal.timeout(10000) }
-      ).catch(() => null);
-
-      if (detailsResponse && detailsResponse.ok) {
-        const detailsData = await detailsResponse.json();
-        finalItems = items.map((item: any) => {
-          const details = detailsData.items?.find((d: any) => d.id === item.id.videoId);
-          return {
-            ...item,
-            snippet: details?.snippet || item.snippet,
-            statistics: details?.statistics
-          };
-        });
-      }
-    }
-
-    const resultsSummary = finalItems.map((item: any, index: number) => {
-      const title = item.snippet?.title || "No Title";
-      const videoId = item.id?.videoId || item.id;
-      const channel = item.snippet?.channelTitle || "Unknown Channel";
-      const description = item.snippet?.description || "";
-      const views = item.statistics?.viewCount ? Number(item.statistics.viewCount).toLocaleString() : null;
-      const thumbnail = item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url;
-      
-      let text = `[Video ${index + 1}] **${title}**\n`;
-      if (thumbnail) text += `[![${title}](${thumbnail})](https://www.youtube.com/watch?v=${videoId})\n`;
-      text += `Channel: ${channel}\nDirect Link: https://www.youtube.com/watch?v=${videoId}\n`;
-      if (views) text += `Views: ${views}\n`;
-      text += `Description: ${description.substring(0, 150)}...\n`;
-      return text;
-    }).join('\n');
-
-    return `### YouTube results for "${query}":\n\n${resultsSummary}\n\n*Note: You can watch these videos directly on YouTube via the links above.*`;
-  } catch (error: any) {
-    console.error('Youtube tool error:', error);
-    if (error.name === 'TimeoutError') return "The YouTube search service timed out. Please try again.";
-    return "An error occurred while searching YouTube.";
-  }
+    if (!response.ok) return "YouTube search error.";
+    const data = await response.json();
+    return (data.items || []).map((item: any, i: number) => 
+      `[Video ${i + 1}] **${item.snippet.title}**\nChannel: ${item.snippet.channelTitle}\nLink: https://www.youtube.com/watch?v=${item.id.videoId}`
+    ).join('\n\n');
+  } catch (e) { return "YouTube search timed out."; }
 }
 
 async function performWebSearch(query: string) {
   const apiKey = process.env.LANGSEARCH_API_KEY;
-  if (!apiKey) {
-    return "Web search is currently unavailable (API key missing).";
-  }
-
+  if (!apiKey) return "Web search unavailable (API key missing).";
   try {
-    // 1. Retrieval: Fetch top 5 results
-    const searchResponse = await fetch('https://api.langsearch.com/v1/web-search', {
+    const response = await fetch('https://api.langsearch.com/v1/web-search', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        query,
-        count: 5
-      }),
-      signal: AbortSignal.timeout(15000) // 15s timeout
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({ query, count: 5 }),
+      signal: AbortSignal.timeout(12000)
     });
-
-    if (!searchResponse.ok) {
-      const errorText = await searchResponse.text();
-      console.error('LangSearch Search Error:', searchResponse.status, errorText);
-      return `Sorry, the search service is unavailable (Status: ${searchResponse.status}).`;
-    }
-
-    const searchData = await searchResponse.json();
-    const initialResults = searchData.data?.webPages?.value || searchData.webPages?.value || [];
-    
-    if (!initialResults || initialResults.length === 0) {
-      return `I searched for "${query}" but couldn't find any relevant results.`;
-    }
-
-    const resultsSummary = initialResults.map((item: any, index: number) => {
-      const title = item.name || item.title || "No Title";
-      const link = item.url || item.link || "#";
-      const snippet = item.snippet || item.summary || "No snippet available.";
-      return `[${index + 1}] **${title}**\nSource: ${link}\nSnippet: ${snippet}\n`;
-    }).join('\n');
-    
-    return `### Search results for "${query}":\n\n${resultsSummary}`;
-
-  } catch (error: any) {
-    console.error('Web search error:', error);
-    if (error.name === 'TimeoutError') return "The search service timed out. Please try again or rephrase.";
-    return "An error occurred while connecting to the search service.";
-  }
+    if (!response.ok) return "Search service error.";
+    const data = await response.json();
+    const results = data.data?.webPages?.value || [];
+    return results.map((r: any, i: number) => `[${i+1}] **${r.name}**\nSource: ${r.url}\nSnippet: ${r.snippet}`).join('\n\n');
+  } catch (e) { return "Web search timed out."; }
 }
 
 async function performWebFetch(url: string) {
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      },
-      signal: AbortSignal.timeout(15000) // 15s timeout
-    });
-
-    if (!response.ok) {
-      return `Failed to fetch the URL: ${url} (Status: ${response.status})`;
-    }
-
+    const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!response.ok) return "Failed to fetch URL.";
     const html = await response.text();
     const $ = cheerio.load(html);
-
-    $('script, style, nav, footer, header, iframe, noscript').remove();
-
-    const title = $('title').text().trim() || 'No title';
-    let content = $('article').text().trim() || $('main').text().trim() || $('body').text().trim();
-    content = content.replace(/\s+/g, ' ').substring(0, 5000);
-
-    return `### Content from: ${title}\nURL: ${url}\n\n${content}`;
-  } catch (error: any) {
-    console.error('Web fetch error:', error);
-    if (error.name === 'TimeoutError') return `Fetching the URL timed out: ${url}`;
-    return `An error occurred while fetching the URL: ${url}`;
-  }
+    $('script, style, nav, footer, header').remove();
+    return `### Content from: ${$('title').text()}\n\n${$.text().replace(/\s+/g, ' ').substring(0, 3000)}`;
+  } catch (e) { return "Fetch error."; }
 }
 
 async function performMathExecution(code: string) {
   let sandbox;
   try {
-    sandbox = await Sandbox.create({
-      runtime: 'python3.13',
-      timeout: 30000,
-    });
+    // Explicitly set Vercel metadata for Sandbox initialization
+    if (!process.env.VERCEL_PROJECT_ID) process.env.VERCEL_PROJECT_ID = 'prj_NihkVuIjpWkHupQ1Z1zCd6wJunfR';
+    if (!process.env.VERCEL_TEAM_ID) process.env.VERCEL_TEAM_ID = 'team_uHDJgys0cb2M6SdvUZ0rjZ9Y';
 
-    await sandbox.writeFiles([
-      {
-        path: 'requirements.txt',
-        content: Buffer.from('sympy\nnumpy\nscipy\npandas\nmatplotlib'),
-      },
-      {
-        path: 'calculation.py',
-        content: Buffer.from(code),
-      }
-    ]);
+    // Increased timeout to 300s to account for system package and library installation
+    sandbox = await Sandbox.create({ runtime: 'python3.13', timeout: 300000 });
+    
+    const libs = [];
+    if (code.includes('sympy')) libs.push('sympy');
+    if (code.includes('numpy')) libs.push('numpy');
+    if (code.includes('scipy')) libs.push('scipy');
+    if (code.includes('pandas')) libs.push('pandas');
+    if (code.includes('sklearn') || code.includes('scikit-learn')) libs.push('scikit-learn');
+    if (code.includes('statsmodels')) libs.push('statsmodels');
+    if (code.includes('seaborn')) libs.push('seaborn');
+    if (code.includes('mpmath')) libs.push('mpmath');
+    if (code.includes('networkx')) libs.push('networkx');
+    if (code.includes('matplotlib')) {
+        libs.push('matplotlib');
+        // Inject headless backend for matplotlib
+        if (!code.includes('matplotlib.use')) {
+            code = "import matplotlib\nmatplotlib.use('Agg')\n" + code;
+        }
+    }
 
-    // Install requirements silently before execution
-    await sandbox.runCommand({
-      cmd: 'pip',
-      args: ['install', '-r', 'requirements.txt', '--quiet'],
-    });
+    const files = [{ path: 'calculation.py', content: Buffer.from(code) }];
+    if (libs.length > 0) files.push({ path: 'requirements.txt', content: Buffer.from(libs.join('\n')) });
+    await sandbox.writeFiles(files);
 
-    const execution = await sandbox.runCommand({
-      cmd: 'python3',
-      args: ['calculation.py'],
-    });
+    if (libs.length > 0) {
+      // 1. Install system dependencies via dnf (as recommended by Vercel KB)
+      // These are often needed for robust numpy/scipy/matplotlib installation
+      await sandbox.runCommand({ 
+        cmd: 'dnf', 
+        args: ['install', '-y', 'gcc', 'python3-devel', 'blas-devel', 'lapack-devel', 'freetype-devel', 'libpng-devel'], 
+        sudo: true 
+      });
 
+      // 2. Upgrade pip and install libraries (as in install_math.sh)
+      await sandbox.runCommand({ 
+        cmd: 'pip', 
+        args: ['install', '--upgrade', 'pip', '--quiet'], 
+        sudo: true 
+      });
+      
+      await sandbox.runCommand({ 
+        cmd: 'pip', 
+        args: ['install', '-r', 'requirements.txt', '--quiet'], 
+        sudo: true 
+      });
+    }
+    
+    const execution = await sandbox.runCommand({ cmd: 'python3', args: ['calculation.py'] });
     const output = await execution.stdout();
     const errorOutput = await execution.stderr();
-
+    
     const result = (output + (errorOutput ? `\nERRORS:\n${errorOutput}` : '')).trim();
-    return result || "Execution completed with no output.";
-  } catch (error: any) {
-    console.error('Sandbox Math execution error:', error);
-    return `Failed to execute calculation: ${error.message}`;
-  } finally {
-    if (sandbox) {
-      try {
-        await sandbox.stop();
-      } catch (e) {
-        console.error('Error stopping sandbox:', e);
-      }
-    }
+    return result || "Execution finished with no output. Ensure you use print() to see results.";
+  } catch (e: any) { 
+    console.error("Sandbox execution error:", e);
+    return `Math engine error: ${e.message}`; 
   }
+  finally { if (sandbox) await sandbox.stop().catch(() => {}); }
 }
-
-export const maxDuration = 300;
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
 }
 
+function repairJson(str: string): string {
+  try {
+    let s = str.trim();
+    JSON.parse(s);
+    return s;
+  } catch (e) {
+    let s = str.trim();
+    
+    // Handle truncation: Auto-close braces and brackets
+    let openBraces = 0;
+    let openBrackets = 0;
+    let inString = false;
+    
+    for (let i = 0; i < s.length; i++) {
+      if (s[i] === '"' && s[i-1] !== '\\') inString = !inString;
+      if (!inString) {
+        if (s[i] === '{') openBraces++;
+        else if (s[i] === '}') openBraces--;
+        else if (s[i] === '[') openBrackets++;
+        else if (s[i] === ']') openBrackets--;
+      }
+    }
+    
+    if (inString) s += '"';
+    while (openBrackets > 0) { s += ']'; openBrackets--; }
+    while (openBraces > 0) { s += '}'; openBraces--; }
+
+    // Attempt common fixes:
+    s = s.replace(/: \s*"([^"]*)"/g, (match, p1) => {
+        return ': "' + p1.replace(/\n/g, '\\n').replace(/\r/g, '\\r') + '"';
+    });
+    s = s.replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3');
+
+    try {
+      JSON.parse(s);
+      return s;
+    } catch (e2) {
+      return str; // Return original if fix fails
+    }
+  }
+}
 export async function POST(req: NextRequest) {
   try {
     const { messages, timezone = 'Asia/Manila' }: { messages: Message[], timezone?: string } = await req.json();
-    
     const sessionCookie = req.cookies.get('session_token');
-    if (!sessionCookie?.value) {
-      return new Response('Authentication required', { status: 401 });
-    }
+    if (!sessionCookie?.value) return new Response('Unauthorized', { status: 401 });
 
     let userId = "";
     try {
-      const decrypted = decrypt(sessionCookie.value);
-      const sessionData = JSON.parse(decrypted);
-      userId = sessionData.userId;
-    } catch {
-      return new Response('Invalid or expired session', { status: 401 });
-    }
+      userId = JSON.parse(decrypt(sessionCookie.value)).userId;
+    } catch { return new Response('Invalid session', { status: 401 }); }
 
     await initDatabase();
-
-    if (!db) {
-      return new Response('Database connection failed', { status: 500 });
-    }
-
-    const studentData = await getFullStudentData(userId);
-    if (!studentData) {
-      return new Response('Student profile not found.', { status: 404 });
-    }
-
-    const scheduleItems = studentData.schedule || [];
-    const financials = studentData.financials;
-    const allGrades = studentData.allGrades || [];
-    const gpa = studentData.gpa || 'N/A';
-
-    // Group schedule by day for better LLM parsing
-    const structuredSchedule: Record<string, any[]> = {};
-    const dayCodes = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-    
-    dayCodes.forEach(day => {
-      const daySched = scheduleItems.filter((item: any) => item.time?.includes(day));
-      if (daySched.length > 0) {
-        structuredSchedule[day] = daySched.map((s: any) => ({
-          subject: s.subject,
-          description: s.description,
-          time: s.time,
-          room: s.room,
-          instructor: s.instructor || 'N/A'
-        }));
-      }
-    });
-
-    const structuredGrades: Record<string, any> = {};
-    allGrades.forEach((g: any) => {
-      structuredGrades[g.code] = {
-        description: g.description,
-        grade: g.grade,
-        remarks: g.remarks
-      };
-    });
-
-    let financialContext = 'No financial data found.';
-    if (financials) {
-      financialContext = `
-- Current Balance: ${financials.balance || '0.00'}
-- Total Assessment: ${financials.total || '0.00'}
-- Due Today: ${financials.dueToday || '0.00'}
-- Installments: ${JSON.stringify(financials.installments)}
-`.trim();
-    }
-
-    const gradesContext = Object.keys(structuredGrades).length > 0
-      ? JSON.stringify(structuredGrades, null, 2)
-      : 'No grades found.';
-
-    const scheduleContext = Object.keys(structuredSchedule).length > 0
-      ? JSON.stringify(structuredSchedule, null, 2)
-      : 'No schedule found.';
+    const student = await getStudentProfile(userId);
+    if (!student) return new Response('Profile not found', { status: 404 });
 
     const now = new Date();
-    const dateStr = now.toLocaleDateString('en-PH', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      timeZone: timezone
-    });
-    const timeStr = now.toLocaleTimeString('en-PH', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true,
-      timeZone: timezone
-    });
+    const dateStr = now.toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: timezone });
+    const timeStr = now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: timezone });
 
     const systemPrompt = `
 You are the "Portal Assistant" (code-named Assistant), a specialized academic advisor and computational assistant for ${SCHOOL_INFO.name}.
 
 STRICT OPERATIONAL RULES:
-1. **NO PROACTIVE SUMMARIES:** Never start a conversation by summarizing the student's grades, GPA, or financial balance unless specifically asked.
-2. **PROACTIVE WEB SEARCH:** If the user asks about ANY topic outside of the school's internal knowledge (e.g., general news, tech updates, external events), you MUST immediately call the \`web_search\` tool. Do not ask for permission.
-3. **PROACTIVE CLARIFICATION:** If a user request is ambiguous or requires more data that isn't in your student context, immediately use the \`ask_user\` tool to request the missing information.
-4. **CITE SOURCES:** When using \`web_search\` or \`web_fetch\`, synthesize results and provide Markdown links.
-5. **NO ASSUMPTIONS:** You MUST always use the \`ask_user\` and \`ask_user_choice\` tools to gather preferences, clarify requirements, or make decisions instead of making assumptions.
-6. **YOUTUBE LEARNING:** When the user asks for "videos", "how-to", "tutorials", or "visual guides", prioritize the \`youtube_search\` tool.
-7. **ADVANCED MATH & LOGIC:** For any precise mathematical calculations, GPA forecasting, financial planning, or complex logic puzzles, you MUST use the \`execute_math\` tool. Do not estimate complex math. Assistant is empowered to solve problems of **unlimited complexity** (Calculus, Linear Algebra, Statistics, Physics, etc.) by writing robust Python scripts. **After receiving the tool result, you MUST display the Python code you used in a Markdown code block so the student can verify the logic.**
-8. **STRICT MATHEMATICAL NOTATION:** You MUST use LaTeX for EVERY mathematical formula, equation, or numeric derivation without exception. 
-   - Inline math: Use single dollar signs like $E = mc^2$.
-   - Block math: Use double dollar signs like $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$.
-   - **CRITICAL:** Even simple arithmetic in your explanation must be wrapped in LaTeX (e.g., use $2 + 2 = 4$ instead of plain text "2 + 2 = 4").
-9. **STRICT RESPONSE CLEANLINESS:** NEVER include internal status markers like "STATUS:XYZ" or progress text like "Executing mathematical logic..." in your response bubble. These are internal system logs and must NOT be shown to the user.
-10. **HIGHLIGHT KEYWORDS:** You MUST **bold** (e.g., **important**) key terms, academic concepts, deadlines, or critical instructions in every response to enhance readability and ensure the student doesn't miss vital information.
-11. **PERSONALIZED ADDRESSING:** You MUST refer to the student by their first name (found in the student reference data) to maintain a personalized feel. Additionally, refer to the student body or the student themselves collectively as an **"LCCian"** (e.g., "As a fellow LCCian...", "Hello [Name], my fellow LCCian!"). Use this terminology naturally to foster a sense of community.
+1. **NO PROACTIVE SUMMARIES:** Never start a conversation by summarizing the student's records unless specifically asked. "Proactive" means starting a conversation with data; if a student ASKS (even via a menu choice), it is NOT proactive—it is a REQUEST.
+2. **USE TOOLS FOR RECORDS:** You DO NOT have the student's records in your immediate context. You MUST call the appropriate tool (e.g., \`get_grades\`, \`get_financials\`, \`get_day_schedule\`) to answer record-related questions.
+3. **ZERO HALLUCINATION:** Never guess or estimate academic data.
+4. **LATEX:** ALWAYS use LaTeX for EVERY mathematical derivation.
+5. **HIGHLIGHT KEYWORDS:** You MUST **bold** key terms and concepts.
+6. **PERSONALIZED:** Refer to the student by first name and as an **"LCCian"**.
+7. **ACTION ON COMMAND:** If a student gives a command or selects a portal suggestion (e.g., "Summarize this...", "Resources for...", "Show my..."), EXECUTE the tool IMMEDIATELY. DO NOT waste time with introductory greetings.
+8. **CONFIRMATION FOR SUGGESTIONS:** ONLY ask for confirmation if YOU are the one suggesting an optional action that the student didn't explicitly ask for.
 
 ---
-💡 COMPUTATIONAL THINKING (ASSISTANT'S GUIDELINES):
-- **Unlimited Complexity:** You are expected to solve high-level academic problems (integrals, matrix operations, statistical distributions) by writing comprehensive Python logic.
-- **Library Usage:** Use the \`math\`, \`statistics\`, \`json\`, \`sympy\`, \`numpy\`, \`scipy\`, \`pandas\`, and \`matplotlib\` modules. Assistant's high-performance computational engine is fully equipped with these advanced mathematical and data science libraries. For symbolic or complex numeric tasks, leverage these libraries to ensure maximum precision and efficiency.
-- **Step-by-Step Logic:** Break down complex problems into manageable functions in your script.
-- **Presentation:** 
-  1. **MANDATORY:** Always show the mathematical formula/equation used in a LaTeX block ($$ ... $$) before and after any calculation.
-  2. Provide the full Python calculation script in a Markdown code block (\`\`\`python ... \`\`\`).
-  3. Explain the final result in clear terms for the student, using LaTeX for any numbers or math mentioned in the text.
-- **Formatting:** Ensure ALL mathematical derivations and final numeric results are formatted with LaTeX ($ or $$) for high-quality rendering. This applies to every turn where math is involved.
-- **Self-Correction:** If a script fails (e.g., division by zero, overflow), analyze the error and retry with a fixed version in the next turn.
-- **Output:** Always print the final result clearly so it can be parsed from the sandbox output. Use clear labeling in your print statements.
+💡 COMPUTATIONAL THINKING:
+- Solve high-level academic problems by writing comprehensive Python logic via \`execute_math\`.
+- **VISUAL SIMULATIONS:** Use \`render_html\` to create interactive visual simulations for concepts like physics trajectories (using SVG/Canvas), algorithm step-by-step animations, and complex data charts.
+- **SUPERCHARGED UI:** Use \`render_html\` for:
+    - **INTERACTIVE CHARTS:** Use CDN libraries (e.g., \`https://cdn.jsdelivr.net/npm/chart.js\`) to build professional charts from tool results.
+    - **3D VISUALS:** Use \`Three.js\` for molecular structures, geometry, or physics modeling.
+    - **STEP-BY-STEP SOLVERS:** Build custom UIs with progress bars and interactive steps for complex math or engineering problems.
+    - **SMART REPORTS:** Generate rich, multi-column reports with Tailwind, including summary cards, tables, and highlighted key metrics.
+- **CRITICAL JSON RULE:** Every tool call MUST be a VALID, PARSABLE JSON object. Do NOT use Python syntax (like list comprehensions), placeholders, or unquoted variables within the JSON. All data must be literal.
+- **ALGORITHMS & NETWORKS:** Use \`networkx\` for Graph Theory, shortest paths (Dijkstra), or Tree structures (BST, Heaps) for IT/CS problems.
+- **PREDICTIVE MODELING:** Use \`scikit-learn\` for grade forecasting, Linear Regression, or K-Means clustering of academic trends.
+- **CRYPTOGRAPHY:** Simulate RSA encryption logic, modular exponentiation, and prime number generation for Cybersecurity concepts.
+- **ECONOMIC MODELING:** Use \`statsmodels\` and \`pandas\` for Time-Series forecasting, Gini Coefficients, or Monte Carlo business risk simulations.
+- **DISCRETE MATH:** Use \`sympy\` to generate Truth Tables for logic expressions (p ∧ q → r) and verify Set Theory proofs.
+- Always show the LaTeX formula before and after calculation.
+- Provide the full Python script in a Markdown code block.
+- **CRITICAL:** Use \`print()\` in your Python scripts to output the final results.
 
 ---
-🛠️ TOOL CALLING CONFIGURATION
-To call a tool, append \`|||\` followed by the JSON tool call at the VERY END of your response. 
+🛠️ TOOL CALLING CONVENTION (MANDATORY)
+To call a tool, you MUST append \`|||\` followed by a complete JSON object at the VERY END of your response.
+**REQUIRED FORMAT:** \`||| {"name": "TOOL_NAME", "parameters": {...}}\`
+**SCHEDULE FORMAT:** For \`get_day_schedule\`, you MUST use three-letter uppercase day codes: **MON, TUE, WED, THU, FRI, SAT, SUN**.
 **CRITICAL:** DO NOT wrap the tool call in markdown code blocks.
 
-**Example:**
-I'll check the web for that information.
-||| {"name": "web_search", "parameters": {"query": "latest enrollment dates"}}
-
-**Available Tools:**
+Available Tools:
 \`\`\`json
 [
   {
     "name": "execute_math",
-    "description": "Assistant's high-performance computational engine. Execute Python 3.13 code for advanced math, complex logic, simulations, and precise data analysis. Can handle any mathematical complexity by writing complete scripts.",
-    "parameters": {
-      "type": "object",
-      "properties": { "code": { "type": "string", "description": "The complete Python script to solve the problem. Use print() for results." } },
-      "required": ["code"]
-    }
+    "description": "Execute Python for advanced math.",
+    "parameters": { "type": "object", "properties": { "code": { "type": "string" } }, "required": ["code"] }
+  },
+  {
+    "name": "get_grades",
+    "description": "Get student's grades, GPA, and subject units.",
+    "parameters": { "type": "object", "properties": {} }
+  },
+  {
+    "name": "get_financials",
+    "description": "Get student's financial balance.",
+    "parameters": { "type": "object", "properties": {} }
   },
   {
     "name": "get_today_schedule",
-    "description": "Get the student's schedule for today.",
+    "description": "Get student's schedule for today.",
     "parameters": { "type": "object", "properties": {} }
   },
   {
     "name": "get_day_schedule",
-    "description": "Get the student's schedule for a specific day.",
-    "parameters": {
-      "type": "object",
-      "properties": { "day": { "type": "string", "description": "Day of the week (e.g., MON, TUE, WED, THU, FRI, SAT, SUN)." } },
-      "required": ["day"]
-    }
+    "description": "Get schedule for a specific day. MANDATORY: Use three-letter codes (e.g., MON, TUE, WED, THU, FRI, SAT, SUN).",
+    "parameters": { "type": "object", "properties": { "day": { "type": "string", "description": "Three-letter day code (e.g., MON, FRI)" } }, "required": ["day"] }
   },
   {
     "name": "get_weekly_schedule",
-    "description": "Get the student's full weekly schedule.",
+    "description": "Get full weekly schedule.",
     "parameters": { "type": "object", "properties": {} }
   },
   {
-    "name": "ask_user",
-    "description": "Ask the user a question through a modal with a text input. Use this when you need specific information from the user that isn't in your database.",
-    "parameters": {
-      "type": "object",
-      "properties": { 
-        "question": { "type": "string", "description": "The question to show in the modal." },
-        "placeholder": { "type": "string", "description": "Hint text for the input field." }
-      },
-      "required": ["question"]
-    }
-  },
-  {
-    "name": "ask_user_choice",
-    "description": "Ask the user to choose from a list of options. Use this for clarifying intents or selecting from a limited set of possibilities.",
-    "parameters": {
-      "type": "object",
-      "properties": { 
-        "question": { "type": "string", "description": "The question or prompt for the choices." },
-        "options": { 
-          "type": "array", 
-          "items": { "type": "string" },
-          "description": "List of options for the user to select from." 
-        }
-      },
-      "required": ["question", "options"]
-    }
+    "name": "web_search",
+    "description": "Search the web for real-time info.",
+    "parameters": { "type": "object", "properties": { "query": { "type": "string" } }, "required": ["query"] }
   },
   {
     "name": "youtube_search",
-    "description": "Search for educational or informative videos on YouTube. Use this if the user specifically asks for videos, tutorials, or visual guides.",
-    "parameters": {
-      "type": "object",
-      "properties": { "query": { "type": "string" } },
-      "required": ["query"]
-    }
-  },
-  {
-    "name": "web_search",
-    "description": "Search the web for real-time information or general knowledge.",
-    "parameters": {
-      "type": "object",
-      "properties": { "query": { "type": "string" } },
-      "required": ["query"]
-    }
+    "description": "Search YouTube for videos.",
+    "parameters": { "type": "object", "properties": { "query": { "type": "string" } }, "required": ["query"] }
   },
   {
     "name": "web_fetch",
-    "description": "Summarize a specific URL.",
-    "parameters": {
-      "type": "object",
-      "properties": { "url": { "type": "string" } },
-      "required": ["url"]
+    "description": "Summarize a URL. MANDATORY: The URL must include a protocol (e.g., https://).",
+    "parameters": { "type": "object", "properties": { "url": { "type": "string", "description": "Full URL including protocol (https://)" } }, "required": ["url"] }
+  },
+  {
+    "name": "render_html",
+    "description": "Render advanced, interactive content in a modal using an isolated iframe. You can use HTML, Tailwind CSS, and external libraries via CDN. MANDATORY STRUCTURE: 1. Use a wrapper <div id='app-root' class='w-full min-h-[400px]'> for all content. 2. For Three.js/Canvas, use a dedicated <div id='canvas-container' class='w-full h-[400px] bg-slate-900 rounded-xl overflow-hidden'>. 3. Always include a <script> block for logic. 4. For 3D: Use renderer.setSize(container.clientWidth, container.clientHeight) and handle window resizing.",
+    "parameters": { 
+      "type": "object", 
+      "properties": { 
+        "html": { "type": "string", "description": "The complete HTML/Tailwind/Script payload. Ensure all library CDNs (e.g., Three.js, Chart.js) are loaded BEFORE your custom logic script. Use Tailwind for professional UI components (buttons, cards, badges)." },
+        "title": { "type": "string", "description": "A descriptive title for the modal visualization." }
+      }, 
+      "required": ["html", "title"] 
     }
+  },
+  {
+    "name": "ask_user",
+    "description": "Ask student a question.",
+    "parameters": { "type": "object", "properties": { "question": { "type": "string" }, "placeholder": { "type": "string" } }, "required": ["question"] }
+  },
+  {
+    "name": "ask_user_choice",
+    "description": "Ask student to choose.",
+    "parameters": { "type": "object", "properties": { "question": { "type": "string" }, "options": { "type": "array", "items": { "type": "string" } } }, "required": ["question", "options"] }
   }
 ]
 \`\`\`
+
+Knowledge: Vision: ${SCHOOL_INFO.vision}, Mission: ${SCHOOL_INFO.mission}, Programs: ${JSON.stringify(ACADEMIC_PROGRAMS)}, Building Codes: ${JSON.stringify(BUILDING_CODES)}, Grading: ${GRADING_SYSTEM}, Procedures: ${COMMON_PROCEDURES}, Offices: ${JSON.stringify(IMPORTANT_OFFICES)}.
 `.trim();
 
     const studentContext = `
-STUDENT REFERENCE DATA (FOR BACKGROUND ONLY):
-- Name: ${studentData.name}
-- Course: ${studentData.course}
-- GPA: ${gpa}
-- Financials: 
-${financialContext}
-- Grades:
-${gradesContext}
-- Current Schedule:
-${scheduleContext}
-- School: ${SCHOOL_INFO.name} (${SCHOOL_INFO.acronym})
-- Location: ${SCHOOL_INFO.location}
-- Motto: ${SCHOOL_INFO.motto}
-- Core Values: ${SCHOOL_INFO.coreValues.join(', ')}
-- Current Date/Time: ${dateStr}, ${timeStr}
-
-SCHOOL POLICIES & INFORMATION:
-Building Codes: ${JSON.stringify(BUILDING_CODES)}
-Grading System: ${GRADING_SYSTEM}
-Common Procedures: ${COMMON_PROCEDURES}
-Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
+STUDENT REFERENCE DATA:
+- Name: ${student.name}
+- Course: ${student.course}
+- School: ${SCHOOL_INFO.name}
+- Date/Time: ${dateStr}, ${timeStr}
 `.trim();
 
     const model = new ChatGoogleGenerativeAI({
       model: "gemma-3-27b-it",
       apiKey: process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
-      maxOutputTokens: 2048,
+      maxOutputTokens: 4096,
       streaming: true,
     });
 
@@ -514,12 +344,8 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
     const transformStream = new TransformStream();
     const writer = transformStream.writable.getWriter();
 
-    // Reconstruct history with background at the top
     const history: BaseMessage[] = [];
-    history.push(new HumanMessage("BACKGROUND INFORMATION:\n" + studentContext));
-    history.push(new HumanMessage("SYSTEM INSTRUCTIONS & STRICT RULES:\n" + systemPrompt));
     
-    // Add existing conversation history
     messages.slice(0, -1).forEach((m: any) => {
       if (m.role === 'assistant') history.push(new AIMessage(m.content));
       else history.push(new HumanMessage(m.content));
@@ -529,181 +355,236 @@ Offices: ${JSON.stringify(IMPORTANT_OFFICES)}
 
     (async () => {
       let currentInput = input;
-      const maxTurns = 5;
       let turn = 0;
-      let isWriterClosed = false;
+      const maxTurns = 5;
 
       try {
         while (turn < maxTurns) {
           turn++;
+          
+          // NOTE: The model does not support developer instructions (system role), so we inject them as user messages.
+          const prompt = ChatPromptTemplate.fromMessages([
+            ["human", `INSTRUCTIONS & BACKGROUND:\n${systemPrompt.replace(/{/g, '{{').replace(/}/g, '}}')}\n\nSTUDENT DATA:\n${studentContext.replace(/{/g, '{{').replace(/}/g, '}}')}\n\nDo you understand these instructions and your persona?`],
+            ["ai", `Understood. I am the Portal Assistant for ${SCHOOL_INFO.name}. I will follow all strict operational rules, use LaTeX for math, and execute tools immediately for student commands without introductory greetings.`],
+            new MessagesPlaceholder("history"),
+            ["human", "{input}"],
+          ]);
+
           const responseStream = await model.stream(
-            await ChatPromptTemplate.fromMessages([
-              new MessagesPlaceholder("history"),
-              ["user", "{input}"],
-            ]).formatMessages({ history, input: currentInput })
+            await prompt.formatMessages({ history, input: currentInput })
           );
 
           let fullContent = '';
-          const toolCallMarker = '|||';
+          let streamedLength = 0;
+          let toolDetected = false;
+          let toolMarkerPos = -1;
 
           try {
             for await (const chunk of responseStream) {
               const content = chunk.content as string || '';
               fullContent += content;
-            }
-          } catch (streamError: any) {
-            console.error("Stream reading interrupted:", streamError.message);
-            // If we have some content, try to proceed anyway as it might contain a complete tool call
-            if (!fullContent) throw streamError;
-          }
 
-          // Check if model called a tool
-          const toolMarkerIndex = fullContent.indexOf(toolCallMarker);
-          let jsonStr = '';
-          let toolCallPos = -1;
-
-          if (toolMarkerIndex !== -1) {
-            jsonStr = fullContent.substring(toolMarkerIndex + toolCallMarker.length).trim();
-            toolCallPos = toolMarkerIndex;
-          } else {
-            // Fallback: search for tool-like JSON in the whole content
-            const toolPatterns = [
-              '"web_search"', 
-              '"web_fetch"', 
-              '"ask_user"', 
-              '"ask_user_choice"', 
-              '"youtube_search"',
-              '"execute_math"',
-              '"get_today_schedule"',
-              '"get_day_schedule"',
-              '"get_weekly_schedule"'
-            ];
-            if (toolPatterns.some(p => fullContent.includes(p))) {
-              // Find the FIRST '{' that likely starts the tool call
-              // We search from the end but look for the outermost matching brace
-              const startOfJsonIndex = fullContent.indexOf('{');
-              const endOfJsonIndex = fullContent.lastIndexOf('}');
-              
-              if (startOfJsonIndex !== -1 && endOfJsonIndex !== -1 && endOfJsonIndex > startOfJsonIndex) {
-                 jsonStr = fullContent.substring(startOfJsonIndex, endOfJsonIndex + 1);
-                 toolCallPos = startOfJsonIndex;
-              }
-            }
-          }
-
-          if (jsonStr && jsonStr.includes('{')) {
-            const startOfJsonIndex = jsonStr.indexOf('{');
-            const endOfJsonIndex = jsonStr.lastIndexOf('}');
-            
-            if (startOfJsonIndex !== -1 && endOfJsonIndex !== -1 && endOfJsonIndex > startOfJsonIndex) {
-              jsonStr = jsonStr.substring(startOfJsonIndex, endOfJsonIndex + 1);
-            }
-
-            try {
-              // Pre-process jsonStr to fix common model mistakes
-              const sanitizedJson = jsonStr.replace(/ask_user_choices/g, 'ask_user_choice');
-              const toolCall = JSON.parse(sanitizedJson);
-              const isOurTool = ['web_search', 'web_fetch', 'ask_user', 'ask_user_choice', 'youtube_search', 'get_today_schedule', 'get_day_schedule', 'get_weekly_schedule', 'execute_math'].includes(toolCall.name);
-              
-              if (isOurTool) {
-                // Inform the client about tool usage
-                if (!isWriterClosed) {
-                  await writer.write(encoder.encode(`\nTOOL_USED:${toolCall.name}\n`));
-                }
-
-                if (toolCall.name === 'web_search' && toolCall.parameters?.query) {
-                  const result = await performWebSearch(toolCall.parameters.query);
-                  history.push(new AIMessage(fullContent));
-                  currentInput = `TOOL_RESULT: ${result}\n\nBased on these search results, please provide a comprehensive answer and cite your sources.`;
-                  continue;
-                } else if (toolCall.name === 'execute_math' && toolCall.parameters?.code) {
-                  const result = await performMathExecution(toolCall.parameters.code);
-                  history.push(new AIMessage(fullContent));
-                  currentInput = `TOOL_RESULT (Sandbox Output):\n${result}\n\nINSTRUCTION: Provide the final answer. Start by presenting the math formula/equation in a LaTeX block ($$ ... $$), show your Python code in a \`\`\`python code block, and finally explain the logic clearly.`;
-                  continue;
-                } else if (toolCall.name === 'get_today_schedule') {
-                    const dayMap = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-                    const todayCode = dayMap[new Date().getDay()];
-                    const result = structuredSchedule[todayCode] 
-                      ? JSON.stringify({ [todayCode]: structuredSchedule[todayCode] }, null, 2)
-                      : "No classes scheduled for today.";
-                    history.push(new AIMessage(fullContent));
-                    currentInput = `TOOL_RESULT: Today's Schedule (${todayCode}):\n${result}`;
-                    continue;
-                } else if (toolCall.name === 'get_day_schedule' && toolCall.parameters?.day) {
-                    const targetDay = toolCall.parameters.day.toUpperCase().substring(0, 3);
-                    const result = structuredSchedule[targetDay]
-                      ? JSON.stringify({ [targetDay]: structuredSchedule[targetDay] }, null, 2)
-                      : `No classes scheduled for ${toolCall.parameters.day}.`;
-                    history.push(new AIMessage(fullContent));
-                    currentInput = `TOOL_RESULT: Schedule for ${targetDay}:\n${result}`;
-                    continue;
-                } else if (toolCall.name === 'get_weekly_schedule') {
-                    const result = Object.keys(structuredSchedule).length > 0
-                      ? JSON.stringify(structuredSchedule, null, 2)
-                      : "No schedule found.";
-                    history.push(new AIMessage(fullContent));
-                    currentInput = `TOOL_RESULT: Full Weekly Schedule:\n${result}`;
-                    continue;
-                } else if (toolCall.name === 'youtube_search' && toolCall.parameters?.query) {
-                  const result = await performYoutubeSearch(toolCall.parameters.query);
-                  history.push(new AIMessage(fullContent));
-                  currentInput = `TOOL_RESULT: ${result}\n\nBased on these YouTube results, please provide a summary of the found videos and their creators. Inform the user they can watch these videos on YouTube via the links provided.`;
-                  continue;
-                } else if (toolCall.name === 'web_fetch' && toolCall.parameters?.url) {
-                  const result = await performWebFetch(toolCall.parameters.url);
-                  history.push(new AIMessage(fullContent));
-                  currentInput = `TOOL_RESULT: ${result}\n\nBased on this page content, please provide a comprehensive summary and cite the source.`;
-                  continue;
-                } else {
-                  // Other client-side tools (ask_user, ask_user_choice) DO break as they wait for input
-                  const textBefore = fullContent.substring(0, toolCallPos).replace(/\|\|\|$/, '').trim();
-                  if (textBefore && !isWriterClosed) await writer.write(encoder.encode(textBefore));
-                  if (!isWriterClosed) {
-                    await writer.write(encoder.encode('\nTOOL_CALL:' + JSON.stringify(toolCall) + '\n'));
+              if (!toolDetected) {
+                const markerIndex = fullContent.indexOf('|||');
+                const jsonStart = fullContent.indexOf('```json');
+                
+                if (markerIndex !== -1) {
+                  toolDetected = true;
+                  toolMarkerPos = markerIndex;
+                  const textBefore = fullContent.substring(streamedLength, markerIndex).trim();
+                  if (textBefore) await writer.write(encoder.encode(textBefore));
+                  streamedLength = markerIndex;
+                } else if (jsonStart !== -1) {
+                  // Only treat ```json as a tool call if there is no ||| marker later in the stream
+                  // Wait for potential ||| if not found yet
+                  const safeLength = fullContent.length - 20; 
+                  if (safeLength > streamedLength) {
+                    // Check if ||| is still possible
+                    if (fullContent.substring(jsonStart).includes('|||')) {
+                        // Wait for ||| instead
+                    } else {
+                        toolDetected = true;
+                        toolMarkerPos = jsonStart;
+                        const textBefore = fullContent.substring(streamedLength, jsonStart).trim();
+                        if (textBefore) await writer.write(encoder.encode(textBefore));
+                        streamedLength = jsonStart;
+                    }
                   }
-                  break;
+                } else {
+                  const safeLength = fullContent.length - 15;
+                  if (safeLength > streamedLength) {
+                    await writer.write(encoder.encode(fullContent.substring(streamedLength, safeLength)));
+                    streamedLength = safeLength;
+                  }
                 }
-              } else {
-                throw new Error("Invalid tool name");
               }
+            }
+          } catch (streamErr: any) {
+            console.error("[Assistant API] Chunk processing error:", streamErr);
+            if (!fullContent) throw streamErr; 
+          }
+
+          if (!toolDetected) {
+            const remaining = fullContent.substring(streamedLength);
+            if (remaining) await writer.write(encoder.encode(remaining));
+            
+            // Interaction complete: Sync history for future POST requests
+            history.push(new HumanMessage(currentInput));
+            history.push(new AIMessage(fullContent));
+            break; 
+          }
+
+          // Handle Tool Call
+          const toolJsonStr = fullContent.substring(toolMarkerPos);
+          
+          // Sync history with the current interaction before tool result
+          history.push(new HumanMessage(currentInput));
+          history.push(new AIMessage(fullContent));
+
+          let toolName = 'unknown';
+          try {
+            let sanitized = toolJsonStr.trim().replace(/^\|\|\|/, '').replace(/^```json\s*/, '').replace(/```$/, '').trim();
+            
+            let toolCall;
+            
+            // Strategy 1: Attempt to parse as a complete JSON structure (Object or Array)
+            try {
+                const parsed = JSON.parse(repairJson(sanitized));
+                if (Array.isArray(parsed) && parsed.length > 0) toolCall = parsed[0];
+                else if (!Array.isArray(parsed)) toolCall = parsed;
             } catch (e) {
-              console.error('Tool parsing error:', e, 'Raw JSON string:', jsonStr);
-              const cleanedContent = fullContent.split(toolCallMarker)[0].trim();
-              if (!isWriterClosed) {
-                await writer.write(encoder.encode(cleanedContent));
-              }
+                // Strategy 2: Extract the first balanced JSON object
+                const startBrace = sanitized.indexOf('{');
+                if (startBrace !== -1) {
+                    let balance = 0;
+                    let endBrace = -1;
+                    for (let i = startBrace; i < sanitized.length; i++) {
+                        if (sanitized[i] === '{') balance++;
+                        else if (sanitized[i] === '}') {
+                            balance--;
+                            if (balance === 0) {
+                                endBrace = i;
+                                break;
+                            }
+                        }
+                    }
+                    if (endBrace !== -1) {
+                        try {
+                            toolCall = JSON.parse(repairJson(sanitized.substring(startBrace, endBrace + 1)));
+                        } catch (e2) { /* Continue to fallback */ }
+                    }
+                }
+            }
+
+            // Strategy 3: Fallback to original "outermost braces" logic if valid JSON still not found
+            if (!toolCall) {
+                const startBrace = sanitized.indexOf('{');
+                const endBrace = sanitized.lastIndexOf('}');
+                if (startBrace !== -1 && endBrace !== -1) {
+                    try {
+                        toolCall = JSON.parse(repairJson(sanitized.substring(startBrace, endBrace + 1)));
+                    } catch (e3) { 
+                         // Final attempt: sometimes the model forgets the closing brace
+                         try {
+                            toolCall = JSON.parse(repairJson(sanitized.substring(startBrace) + '}'));
+                         } catch (e4) { /* Give up */ }
+                    }
+                }
+            }
+            
+            if (!toolCall) throw new Error("Could not parse tool call from response");
+
+            toolName = toolCall.name || toolCall.tool_name || 'unknown';
+            
+            // Fallback inference for malformed but readable tool calls
+            if (toolName === 'unknown') {
+                if (toolCall.day) toolName = 'get_day_schedule';
+                else if (toolCall.code) toolName = 'execute_math';
+                else if (toolCall.query) {
+                    toolName = (fullContent.toLowerCase().includes('video') || fullContent.toLowerCase().includes('youtube')) 
+                        ? 'youtube_search' 
+                        : 'web_search';
+                } else if (toolCall.url) toolName = 'web_fetch';
+                else if (toolCall.question) toolName = toolCall.options ? 'ask_user_choice' : 'ask_user';
+            }
+
+            if (toolName === 'unknown') throw new Error("Missing tool name");
+            await writer.write(encoder.encode(`\nSTATUS:${toolName.includes('search') ? 'SEARCHING' : toolName.includes('fetch') ? 'FETCHING' : toolName.includes('math') ? 'COMPUTING' : 'PROCESSING'}\n`));
+                await writer.write(encoder.encode(`\nTOOL_USED:${toolName}\n`));
+            
+            let result = '';
+            let customInstruction = '';
+
+            if (toolName === 'get_grades') result = JSON.stringify(await getStudentGrades(userId), null, 2);
+            else if (toolName === 'get_financials') result = JSON.stringify(await getStudentFinancials(userId), null, 2);
+            else if (toolName === 'get_today_schedule' || toolName === 'get_weekly_schedule' || toolName === 'get_day_schedule') {
+              const schedule = await getStudentSchedule(userId);
+              if (toolName === 'get_today_schedule') {
+                const dayAbbr = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][new Date().getDay()];
+                result = JSON.stringify(schedule.filter((s: any) => s.time?.toUpperCase().includes(dayAbbr)), null, 2);
+              } else if (toolName === 'get_day_schedule') {
+                const rawDay = toolCall.day || toolCall.parameters?.day || '';
+                const dayMap: Record<string, string> = {
+                  'monday': 'MON', 'tuesday': 'TUE', 'wednesday': 'WED', 'thursday': 'THU', 
+                  'friday': 'FRI', 'saturday': 'SAT', 'sunday': 'SUN'
+                };
+                const dayAbbr = dayMap[rawDay.toLowerCase()] || rawDay.substring(0, 3).toUpperCase();
+                result = JSON.stringify(schedule.filter((s: any) => s.time?.toUpperCase().includes(dayAbbr)), null, 2);
+              } else result = JSON.stringify(schedule, null, 2);
+            }
+            else if (toolName === 'execute_math') {
+                result = await performMathExecution(toolCall.code || toolCall.parameters?.code);
+                customInstruction = "\n\nINSTRUCTION: Provide the final answer based on this output. Show your reasoning, the math formula in LaTeX, and the Python code used. You MUST output the Python code in a Markdown block for transparency.";
+            }
+            else if (toolName === 'web_search') result = await performWebSearch(toolCall.query || toolCall.parameters?.query);
+            else if (toolName === 'web_fetch') result = await performWebFetch(toolCall.url || toolCall.parameters?.url);
+            else if (toolName === 'youtube_search') result = await performYoutubeSearch(toolCall.query || toolCall.parameters?.query);
+            else if (['ask_user', 'ask_user_choice', 'render_html'].includes(toolName)) {
+              const normalized = {
+                name: toolName,
+                parameters: {
+                  question: toolCall.question || toolCall.parameters?.question,
+                  placeholder: toolCall.placeholder || toolCall.parameters?.placeholder,
+                  options: toolCall.options || toolCall.parameters?.options,
+                  html: toolCall.html || toolCall.parameters?.html,
+                  title: toolCall.title || toolCall.parameters?.title,
+                }
+              };
+              await writer.write(encoder.encode(`\nTOOL_CALL:${JSON.stringify(normalized)}\n`));
               break;
+            } else {
+              result = `Error: Unknown tool "${toolName}".`;
             }
-          } else {
-            // Final answer turn or no tool call
-            const cleanedContent = fullContent.split(toolCallMarker)[0].trim();
-            if (!isWriterClosed) {
-              await writer.write(encoder.encode(cleanedContent));
-            }
-            break;
+
+            history.push(new HumanMessage(`TOOL_RESULT (${toolName}): ${result || "No data returned."}`));
+            
+            currentInput = `Based on the TOOL_RESULT above, provide the final answer to the student's original request: "${input}". 
+STRICT: Do NOT repeat your previous preamble or the tool call. Go straight to the final response.`;
+          } catch (e: any) {
+            console.error(`[Assistant API] Self-Correction triggered (${toolName || 'parsing_failed'}):`, e.message);
+            
+            // Feed the error back to the model for self-correction
+            history.push(new HumanMessage(`ERROR: Your previous tool call failed with message: "${e.message}". 
+${toolJsonStr ? `Partially generated JSON: ${toolJsonStr.substring(0, 500)}...` : ""}
+Please FIX your output. Ensure the JSON is valid, complete, and follows all structural rules. If you hit the token limit, provide a more concise version.`));
+            
+            currentInput = "Please provide the CORRECTED tool call now.";
+            // The loop continues, giving the model another 'turn' to fix itself
           }
         }
       } catch (err: any) {
-        console.error("Streaming error:", err);
-        if (!isWriterClosed) await writer.write(encoder.encode("\n\n[Error: " + err.message + "]"));
+        console.error("[Assistant API] Streaming loop error:", err);
+        await writer.write(encoder.encode(`\n\n[System Error: ${err.message}]`));
       } finally {
-        if (!isWriterClosed) {
-          isWriterClosed = true;
-          await writer.close();
-        }
+        await writer.close();
       }
     })();
 
     return new Response(transformStream.readable, {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Transfer-Encoding': 'chunked',
-      },
+      headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Transfer-Encoding': 'chunked' },
     });
-
   } catch (error: any) {
-    console.error('Assistant API Error:', error);
-    return new Response('Failed to process request: ' + error.message, { status: 500 });
+    console.error("[Assistant API] Fatal POST error:", error);
+    return new Response('Error: ' + error.message, { status: 500 });
   }
 }

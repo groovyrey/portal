@@ -3,3 +3,8 @@ numpy
 scipy
 pandas
 matplotlib
+scikit-learn
+statsmodels
+seaborn
+mpmath
+networkx

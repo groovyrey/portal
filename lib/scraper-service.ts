@@ -523,13 +523,29 @@ export class ScraperService {
           let remarks = "";
 
           if (cells.length === 3) {
-              desc = col0;
-              code = col1;
-              grade = col2;
+              // Check if col0 looks like a section (e.g. BSCS-1A)
+              const isSectionAtStart = /^[A-Z]{2,}-\d[A-Z]$/i.test(col0) || col0.includes('-');
+              if (isSectionAtStart) {
+                  code = col1;
+                  grade = col2;
+                  desc = "Unknown Subject"; // Description missing in 3-col if col0 is section
+              } else {
+                  desc = col0;
+                  code = col1;
+                  grade = col2;
+              }
               remarks = "N/A";
           } else {
-              code = col0;
-              desc = col1;
+              // DETECT IF FIRST COLUMN IS SECTION (e.g. "BSCS-1A", "BSIT-2B", etc.)
+              const isSectionAtStart = cells.length >= 4 && (/^[A-Z]{2,}-\d[A-Z]$/i.test(col0) || col0.includes('-'));
+              
+              if (isSectionAtStart) {
+                code = col1;
+                desc = col2;
+              } else {
+                code = col0;
+                desc = col1;
+              }
               
               cells.each((cIdx, cell) => {
                   const cellText = $rc(cell).text().trim();
@@ -544,8 +560,11 @@ export class ScraperService {
                       grade = $rc(cells[cells.length - 2]).text().trim();
                       remarks = $rc(cells[cells.length - 1]).text().trim();
                   } else {
-                      grade = $rc(cells[2]).text().trim();
-                      remarks = $rc(cells[3]).text().trim();
+                      // Adjust indices if we shifted for section
+                      const gradeIdx = isSectionAtStart ? 3 : 2;
+                      const remarksIdx = isSectionAtStart ? 4 : 3;
+                      grade = $rc(cells[gradeIdx]).text().trim();
+                      remarks = $rc(cells[remarksIdx]).text().trim();
                   }
               }
           }

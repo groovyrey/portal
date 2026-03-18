@@ -183,7 +183,6 @@ export default function AssistantPage() {
   const [suggestions, setSuggestions] = useState([
     { text: "What's my current balance?", icon: Wallet, color: "text-primary", bg: "bg-primary/10" },
     { text: "Show my schedule for today", icon: Calendar, color: "text-primary", bg: "bg-primary/10" },
-    { text: "Search for Latest AI Advancement", icon: Search, color: "text-primary", bg: "bg-primary/10" },
     { text: "Summarize: laconcepcioncollege.com", icon: Globe, color: "text-primary", bg: "bg-primary/10" }
   ]);
 
@@ -198,7 +197,63 @@ export default function AssistantPage() {
   const [choiceQuestion, setChoiceQuestion] = useState('');
   const [choiceOptions, setChoiceOptions] = useState<string[]>([]);
 
+  // HTML modal state for render_html tool
+  const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
+  const [htmlModalContent, setHtmlModalContent] = useState('');
+  const [htmlModalTitle, setHtmlModalTitle] = useState('');
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Helper to generate the isolated iframe content
+  const getIframeSrcDoc = (content: string) => {
+    const isDark = typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : false;
+    return `
+      <!DOCTYPE html>
+      <html class="${isDark ? 'dark' : ''}">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <script src="https://cdn.tailwindcss.com"></script>
+          <script>
+            tailwind.config = {
+              darkMode: 'class',
+              theme: {
+                extend: {
+                  colors: {
+                    primary: '#2563eb',
+                    secondary: '#e0ebff',
+                    accent: '#eef4ff',
+                    border: '#e2eaff',
+                    'accent-blue': '#3b82f6',
+                  }
+                }
+              }
+            }
+          </script>
+          <style>
+            body { 
+              font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+              margin: 0;
+              padding: 0;
+              background: transparent;
+              overflow-x: hidden;
+            }
+            /* Custom Scrollbar for Iframe */
+            ::-webkit-scrollbar { width: 6px; }
+            ::-webkit-scrollbar-track { background: transparent; }
+            ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+            
+            canvas { display: block; width: 100%; height: 100%; }
+          </style>
+        </head>
+        <body class="${isDark ? 'bg-[#020617] text-slate-100' : 'bg-white text-slate-900'} min-h-screen">
+          <div class="p-4 prose prose-sm dark:prose-invert max-w-none">
+            ${content}
+          </div>
+        </body>
+      </html>
+    `;
+  };
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -279,6 +334,7 @@ export default function AssistantPage() {
 
       const textDecoder = new TextDecoder();
       let buffer = "";
+      let activeAssistantMessageId = assistantMessageId;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -299,7 +355,7 @@ export default function AssistantPage() {
             const toolName = buffer.substring(usedIndex + toolUsedPrefix.length, endOfUsed).trim();
             if (toolName) {
               setMessages((prev) => prev.map((msg) => 
-                msg.id === assistantMessageId 
+                msg.id === activeAssistantMessageId 
                   ? { ...msg, tools: Array.from(new Set([...(msg.tools || []), toolName])) } 
                   : msg
               ));
@@ -314,10 +370,11 @@ export default function AssistantPage() {
         while (true) {
           const toolCallIndex = buffer.indexOf(toolCallPrefix);
           if (toolCallIndex === -1) {
+            // Check for potential truncation if it's the end but no tool call
             const safeLength = Math.max(0, buffer.length - toolCallPrefix.length);
             const safeContent = buffer.substring(0, safeLength);
             if (safeContent) {
-              setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: msg.content + safeContent } : msg));
+              setMessages((prev) => prev.map((msg) => msg.id === activeAssistantMessageId ? { ...msg, content: msg.content + safeContent } : msg));
               buffer = buffer.substring(safeLength);
             }
             break; 
@@ -325,7 +382,7 @@ export default function AssistantPage() {
 
           const contentBefore = buffer.substring(0, toolCallIndex);
           if (contentBefore) {
-            setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: msg.content + contentBefore } : msg));
+            setMessages((prev) => prev.map((msg) => msg.id === activeAssistantMessageId ? { ...msg, content: msg.content + contentBefore } : msg));
           }
           buffer = buffer.substring(toolCallIndex + toolCallPrefix.length);
 
@@ -348,6 +405,11 @@ export default function AssistantPage() {
                   setChoiceQuestion(question);
                   setChoiceOptions(options || []);
                   setIsChoiceModalOpen(true);
+                } else if (toolCall.name === 'render_html' && toolCall.parameters) {
+                  const { html, title } = toolCall.parameters as { html: string; title: string };
+                  setHtmlModalContent(html);
+                  setHtmlModalTitle(title || 'Assistant Visualization');
+                  setIsHtmlModalOpen(true);
                 }
               } catch (e) {}
             }
@@ -358,7 +420,7 @@ export default function AssistantPage() {
           }
         }
         if (done) {
-          if (buffer) setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: msg.content + buffer } : msg));
+          if (buffer) setMessages((prev) => prev.map((msg) => msg.id === activeAssistantMessageId ? { ...msg, content: msg.content + buffer } : msg));
           break;
         }
       }
@@ -367,6 +429,7 @@ export default function AssistantPage() {
       toast.error(friendlyError);
       setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: `⚠️ ${friendlyError}` } : msg));
     } finally {
+      setMessages(prev => prev.filter(msg => msg.content.trim() !== '' || msg.role !== 'assistant'));
       setIsLoading(false);
     }
   }, [messages, isLoading]);
@@ -383,7 +446,7 @@ export default function AssistantPage() {
       <div className="flex-1 bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col relative">
         <div 
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scroll-smooth custom-scrollbar"
+          className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth custom-scrollbar"
         >
           {messages.length === 0 && (
             <motion.div 
@@ -433,82 +496,86 @@ export default function AssistantPage() {
           )}
 
           <AnimatePresence initial={false} mode="popLayout">
-            {messages.map((m, idx) => (
-              <motion.div 
-                key={m.id} 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                className={`flex w-full ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className={`flex gap-3.5 ${m.role === 'user' ? 'max-w-[85%] sm:max-w-[75%]' : 'flex-col w-full items-start'}`}>
-                  {/* Avatar & Label Area */}
-                  {m.role !== 'user' && (
-                    <div className="w-full flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 h-9 w-9 rounded-2xl bg-accent border border-border text-primary flex items-center justify-center shadow-sm">
-                          <BrainCircuit className="h-5 w-5" />
-                        </div>
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-bold text-foreground uppercase tracking-tight">Assistant</span>
-                            <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
+            {messages.map((m, idx) => {
+              const isContinuation = idx > 0 && messages[idx - 1].role === m.role;
+              return (
+                <motion.div 
+                  key={m.id} 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  className={`flex w-full ${m.role === 'user' ? 'justify-end' : 'justify-start'} ${isContinuation ? 'mt-1' : 'mt-6'}`}
+                >
+                  <div className={`flex gap-3.5 ${m.role === 'user' ? 'max-w-[85%] sm:max-w-[75%]' : 'flex-col w-full items-start'}`}>
+                    {/* Avatar & Label Area - Only show for first message of sequence */}
+                    {m.role !== 'user' && !isContinuation && (
+                      <div className="w-full flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0 h-9 w-9 rounded-2xl bg-accent border border-border text-primary flex items-center justify-center shadow-sm">
+                            <BrainCircuit className="h-5 w-5" />
+                          </div>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] font-bold text-foreground uppercase tracking-tight">Assistant</span>
+                              <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
+                            </div>
                           </div>
                         </div>
+                        
+                        <div className="flex items-center gap-4">
+                          {/* Tool Stack */}
+                          {m.tools && m.tools.length > 0 && (
+                            <div className="flex flex-col items-end gap-1">
+                              <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1">Tools Engaged</span>
+                              <AvatarGroup 
+                                max={6}
+                                sx={{
+                                  '& .MuiAvatar-root': { 
+                                    width: 20, 
+                                    height: 20, 
+                                    fontSize: 10,
+                                    border: '2px solid var(--card)',
+                                    bgcolor: 'color-mix(in srgb, var(--primary), transparent 90%)',
+                                    color: 'var(--primary)',
+                                    boxShadow: '0 2px 4px -1px rgb(0 0 0 / 0.1)'
+                                  },
+                                }}
+                              >
+                                {m.tools.map((tool, i) => {
+                                  const ToolIcon = getToolIcon(tool);
+                                  return (
+                                    <Tooltip key={i} title={tool.replace(/_/g, ' ')} arrow>
+                                      <Avatar>
+                                        <ToolIcon className="h-2.5 w-2.5" />
+                                      </Avatar>
+                                    </Tooltip>
+                                  );
+                                })}
+                              </AvatarGroup>
+                            </div>
+                          )}
+                          {m.content && !isLoading && (
+                            <div className="h-8 w-[1px] bg-border mx-1 hidden sm:block" />
+                          )}
+                          {m.content && !isLoading && <CopyButton content={m.content} className="scale-110" />}
+                        </div>
                       </div>
-                      
-                      <div className="flex items-center gap-4">
-                        {/* Tool Stack */}
-                        {m.tools && m.tools.length > 0 && (
-                          <div className="flex flex-col items-end gap-1">
-                            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1">Tools Engaged</span>
-                            <AvatarGroup 
-                              max={6}
-                              sx={{
-                                '& .MuiAvatar-root': { 
-                                  width: 20, 
-                                  height: 20, 
-                                  fontSize: 10,
-                                  border: '2px solid var(--card)',
-                                  bgcolor: 'color-mix(in srgb, var(--primary), transparent 90%)',
-                                  color: 'var(--primary)',
-                                  boxShadow: '0 2px 4px -1px rgb(0 0 0 / 0.1)'
-                                },
-                              }}
-                            >
-                              {m.tools.map((tool, i) => {
-                                const ToolIcon = getToolIcon(tool);
-                                return (
-                                  <Tooltip key={i} title={tool.replace(/_/g, ' ')} arrow>
-                                    <Avatar>
-                                      <ToolIcon className="h-2.5 w-2.5" />
-                                    </Avatar>
-                                  </Tooltip>
-                                );
-                              })}
-                            </AvatarGroup>
-                          </div>
-                        )}
-                        {m.content && !isLoading && (
-                          <div className="h-8 w-[1px] bg-border mx-1 hidden sm:block" />
-                        )}
-                        {m.content && !isLoading && <CopyButton content={m.content} className="scale-110" />}
-                      </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Bubble / Card */}
-                  <div className={`leading-relaxed break-words overflow-hidden ${
-                    m.role === 'user' 
-                      ? 'p-3.5 rounded-2xl rounded-tr-none bg-primary text-primary-foreground font-medium shadow-md' 
-                      : 'w-full max-w-full'
-                  }`}>
-                    {m.role === 'user' ? (
-                      <p className="whitespace-pre-wrap text-sm">{m.content}</p>
-                    ) : (
-                      m.content ? (
-                        <div className="relative w-full overflow-hidden bg-accent/10 p-5 md:p-7 rounded-2xl rounded-tl-none border border-border/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]">
-                          <ReactMarkdown 
+                    {/* Bubble / Card */}
+                    <div className={`leading-relaxed break-words overflow-hidden ${
+                      m.role === 'user' 
+                        ? 'p-3.5 rounded-2xl rounded-tr-none bg-primary text-primary-foreground font-medium shadow-md' 
+                        : 'w-full max-w-full'
+                    }`}>
+                      {m.role === 'user' ? (
+                        <p className="whitespace-pre-wrap text-sm">{m.content}</p>
+                      ) : (
+                        m.content ? (
+                          <div className={`relative w-full overflow-hidden bg-accent/10 p-5 md:p-7 border border-border/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] ${
+                            isContinuation ? 'rounded-2xl' : 'rounded-2xl rounded-tl-none'
+                          }`}>
+                            <ReactMarkdown 
                             remarkPlugins={[remarkGfm, remarkMath]} 
                             rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
                             className={`prose prose-slate dark:prose-invert max-w-full leading-relaxed text-muted-foreground font-medium text-sm break-words ${
@@ -562,7 +629,8 @@ export default function AssistantPage() {
                   </div>
                 </div>
               </motion.div>
-            ))}
+            );
+            })}
           </AnimatePresence>
         </div>
 
@@ -674,6 +742,32 @@ export default function AssistantPage() {
           </button>
         </div>
       </Modal>
+
+      {/* HTML Visualization Modal */}
+      <Modal
+        isOpen={isHtmlModalOpen}
+        onClose={() => setIsHtmlModalOpen(false)}
+        title={htmlModalTitle}
+        maxWidth="max-w-4xl"
+      >
+        <div className="h-[70vh] w-full bg-card overflow-hidden">
+          <iframe
+            srcDoc={getIframeSrcDoc(htmlModalContent)}
+            className="w-full h-full border-none"
+            title="Assistant Visualization"
+            sandbox="allow-scripts allow-modals allow-popups allow-forms"
+          />
+        </div>
+        <div className="flex justify-end p-4 border-t border-border bg-card">
+          <button
+            onClick={() => setIsHtmlModalOpen(false)}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
+          >
+            Close
+          </button>
+        </div>
+      </Modal>
+
     </div>
   );
 }

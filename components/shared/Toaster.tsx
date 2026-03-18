@@ -1,19 +1,22 @@
 'use client';
 
 import { Toaster as SonnerToaster } from 'sonner';
+import { useTheme } from './ThemeProvider';
 
 export default function Toaster() {
+  const { resolvedTheme } = useTheme();
+
   return (
     <SonnerToaster
       position="top-center"
-      theme="system"
+      theme={resolvedTheme}
       expand={false}
       closeButton={false}
       visibleToasts={3}
       toastOptions={{
         className: 'group toast !bg-background !border-border !text-foreground rounded-md shadow-lg border px-5 py-4 flex items-center gap-4 w-[min(calc(100vw-2rem),380px)]',
         classNames: {
-          title: 'font-semibold text-[14px] leading-tight',
+          title: 'font-semibold text-[14px] leading-tight text-foreground',
           description: 'text-[12px] text-muted-foreground leading-normal mt-0.5',
           actionButton: 'bg-primary text-primary-foreground font-medium rounded-sm text-xs px-3 py-1.5 transition-opacity hover:opacity-90',
           cancelButton: 'bg-muted text-muted-foreground font-medium rounded-sm text-xs px-3 py-1.5 transition-colors hover:bg-muted/80',

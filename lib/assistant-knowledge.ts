@@ -2,22 +2,75 @@ export const SCHOOL_INFO = {
   name: "La Concepcion College",
   acronym: "LCC",
   location: "San Jose del Monte, Bulacan",
-  motto: "Changing Lives for the Better",
+  tagline: "Changing Lives for the Better YOU",
+  vision: "La Concepcion College envisions itself to be one of the forefront educational institutions that serves as a catalyst of change for the holistic development of the community, the country, and the ASEAN region.",
+  mission: "Inspired by the motherly care and ideals of Mary Immaculate Conception and guided by the core values that befit a true LCCian, LCC dedicates herself to the pursuit of her purpose of inspiring her students and stakeholders to be in their fullest potential by cultivating minds, capturing hearts, and changing lives to become better individuals of society.",
+  history: "Established in 1998 by Mr. Francisco C. Magpantay and Dr. Loreto F. Magpantay. It started in 1997 as the 'Little Angels’ Daycare Center' and has grown into a multi-campus institution (Kaypian, Francisco Homes, and Muzon) recognized by CHED and TESDA.",
   coreValues: [
     "Leadership",
     "Competitiveness",
     "Culture of Excellence"
   ],
+  campuses: [
+    {
+      name: "Kaypian Campus (Main)",
+      address: "Kaypian Road corner Quirino Highway, City of San Jose del Monte, Bulacan",
+      phone: "(044) 762-36-60",
+      mobile: "0961-532-3351",
+      email: "registrar@laconcepcioncollege.com"
+    },
+    {
+      name: "Francisco Homes Campus",
+      address: "Phase-F, Francisco Homes I, Brgy. Narra, CSJDM, Bulacan",
+      mobile: "0921-916-7021"
+    },
+    {
+      name: "Muzon Campus",
+      address: "Tungko-Santa Maria Road, Zone 2, Brgy. Muzon, CSJDM, Bulacan",
+      mobile: "0921-916-7004"
+    }
+  ],
   socials: {
     facebook: "https://www.facebook.com/laconcepcioncollege",
-    website: "https://www.lcc.edu.ph"
+    website: "https://laconcepcioncollege.com"
   }
 };
 
+export const ACADEMIC_PROGRAMS = {
+  college: [
+    "BS Accountancy",
+    "BS Accounting Information System",
+    "BS Business Administration (Majors: Financial, Human Resource, Marketing Management)",
+    "BS Civil Engineering",
+    "BS Computer Science",
+    "BS Information Systems",
+    "BS Psychology",
+    "BS Criminology",
+    "AB English Language",
+    "BS Hospitality Management",
+    "Bachelor of Elementary Education",
+    "Bachelor of Secondary Education (Majors: English, Filipino, Math, Science, Social Studies, Values Education)",
+    "Bachelor of Physical Education"
+  ],
+  tesda: [
+    "Bookkeeping NC III",
+    "Driving NC II",
+    "Events Management Services NC III",
+    "Food & Beverage Services NC II",
+    "Shielded Metal Arc Welding (SMAW) NC II"
+  ],
+  basic_ed: [
+    "Preschool",
+    "Elementary",
+    "Junior High School",
+    "Senior High School (Academic and TVL Tracks)"
+  ]
+};
+
 export const BUILDING_CODES = {
-  "FCM": "Francisco C. Menu (Main Building)",
-  "FCM2": "Francisco C. Menu Annex",
-  "SOL": "School of Law Building",
+  "FCM": "Francisco C. Magpantay (Main Building)",
+  "FCM2": "Francisco C. Magpantay Annex",
+  "SOL": "School of Law / Social Sciences Building",
   "HM": "Hospitality Management Building",
   "CADLAB": "Computer Aided Design Laboratory (Main Bldg)",
   "CL": "Computer Laboratory"

@@ -181,8 +181,8 @@ body {
   overflow-x: auto;
   overflow-y: hidden;
   padding: 1.25rem !important;
-  background: color-mix(in srgb, var(--accent-blue), transparent 95%);
-  border: 1px solid color-mix(in srgb, var(--accent-blue), transparent 80%);
+  background: transparent !important;
+  border: none !important;
   border-radius: var(--radius);
 }
 
@@ -194,7 +194,7 @@ body {
 }
 
 .prose .katex {
-  background: color-mix(in srgb, var(--accent-blue), transparent 92%);
+  background: transparent !important;
   border-radius: 4px;
   padding: 1px 4px;
 }

@@ -53,6 +53,7 @@ export interface SubjectGrade {
   code: string;
   description: string;
   grade: string;
+  units?: string;
   remarks: string;
 }
 

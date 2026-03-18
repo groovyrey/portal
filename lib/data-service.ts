@@ -146,7 +146,12 @@ const CACHE_TTL = 60 * 60 * 1000;
 
 export async function getStudentGrades(userId: string): Promise<SubjectGrade[]> {
   try {
-    // 1. Fetch by Query (New Format)
+    // 1. Fetch offered subjects for unit cross-referencing
+    const offeredSubjects = await getOfferedSubjects();
+    const unitsMap = new Map<string, string>();
+    offeredSubjects.forEach(s => unitsMap.set(s.code.toLowerCase(), s.units));
+
+    // 2. Fetch by Query (New Format)
     const q = query(collection(db, 'grades'), where('student_id', '==', userId));
     const querySnap = await getDocs(q);
     
@@ -163,6 +168,11 @@ export async function getStudentGrades(userId: string): Promise<SubjectGrade[]> 
            const desc = item.description || item.subject || 'Unknown Subject';
            const key = `${code}-${desc}`.toLowerCase();
            
+           // Resolve units: prioritize item.units, then prospectus, then fallback to '3.0' for college courses
+           const resolvedUnits = item.units && item.units !== '0' 
+                ? item.units 
+                : (unitsMap.get(code.toLowerCase()) || '3.0');
+
            const current = subjectsMap.get(key);
            if (!current || ts >= current.updatedAt) {
                subjectsMap.set(key, {
@@ -170,6 +180,7 @@ export async function getStudentGrades(userId: string): Promise<SubjectGrade[]> 
                        code,
                        description: desc,
                        grade: item.grade || 'N/A',
+                       units: resolvedUnits,
                        remarks: item.remarks || 'N/A'
                    },
                    updatedAt: ts
@@ -254,7 +265,8 @@ export async function getFullStudentData(userId: string): Promise<AggregatedStud
   grades.forEach(g => {
     const grade = parseFloat(g.grade);
     if (!isNaN(grade) && grade > 0) {
-      const units = subjectUnitsMap.get(g.code.toLowerCase()) || 3.0; // Default to 3 units if not found
+      // Use units from the grade record if available, otherwise fallback to map or default
+      const units = g.units ? parseFloat(g.units) : (subjectUnitsMap.get(g.code.toLowerCase()) || 3.0);
       totalWeightedGrade += grade * units;
       totalUnits += units;
     }
