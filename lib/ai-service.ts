@@ -21,9 +21,13 @@ export async function generateVisualization(
     Your goal is to generate a premium, responsive, and interactive HTML/Tailwind component that visualizes the provided data.
 
     ### 1. COMPONENT STRUCTURE (CRITICAL)
-    - **Root Element:** You MUST wrap everything in a single container: \`<div class="w-full min-h-screen flex flex-col p-4 md:p-6 space-y-6 bg-background text-foreground animate-in fade-in duration-700">\`.
+    - **Root Element:** You MUST wrap everything in a single container: \`<div class="w-full min-h-screen flex flex-col bg-transparent text-foreground animate-in fade-in duration-700 overflow-x-hidden overflow-y-auto">\`.
     - **Layout:** Use \`flex\` or \`grid\`. For dashboards, use \`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6\`.
-    - **Responsiveness:** Always design for mobile portrait first, then add \`md:\` and \`lg:\` modifiers.
+    - **Responsiveness (MANDATORY):** 
+      - **Mobile-First:** Always design for mobile portrait (default classes) first.
+      - **Adaptive:** Use \`md:\`, \`lg:\`, and \`xl:\` modifiers for tablet and desktop refinements.
+      - **Fluidity:** Use relative units (\`w-full\`, \`max-w-7xl\`, \`aspect-video\`, \`p-[4%]\`) to ensure the UI feels natural on all screen sizes, including small handhelds and ultra-wide monitors.
+      - **Safe Areas:** Ensure no elements are clipped on rounded displays.
     - **Theme Integration:** You MUST use these Tailwind classes to match the app theme:
       - Backgrounds: \`bg-background\` (main), \`bg-card\` (panels/cards), \`bg-accent\` (interactive).
       - Text: \`text-foreground\` (primary), \`text-muted-foreground\` (secondary), \`text-primary\` (brand).
@@ -37,17 +41,23 @@ export async function generateVisualization(
     ### 3. INTERACTIVITY & LIBRARIES (Pre-installed)
     - **Charts (Chart.js):** \`<canvas id="myChart"></canvas>\` + \`<script>new Chart(...)</script>\`.
     - **Animations (GSAP):** \`gsap.from(".card", {y: 20, opacity: 0, stagger: 0.1})\`.
-    - **Math/3D:** Use Three.js only for complex spatial concepts.
+    - **3D SIMULATIONS (Three.js):** 
+      - Use for complex spatial concepts, engineering models, or interactive math demos.
+      - **Robust Setup:** Initialize with a clear Scene, Camera (Perspective), and Renderer with alpha:true for transparency.
+      - **Lighting:** Always include basic lighting (AmbientLight + DirectionalLight) to ensure materials are visible.
+      - **Interactivity:** Use \`OrbitControls\` if the user needs to inspect the model.
+      - **Performance:** Use \`requestAnimationFrame\` for the render loop and handle window resizing.
     
     ### 4. DATA HANDLING
     - If specific student data (grades, schedule, finance) is provided in the context, visualize it accurately.
-    - If no data is provided, generate a realistic "Skeleton" or "Demo" state to show layout.
+    - **Functional Demos:** Create actual interactive prototypes (clickable buttons, state management, simulated logic) that the user can play with.
     
     ### 5. OUTPUT RULES
     - Return **ONLY** the raw HTML code. 
     - **DO NOT** use markdown code blocks (\`\`\`).
     - **DO NOT** include \`<!DOCTYPE html>\` or \`<html>\` tags. Return the component fragment only.
     - **DO NOT** add conversational text.
+    - **Self-Contained:** Include all CSS (in \`<style>\` tags) and JS (in \`<script>\` tags) within the fragment. Use CDN links for libraries if not using the pre-installed global versions.
   `;
 
   try {

@@ -74,9 +74,9 @@ export default function Modal({
 
               {/* Modal Panel */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className={`relative w-full ${maxWidth} bg-card rounded-3xl shadow-2xl overflow-hidden border border-border text-left align-middle ${className}`}
                 onClick={(e) => e.stopPropagation()}

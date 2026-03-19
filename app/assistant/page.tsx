@@ -737,7 +737,7 @@ export default function AssistantPage() {
                             )}
 
                             {m.inlineHtml && (
-                              <div className={`${m.content ? 'mt-6' : ''} rounded-2xl overflow-hidden border border-border/80 shadow-2xl h-[500px] relative group bg-card`}>
+                              <div className={`${m.content ? 'mt-6' : ''} h-[500px] relative group`}>
                                 <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 flex gap-2">
                                   <button 
                                     onClick={() => {
@@ -759,7 +759,7 @@ export default function AssistantPage() {
                                 </div>
                                 <iframe
                                   srcDoc={getIframeSrcDoc(m.inlineHtml.html)}
-                                  className="w-full h-full border-none"
+                                  className="w-full h-full border-none bg-transparent"
                                   title={m.inlineHtml.title || "Assistant Visualization"}
                                   sandbox="allow-scripts allow-modals allow-popups allow-forms"
                                 />
