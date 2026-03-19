@@ -26,7 +26,6 @@ import {
   Bell,
   LayoutGrid,
   ShieldCheck,
-  Mic,
   Monitor
 } from 'lucide-react';
 import { ThemeToggle } from '../shared/ThemeToggle';
@@ -212,7 +211,6 @@ export default function Navbar() {
 
   const workspaceLinks = [
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit, desc: 'AI Study Buddy' },
-    { name: 'Meetings', href: '/meetings', icon: Mic, desc: 'Archive' },
   ];
 
   const socialLinks = [

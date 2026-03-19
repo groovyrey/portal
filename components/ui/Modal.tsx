@@ -26,23 +26,13 @@ export default function Modal({
   // Disable background scrolling when modal is open
   useEffect(() => {
     if (isOpen) {
-      document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
     } else {
-      // Only restore if no other modals might be open (simple check)
-      const otherModals = document.querySelectorAll('.fixed.inset-0.z-\\[700\\]').length;
-      if (otherModals <= 1) {
-        document.documentElement.style.overflow = '';
-        document.body.style.overflow = '';
-      }
+      document.body.style.overflow = '';
     }
     
     return () => {
-      const otherModals = document.querySelectorAll('.fixed.inset-0.z-\\[700\\]').length;
-      if (otherModals <= 1) {
-        document.documentElement.style.overflow = '';
-        document.body.style.overflow = '';
-      }
+      document.body.style.overflow = '';
     };
   }, [isOpen]);
 
@@ -57,55 +47,67 @@ export default function Modal({
     return () => {
       window.removeEventListener('keydown', handleEsc);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, showCloseButton]);
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[700] flex items-center justify-center p-4 sm:p-6">
-          {/* Backdrop with Fade */}
+        <div className="relative z-[700]">
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            onClick={() => showCloseButton && onClose()}
-            className="absolute inset-0 bg-foreground/40 dark:bg-card/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-foreground/40 dark:bg-card/60 backdrop-blur-sm"
+            aria-hidden="true"
           />
 
-          {/* Modal Content with Fade */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className={`relative w-full ${maxWidth} bg-card rounded-3xl shadow-2xl overflow-hidden border border-border ${className}`}
-          >
-            {title && (
-              <div className="flex items-center justify-between p-6 border-b border-border">
-                <div className="flex-1">{title}</div>
-                {showCloseButton && (
+          {/* Scrollable Container */}
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 sm:p-6 text-center">
+              {/* Click handler for backdrop behavior on the wrapper */}
+              <div 
+                className="absolute inset-0" 
+                onClick={() => showCloseButton && onClose()} 
+              />
+
+              {/* Modal Panel */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className={`relative w-full ${maxWidth} bg-card rounded-3xl shadow-2xl overflow-hidden border border-border text-left align-middle ${className}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {title && (
+                  <div className="flex items-center justify-between p-6 border-b border-border">
+                    <div className="flex-1">{title}</div>
+                    {showCloseButton && (
+                      <button
+                        onClick={onClose}
+                        className="p-2 ml-2 bg-accent hover:bg-accent text-muted-foreground hover:text-muted-foreground rounded-xl transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
+                {!title && showCloseButton && (
                   <button
                     onClick={onClose}
-                    className="p-2 ml-2 bg-accent hover:bg-accent text-muted-foreground hover:text-muted-foreground rounded-xl transition-colors"
+                    className="absolute top-4 right-4 z-10 p-2 bg-accent/20 hover:bg-accent/40 text-muted-foreground rounded-xl transition-colors"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 )}
-              </div>
-            )}
-            {!title && showCloseButton && (
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 z-10 p-2 bg-accent/20 hover:bg-accent/40 text-muted-foreground rounded-xl transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-            <div className="relative">
-              {children}
+                <div className="relative flex-1 flex flex-col">
+                  {children}
+                </div>
+              </motion.div>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
     </AnimatePresence>

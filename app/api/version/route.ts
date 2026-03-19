@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { APP_VERSION } from '@/lib/version';
 import { pool } from '@/lib/turso';
-import { migrateCommunity, migrateNotifications, migrateActivityLogs, migrateMeetings } from '@/lib/db-migrate';
+import { migrateCommunity, migrateNotifications, migrateActivityLogs } from '@/lib/db-migrate';
 
 export async function GET() {
   // Wake up Turso and initialize tables
@@ -10,7 +10,6 @@ export async function GET() {
     migrateCommunity().catch(() => {});
     migrateNotifications().catch(() => {});
     migrateActivityLogs().catch(() => {});
-    migrateMeetings().catch(() => {});
   } catch (e) {
     // Fail silently or handle internal warming error
   }

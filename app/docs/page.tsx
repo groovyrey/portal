@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   ArrowLeft, BookOpen, Clock, WalletCards, GraduationCap, 
-  Mic, BrainCircuit, ShieldCheck, Sparkles, UserCircle, 
+  BrainCircuit, ShieldCheck, Sparkles, UserCircle, 
   Users, Smartphone, Database, Zap, LayoutGrid 
 } from 'lucide-react';
 import Link from 'next/link';
@@ -36,7 +36,7 @@ const DocsPage: React.FC = () => {
             <div className="space-y-4">
               <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sections</h4>
               <nav className="flex flex-col gap-2">
-                {['The Mission', 'AI Assistant', 'Meetings & Lectures', 'Academic Tools', 'Community Hub', 'Security & Sync'].map((item) => (
+                {['The Mission', 'AI Assistant', 'Academic Tools', 'Community Hub', 'Security & Sync'].map((item) => (
                   <a key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`} className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors py-1">
                     {item}
                   </a>
@@ -61,7 +61,7 @@ const DocsPage: React.FC = () => {
                 <h2 className="text-2xl font-black tracking-tight uppercase italic">The Mission</h2>
               </div>
               <p className="text-base text-muted-foreground leading-relaxed font-medium mb-6">
-                LCC Hub isn't just a portal; it's a <strong>Strategic Intelligence Tool</strong>. We built this to solve the common frustrations of students: scattered schedules, confusing financial records, and the difficulty of reviewing long lectures.
+                LCC Hub isn't just a portal; it's a <strong>Strategic Intelligence Tool</strong>. We built this to solve the common frustrations of students: scattered schedules, confusing financial records, and lack of real-time connectivity.
               </p>
               <div className="bg-card p-8 rounded-3xl border border-border shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5">
@@ -114,33 +114,6 @@ const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-            </section>
-
-            {/* Section: Meetings */}
-            <section id="meetings-&-lectures">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="h-8 w-1 bg-primary rounded-full" />
-                <h2 className="text-2xl font-black tracking-tight uppercase italic">Classroom Archive</h2>
-              </div>
-              <p className="text-base text-muted-foreground leading-relaxed font-medium mb-8">
-                Never miss a detail from your lectures. Our Meeting system turns spoken audio into actionable knowledge.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-card p-6 rounded-2xl border border-border border-l-4 border-l-primary shadow-sm">
-                  <Mic className="h-6 w-6 text-primary mb-4" />
-                  <h4 className="font-bold mb-2 uppercase tracking-tight text-sm">Smart Transcription</h4>
-                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-                    Powered by Deepgram, our recorder captures every word. You can search through your transcripts to find exactly when a topic was mentioned.
-                  </p>
-                </div>
-                <div className="bg-card p-6 rounded-2xl border border-border border-l-4 border-l-indigo-500 shadow-sm">
-                  <Sparkles className="h-6 w-6 text-indigo-500 mb-4" />
-                  <h4 className="font-bold mb-2 uppercase tracking-tight text-sm">AI Insights</h4>
-                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-                    The AI automatically summarizes your class recordings, identifies key terms, and lists "Action Items" like upcoming quizzes or projects mentioned.
-                  </p>
-                </div>
               </div>
             </section>
 

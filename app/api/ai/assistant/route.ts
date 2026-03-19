@@ -17,6 +17,8 @@ import {
   getStudentFinancials, 
   getStudentGrades 
 } from '@/lib/data-service';
+import { generateVisualization } from '@/lib/ai-service';
+import { query } from '@/lib/turso';
 import { 
   SCHOOL_INFO, 
   ACADEMIC_PROGRAMS,
@@ -222,16 +224,13 @@ STRICT OPERATIONAL RULES:
 6. **PERSONALIZED:** Refer to the student by first name and as an **"LCCian"**.
 7. **ACTION ON COMMAND:** If a student gives a command or selects a portal suggestion (e.g., "Summarize this...", "Resources for...", "Show my..."), EXECUTE the tool IMMEDIATELY. DO NOT waste time with introductory greetings.
 8. **CONFIRMATION FOR SUGGESTIONS:** ONLY ask for confirmation if YOU are the one suggesting an optional action that the student didn't explicitly ask for.
+9. **NO RESPONSE ENVELOPING:** NEVER wrap your entire response inside a Markdown code block (\`\`\`). Markdown blocks are ONLY for specific code snippets, tables, or technical data within your normal conversational response.
 
 ---
 💡 COMPUTATIONAL THINKING:
 - Solve high-level academic problems by writing comprehensive Python logic via \`execute_math\`.
-- **VISUAL SIMULATIONS:** Use \`render_html\` to create interactive visual simulations for concepts like physics trajectories (using SVG/Canvas), algorithm step-by-step animations, and complex data charts.
-- **SUPERCHARGED UI:** Use \`render_html\` for:
-    - **INTERACTIVE CHARTS:** Use CDN libraries (e.g., \`https://cdn.jsdelivr.net/npm/chart.js\`) to build professional charts from tool results.
-    - **3D VISUALS:** Use \`Three.js\` for molecular structures, geometry, or physics modeling.
-    - **STEP-BY-STEP SOLVERS:** Build custom UIs with progress bars and interactive steps for complex math or engineering problems.
-    - **SMART REPORTS:** Generate rich, multi-column reports with Tailwind, including summary cards, tables, and highlighted key metrics.
+- **VISUAL SIMULATIONS:** Use \`render_html\` to create immersive interactive visual simulations. Pass the student's exact request and all data. **CRITICAL:** NEVER output raw HTML code in your text response. ONLY use the \`render_html\` tool. Do NOT write HTML code in the description parameter.
+- **SMART REPORTS:** Use \`render_html\` to generate rich, multi-column reports with Tailwind.
 - **CRITICAL JSON RULE:** Every tool call MUST be a VALID, PARSABLE JSON object. Do NOT use Python syntax (like list comprehensions), placeholders, or unquoted variables within the JSON. All data must be literal.
 - **ALGORITHMS & NETWORKS:** Use \`networkx\` for Graph Theory, shortest paths (Dijkstra), or Tree structures (BST, Heaps) for IT/CS problems.
 - **PREDICTIVE MODELING:** Use \`scikit-learn\` for grade forecasting, Linear Regression, or K-Means clustering of academic trends.
@@ -247,7 +246,7 @@ STRICT OPERATIONAL RULES:
 To call a tool, you MUST append \`|||\` followed by a complete JSON object at the VERY END of your response.
 **REQUIRED FORMAT:** \`||| {"name": "TOOL_NAME", "parameters": {...}}\`
 **SCHEDULE FORMAT:** For \`get_day_schedule\`, you MUST use three-letter uppercase day codes: **MON, TUE, WED, THU, FRI, SAT, SUN**.
-**CRITICAL:** DO NOT wrap the tool call in markdown code blocks.
+**CRITICAL:** DO NOT wrap the tool call in markdown code blocks. Always place the tool call OUTSIDE and AFTER any markdown text.
 
 Available Tools:
 \`\`\`json
@@ -299,14 +298,15 @@ Available Tools:
   },
   {
     "name": "render_html",
-    "description": "Render advanced, interactive content in a modal using an isolated iframe. You can use HTML, Tailwind CSS, and external libraries via CDN. MANDATORY STRUCTURE: 1. Use a wrapper <div id='app-root' class='w-full min-h-[400px]'> for all content. 2. For Three.js/Canvas, use a dedicated <div id='canvas-container' class='w-full h-[400px] bg-slate-900 rounded-xl overflow-hidden'>. 3. Always include a <script> block for logic. 4. For 3D: Use renderer.setSize(container.clientWidth, container.clientHeight) and handle window resizing.",
+    "description": "Generate a premium, interactive visual component or report. Use this for complex data, 3D simulations, or beautiful dashboards. PROVIDE ALL RELEVANT DATA POINTS (grades, financials, etc.) AND THE STUDENT'S EXACT REQUEST in the description. CRITICAL: Do NOT write any HTML in the description parameter. The specialized agent will generate the HTML for you.",
     "parameters": { 
       "type": "object", 
       "properties": { 
-        "html": { "type": "string", "description": "The complete HTML/Tailwind/Script payload. Ensure all library CDNs (e.g., Three.js, Chart.js) are loaded BEFORE your custom logic script. Use Tailwind for professional UI components (buttons, cards, badges)." },
-        "title": { "type": "string", "description": "A descriptive title for the modal visualization." }
+        "description": { "type": "string", "description": "A detailed explanation of the visualization, including all specific data points to be rendered. Do NOT include HTML code here." },
+        "title": { "type": "string", "description": "Title for the component." },
+        "fullScreen": { "type": "boolean", "description": "Whether to use a larger display area." }
       }, 
-      "required": ["html", "title"] 
+      "required": ["description", "title"] 
     }
   },
   {
@@ -391,8 +391,12 @@ STUDENT REFERENCE DATA:
                 if (markerIndex !== -1) {
                   toolDetected = true;
                   toolMarkerPos = markerIndex;
-                  const textBefore = fullContent.substring(streamedLength, markerIndex).trim();
-                  if (textBefore) await writer.write(encoder.encode(textBefore));
+                  let textBefore = fullContent.substring(streamedLength, markerIndex);
+                  
+                  // Defensive: strip trailing code block markers that often precede a tool call
+                  textBefore = textBefore.replace(/```json\s*$/, '').replace(/```\s*$/, '');
+                  
+                  if (textBefore.trim()) await writer.write(encoder.encode(textBefore));
                   streamedLength = markerIndex;
                 } else if (jsonStart !== -1) {
                   // Only treat ```json as a tool call if there is no ||| marker later in the stream
@@ -405,8 +409,8 @@ STUDENT REFERENCE DATA:
                     } else {
                         toolDetected = true;
                         toolMarkerPos = jsonStart;
-                        const textBefore = fullContent.substring(streamedLength, jsonStart).trim();
-                        if (textBefore) await writer.write(encoder.encode(textBefore));
+                        let textBefore = fullContent.substring(streamedLength, jsonStart);
+                        if (textBefore.trim()) await writer.write(encoder.encode(textBefore));
                         streamedLength = jsonStart;
                     }
                   }
@@ -539,19 +543,38 @@ STUDENT REFERENCE DATA:
             else if (toolName === 'web_search') result = await performWebSearch(toolCall.query || toolCall.parameters?.query);
             else if (toolName === 'web_fetch') result = await performWebFetch(toolCall.url || toolCall.parameters?.url);
             else if (toolName === 'youtube_search') result = await performYoutubeSearch(toolCall.query || toolCall.parameters?.query);
-            else if (['ask_user', 'ask_user_choice', 'render_html'].includes(toolName)) {
+            else if (['ask_user', 'ask_user_choice'].includes(toolName)) {
               const normalized = {
                 name: toolName,
                 parameters: {
                   question: toolCall.question || toolCall.parameters?.question,
                   placeholder: toolCall.placeholder || toolCall.parameters?.placeholder,
-                  options: toolCall.options || toolCall.parameters?.options,
-                  html: toolCall.html || toolCall.parameters?.html,
-                  title: toolCall.title || toolCall.parameters?.title,
+                  options: toolCall.options || toolCall.parameters?.options
                 }
               };
               await writer.write(encoder.encode(`\nTOOL_CALL:${JSON.stringify(normalized)}\n`));
               break;
+            } else if (toolName === 'render_html') {
+              const desc = toolCall.description || toolCall.parameters?.description;
+              const title = toolCall.title || toolCall.parameters?.title;
+              const fullScreen = toolCall.fullScreen || toolCall.parameters?.fullScreen;
+              
+              // Call Specialized Agent to generate the HTML
+              await writer.write(encoder.encode(`\nSTATUS:DESIGNING\n`));
+              const html = await generateVisualization(desc, JSON.stringify(student));
+              
+              if (!html) {
+                console.error("[Assistant API] Specialized agent returned empty HTML for:", desc);
+                result = "The visualization specialized agent failed to produce output. Please try rephrasing.";
+              } else {
+                console.log(`[Assistant API] Specialized agent generated HTML (length: ${html.length} chars). Preview:`, html.substring(0, 200));
+                const normalized = {
+                  name: toolName,
+                  parameters: { html, title, fullScreen }
+                };
+                await writer.write(encoder.encode(`\nTOOL_CALL:${JSON.stringify(normalized)}\n`));
+                break;
+              }
             } else {
               result = `Error: Unknown tool "${toolName}".`;
             }
@@ -559,7 +582,7 @@ STUDENT REFERENCE DATA:
             history.push(new HumanMessage(`TOOL_RESULT (${toolName}): ${result || "No data returned."}`));
             
             currentInput = `Based on the TOOL_RESULT above, provide the final answer to the student's original request: "${input}". 
-STRICT: Do NOT repeat your previous preamble or the tool call. Go straight to the final response.`;
+STRICT: Do NOT repeat your previous preamble or the tool call. Go straight to the final response.${customInstruction}`;
           } catch (e: any) {
             console.error(`[Assistant API] Self-Correction triggered (${toolName || 'parsing_failed'}):`, e.message);
             

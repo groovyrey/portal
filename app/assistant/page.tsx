@@ -26,7 +26,9 @@ import {
   Bell,
   List,
   FileText,
-  CalendarDays
+  CalendarDays,
+  Square,
+  Maximize2
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -46,6 +48,11 @@ type Message = {
   role: 'user' | 'assistant';
   content: string;
   tools?: string[];
+  inlineHtml?: {
+    html: string;
+    title?: string;
+    fullScreen?: boolean;
+  };
 };
 
 // Modern Typing Indicator Component
@@ -99,11 +106,13 @@ const TypingIndicator = () => (
 // Sub-component for the input area to prevent full page re-renders on every keystroke
 const ChatInput = React.memo(({ 
   onSend, 
+  onStop,
   isLoading, 
   onClear,
   hasMessages 
 }: { 
   onSend: (content: string) => void, 
+  onStop: () => void,
   isLoading: boolean, 
   onClear: () => void,
   hasMessages: boolean
@@ -112,7 +121,11 @@ const ChatInput = React.memo(({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim() && !isLoading) {
+    if (isLoading) {
+      onStop();
+      return;
+    }
+    if (input.trim()) {
       onSend(input);
       setInput('');
     }
@@ -125,7 +138,7 @@ const ChatInput = React.memo(({
             <button
                 type="button"
                 onClick={onClear}
-                disabled={!hasMessages}
+                disabled={!hasMessages || isLoading}
                 className="pl-3 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-30"
                 title="Clear Chat"
             >
@@ -136,16 +149,17 @@ const ChatInput = React.memo(({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 disabled={isLoading}
-                placeholder={isLoading ? "Processing..." : "Ask a question..."}
+                placeholder={isLoading ? "Assistant is responding..." : "Ask a question..."}
                 className="w-full bg-transparent px-3 py-3 text-sm font-medium transition-all outline-none disabled:opacity-60 text-foreground"
             />
             <div className="pr-1.5">
                 <button 
                     type="submit"
-                    disabled={!input?.trim() || isLoading}
-                    className="bg-primary text-primary-foreground p-2 rounded-lg hover:opacity-90 disabled:opacity-30 transition-all shadow-sm active:scale-90"
+                    disabled={!input?.trim() && !isLoading}
+                    className={`${isLoading ? 'bg-red-500 text-white' : 'bg-primary text-primary-foreground'} p-2 rounded-lg hover:opacity-90 transition-all shadow-sm active:scale-90 flex items-center justify-center`}
+                    title={isLoading ? "Stop generating" : "Send message"}
                 >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    {isLoading ? <Square className="h-4 w-4 fill-current" /> : <Send className="h-4 w-4" />}
                 </button>
             </div>
         </div>
@@ -164,6 +178,16 @@ ChatInput.displayName = 'ChatInput';
 export default function AssistantPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleStop = React.useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsLoading(false);
+      toast.info('Response stopped');
+    }
+  }, []);
 
   const getToolIcon = (toolName: string) => {
     switch (toolName) {
@@ -201,30 +225,73 @@ export default function AssistantPage() {
   const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
   const [htmlModalContent, setHtmlModalContent] = useState('');
   const [htmlModalTitle, setHtmlModalTitle] = useState('');
+  const [htmlModalFullScreen, setHtmlModalFullScreen] = useState(false);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Helper to generate the isolated iframe content
   const getIframeSrcDoc = (content: string) => {
     const isDark = typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : false;
+    
+    const libraries = `
+      <script src="https://cdn.tailwindcss.com"></script>
+      <script src="https://unpkg.com/lucide@latest"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    `;
+
+    const lucideInit = `
+      <script>
+        const initLucide = () => {
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+        document.addEventListener('DOMContentLoaded', initLucide);
+        setTimeout(initLucide, 500);
+        setTimeout(initLucide, 2000);
+      </script>
+    `;
+
+    // Check if content already contains a full HTML structure
+    if (content.trim().toLowerCase().includes('<!doctype html>') || content.trim().toLowerCase().includes('<html')) {
+      let finalContent = content;
+      if (isDark && !content.includes('class="dark"') && !content.includes("class='dark'")) {
+        finalContent = content.replace('<html', '<html class="dark"');
+      }
+      
+      // Inject libraries and init if they seem to be missing
+      if (!content.includes('tailwind')) finalContent = finalContent.replace('</head>', `${libraries}</head>`);
+      if (!content.includes('lucide.createIcons')) finalContent = finalContent.replace('</body>', `${lucideInit}</body>`);
+      
+      return finalContent;
+    }
+
     return `
       <!DOCTYPE html>
       <html class="${isDark ? 'dark' : ''}">
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <script src="https://cdn.tailwindcss.com"></script>
+          ${libraries}
           <script>
             tailwind.config = {
               darkMode: 'class',
               theme: {
                 extend: {
                   colors: {
-                    primary: '#2563eb',
-                    secondary: '#e0ebff',
-                    accent: '#eef4ff',
-                    border: '#e2eaff',
-                    'accent-blue': '#3b82f6',
+                    background: '${isDark ? '#020617' : '#f4f8ff'}',
+                    foreground: '${isDark ? '#f8faff' : '#020817'}',
+                    card: '${isDark ? '#050b1d' : '#ffffff'}',
+                    'card-foreground': '${isDark ? '#f8faff' : '#020817'}',
+                    primary: '${isDark ? '#3b82f6' : '#2563eb'}',
+                    'primary-foreground': '#ffffff',
+                    secondary: '${isDark ? '#0f172a' : '#e0ebff'}',
+                    'secondary-foreground': '${isDark ? '#f1f5f9' : '#1e40af'}',
+                    muted: '${isDark ? '#070d1f' : '#f0f5ff'}',
+                    'muted-foreground': '${isDark ? '#94a3b8' : '#64748b'}',
+                    accent: '${isDark ? '#0f172a' : '#eef4ff'}',
+                    'accent-foreground': '${isDark ? '#f1f5f9' : '#1e40af'}',
+                    border: '${isDark ? '#141e33' : '#e2eaff'}',
                   }
                 }
               }
@@ -232,24 +299,24 @@ export default function AssistantPage() {
           </script>
           <style>
             body { 
-              font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+              font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
               margin: 0;
               padding: 0;
               background: transparent;
               overflow-x: hidden;
+              color: ${isDark ? '#f1f5f9' : '#0f172a'};
             }
-            /* Custom Scrollbar for Iframe */
-            ::-webkit-scrollbar { width: 6px; }
+            #app-root { min-height: 100vh; }
+            ::-webkit-scrollbar { width: 5px; }
             ::-webkit-scrollbar-track { background: transparent; }
-            ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
-            
-            canvas { display: block; width: 100%; height: 100%; }
+            ::-webkit-scrollbar-thumb { background: ${isDark ? '#1e293b' : '#cbd5e1'}; border-radius: 5px; }
           </style>
         </head>
-        <body class="${isDark ? 'bg-[#020617] text-slate-100' : 'bg-white text-slate-900'} min-h-screen">
-          <div class="p-4 prose prose-sm dark:prose-invert max-w-none">
+        <body class="${isDark ? 'bg-transparent text-slate-200' : 'bg-transparent text-slate-800'}">
+          <div id="app-root">
             ${content}
           </div>
+          ${lucideInit}
         </body>
       </html>
     `;
@@ -297,6 +364,10 @@ export default function AssistantPage() {
   const sendMessage = React.useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
 
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -325,6 +396,7 @@ export default function AssistantPage() {
           })),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }),
+        signal: abortController.signal
       });
 
       if (!response.ok) throw new Error(await response.text() || 'Failed to get a response');
@@ -338,12 +410,21 @@ export default function AssistantPage() {
 
       while (true) {
         const { done, value } = await reader.read();
-        if (value) buffer += textDecoder.decode(value, { stream: true });
+        if (value) {
+          const chunk = textDecoder.decode(value, { stream: true });
+          buffer += chunk;
+        }
         
-        buffer = buffer.replace(/STATUS:(SEARCHING|PROCESSING|FETCHING|FINALIZING|COMPUTING)/g, '');
+        // Clean up status markers from buffer before processing text
+        const statusRegex = /STATUS:(SEARCHING|PROCESSING|FETCHING|FINALIZING|COMPUTING|DESIGNING)\n?/g;
+        if (statusRegex.test(buffer)) {
+          buffer = buffer.replace(statusRegex, '');
+        }
 
-        // Detect and extract TOOL_USED: markers
+        const toolCallPrefix = "TOOL_CALL:";
         const toolUsedPrefix = "TOOL_USED:";
+
+        // Process TOOL_USED markers first
         while (true) {
           const usedIndex = buffer.indexOf(toolUsedPrefix);
           if (usedIndex === -1) break;
@@ -362,75 +443,104 @@ export default function AssistantPage() {
             }
             buffer = buffer.substring(0, usedIndex) + buffer.substring(endOfUsed + (done ? 0 : 1));
           } else {
-            break;
+            break; // Wait for more data
           }
         }
 
-        const toolCallPrefix = "TOOL_CALL:";
+        // Process TOOL_CALL markers
         while (true) {
           const toolCallIndex = buffer.indexOf(toolCallPrefix);
           if (toolCallIndex === -1) {
-            // Check for potential truncation if it's the end but no tool call
+            // No tool call marker, process buffer as normal text
+            // Leave some room at the end for a partial marker
             const safeLength = Math.max(0, buffer.length - toolCallPrefix.length);
-            const safeContent = buffer.substring(0, safeLength);
-            if (safeContent) {
-              setMessages((prev) => prev.map((msg) => msg.id === activeAssistantMessageId ? { ...msg, content: msg.content + safeContent } : msg));
+            const textToAppend = buffer.substring(0, safeLength);
+            if (textToAppend) {
+              setMessages((prev) => prev.map((msg) => 
+                msg.id === activeAssistantMessageId ? { ...msg, content: msg.content + textToAppend } : msg
+              ));
               buffer = buffer.substring(safeLength);
             }
             break; 
           }
 
+          // Marker found! Process text before marker first
           const contentBefore = buffer.substring(0, toolCallIndex);
           if (contentBefore) {
-            setMessages((prev) => prev.map((msg) => msg.id === activeAssistantMessageId ? { ...msg, content: msg.content + contentBefore } : msg));
+            setMessages((prev) => prev.map((msg) => 
+              msg.id === activeAssistantMessageId ? { ...msg, content: msg.content + contentBefore } : msg
+            ));
           }
-          buffer = buffer.substring(toolCallIndex + toolCallPrefix.length);
-
-          let endOfToolCall = buffer.indexOf('\n');
+          
+          // Look for end of tool call (newline)
+          const jsonStart = toolCallIndex + toolCallPrefix.length;
+          let endOfToolCall = buffer.indexOf('\n', jsonStart);
           if (endOfToolCall === -1 && done) endOfToolCall = buffer.length;
 
           if (endOfToolCall !== -1) {
-            const toolCallStr = buffer.substring(0, endOfToolCall).trim();
+            const toolCallStr = buffer.substring(jsonStart, endOfToolCall).trim();
             if (toolCallStr) {
               try {
                 const toolCall = JSON.parse(toolCallStr);
+                console.log("[Assistant] Parsing Tool Call:", toolCall.name);
+                
                 if (toolCall.name === 'ask_user' && toolCall.parameters) {
-                  const { question, placeholder } = toolCall.parameters as { question: string; placeholder?: string };
+                  const { question, placeholder } = toolCall.parameters;
                   setModalQuestion(question);
                   setModalPlaceholder(placeholder || "Type your response here...");
-                  setModalInput('');
                   setIsModalOpen(true);
                 } else if (toolCall.name === 'ask_user_choice' && toolCall.parameters) {
-                  const { question, options } = toolCall.parameters as { question: string; options: string[] };
+                  const { question, options } = toolCall.parameters;
                   setChoiceQuestion(question);
                   setChoiceOptions(options || []);
                   setIsChoiceModalOpen(true);
                 } else if (toolCall.name === 'render_html' && toolCall.parameters) {
-                  const { html, title } = toolCall.parameters as { html: string; title: string };
-                  setHtmlModalContent(html);
-                  setHtmlModalTitle(title || 'Assistant Visualization');
-                  setIsHtmlModalOpen(true);
+                  const { html, title, fullScreen } = toolCall.parameters;
+                  console.log("[Assistant] Received Visualization:", { title, size: html.length });
+                  setMessages((prev) => prev.map((msg) => 
+                    msg.id === activeAssistantMessageId 
+                      ? { ...msg, inlineHtml: { html, title, fullScreen } } 
+                      : msg
+                  ));
                 }
-              } catch (e) {}
+              } catch (e) {
+                console.error("[Assistant] Tool Call Parse Error:", e, "Payload:", toolCallStr.substring(0, 100));
+              }
             }
             buffer = buffer.substring(endOfToolCall + (done ? 0 : 1));
           } else {
-            buffer = toolCallPrefix + buffer;
+            // Tool call is incomplete, keep it in buffer and wait for more data
+            // We need to keep everything from toolCallIndex onwards
+            buffer = buffer.substring(toolCallIndex);
             break;
           }
         }
+
         if (done) {
-          if (buffer) setMessages((prev) => prev.map((msg) => msg.id === activeAssistantMessageId ? { ...msg, content: msg.content + buffer } : msg));
+          // Final sweep for any remaining buffer text
+          if (buffer.trim()) {
+             setMessages((prev) => prev.map((msg) => 
+               msg.id === activeAssistantMessageId ? { ...msg, content: msg.content + buffer } : msg
+             ));
+          }
           break;
         }
       }
     } catch (err: any) {
-      const friendlyError = "I'm having trouble connecting right now. Please try again in a moment.";
+      if (err.name === 'AbortError') return;
+      console.error("[Assistant] Stream Error:", err);
+      const friendlyError = "I'm having trouble connecting right now.";
       toast.error(friendlyError);
       setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: `⚠️ ${friendlyError}` } : msg));
     } finally {
-      setMessages(prev => prev.filter(msg => msg.content.trim() !== '' || msg.role !== 'assistant'));
+      console.log("[Assistant] Message Stream Finalized");
+      setMessages(prev => prev.filter(msg => 
+        (msg.content && msg.content.trim() !== '') || 
+        msg.role !== 'assistant' || 
+        (msg.inlineHtml && msg.inlineHtml.html)
+      ));
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   }, [messages, isLoading]);
 
@@ -571,62 +681,96 @@ export default function AssistantPage() {
                       {m.role === 'user' ? (
                         <p className="whitespace-pre-wrap text-sm">{m.content}</p>
                       ) : (
-                        m.content ? (
-                          <div className={`relative w-full overflow-hidden bg-accent/10 p-5 md:p-7 border border-border/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] ${
+                        (m.content || m.inlineHtml) ? (
+                          <div className={`relative w-full overflow-x-auto bg-accent/10 p-5 md:p-7 border border-border/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] ${
                             isContinuation ? 'rounded-2xl' : 'rounded-2xl rounded-tl-none'
                           }`}>
-                            <ReactMarkdown 
-                            remarkPlugins={[remarkGfm, remarkMath]} 
-                            rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
-                            className={`prose prose-slate dark:prose-invert max-w-full leading-relaxed text-muted-foreground font-medium text-sm break-words ${
-                              isLoading && idx === messages.length - 1 ? 'streaming-active' : ''
-                            }`}
-                            components={{
-                              p: ({children}) => <p className="mb-5 last:mb-0 leading-relaxed text-sm/6">{children}</p>,
-                              table: ({...props}) => <div className="overflow-x-auto my-8 rounded-xl border border-border/60 shadow-sm bg-card/50"><table className="w-full text-xs text-left" {...props} /></div>,
-                              thead: ({...props}) => <thead className="bg-accent/80 text-foreground font-bold uppercase tracking-tight text-[10px]" {...props} />,
-                              th: ({...props}) => <th className="px-4 py-3" {...props} />,
-                              td: ({...props}) => <td className="px-4 py-3 border-t border-border/40" {...props} />,
-                              code: ({className, children, ...props}) => {
-                                const match = /language-(\w+)/.exec(className || '');
-                                return match ? (
-                                  <div className="relative group my-6">
-                                    <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-                                      <div className="px-2 py-1 bg-accent rounded text-[9px] font-bold uppercase tracking-tight text-muted-foreground border border-border">
-                                        {match[1]}
+                            {m.content && (
+                              <ReactMarkdown 
+                                remarkPlugins={[remarkGfm, remarkMath]} 
+                                rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
+                                className={`prose prose-slate dark:prose-invert max-w-full leading-relaxed text-muted-foreground font-medium text-sm break-words ${
+                                  isLoading && idx === messages.length - 1 ? 'streaming-active' : ''
+                                }`}
+                                components={{
+                                  p: ({children}) => <p className="mb-5 last:mb-0 leading-relaxed text-sm/6">{children}</p>,
+                                  table: ({...props}) => <div className="overflow-x-auto my-8 rounded-xl border border-border/60 shadow-sm bg-card/50"><table className="w-full text-xs text-left" {...props} /></div>,
+                                  thead: ({...props}) => <thead className="bg-accent/80 text-foreground font-bold uppercase tracking-tight text-[10px]" {...props} />,
+                                  th: ({...props}) => <th className="px-4 py-3" {...props} />,
+                                  td: ({...props}) => <td className="px-4 py-3 border-t border-border/40" {...props} />,
+                                  code: ({className, children, ...props}) => {
+                                    const match = /language-(\w+)/.exec(className || '');
+                                    return match ? (
+                                      <div className="relative group my-6">
+                                        <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
+                                          <div className="px-2 py-1 bg-accent rounded text-[9px] font-bold uppercase tracking-tight text-muted-foreground border border-border">
+                                            {match[1]}
+                                          </div>
+                                          <CopyButton content={String(children).replace(/\n$/, '')} />
+                                        </div>
+                                        <pre className="bg-muted text-foreground rounded-xl p-5 overflow-x-auto text-xs scroll-smooth custom-scrollbar border border-border shadow-xl">
+                                          <code className={className} {...props}>
+                                            {children}
+                                          </code>
+                                        </pre>
                                       </div>
-                                      <CopyButton content={String(children).replace(/\n$/, '')} />
-                                    </div>
-                                    <pre className="bg-muted text-foreground rounded-xl p-5 overflow-x-auto text-xs scroll-smooth custom-scrollbar border border-border shadow-xl">
-                                      <code className={className} {...props}>
+                                    ) : (
+                                      <code className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 font-mono text-[0.9em] font-bold border border-primary/20" {...props}>
                                         {children}
                                       </code>
-                                    </pre>
+                                    );
+                                  },
+                                  a: ({...props}) => <a className="text-primary font-bold hover:opacity-80 transition-all underline decoration-primary/30 underline-offset-4" target="_blank" rel="noopener noreferrer" {...props} />,
+                                  img: ({...props}) => <img className="rounded-2xl border border-border shadow-lg my-8 max-w-full h-auto" {...props} />,
+                                  ul: ({...props}) => <ul className="list-disc list-outside ml-6 my-5 space-y-2.5" {...props} />,
+                                  ol: ({...props}) => <ol className="list-decimal list-outside ml-6 my-5 space-y-2.5" {...props} />,
+                                  h1: ({children}) => <h1 className="text-xl font-bold text-foreground mt-10 mb-5 pb-3 border-b border-border/60 uppercase tracking-tight">{children}</h1>,
+                                  h2: ({children}) => <h2 className="text-lg font-bold text-foreground mt-8 mb-4 tracking-tight">{children}</h2>,
+                                  h3: ({children}) => <h3 className="text-base font-bold text-foreground mt-6 mb-3">{children}</h3>,
+                                  blockquote: ({...props}) => <blockquote className="border-l-4 border-primary/50 pl-5 py-3 my-8 text-muted-foreground italic bg-primary/5 rounded-r-2xl font-medium" {...props} />,
+                                  iframe: ({...props}) => <iframe className="max-w-full rounded-xl border border-border shadow-sm my-4" {...props} />,
+                                  video: ({...props}) => <video className="max-w-full rounded-xl border border-border shadow-sm my-4" controls {...props} />,
+                                }}
+                              >
+                                {m.content}
+                              </ReactMarkdown>
+                            )}
+
+                            {m.inlineHtml && (
+                              <div className={`${m.content ? 'mt-6' : ''} rounded-2xl overflow-hidden border border-border/80 shadow-2xl h-[500px] relative group bg-card`}>
+                                <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 flex gap-2">
+                                  <button 
+                                    onClick={() => {
+                                      setHtmlModalContent(m.inlineHtml!.html);
+                                      setHtmlModalTitle(m.inlineHtml!.title || 'Visualization');
+                                      setHtmlModalFullScreen(!!m.inlineHtml!.fullScreen);
+                                      setIsHtmlModalOpen(true);
+                                    }}
+                                    className="p-2.5 bg-primary/90 text-primary-foreground hover:bg-primary rounded-xl shadow-xl backdrop-blur-md border border-white/10 active:scale-95 transition-all"
+                                    title="View Fullscreen"
+                                  >
+                                    <Maximize2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                                <div className="absolute top-4 left-4 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                                  <div className="px-3 py-1.5 bg-card/80 backdrop-blur-md border border-border rounded-lg text-[10px] font-bold text-foreground uppercase tracking-wider shadow-lg">
+                                    {m.inlineHtml.title || 'Interactive Content'}
                                   </div>
-                                ) : (
-                                  <code className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 font-mono text-[0.9em] font-bold border border-primary/20" {...props}>
-                                    {children}
-                                  </code>
-                                );
-                              },
-                              a: ({...props}) => <a className="text-primary font-bold hover:opacity-80 transition-all underline decoration-primary/30 underline-offset-4" target="_blank" rel="noopener noreferrer" {...props} />,
-                              img: ({...props}) => <img className="rounded-2xl border border-border shadow-lg my-8 max-w-full h-auto" {...props} />,
-                              ul: ({...props}) => <ul className="list-disc list-outside ml-6 my-5 space-y-2.5" {...props} />,
-                              ol: ({...props}) => <ol className="list-decimal list-outside ml-6 my-5 space-y-2.5" {...props} />,
-                              h1: ({children}) => <h1 className="text-xl font-bold text-foreground mt-10 mb-5 pb-3 border-b border-border/60 uppercase tracking-tight">{children}</h1>,
-                              h2: ({children}) => <h2 className="text-lg font-bold text-foreground mt-8 mb-4 tracking-tight">{children}</h2>,
-                              h3: ({children}) => <h3 className="text-base font-bold text-foreground mt-6 mb-3">{children}</h3>,
-                              blockquote: ({...props}) => <blockquote className="border-l-4 border-primary/50 pl-5 py-3 my-8 text-muted-foreground italic bg-primary/5 rounded-r-2xl font-medium" {...props} />,
-                            }}
-                          >
-                            {m.content}
-                          </ReactMarkdown>
-                        </div>
-                      ) : (
-                        <TypingIndicator />
-                      )
-                    )}
-                  </div>
+                                </div>
+                                <iframe
+                                  srcDoc={getIframeSrcDoc(m.inlineHtml.html)}
+                                  className="w-full h-full border-none"
+                                  title={m.inlineHtml.title || "Assistant Visualization"}
+                                  sandbox="allow-scripts allow-modals allow-popups allow-forms"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <TypingIndicator />
+                        )
+                      )}
+                    </div>
                 </div>
               </motion.div>
             );
@@ -637,6 +781,7 @@ export default function AssistantPage() {
         {/* Input Area */}
         <ChatInput 
           onSend={sendMessage} 
+          onStop={handleStop}
           isLoading={isLoading} 
           onClear={handleClear}
           hasMessages={messages.length > 0}
@@ -748,9 +893,10 @@ export default function AssistantPage() {
         isOpen={isHtmlModalOpen}
         onClose={() => setIsHtmlModalOpen(false)}
         title={htmlModalTitle}
-        maxWidth="max-w-4xl"
+        maxWidth={htmlModalFullScreen ? "max-w-[95vw]" : "max-w-4xl"}
+        className={htmlModalFullScreen ? "h-[90vh] flex flex-col" : ""}
       >
-        <div className="h-[70vh] w-full bg-card overflow-hidden">
+        <div className={`w-full bg-card overflow-hidden relative ${htmlModalFullScreen ? "flex-1" : "h-[70vh]"}`}>
           <iframe
             srcDoc={getIframeSrcDoc(htmlModalContent)}
             className="w-full h-full border-none"
@@ -761,7 +907,7 @@ export default function AssistantPage() {
         <div className="flex justify-end p-4 border-t border-border bg-card">
           <button
             onClick={() => setIsHtmlModalOpen(false)}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
+            className="px-6 py-2 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-blue-500/10 hover:opacity-90 transition-all active:scale-95"
           >
             Close
           </button>
