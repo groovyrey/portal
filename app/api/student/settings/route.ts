@@ -40,7 +40,8 @@ export async function POST(req: NextRequest) {
       isPublic: 'Public Profile',
       showAcademicInfo: 'Academic Info',
       showStudentId: 'Student ID',
-      campus: 'Campus Location'
+      campus: 'Campus Location',
+      assistant: 'AI Assistant Preferences'
     };
 
     Object.keys(newSettings).forEach(key => {

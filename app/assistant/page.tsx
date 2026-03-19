@@ -28,7 +28,9 @@ import {
   FileText,
   CalendarDays,
   Square,
-  Maximize2
+  Maximize2,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -42,12 +44,16 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import Modal from '@/components/ui/Modal';
 import { Avatar, AvatarGroup, Tooltip } from '@mui/material';
+import { useStudent } from '@/lib/hooks';
+import AssistantTab from '@/components/settings/AssistantTab';
+import { Settings } from 'lucide-react';
 
 type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   tools?: string[];
+  status?: string;
   inlineHtml?: {
     html: string;
     title?: string;
@@ -56,7 +62,7 @@ type Message = {
 };
 
 // Modern Typing Indicator Component
-const TypingIndicator = () => (
+const TypingIndicator = ({ status }: { status?: string }) => (
   <motion.div 
     initial={{ opacity: 0, y: 5 }}
     animate={{ opacity: 1, y: 0 }}
@@ -73,7 +79,7 @@ const TypingIndicator = () => (
         ))}
         </div>
         <span className="text-[10px] font-bold text-muted-foreground animate-pulse uppercase tracking-tight leading-none">
-        Assistant is thinking
+          {status ? `Assistant is ${status.toLowerCase()}` : "Assistant is thinking"}
         </span>
         </motion.div>
         );
@@ -101,6 +107,19 @@ const TypingIndicator = () => (
         >
         {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
         </button>
+        );
+        };
+
+        // Speak Button Component
+        const SpeakButton = ({ messageId, content, isSpeaking, onSpeak, className = "" }: { messageId: string, content: string, isSpeaking: boolean, onSpeak: (id: string, content: string) => void, className?: string }) => {
+        return (
+          <button
+            onClick={(e) => { e.stopPropagation(); onSpeak(messageId, content); }}
+            className={`p-1.5 rounded-lg bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-all border border-border/50 shadow-sm active:scale-90 ${className}`}
+            title={isSpeaking ? "Stop speaking" : "Read aloud"}
+          >
+            {isSpeaking ? <VolumeX className="h-3.5 w-3.5 text-primary animate-pulse" /> : <Volume2 className="h-3.5 w-3.5" />}
+          </button>
         );
         };
 // Sub-component for the input area to prevent full page re-renders on every keystroke
@@ -176,9 +195,48 @@ const ChatInput = React.memo(({
 ChatInput.displayName = 'ChatInput';
 
 export default function AssistantPage() {
+  const { student } = useStudent();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastAssistantMessageIdRef = useRef<string | null>(null);
+
+  // Auto-speak effect
+  useEffect(() => {
+    if (!isLoading && lastAssistantMessageIdRef.current && student?.settings?.assistant?.autoSpeak) {
+      const lastId = lastAssistantMessageIdRef.current;
+      const lastMsg = messages.find(m => m.id === lastId);
+      if (lastMsg && lastMsg.role === 'assistant' && lastMsg.content) {
+        handleSpeak(lastId, lastMsg.content);
+      }
+      lastAssistantMessageIdRef.current = null;
+    }
+  }, [isLoading, messages, student?.settings?.assistant?.autoSpeak]);
+
+  const updateSettings = async (newSettings: any) => {
+    if (!student) return;
+    
+    // Optimistic update
+    const updatedStudent = { ...student, settings: newSettings };
+    localStorage.setItem('student_data', JSON.stringify(updatedStudent));
+    window.dispatchEvent(new Event('local-storage-update'));
+
+    try {
+      console.log("[Assistant] Saving settings:", newSettings);
+      const res = await fetch('/api/student/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: newSettings }),
+      });
+      
+      if (!res.ok) throw new Error('Failed to update settings');
+      toast.success('Preferences updated');
+    } catch (e) {
+      console.error("[Assistant] Settings update error:", e);
+      toast.error('Failed to save preferences');
+    }
+  };
 
   const handleStop = React.useCallback(() => {
     if (abortControllerRef.current) {
@@ -226,6 +284,67 @@ export default function AssistantPage() {
   const [htmlModalContent, setHtmlModalContent] = useState('');
   const [htmlModalTitle, setHtmlModalTitle] = useState('');
   const [htmlModalFullScreen, setHtmlModalFullScreen] = useState(false);
+
+  // TTS State
+  const [currentlySpeakingId, setCurrentlySpeakingId] = useState<string | null>(null);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+
+  const cleanTextForTTS = (text: string) => {
+    return text
+      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+      .replace(/`[^`]*`/g, '')       // Remove inline code
+      .replace(/!\[[^\]]*\]\([^\)]+\)/g, '') // Remove images
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Keep link text, remove URL
+      .replace(/https?:\/\/\S+/g, '') // Remove standalone URLs
+      .replace(/₱/g, ' Pesos ')       // Replace Peso sign with word
+      .replace(/[*#~>|]/g, '')      // Remove markdown special characters
+      .replace(/\s+/g, ' ')          // Normalize whitespace
+      .trim();
+  };
+
+  const handleSpeak = async (messageId: string, content: string) => {
+    if (currentlySpeakingId === messageId && currentAudio) {
+      currentAudio.pause();
+      setCurrentlySpeakingId(null);
+      return;
+    }
+
+    // Stop any current audio
+    if (currentAudio) {
+      currentAudio.pause();
+    }
+
+    const cleanedText = cleanTextForTTS(content);
+    if (!cleanedText) return;
+
+    try {
+      setCurrentlySpeakingId(messageId);
+      const voiceModel = student?.settings?.assistant?.voiceModel || 'aura-helios-en';
+      
+      const response = await fetch('/api/deepgram', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: cleanedText, model: voiceModel }) 
+      });
+
+      if (!response.ok) throw new Error('TTS failed');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      
+      audio.onended = () => {
+        setCurrentlySpeakingId(null);
+        URL.revokeObjectURL(url);
+      };
+
+      setCurrentAudio(audio);
+      audio.play();
+    } catch (err) {
+      console.error('Failed to speak text: ', err);
+      setCurrentlySpeakingId(null);
+    }
+  };
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -378,6 +497,7 @@ export default function AssistantPage() {
     setIsLoading(true);
 
     const assistantMessageId = (Date.now() + 1).toString();
+    lastAssistantMessageIdRef.current = assistantMessageId;
     const temporaryAssistantMessage: Message = {
       id: assistantMessageId,
       role: 'assistant',
@@ -415,8 +535,17 @@ export default function AssistantPage() {
           buffer += chunk;
         }
         
-        // Clean up status markers from buffer before processing text
+        // Process STATUS markers
         const statusRegex = /STATUS:(SEARCHING|PROCESSING|FETCHING|FINALIZING|COMPUTING|DESIGNING)\n?/g;
+        let match;
+        while ((match = statusRegex.exec(buffer)) !== null) {
+          const statusVal = match[1];
+          setMessages((prev) => prev.map((msg) => 
+            msg.id === activeAssistantMessageId ? { ...msg, status: statusVal } : msg
+          ));
+        }
+        
+        // Clean up status markers from buffer after processing
         if (statusRegex.test(buffer)) {
           buffer = buffer.replace(statusRegex, '');
         }
@@ -552,6 +681,22 @@ export default function AssistantPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-4 md:py-6 flex flex-col h-[calc(100dvh-140px)]">
+      {/* Header with Settings */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="bg-primary/10 p-2 rounded-xl text-primary">
+            <Bot size={20} />
+          </div>
+        </div>
+        <button
+          onClick={() => setIsSettingsModalOpen(true)}
+          className="p-2 hover:bg-accent rounded-xl text-muted-foreground hover:text-foreground transition-all active:scale-95"
+          title="Assistant Settings"
+        >
+          <Settings size={18} />
+        </button>
+      </div>
+
       {/* Messages Area */}
       <div className="flex-1 bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col relative">
         <div 
@@ -667,7 +812,18 @@ export default function AssistantPage() {
                           {m.content && !isLoading && (
                             <div className="h-8 w-[1px] bg-border mx-1 hidden sm:block" />
                           )}
-                          {m.content && !isLoading && <CopyButton content={m.content} className="scale-110" />}
+                          {m.content && !isLoading && (
+                            <div className="flex items-center gap-2">
+                              <SpeakButton 
+                                messageId={m.id} 
+                                content={m.content} 
+                                isSpeaking={currentlySpeakingId === m.id} 
+                                onSpeak={handleSpeak}
+                                className="scale-110" 
+                              />
+                              <CopyButton content={m.content} className="scale-110" />
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -767,7 +923,7 @@ export default function AssistantPage() {
                             )}
                           </div>
                         ) : (
-                          <TypingIndicator />
+                          <TypingIndicator status={m.status} />
                         )
                       )}
                     </div>
@@ -911,6 +1067,25 @@ export default function AssistantPage() {
           >
             Close
           </button>
+        </div>
+      </Modal>
+
+      {/* Assistant Settings Modal */}
+      <Modal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        maxWidth="max-w-2xl"
+        title={
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 p-2.5 rounded-xl text-primary">
+              <Bot className="h-6 w-6" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground">Assistant Preferences</h3>
+          </div>
+        }
+      >
+        <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+          {student && <AssistantTab student={student} updateSettings={updateSettings} />}
         </div>
       </Modal>
 

@@ -163,6 +163,13 @@ export interface Student {
     classReminders?: boolean;
     paymentReminders?: boolean;
     campus?: string;
+    assistant?: {
+      autoSpeak: boolean;
+      voiceModel: string;
+      saveHistory: boolean;
+      showThinkingProcess: boolean;
+      contextAwareness: boolean;
+    };
   };
 }
 

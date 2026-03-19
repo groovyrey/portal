@@ -208,6 +208,12 @@ export async function POST(req: NextRequest) {
     const student = await getStudentProfile(userId);
     if (!student) return new Response('Profile not found', { status: 404 });
 
+    const assistantSettings = student.settings?.assistant || {
+      saveHistory: true,
+      contextAwareness: true,
+      showThinkingProcess: true
+    };
+
     const now = new Date();
     const dateStr = now.toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: timezone });
     const timeStr = now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: timezone });
@@ -218,14 +224,15 @@ You are the "Portal Assistant" (code-named Assistant), a specialized academic ad
 STRICT OPERATIONAL RULES:
 1. **NO PROACTIVE SUMMARIES:** Never start a conversation by summarizing the student's records unless specifically asked. "Proactive" means starting a conversation with data; if a student ASKS (even via a menu choice), it is NOT proactive—it is a REQUEST.
 2. **USE TOOLS FOR RECORDS:** You DO NOT have the student's records in your immediate context. You MUST call the appropriate tool (e.g., \`get_grades\`, \`get_financials\`, \`get_day_schedule\`) to answer record-related questions.
-3. **ZERO HALLUCINATION:** Never guess or estimate academic data.
-4. **LATEX:** ALWAYS use LaTeX for EVERY mathematical derivation.
-5. **HIGHLIGHT KEYWORDS:** You MUST **bold** key terms and concepts.
-6. **STRUCTURED NARRATIVE:** When presenting data, summaries from \`web_search\`, or report findings, use **well-structured paragraphs** rather than just bulleted lists. This creates a more professional, conversational flow.
-7. **PERSONALIZED:** Refer to the student by first name and as an **"LCCian"**.
-8. **ACTION ON COMMAND:** If a student gives a command or selects a portal suggestion (e.g., "Summarize this...", "Resources for...", "Show my..."), EXECUTE the tool IMMEDIATELY. DO NOT waste time with introductory greetings.
-9. **CONFIRMATION FOR SUGGESTIONS:** ONLY ask for confirmation if YOU are the one suggesting an optional action that the student didn't explicitly ask for.
-10. **NO RESPONSE ENVELOPING:** NEVER wrap your entire response inside a Markdown code block (\`\`\`). Markdown blocks are ONLY for specific code snippets, tables, or technical data within your normal conversational response.
+${assistantSettings.contextAwareness ? "" : "3. **CONTEXT DISABLED:** The student has disabled context awareness. You CANNOT access their specific grades, financials, or schedule. If they ask about these, politely explain that they need to enable 'Academic Context Awareness' in Assistant Settings."}
+4. **ZERO HALLUCINATION:** Never guess or estimate academic data.
+5. **LATEX:** ALWAYS use LaTeX for EVERY mathematical derivation.
+6. **HIGHLIGHT KEYWORDS:** You MUST **bold** key terms and concepts.
+7. **STRUCTURED NARRATIVE:** When presenting data, summaries from \`web_search\`, or report findings, use **well-structured paragraphs** rather than just bulleted lists. This creates a more professional, conversational flow.
+8. **PERSONALIZED:** Refer to the student by first name and as an **"LCCian"**.
+9. **ACTION ON COMMAND:** If a student gives a command or selects a portal suggestion (e.g., "Summarize this...", "Resources for...", "Show my..."), EXECUTE the tool IMMEDIATELY. DO NOT waste time with introductory greetings.
+10. **CONFIRMATION FOR SUGGESTIONS:** ONLY ask for confirmation if YOU are the one suggesting an optional action that the student didn't explicitly ask for.
+11. **NO RESPONSE ENVELOPING:** NEVER wrap your entire response inside a Markdown code block (\`\`\`). Markdown blocks are ONLY for specific code snippets, tables, or technical data within your normal conversational response.
 
 ---
 💡 COMPUTATIONAL THINKING:
@@ -347,7 +354,10 @@ STUDENT REFERENCE DATA:
 
     const history: BaseMessage[] = [];
     
-    messages.slice(0, -1).forEach((m: any) => {
+    // Respect saveHistory setting
+    const historicalMessages = assistantSettings.saveHistory ? messages.slice(0, -1) : [];
+
+    historicalMessages.forEach((m: any) => {
       if (m.role === 'assistant') history.push(new AIMessage(m.content));
       else history.push(new HumanMessage(m.content));
     });
@@ -514,13 +524,21 @@ STUDENT REFERENCE DATA:
             }
 
             if (toolName === 'unknown') throw new Error("Missing tool name");
-            await writer.write(encoder.encode(`\nSTATUS:${toolName.includes('search') ? 'SEARCHING' : toolName.includes('fetch') ? 'FETCHING' : toolName.includes('math') ? 'COMPUTING' : 'PROCESSING'}\n`));
+            
+            // Respect showThinkingProcess setting
+            if (assistantSettings.showThinkingProcess) {
+                await writer.write(encoder.encode(`\nSTATUS:${toolName.includes('search') ? 'SEARCHING' : toolName.includes('fetch') ? 'FETCHING' : toolName.includes('math') ? 'COMPUTING' : 'PROCESSING'}\n`));
                 await writer.write(encoder.encode(`\nTOOL_USED:${toolName}\n`));
+            }
             
             let result = '';
             let customInstruction = '';
 
-            if (toolName === 'get_grades') result = JSON.stringify(await getStudentGrades(userId), null, 2);
+            const isAcademicTool = ['get_grades', 'get_financials', 'get_today_schedule', 'get_weekly_schedule', 'get_day_schedule'].includes(toolName);
+            
+            if (isAcademicTool && !assistantSettings.contextAwareness) {
+                result = "ERROR: Academic context awareness is disabled by the student. You cannot access this data.";
+            } else if (toolName === 'get_grades') result = JSON.stringify(await getStudentGrades(userId), null, 2);
             else if (toolName === 'get_financials') result = JSON.stringify(await getStudentFinancials(userId), null, 2);
             else if (toolName === 'get_today_schedule' || toolName === 'get_weekly_schedule' || toolName === 'get_day_schedule') {
               const schedule = await getStudentSchedule(userId);
@@ -561,7 +579,10 @@ STUDENT REFERENCE DATA:
               const fullScreen = toolCall.fullScreen || toolCall.parameters?.fullScreen;
               
               // Call Specialized Agent to generate the HTML
-              await writer.write(encoder.encode(`\nSTATUS:DESIGNING\n`));
+              if (assistantSettings.showThinkingProcess) {
+                await writer.write(encoder.encode(`\nSTATUS:DESIGNING\n`));
+              }
+
               const html = await generateVisualization(desc, JSON.stringify(student));
               
               if (!html) {

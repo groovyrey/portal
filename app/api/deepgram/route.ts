@@ -94,3 +94,64 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function PATCH(request: Request) {
+  const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
+
+  if (!DEEPGRAM_API_KEY) {
+    return NextResponse.json(
+      { error: "Deepgram API key is not configured" },
+      { status: 500 }
+    );
+  }
+
+  try {
+    const { text, model } = await request.json();
+
+    if (!text) {
+      return NextResponse.json(
+        { error: "No text provided for TTS" },
+        { status: 400 }
+      );
+    }
+
+    const deepgram = new DeepgramClient({ apiKey: DEEPGRAM_API_KEY });
+    
+    const response = await deepgram.speak.v1.audio.generate(
+      { 
+        text,
+        model: (model as any) || "aura-helios-en",
+        encoding: "linear16",
+        container: "wav",
+      }
+    );
+
+    const stream = response.stream();
+    if (!stream) {
+      throw new Error("Failed to get stream from Deepgram");
+    }
+
+    const reader = stream.getReader();
+    const chunks = [];
+    
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+    }
+
+    const audioBuffer = Buffer.concat(chunks);
+
+    return new NextResponse(audioBuffer, {
+      headers: {
+        "Content-Type": "audio/wav",
+      },
+    });
+  } catch (err: any) {
+    console.error("TTS error:", err);
+    return NextResponse.json(
+      { error: err.message || "TTS failed" },
+      { status: 500 }
+    );
+  }
+}
