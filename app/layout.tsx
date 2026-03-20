@@ -15,8 +15,16 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "LCC Hub",
+  title: {
+    default: "LCC Hub",
+    template: "%s | LCC Hub"
+  },
   description: "Secure Access to Schoolista Info",
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

@@ -1,5 +1,11 @@
 import React from 'react';
 import DisclaimerContent from '@/components/shared/DisclaimerContent';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Disclaimer',
+  description: 'Legal notice and data synchronization policy for LCC Hub.',
+};
 
 const DisclaimerPage: React.FC = () => {
   return (

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { GraduationCap } from 'lucide-react';
 import { APP_VERSION } from '@/lib/version';
 
@@ -24,8 +25,13 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4 active:scale-95 transition-all w-fit">
-              <div className="bg-primary rounded-lg p-1.5 text-primary-foreground">
-                <GraduationCap className="h-5 w-5" />
+              <div className="relative h-8 w-8">
+                <Image 
+                  src="/logo.png" 
+                  alt="LCC Hub Logo" 
+                  fill
+                  className="object-contain"
+                />
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-lg tracking-tight text-foreground">LCC Hub</span>

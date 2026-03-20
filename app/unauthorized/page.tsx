@@ -1,6 +1,12 @@
 import React from 'react';
 import { Lock, ArrowLeft, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Unauthorized Access',
+  description: 'Access to this area is restricted to authenticated students.',
+};
 
 export default function UnauthorizedPage() {
   return (

@@ -4,6 +4,12 @@ import Link from 'next/link';
 import fs from 'fs';
 import path from 'path';
 import MarkdownRenderer from '@/components/shared/MarkdownRenderer';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Documentation',
+  description: 'Comprehensive guide and manual for the LCC Hub ecosystem.',
+};
 
 const DocsPage: React.FC = () => {
   // Read the README.md file

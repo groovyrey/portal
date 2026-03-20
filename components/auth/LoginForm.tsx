@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LayoutDashboard, User, Lock, AlertCircle, Info, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface LoginFormProps {
   onLogin: (id: string, pass: string) => void;
@@ -24,8 +25,14 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
     <div className="flex min-h-screen bg-background items-center justify-center p-4">
       <div className="bg-card border border-border rounded-2xl shadow-sm w-full max-w-sm overflow-hidden">
         <div className="p-6 pb-2">
-          <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground mb-4">
-            <LayoutDashboard className="h-5 w-5" />
+          <div className="relative h-12 w-12 mb-4">
+            <Image 
+              src="/logo.png" 
+              alt="LCC Hub Logo" 
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
           <h1 className="text-xl font-bold text-foreground">Portal Access</h1>
           <p className="text-xs text-muted-foreground mt-0.5 font-medium">Authentication required to continue</p>

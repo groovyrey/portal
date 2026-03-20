@@ -20,6 +20,12 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { SCHOOL_INFO, ACADEMIC_PROGRAMS } from '@/lib/assistant-knowledge';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'School Information',
+  description: 'Learn more about La Concepcion College, its mission, vision, and academic programs.',
+};
 
 const SchoolInfoPage = () => {
   const officialLinks = [
@@ -37,13 +43,9 @@ const SchoolInfoPage = () => {
           className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000"
           style={{ backgroundImage: 'url("/herobg.jpeg")' }}
         />
-        <div className="absolute inset-0 z-10 bg-slate-950/80 backdrop-blur-sm" />
+        <div className="absolute inset-0 z-10 bg-slate-950/40" />
 
         <div className="max-w-6xl mx-auto relative z-20">
-          <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-all text-xs font-bold mb-10 uppercase tracking-widest active:scale-95">
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to Dashboard
-          </Link>
           <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
             <div className="h-24 w-24 bg-primary/20 backdrop-blur-xl rounded-3xl flex items-center justify-center shrink-0 border border-white/10 shadow-2xl">
               <GraduationCap className="h-12 w-12 text-primary" />

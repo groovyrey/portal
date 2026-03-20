@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -257,8 +258,14 @@ export default function Navbar() {
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-3">
               <Link href="/" className="flex items-center gap-2 active:scale-95 transition-all">
-                <div className="bg-primary rounded-lg p-1.5 text-primary-foreground">
-                  <GraduationCap className="h-5 w-5" />
+                <div className="relative h-8 w-8">
+                  <Image 
+                    src="/logo.png" 
+                    alt="LCC Hub Logo" 
+                    fill
+                    className="object-contain"
+                    priority
+                  />
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-lg tracking-tight text-foreground">LCC Hub</span>
@@ -480,7 +487,17 @@ export default function Navbar() {
           <div className="flex flex-col h-full">
             <div className="p-6 border-b border-border">
               <div className="flex items-center justify-between mb-6">
-                <span className="font-bold text-[10px] uppercase tracking-tight text-muted-foreground">Student Console</span>
+                <div className="flex items-center gap-2">
+                  <div className="relative h-5 w-5">
+                    <Image 
+                      src="/logo.png" 
+                      alt="Logo" 
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <span className="font-bold text-[10px] uppercase tracking-tight text-muted-foreground">Student Console</span>
+                </div>
                 <button 
                   onClick={() => setIsOpen(false)}
                   className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
