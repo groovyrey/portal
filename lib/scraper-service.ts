@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import { AxiosInstance } from 'axios';
 import qs from 'querystring';
 import { PORTAL_BASE, ORIGIN } from './constants';
+import { aiExtract } from './ai-scraper';
 
 export interface ScrapedStudentInfo {
   name: string;
@@ -249,7 +250,7 @@ export class ScraperService {
     };
   }
 
-  parseStudentInfo($dashboard: cheerio.CheerioAPI, $eaf: cheerio.CheerioAPI): ScrapedStudentInfo {
+  async parseStudentInfo($dashboard: cheerio.CheerioAPI, $eaf: cheerio.CheerioAPI, rawDashboardHtml?: string, rawEafHtml?: string): Promise<ScrapedStudentInfo> {
     const pageText = $dashboard('body').text().replace(/\s+/g, ' ');
     
     // Extract Student Name
@@ -258,6 +259,19 @@ export class ScraperService {
       $dashboard('#lblStudentName').text().trim() || 
       $dashboard('#lblFullName').text().trim() ||
       $dashboard('#lblName').text().trim();
+
+    // FAILSAFE: If basic extraction fails, try AI fallback
+    if (!studentName && (rawDashboardHtml || rawEafHtml)) {
+        const aiData = await aiExtract((rawDashboardHtml || "") + (rawEafHtml || ""), 'student_info');
+        if (aiData && aiData.name) {
+            console.log(`[Scraper] AI Repair: Successfully recovered student info.`);
+            return {
+                ...aiData,
+                periodCode: "",
+                dashboardUrl: ""
+            };
+        }
+    }
 
     if (!studentName || studentName.length < 3) {
       const nameIdMatch = pageText.match(new RegExp(`([^-
@@ -308,7 +322,7 @@ export class ScraperService {
     };
   }
 
-  parseSchedule($eaf: cheerio.CheerioAPI): ScrapedScheduleItem[] {
+  async parseSchedule($eaf: cheerio.CheerioAPI, rawHtml?: string): Promise<ScrapedScheduleItem[]> {
     const schedule: ScrapedScheduleItem[] = [];
     $eaf('#otbEnrollmentTable tr').each((i, row) => {
       if (i === 0) return; 
@@ -328,10 +342,20 @@ export class ScraperService {
         }
       }
     });
+
+    // FAILSAFE: If no schedule items found but HTML exists
+    if (schedule.length === 0 && rawHtml) {
+        const aiData = await aiExtract(rawHtml, 'schedule');
+        if (Array.isArray(aiData) && aiData.length > 0) {
+            console.log(`[Scraper] AI Repair: Successfully recovered schedule.`);
+            return aiData;
+        }
+    }
+
     return schedule;
   }
 
-  parseFinancials($eaf: cheerio.CheerioAPI): ScrapedFinancials {
+  async parseFinancials($eaf: cheerio.CheerioAPI, rawHtml?: string): Promise<ScrapedFinancials> {
     const installments: any[] = [];
     $eaf('#otbAssessmentAdjustmentDueSummaryTable tr').each((i, row) => {
       if (i === 0) return;
@@ -365,6 +389,15 @@ export class ScraperService {
     if (netTotalCells.length === 4) {
       totalAssessment = '₱' + $eaf(netTotalCells[2]).text().trim();
       totalBalance = '₱' + $eaf(netTotalCells[3]).text().trim();
+    }
+
+    // FAILSAFE: If balance extraction failed, try AI
+    if ((totalBalance === "---" || totalBalance === "₱") && rawHtml) {
+        const aiData = await aiExtract(rawHtml, 'financials');
+        if (aiData && aiData.balance) {
+            console.log(`[Scraper] AI Repair: Successfully recovered financials.`);
+            return aiData;
+        }
     }
 
     return { 
@@ -480,7 +513,7 @@ export class ScraperService {
     return availableReports;
   }
 
-  parseOfferedSubjects($subList: cheerio.CheerioAPI): ScrapedSubject[] {
+  async parseOfferedSubjects($subList: cheerio.CheerioAPI, rawHtml?: string): Promise<ScrapedSubject[]> {
     const offeredSubjects: ScrapedSubject[] = [];
     const table9 = $subList('table').eq(9);
     if (table9.length > 0) {
@@ -498,10 +531,20 @@ export class ScraperService {
         }
       });
     }
+
+    // FAILSAFE: If no subjects found but HTML exists
+    if (offeredSubjects.length === 0 && rawHtml) {
+        const aiData = await aiExtract(rawHtml, 'offered_subjects');
+        if (Array.isArray(aiData) && aiData.length > 0) {
+            console.log(`[Scraper] AI Repair: Successfully recovered offered subjects.`);
+            return aiData;
+        }
+    }
+
     return offeredSubjects;
   }
 
-  parseReportCard($rc: cheerio.CheerioAPI): any[] {
+  async parseReportCard($rc: cheerio.CheerioAPI, rawHtml?: string): Promise<any[]> {
     let subjects: any[] = [];
     $rc('table').each((tIdx, table) => {
       const rows = $rc(table).find('tr');
@@ -590,6 +633,15 @@ export class ScraperService {
         }
       });
     });
+
+    // FAILSAFE: If no subjects found but HTML exists
+    if (subjects.length === 0 && rawHtml) {
+        const aiData = await aiExtract(rawHtml, 'grades');
+        if (Array.isArray(aiData) && aiData.length > 0) {
+            console.log(`[Scraper] AI Repair: Successfully recovered grades.`);
+            return aiData;
+        }
+    }
 
     const seen = new Set();
     return subjects.filter(s => {

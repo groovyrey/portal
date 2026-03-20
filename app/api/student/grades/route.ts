@@ -67,10 +67,10 @@ export async function POST(req: NextRequest) {
     }
 
     debugLog += `Step 3: Fetching Report Card: ${href}\n`;
-    const { $: $rc } = await scraper.fetchReportCard(href, dashboardUrl);
+    const { $: $rc, data: rcHtml } = await scraper.fetchReportCard(href, dashboardUrl);
     
     // Use the central parser from ScraperService
-    const subjects = scraper.parseReportCard($rc);
+    const subjects = await scraper.parseReportCard($rc, rcHtml);
 
     try {
       if (subjects && subjects.length > 0) {

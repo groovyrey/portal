@@ -29,9 +29,9 @@ export async function GET(req: NextRequest) {
         const $eaf = eafRes.$;
 
         // Parse Data using the enhanced ScraperService
-        const studentInfo = scraper.parseStudentInfo($eaf, $eaf); // Using EAF for both for comprehensive info
-        const schedule = scraper.parseSchedule($eaf);
-        const financials = scraper.parseFinancials($eaf);
+        const studentInfo = await scraper.parseStudentInfo($eaf, $eaf, eafHtml, eafHtml); 
+        const schedule = await scraper.parseSchedule($eaf, eafHtml);
+        const financials = await scraper.parseFinancials($eaf, eafHtml);
 
         const extractedData = {
             profile: {

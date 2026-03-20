@@ -156,16 +156,16 @@ export class SyncService {
     await setDoc(lastSyncRef, { at: serverTimestamp() });
   }
 
-  async performFullSync(scraper: ScraperService, dashboard$: cheerio.CheerioAPI, periodCode: string, dashboardUrl: string) {
+  async performFullSync(scraper: ScraperService, dashboard$: cheerio.CheerioAPI, periodCode: string, dashboardUrl: string, rawDashboardHtml?: string) {
     console.log(`[SyncService] Starting full sync for ${this.userId}...`);
     
     // Parallel Fetch all data from portal
     const { eaf, grades, accounts, subjects: offeredSubsRes } = await scraper.fetchAllData(periodCode, dashboardUrl, dashboard$);
 
-    // Parse all data
-    const studentInfo = scraper.parseStudentInfo(dashboard$, eaf.$);
-    const schedule = scraper.parseSchedule(eaf.$);
-    const financials = scraper.parseFinancials(eaf.$);
+    // Parse all data - using await for newly async methods
+    const studentInfo = await scraper.parseStudentInfo(dashboard$, eaf.$, rawDashboardHtml, eaf.data);
+    const schedule = await scraper.parseSchedule(eaf.$, eaf.data);
+    const financials = await scraper.parseFinancials(eaf.$, eaf.data);
     const extraFinancials = scraper.parseAccounts(accounts.$);
 
     const mergedFinancials = {
@@ -174,7 +174,7 @@ export class SyncService {
     };
 
     const reportLinks = scraper.parseReportCardLinks(grades.$);
-    const offeredSubjects = scraper.parseOfferedSubjects(offeredSubsRes.$);
+    const offeredSubjects = await scraper.parseOfferedSubjects(offeredSubsRes.$, offeredSubsRes.data);
 
     // Database Syncing
     const { isNewUser, settings, badges } = await this.syncStudentData(studentInfo, reportLinks);

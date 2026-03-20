@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
     const { periodCode, dashboardUrl } = await scraper.fetchDashboard();
     
     // Centralized Sync Logic
-    const syncResult = await syncer.performFullSync(scraper, $dashboard, periodCode, dashboardUrl);
+    const syncResult = await syncer.performFullSync(scraper, $dashboard, periodCode, dashboardUrl, loginRes.data);
 
     // Log successful login
     logActivity(userId, 'Login', 'Logged into student portal').catch(e => {});

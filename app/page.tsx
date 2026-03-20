@@ -6,6 +6,9 @@ import LoginForm from '@/components/auth/LoginForm';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardInsights from '@/components/dashboard/DashboardInsights';
 import ScheduleTable from '@/components/dashboard/ScheduleTable';
+import DailyGreeting from '@/components/dashboard/DailyGreeting';
+import StatCards from '@/components/dashboard/StatCards';
+import WeatherWidget from '@/components/dashboard/WeatherWidget';
 import { toast } from 'sonner';
 import Skeleton from '@/components/ui/Skeleton';
 import LoginProgressModal from '@/components/auth/LoginProgressModal';
@@ -90,43 +93,21 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground pb-12">
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-        <DashboardHeader student={student} />
-        
-        <DashboardInsights student={student} />
-        
-        <div className="max-w-5xl mx-auto space-y-6">
-          {student.financials && (
-            <div className="bg-card p-4 rounded-2xl border border-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 border border-orange-500/20">
-                  <Wallet className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1.5">Outstanding Balance</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-foreground tabular-nums tracking-tight">
-                      {student.financials.balance || '₱0.00'}
-                    </span>
-                    {student.financials.dueToday && student.financials.dueToday !== '₱0.00' && (
-                      <span className="px-2 py-0.5 bg-destructive/10 text-destructive text-[9px] font-bold rounded border border-destructive/20 uppercase tracking-tight">
-                        Due Today
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <DailyGreeting student={student} />
+          </div>
+          <div className="lg:col-span-1">
+            <WeatherWidget />
+          </div>
+        </div>
 
-              <Link 
-                href="/accounts" 
-                className="flex items-center justify-center gap-2 bg-foreground text-background dark:bg-card dark:text-foreground px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-tight hover:opacity-90 transition-all active:scale-95 group"
-              >
-                Financial Registry
-                <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          )}
-
+        <StatCards student={student} />
+        
+        <div className="space-y-8">
+          <DashboardInsights student={student} />
+          
           {student.schedule && (
             <ScheduleTable 
               schedule={student.schedule} 

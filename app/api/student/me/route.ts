@@ -91,6 +91,7 @@ async function backgroundSync(userId: string, password: string) {
   // Re-verify login if session is not already active
   const dashboardRes = await scraper.fetchDashboard();
   let $dashboard = dashboardRes.$;
+  let rawHtml = dashboardRes.data;
   
   const hasLoginButton = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
   if (hasLoginButton) {
@@ -105,6 +106,7 @@ async function backgroundSync(userId: string, password: string) {
 
       const loginRes = await scraper.forceLogin(password);
       $dashboard = loginRes.$;
+      rawHtml = loginRes.data;
       const stillHasLogin = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
       
       await saveSession(userId, jar, !stillHasLogin);
@@ -123,7 +125,7 @@ async function backgroundSync(userId: string, password: string) {
   const { periodCode, dashboardUrl } = await scraper.fetchDashboard();
   
   // Use centralized sync logic
-  await syncer.performFullSync(scraper, $dashboard, periodCode, dashboardUrl);
+  await syncer.performFullSync(scraper, $dashboard, periodCode, dashboardUrl, rawHtml);
 
   // Notify client via Ably
   await publishUpdate(`student-${userId}`, { type: 'SYNC_COMPLETE' });
