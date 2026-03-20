@@ -144,6 +144,11 @@ const ChatInput = React.memo(({
   const chunksRef = useRef<Blob[]>([]);
 
   const startRecording = async () => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast.error("Voice input is only available in secure contexts (HTTPS or localhost).");
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);

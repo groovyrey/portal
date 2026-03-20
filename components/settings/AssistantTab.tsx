@@ -42,6 +42,11 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
   }, []);
 
   const requestMicPermission = async () => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast.error("Microphone access is only available in secure contexts (HTTPS or localhost).");
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setMicPermission('granted');
