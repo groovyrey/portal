@@ -1,7 +1,7 @@
 'use client';
 
 import { Student } from '@/types';
-import { Cloud, Sun, CloudRain, Moon, Sparkles, Loader2 } from 'lucide-react';
+import { Cloud, Sun, CloudRain, Moon, Sparkles, Loader2, PartyPopper } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const FALLBACK_QUOTES = [
@@ -15,10 +15,17 @@ const FALLBACK_QUOTES = [
   { q: "Recipe for success: Study while others are sleeping; work while others are loafing; prepare while others are playing; and dream while others are wishing.", a: "William A. Ward" }
 ];
 
+interface Holiday {
+  date: string;
+  localName: string;
+  name: string;
+}
+
 export default function DailyGreeting({ student }: { student: Student }) {
   const [quote, setQuote] = useState('');
   const [author, setAuthor] = useState('');
   const [loading, setLoading] = useState(true);
+  const [holiday, setHoliday] = useState<Holiday | null>(null);
   const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening'>('morning');
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -26,7 +33,6 @@ export default function DailyGreeting({ student }: { student: Student }) {
     async function fetchQuote() {
       try {
         setLoading(true);
-        // Using our local proxy to ZenQuotes to avoid CORS issues
         const response = await fetch('/api/quotes');
         if (!response.ok) throw new Error();
         const data = await response.json();
@@ -46,7 +52,27 @@ export default function DailyGreeting({ student }: { student: Student }) {
       }
     }
 
+    async function checkHoliday() {
+      try {
+        const year = currentDate.getFullYear();
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        const day = currentDate.getDate().toString().padStart(2, '0');
+        const todayStr = `${year}-${month}-${day}`;
+
+        // Fetch from the internal API
+        const response = await fetch(`/api/student/holidays?year=${year}`);
+        if (response.ok) {
+          const holidays: Holiday[] = await response.json();
+          const todayHoliday = holidays.find(h => h.date === todayStr);
+          if (todayHoliday) setHoliday(todayHoliday);
+        }
+      } catch (e) {
+        console.error('Failed to fetch holidays', e);
+      }
+    }
+
     fetchQuote();
+    checkHoliday();
     
     const hour = currentDate.getHours();
     if (hour < 12) setTimeOfDay('morning');
@@ -110,6 +136,15 @@ export default function DailyGreeting({ student }: { student: Student }) {
           </p>
         </div>
       </div>
+
+      {holiday && (
+        <div className="relative mt-4 px-4 py-2 bg-primary/10 border border-primary/20 rounded-2xl flex items-center gap-3 animate-bounce-subtle">
+          <PartyPopper className="h-4 w-4 text-primary" />
+          <p className="text-xs font-bold text-primary tracking-tight">
+            Today is <span className="uppercase">{holiday.localName || holiday.name}</span>. Enjoy your holiday!
+          </p>
+        </div>
+      )}
 
       <div className="relative mt-8 pt-6 border-t border-border/50 flex items-start gap-3">
         <div className="mt-1 shrink-0">

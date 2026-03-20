@@ -24,7 +24,7 @@
 
 | Feature | Description |
 | :--- | :--- |
-| **🎓 Student Dashboard** | Instant access to grades, schedules, and financials in a unified, **mobile-first** interface built with Tailwind CSS v4. Widgets include **Grade Stats**, **Financial Summary**, and **Schedule Table**. |
+| **🎓 Student Dashboard** | Instant access to grades, schedules, and financials in a unified, **mobile-first** interface built with Tailwind CSS v4. Widgets include **Grade Stats**, **Financial Summary**, **Schedule Table**, and **Upcoming Holidays**. |
 | **🤖 AI Architect** | A specialized "Frontend Architect" agent powered by **Cloudflare Qwen 2.5**. It generates interactive **3D simulations (Three.js)**, **Charts (Chart.js)**, and **GSAP animations** on demand to explain concepts. |
 | **⚡ Realtime Sync** | Powered by **Ably**, get instant notifications. The **Dual-Database** strategy (Firestore + Turso) ensures data is always available, even offline. |
 | **🏆 Badge System** | Gamified academic tracking. The system automatically awards badges (e.g., **'Perfect Grade'** for 1.00 GPAs) during data synchronization. |
@@ -107,6 +107,10 @@ When a student needs to *see* a concept, the Orchestrator delegates to a special
 *   **Web Search:** Uses custom search APIs to find real-time information.
 *   **YouTube Search:** Finds relevant educational videos.
 *   **School Knowledge Base:** Has static knowledge of LCC's Vision, Mission, Hymn, Grading System, and Building Codes.
+
+### 5. Voice Interaction
+*   **Speech-to-Text (STT):** Powered by **Deepgram Nova-3**, allowing students to speak directly to the assistant for a hands-free experience.
+*   **Text-to-Speech (TTS):** Powered by **Deepgram Aura**, enabling the assistant to read its responses aloud with natural-sounding voices. Includes "Auto-Speak" preferences in settings.
 
 ---
 

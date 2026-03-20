@@ -20,7 +20,6 @@ import { AnimatePresence } from 'framer-motion';
 import ManageTab from '@/components/admin/ManageTab';
 import KnowledgeTab from '@/components/admin/KnowledgeTab';
 import StatsTab from '@/components/admin/StatsTab';
-import LogsTab from '@/components/admin/LogsTab';
 import MonitoringTab from '@/components/admin/MonitoringTab';
 
 export default function AdminPage() {
@@ -28,18 +27,18 @@ export default function AdminPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
-  const [activeTab, setActiveTab] = useState<'manage' | 'knowledge' | 'stats' | 'logs' | 'monitoring'>('manage');
+  const [activeTab, setActiveTab] = useState<'manage' | 'knowledge' | 'stats' | 'monitoring'>('manage');
   const { data: currentUser, isLoading: isUserLoading } = useStudentQuery();
 
   // Sync tab with URL
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['manage', 'knowledge', 'stats', 'logs', 'monitoring'].includes(tab)) {
+    if (tab && ['manage', 'knowledge', 'stats', 'monitoring'].includes(tab)) {
       setActiveTab(tab as any);
     }
   }, [searchParams]);
 
-  const handleTabChange = (tabId: 'manage' | 'knowledge' | 'stats' | 'logs' | 'monitoring') => {
+  const handleTabChange = (tabId: 'manage' | 'knowledge' | 'stats' | 'monitoring') => {
     setActiveTab(tabId);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tabId);
@@ -81,7 +80,6 @@ export default function AdminPage() {
     { id: 'manage', name: 'Manage Users', icon: Users, desc: 'Badges & Registry' },
     { id: 'stats', name: 'Statistics', icon: BarChart3, desc: 'Growth & Metrics' },
     { id: 'monitoring', name: 'Monitoring', icon: Activity, desc: 'System Health' },
-    { id: 'logs', name: 'Audit Logs', icon: History, desc: 'System Changes' },
     { id: 'knowledge', name: 'Knowledge', icon: BookOpen, desc: 'AI Knowledge Base' },
   ] as const;
 
@@ -169,7 +167,6 @@ export default function AdminPage() {
                 {activeTab === 'manage' && <ManageTab key="manage" />}
                 {activeTab === 'stats' && <StatsTab key="stats" />}
                 {activeTab === 'monitoring' && <MonitoringTab key="monitoring" />}
-                {activeTab === 'logs' && <LogsTab key="logs" />}
                 {activeTab === 'knowledge' && <KnowledgeTab key="knowledge" />}
               </AnimatePresence>
             </div>

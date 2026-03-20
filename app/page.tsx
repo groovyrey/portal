@@ -8,14 +8,11 @@ import DashboardInsights from '@/components/dashboard/DashboardInsights';
 import ScheduleTable from '@/components/dashboard/ScheduleTable';
 import DailyGreeting from '@/components/dashboard/DailyGreeting';
 import StatCards from '@/components/dashboard/StatCards';
-import WeatherWidget from '@/components/dashboard/WeatherWidget';
 import { toast } from 'sonner';
 import Skeleton from '@/components/ui/Skeleton';
 import LoginProgressModal from '@/components/auth/LoginProgressModal';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useStudentQuery } from '@/lib/hooks';
-import { Wallet, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
 
 export default function Home() {
   const queryClient = useQueryClient();
@@ -69,13 +66,8 @@ export default function Home() {
             </div>
             <Skeleton className="h-10 w-10 circular" />
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <Skeleton className="h-[400px] w-full" />
-            </div>
-            <div className="lg:col-span-1">
-              <Skeleton className="h-[400px] w-full" />
-            </div>
+          <div className="space-y-6">
+            <Skeleton className="h-[400px] w-full" />
           </div>
         </div>
       </div>
@@ -94,14 +86,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background font-sans text-foreground pb-12">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <DailyGreeting student={student} />
-          </div>
-          <div className="lg:col-span-1">
-            <WeatherWidget />
-          </div>
-        </div>
+        <DailyGreeting student={student} />
 
         <StatCards student={student} />
         

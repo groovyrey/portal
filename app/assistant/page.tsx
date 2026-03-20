@@ -29,10 +29,11 @@ import {
   CalendarDays,
   Square,
   Maximize2,
+  VolumeX,
   Volume2,
-  VolumeX
-} from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+  Mic,
+  StopCircle
+  } from 'lucide-react';import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
@@ -137,6 +138,73 @@ const ChatInput = React.memo(({
   hasMessages: boolean
 }) => {
   const [input, setInput] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        if (audioBlob.size === 0) return;
+
+        setIsTranscribing(true);
+        const toastId = toast.loading("Processing speech...");
+
+        try {
+          const formData = new FormData();
+          formData.append('audio', audioBlob);
+          formData.append('language', 'en'); 
+
+          const response = await fetch('/api/deepgram', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) throw new Error('Transcription failed');
+
+          const data = await response.json();
+          if (data.transcript) {
+            setInput((prev) => prev ? `${prev} ${data.transcript}` : data.transcript);
+            toast.success("Speech processed", { id: toastId });
+          } else {
+            toast.info("No speech detected", { id: toastId });
+          }
+        } catch (error) {
+          console.error("Transcription error:", error);
+          toast.error("Failed to transcribe audio", { id: toastId });
+        } finally {
+          setIsTranscribing(false);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Microphone access denied:", err);
+      toast.error("Microphone access denied. Please check permissions.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,28 +221,56 @@ const ChatInput = React.memo(({
   return (
     <div className="p-4 bg-card border-t border-border">
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-        <div className="relative flex items-center bg-accent border border-border focus-within:border-primary/50 focus-within:bg-card rounded-xl transition-all shadow-sm overflow-hidden">
-            <button
+        <div className={`relative flex items-center bg-accent border border-border focus-within:border-primary/50 focus-within:bg-card rounded-xl transition-all shadow-sm overflow-hidden ${isRecording ? 'ring-2 ring-red-500/50 border-red-500/50' : ''}`}>
+            {isRecording ? (
+              <button
                 type="button"
-                onClick={onClear}
-                disabled={!hasMessages || isLoading}
-                className="pl-3 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-30"
-                title="Clear Chat"
-            >
-                <RefreshCcw className="h-3.5 w-3.5" />
-            </button>
+                onClick={stopRecording}
+                className="pl-3 pr-2 flex items-center gap-2 text-red-500 animate-pulse hover:text-red-600 transition-colors"
+                title="Stop Recording"
+              >
+                <StopCircle className="h-5 w-5 fill-current" />
+                <span className="text-xs font-bold uppercase tracking-wider whitespace-nowrap hidden sm:block">Recording...</span>
+              </button>
+            ) : (
+              <div className="flex items-center pl-1">
+                <button
+                  type="button"
+                  onClick={onClear}
+                  disabled={!hasMessages || isLoading}
+                  className="p-2 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-30"
+                  title="Clear Chat"
+                >
+                  <RefreshCcw className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={startRecording}
+                  disabled={isLoading || isTranscribing}
+                  className="p-2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-30"
+                  title="Speak to Assistant"
+                >
+                  <Mic className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            
             <input 
                 type="text" 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                disabled={isLoading}
-                placeholder={isLoading ? "Assistant is responding..." : "Ask a question..."}
+                disabled={isLoading || isTranscribing}
+                placeholder={
+                  isRecording ? "Listening..." : 
+                  isTranscribing ? "Transcribing speech..." : 
+                  isLoading ? "Assistant is responding..." : "Ask a question..."
+                }
                 className="w-full bg-transparent px-3 py-3 text-sm font-medium transition-all outline-none disabled:opacity-60 text-foreground"
             />
             <div className="pr-1.5">
                 <button 
                     type="submit"
-                    disabled={!input?.trim() && !isLoading}
+                    disabled={(!input?.trim() && !isLoading) || isTranscribing}
                     className={`${isLoading ? 'bg-red-500 text-white' : 'bg-primary text-primary-foreground'} p-2 rounded-lg hover:opacity-90 transition-all shadow-sm active:scale-90 flex items-center justify-center`}
                     title={isLoading ? "Stop generating" : "Send message"}
                 >
