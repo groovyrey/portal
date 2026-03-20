@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
 import { getOfferedSubjects } from '@/lib/data-service';
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const subjectCode = decodeURIComponent(params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const subjectCode = decodeURIComponent(id);
   const subjects = await getOfferedSubjects();
   const subject = subjects.find(s => s.code === subjectCode);
   
