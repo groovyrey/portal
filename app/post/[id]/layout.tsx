@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   try {
+    const { id } = await params;
     // We can't easily import a full DB service for posts here without knowing where it is,
     // but we can use the same API the client uses, or just fetch from Firestore directly.
     // For now, let's use a generic title as the post content is dynamic.
