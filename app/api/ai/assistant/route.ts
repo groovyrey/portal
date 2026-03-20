@@ -1,11 +1,13 @@
 import { NextRequest } from 'next/server';
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { ChatOpenAI } from "@langchain/openai";
 import { Sandbox } from '@vercel/sandbox';
 import { 
   ChatPromptTemplate, 
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
-import { AIMessage, HumanMessage, SystemMessage, BaseMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, SystemMessage, BaseMessage, ToolMessage, AIMessageChunk } from "@langchain/core/messages";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
 import * as cheerio from 'cheerio';
 
 import { db } from '@/lib/db';
@@ -21,11 +23,7 @@ import { generateVisualization } from '@/lib/ai-service';
 import { query } from '@/lib/turso';
 import { 
   SCHOOL_INFO, 
-  ACADEMIC_PROGRAMS,
-  BUILDING_CODES, 
   GRADING_SYSTEM, 
-  COMMON_PROCEDURES, 
-  IMPORTANT_OFFICES 
 } from '@/lib/assistant-knowledge';
 
 export const maxDuration = 300;
@@ -68,26 +66,13 @@ async function performWebSearch(query: string) {
   } catch (e) { return "Web search timed out."; }
 }
 
-async function performWebFetch(url: string) {
-  try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
-    if (!response.ok) return "Failed to fetch URL.";
-    const html = await response.text();
-    const $ = cheerio.load(html);
-    $('script, style, nav, footer, header').remove();
-    return `### Content from: ${$('title').text()}\n\n${$.text().replace(/\s+/g, ' ').substring(0, 3000)}`;
-  } catch (e) { return "Fetch error."; }
-}
-
 async function performMathExecution(code: string) {
   let sandbox;
   try {
-    // Explicitly set Vercel metadata for Sandbox initialization
     if (!process.env.VERCEL_PROJECT_ID) process.env.VERCEL_PROJECT_ID = 'prj_NihkVuIjpWkHupQ1Z1zCd6wJunfR';
     if (!process.env.VERCEL_TEAM_ID) process.env.VERCEL_TEAM_ID = 'team_uHDJgys0cb2M6SdvUZ0rjZ9Y';
 
-    // Increased timeout to 300s to account for system package and library installation
-    sandbox = await Sandbox.create({ runtime: 'python3.13', timeout: 300000 });
+    sandbox = await Sandbox.create({ runtime: 'python3.13', timeout: 180000 }); // 3 min
     
     const libs = [];
     if (code.includes('sympy')) libs.push('sympy');
@@ -101,7 +86,6 @@ async function performMathExecution(code: string) {
     if (code.includes('networkx')) libs.push('networkx');
     if (code.includes('matplotlib')) {
         libs.push('matplotlib');
-        // Inject headless backend for matplotlib
         if (!code.includes('matplotlib.use')) {
             code = "import matplotlib\nmatplotlib.use('Agg')\n" + code;
         }
@@ -112,15 +96,7 @@ async function performMathExecution(code: string) {
     await sandbox.writeFiles(files);
 
     if (libs.length > 0) {
-      // 1. Install system dependencies via dnf (as recommended by Vercel KB)
-      // These are often needed for robust numpy/scipy/matplotlib installation
-      await sandbox.runCommand({ 
-        cmd: 'dnf', 
-        args: ['install', '-y', 'gcc', 'python3-devel', 'blas-devel', 'lapack-devel', 'freetype-devel', 'libpng-devel'], 
-        sudo: true 
-      });
-
-      // 2. Upgrade pip and install libraries (as in install_math.sh)
+      // Skip dnf install to save time; use --only-binary if needed or assume environment has basics
       await sandbox.runCommand({ 
         cmd: 'pip', 
         args: ['install', '--upgrade', 'pip', '--quiet'], 
@@ -139,7 +115,7 @@ async function performMathExecution(code: string) {
     const errorOutput = await execution.stderr();
     
     const result = (output + (errorOutput ? `\nERRORS:\n${errorOutput}` : '')).trim();
-    return result || "Execution finished with no output. Ensure you use print() to see results.";
+    return result || "Execution finished with no output. Use print() to see results.";
   } catch (e: any) { 
     console.error("Sandbox execution error:", e);
     return `Math engine error: ${e.message}`; 
@@ -147,52 +123,6 @@ async function performMathExecution(code: string) {
   finally { if (sandbox) await sandbox.stop().catch(() => {}); }
 }
 
-interface Message {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
-
-function repairJson(str: string): string {
-  try {
-    let s = str.trim();
-    JSON.parse(s);
-    return s;
-  } catch (e) {
-    let s = str.trim();
-    
-    // Handle truncation: Auto-close braces and brackets
-    let openBraces = 0;
-    let openBrackets = 0;
-    let inString = false;
-    
-    for (let i = 0; i < s.length; i++) {
-      if (s[i] === '"' && s[i-1] !== '\\') inString = !inString;
-      if (!inString) {
-        if (s[i] === '{') openBraces++;
-        else if (s[i] === '}') openBraces--;
-        else if (s[i] === '[') openBrackets++;
-        else if (s[i] === ']') openBrackets--;
-      }
-    }
-    
-    if (inString) s += '"';
-    while (openBrackets > 0) { s += ']'; openBrackets--; }
-    while (openBraces > 0) { s += '}'; openBraces--; }
-
-    // Attempt common fixes:
-    s = s.replace(/: \s*"([^"]*)"/g, (match, p1) => {
-        return ': "' + p1.replace(/\n/g, '\\n').replace(/\r/g, '\\r') + '"';
-    });
-    s = s.replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3');
-
-    try {
-      JSON.parse(s);
-      return s;
-    } catch (e2) {
-      return str; // Return original if fix fails
-    }
-  }
-}
 export async function POST(req: NextRequest) {
   try {
     const { messages, timezone = 'Asia/Manila' }: { messages: Message[], timezone?: string } = await req.json();
@@ -218,154 +148,132 @@ export async function POST(req: NextRequest) {
     const dateStr = now.toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: timezone });
     const timeStr = now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: timezone });
 
+    // Define Tools with Zod Schemas
+    const tools = [
+      tool(async ({ code }) => await performMathExecution(code), {
+        name: "execute_math",
+        description: "Execute Python for advanced math.",
+        schema: z.object({ code: z.string().describe("The Python code to execute") })
+      }),
+      tool(async () => JSON.stringify(await getStudentGrades(userId)), {
+        name: "get_grades",
+        description: "Get student's grades and GPA.",
+        schema: z.object({})
+      }),
+      tool(async () => JSON.stringify(await getStudentFinancials(userId)), {
+        name: "get_financials",
+        description: "Get student's financial balance.",
+        schema: z.object({})
+      }),
+      tool(async () => {
+        const schedule = await getStudentSchedule(userId);
+        const dayAbbr = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][new Date().getDay()];
+        return JSON.stringify(schedule.filter((s: any) => s.time?.toUpperCase().includes(dayAbbr)));
+      }, {
+        name: "get_today_schedule",
+        description: "Get schedule for today.",
+        schema: z.object({})
+      }),
+      tool(async ({ day }) => {
+        const schedule = await getStudentSchedule(userId);
+        const dayMap: Record<string, string> = {
+          'monday': 'MON', 'tuesday': 'TUE', 'wednesday': 'WED', 'thursday': 'THU', 
+          'friday': 'FRI', 'saturday': 'SAT', 'sunday': 'SUN'
+        };
+        const dayAbbr = dayMap[day.toLowerCase()] || day.substring(0, 3).toUpperCase();
+        return JSON.stringify(schedule.filter((s: any) => s.time?.toUpperCase().includes(dayAbbr)));
+      }, {
+        name: "get_day_schedule",
+        description: "Get schedule for a specific day.",
+        schema: z.object({ day: z.string().describe("Day of the week (e.g., 'Monday', 'MON')") })
+      }),
+      tool(async ({ query }) => await performWebSearch(query), {
+        name: "web_search",
+        description: "Search the web for info.",
+        schema: z.object({ query: z.string() })
+      }),
+      tool(async ({ description, title }) => {
+         const fullData = await getStudentGrades(userId);
+         return await generateVisualization(description, JSON.stringify(fullData));
+      }, {
+        name: "render_html",
+        description: "Generate interactive, animated, and responsive visual components, simulations, and educational demos.",
+        schema: z.object({ 
+          description: z.string().describe("Description of the visualization"),
+          title: z.string().describe("Title of the component")
+        })
+      })
+    ];
+
     const systemPrompt = `
-You are the "Portal Assistant" (code-named Assistant), a specialized academic advisor and computational assistant for ${SCHOOL_INFO.name}.
+You are the "Portal Assistant", a sophisticated academic advisor and computational engine for ${SCHOOL_INFO.name}.
 
-STRICT OPERATIONAL RULES:
-1. **NO PROACTIVE SUMMARIES:** Never start a conversation by summarizing the student's records unless specifically asked. "Proactive" means starting a conversation with data; if a student ASKS (even via a menu choice), it is NOT proactive—it is a REQUEST.
-2. **USE TOOLS FOR RECORDS:** You DO NOT have the student's records in your immediate context. You MUST call the appropriate tool (e.g., \`get_grades\`, \`get_financials\`, \`get_day_schedule\`) to answer record-related questions.
-${assistantSettings.contextAwareness ? "" : "3. **CONTEXT DISABLED:** The student has disabled context awareness. You CANNOT access their specific grades, financials, or schedule. If they ask about these, politely explain that they need to enable 'Academic Context Awareness' in Assistant Settings."}
-4. **ZERO HALLUCINATION:** Never guess or estimate academic data.
-5. **LATEX:** ALWAYS use LaTeX for EVERY mathematical derivation.
-6. **HIGHLIGHT KEYWORDS:** You MUST **bold** key terms and concepts.
-7. **STRUCTURED NARRATIVE:** When presenting data, summaries from \`web_search\`, or report findings, use **well-structured paragraphs** rather than just bulleted lists. This creates a more professional, conversational flow.
-8. **PERSONALIZED:** Refer to the student by first name and as an **"LCCian"**.
-9. **ACTION ON COMMAND:** If a student gives a command or selects a portal suggestion (e.g., "Summarize this...", "Resources for...", "Show my..."), EXECUTE the tool IMMEDIATELY. DO NOT waste time with introductory greetings.
-10. **CONFIRMATION FOR SUGGESTIONS:** ONLY ask for confirmation if YOU are the one suggesting an optional action that the student didn't explicitly ask for.
-11. **NO RESPONSE ENVELOPING:** NEVER wrap your entire response inside a Markdown code block (\`\`\`). Markdown blocks are ONLY for specific code snippets, tables, or technical data within your normal conversational response.
+### CORE DIRECTIVES
+1.  **Professionalism:** Maintain a formal, academic, and supportive tone. Be concise and precise. Avoid casual slang or excessive emojis.
+2.  **Data-Driven:** Base all answers strictly on the data provided by tools. **Do not hallucinate** grades, schedules, or financial details. If data is missing, state it clearly.
+3.  **Tool Usage:** You must use the provided tools to fetch student data (grades, schedule, financials) or perform calculations.
+4.  **Math & Science:**
+    *   ALWAYS use **LaTeX** for mathematical expressions (e.g., $E = mc^2$).
+    *   Show step-by-step derivations for complex problems.
+    *   Use the \`execute_math\` tool for any non-trivial calculation.
+5.  **Visualization & Simulation:**
+    *   **Proactively use the \`render_html\` tool** to create interactive demonstrations, 2D physics simulations, or dynamic charts for any concept that benefits from visual explanation.
+    *   Do not just describe a phenomenon; **show it** with code.
+    *   Prioritize this for science (physics, chemistry), math (graphs, geometry), and financial data visualization.
+6.  **Personalization:**
+    *   Refer to the student by their **first name** (e.g., "Hello Juan").
+    *   Refer to them as an **"LCCian"** where appropriate to build community spirit.
+7.  **Formatting:**
+    *   Use **bold** for key concepts, dates, and figures.
+    *   Use bullet points for lists to improve readability.
+    *   Keep paragraphs short and focused.
 
----
-💡 COMPUTATIONAL THINKING:
-- Solve high-level academic problems by writing comprehensive Python logic via \`execute_math\`.
-- **VISUAL SIMULATIONS & DEMOS:** Use \`render_html\` to create immersive interactive visual simulations and functional demos. **Formulate a detailed design prompt** for the visualization agent, specifying the layout, required components, and how the simulation or demo should behave. **CRITICAL:** NEVER output raw HTML code in your text response. ONLY use the \`render_html\` tool. Do NOT write HTML code in the description parameter. **INTERNAL ONLY:** Do NOT show your technical design specification or the tool's description to the student; only provide a brief, professional introduction to the visualization.
-- **SMART REPORTS:** Use \`render_html\` to generate rich, multi-column reports with Tailwind. Provide a **technical specification** of the report structure. Keep this specification hidden from the user.
-- **CRITICAL JSON RULE:** Every tool call MUST be a VALID, PARSABLE JSON object. Do NOT use Python syntax (like list comprehensions), placeholders, or unquoted variables within the JSON. All data must be literal.
-- **ALGORITHMS & NETWORKS:** Use \`networkx\` for Graph Theory, shortest paths (Dijkstra), or Tree structures (BST, Heaps) for IT/CS problems.
-- **PREDICTIVE MODELING:** Use \`scikit-learn\` for grade forecasting, Linear Regression, or K-Means clustering of academic trends.
-- **CRYPTOGRAPHY:** Simulate RSA encryption logic, modular exponentiation, and prime number generation for Cybersecurity concepts.
-- **ECONOMIC MODELING:** Use \`statsmodels\` and \`pandas\` for Time-Series forecasting, Gini Coefficients, or Monte Carlo business risk simulations.
-- **DISCRETE MATH:** Use \`sympy\` to generate Truth Tables for logic expressions (p ∧ q → r) and verify Set Theory proofs.
-- Always show the LaTeX formula before and after calculation.
-- Provide the full Python script in a Markdown code block.
-- **CRITICAL:** Use \`print()\` in your Python scripts to output the final results.
+### OPERATIONAL CONSTRAINTS
+*   **No Proactive Summaries:** Do not list all student data at the start of a conversation. Wait for a specific question.
+*   **Privacy:** Only discuss the logged-in student's data.
+*   **Identity:** You are an AI assistant for LCC, not a human.
 
----
-🛠️ TOOL CALLING CONVENTION (MANDATORY)
-To call a tool, you MUST append \`|||\` followed by a complete JSON object at the VERY END of your response.
-**REQUIRED FORMAT:** \`||| {"name": "TOOL_NAME", "parameters": {...}}\`
-**SCHEDULE FORMAT:** For \`get_day_schedule\`, you MUST use three-letter uppercase day codes: **MON, TUE, WED, THU, FRI, SAT, SUN**.
-**CRITICAL:** DO NOT wrap the tool call in markdown code blocks. Always place the tool call OUTSIDE and AFTER any markdown text.
-
-Available Tools:
-\`\`\`json
-[
-  {
-    "name": "execute_math",
-    "description": "Execute Python for advanced math.",
-    "parameters": { "type": "object", "properties": { "code": { "type": "string" } }, "required": ["code"] }
-  },
-  {
-    "name": "get_grades",
-    "description": "Get student's grades, GPA, and subject units.",
-    "parameters": { "type": "object", "properties": {} }
-  },
-  {
-    "name": "get_financials",
-    "description": "Get student's financial balance.",
-    "parameters": { "type": "object", "properties": {} }
-  },
-  {
-    "name": "get_today_schedule",
-    "description": "Get student's schedule for today.",
-    "parameters": { "type": "object", "properties": {} }
-  },
-  {
-    "name": "get_day_schedule",
-    "description": "Get schedule for a specific day. MANDATORY: Use three-letter codes (e.g., MON, TUE, WED, THU, FRI, SAT, SUN).",
-    "parameters": { "type": "object", "properties": { "day": { "type": "string", "description": "Three-letter day code (e.g., MON, FRI)" } }, "required": ["day"] }
-  },
-  {
-    "name": "get_weekly_schedule",
-    "description": "Get full weekly schedule.",
-    "parameters": { "type": "object", "properties": {} }
-  },
-  {
-    "name": "web_search",
-    "description": "Search the web for real-time info.",
-    "parameters": { "type": "object", "properties": { "query": { "type": "string" } }, "required": ["query"] }
-  },
-  {
-    "name": "youtube_search",
-    "description": "Search YouTube for videos.",
-    "parameters": { "type": "object", "properties": { "query": { "type": "string" } }, "required": ["query"] }
-  },
-  {
-    "name": "web_fetch",
-    "description": "Summarize a URL. MANDATORY: The URL must include a protocol (e.g., https://).",
-    "parameters": { "type": "object", "properties": { "url": { "type": "string", "description": "Full URL including protocol (https://)" } }, "required": ["url"] }
-  },
-  {
-    "name": "render_html",
-    "description": "Generate a premium, interactive visual component, simulation, or functional demo. Use this for complex data, 3D simulations, or beautiful dashboards. Provide a COMPREHENSIVE DESIGN PROMPT for the specialized agent in the description, detailing the UI structure, behavior, and data visualization strategy. CRITICAL: Do NOT write any HTML in the description parameter.",
-    "parameters": { 
-      "type": "object", 
-      "properties": { 
-        "description": { "type": "string", "description": "A technical design specification for the visualization agent. Describe the components, layout, behavior, and how to represent the data points." },
-        "title": { "type": "string", "description": "Title for the component." },
-        "fullScreen": { "type": "boolean", "description": "Whether to use a larger display area." }
-      }, 
-      "required": ["description", "title"] 
-    }
-  },
-  {
-    "name": "ask_user",
-    "description": "Ask student a question.",
-    "parameters": { "type": "object", "properties": { "question": { "type": "string" }, "placeholder": { "type": "string" } }, "required": ["question"] }
-  },
-  {
-    "name": "ask_user_choice",
-    "description": "Ask student to choose.",
-    "parameters": { "type": "object", "properties": { "question": { "type": "string" }, "options": { "type": "array", "items": { "type": "string" } } }, "required": ["question", "options"] }
-  }
-]
-\`\`\`
-
-Knowledge: Vision: ${SCHOOL_INFO.vision}, Mission: ${SCHOOL_INFO.mission}, Programs: ${JSON.stringify(ACADEMIC_PROGRAMS)}, Building Codes: ${JSON.stringify(BUILDING_CODES)}, Grading: ${GRADING_SYSTEM}, Procedures: ${COMMON_PROCEDURES}, Offices: ${JSON.stringify(IMPORTANT_OFFICES)}.
+Knowledge Base: ${SCHOOL_INFO.name}, Vision: ${SCHOOL_INFO.vision}, Grading System: ${GRADING_SYSTEM}.
 `.trim();
 
     const studentContext = `
-STUDENT REFERENCE DATA:
+STUDENT DATA:
 - Name: ${student.name}
 - Course: ${student.course}
-- School: ${SCHOOL_INFO.name}
-- Date/Time: ${dateStr}, ${timeStr}
+- Date: ${dateStr}, ${timeStr}
 `.trim();
 
-    const model = new ChatGoogleGenerativeAI({
-      model: "gemma-3-27b-it",
-      apiKey: process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
-      maxOutputTokens: 4096,
+    const model = new ChatOpenAI({
+      model: "@cf/moonshotai/kimi-k2.5",
+      apiKey: process.env.ASSISTANT_KEY || '',
+      configuration: {
+        baseURL: `https://api.cloudflare.com/client/v4/accounts/${process.env.ASSISTANT_ID}/ai/v1`,
+      },
+      maxTokens: 4096,
       streaming: true,
-    });
+      temperature: 0.3, 
+    }).bindTools(tools);
 
     const encoder = new TextEncoder();
     const transformStream = new TransformStream();
     const writer = transformStream.writable.getWriter();
 
     const history: BaseMessage[] = [];
-    
-    // Respect saveHistory setting
-    const historicalMessages = assistantSettings.saveHistory ? messages.slice(0, -1) : [];
+    // Load ALL messages into history, including the latest one.
+    // If not saving history, at least load the current user message.
+    const messagesToLoad = assistantSettings.saveHistory ? messages : [messages[messages.length - 1]];
 
-    historicalMessages.forEach((m: any) => {
+    messagesToLoad.forEach((m: any) => {
       if (m.role === 'assistant') history.push(new AIMessage(m.content));
       else history.push(new HumanMessage(m.content));
     });
 
-    const input = messages[messages.length - 1].content;
+    const promptTemplate = ChatPromptTemplate.fromMessages([
+        ["system", "{system_prompt}\n\n{student_context}"],
+        new MessagesPlaceholder("history"),
+    ]);
 
     (async () => {
-      let currentInput = input;
       let turn = 0;
       const maxTurns = 5;
 
@@ -373,252 +281,148 @@ STUDENT REFERENCE DATA:
         while (turn < maxTurns) {
           turn++;
           
-          // NOTE: The model does not support developer instructions (system role), so we inject them as user messages.
-          const prompt = ChatPromptTemplate.fromMessages([
-            ["human", `INSTRUCTIONS & BACKGROUND:\n${systemPrompt.replace(/{/g, '{{').replace(/}/g, '}}')}\n\nSTUDENT DATA:\n${studentContext.replace(/{/g, '{{').replace(/}/g, '}}')}\n\nDo you understand these instructions and your persona?`],
-            ["ai", `Understood. I am the Portal Assistant for ${SCHOOL_INFO.name}. I will follow all strict operational rules, use LaTeX for math, and execute tools immediately for student commands without introductory greetings.`],
-            new MessagesPlaceholder("history"),
-            ["human", "{input}"],
-          ]);
+          const chain = promptTemplate.pipe(model);
+          const stream = await chain.stream({
+              history,
+              system_prompt: systemPrompt,
+              student_context: studentContext,
+          });
 
-          const responseStream = await model.stream(
-            await prompt.formatMessages({ history, input: currentInput })
-          );
-
-          let fullContent = '';
-          let streamedLength = 0;
-          let toolDetected = false;
-          let toolMarkerPos = -1;
-
-          try {
-            for await (const chunk of responseStream) {
-              const content = chunk.content as string || '';
-              fullContent += content;
-
-              if (!toolDetected) {
-                const markerIndex = fullContent.indexOf('|||');
-                const jsonStart = fullContent.indexOf('```json');
-                
-                if (markerIndex !== -1) {
-                  toolDetected = true;
-                  toolMarkerPos = markerIndex;
-                  let textBefore = fullContent.substring(streamedLength, markerIndex);
-                  
-                  // Defensive: strip trailing code block markers that often precede a tool call
-                  textBefore = textBefore.replace(/```json\s*$/, '').replace(/```\s*$/, '');
-                  
-                  if (textBefore.trim()) await writer.write(encoder.encode(textBefore));
-                  streamedLength = markerIndex;
-                } else if (jsonStart !== -1) {
-                  // Only treat ```json as a tool call if there is no ||| marker later in the stream
-                  // Wait for potential ||| if not found yet
-                  const safeLength = fullContent.length - 20; 
-                  if (safeLength > streamedLength) {
-                    // Check if ||| is still possible
-                    if (fullContent.substring(jsonStart).includes('|||')) {
-                        // Wait for ||| instead
-                    } else {
-                        toolDetected = true;
-                        toolMarkerPos = jsonStart;
-                        let textBefore = fullContent.substring(streamedLength, jsonStart);
-                        if (textBefore.trim()) await writer.write(encoder.encode(textBefore));
-                        streamedLength = jsonStart;
-                    }
-                  }
-                } else {
-                  const safeLength = fullContent.length - 15;
-                  if (safeLength > streamedLength) {
-                    await writer.write(encoder.encode(fullContent.substring(streamedLength, safeLength)));
-                    streamedLength = safeLength;
-                  }
-                }
-              }
-            }
-          } catch (streamErr: any) {
-            console.error("[Assistant API] Chunk processing error:", streamErr);
-            if (!fullContent) throw streamErr; 
-          }
-
-          if (!toolDetected) {
-            const remaining = fullContent.substring(streamedLength);
-            if (remaining) await writer.write(encoder.encode(remaining));
-            
-            // Interaction complete: Sync history for future POST requests
-            history.push(new HumanMessage(currentInput));
-            history.push(new AIMessage(fullContent));
-            break; 
-          }
-
-          // Handle Tool Call
-          const toolJsonStr = fullContent.substring(toolMarkerPos);
+          let aggregatedChunk: AIMessageChunk | null = null;
+          let fullContent = "";
+          let isBuffering = false;
           
-          // Sync history with the current interaction before tool result
-          history.push(new HumanMessage(currentInput));
-          history.push(new AIMessage(fullContent));
-
-          let toolName = 'unknown';
-          try {
-            let sanitized = toolJsonStr.trim().replace(/^\|\|\|/, '').replace(/^```json\s*/, '').replace(/```$/, '').trim();
-            
-            let toolCall;
-            
-            // Strategy 1: Attempt to parse as a complete JSON structure (Object or Array)
-            try {
-                const parsed = JSON.parse(repairJson(sanitized));
-                if (Array.isArray(parsed) && parsed.length > 0) toolCall = parsed[0];
-                else if (!Array.isArray(parsed)) toolCall = parsed;
-            } catch (e) {
-                // Strategy 2: Extract the first balanced JSON object
-                const startBrace = sanitized.indexOf('{');
-                if (startBrace !== -1) {
-                    let balance = 0;
-                    let endBrace = -1;
-                    for (let i = startBrace; i < sanitized.length; i++) {
-                        if (sanitized[i] === '{') balance++;
-                        else if (sanitized[i] === '}') {
-                            balance--;
-                            if (balance === 0) {
-                                endBrace = i;
-                                break;
-                            }
-                        }
-                    }
-                    if (endBrace !== -1) {
-                        try {
-                            toolCall = JSON.parse(repairJson(sanitized.substring(startBrace, endBrace + 1)));
-                        } catch (e2) { /* Continue to fallback */ }
-                    }
-                }
-            }
-
-            // Strategy 3: Fallback to original "outermost braces" logic if valid JSON still not found
-            if (!toolCall) {
-                const startBrace = sanitized.indexOf('{');
-                const endBrace = sanitized.lastIndexOf('}');
-                if (startBrace !== -1 && endBrace !== -1) {
-                    try {
-                        toolCall = JSON.parse(repairJson(sanitized.substring(startBrace, endBrace + 1)));
-                    } catch (e3) { 
-                         // Final attempt: sometimes the model forgets the closing brace
-                         try {
-                            toolCall = JSON.parse(repairJson(sanitized.substring(startBrace) + '}'));
-                         } catch (e4) { /* Give up */ }
-                    }
-                }
-            }
-            
-            if (!toolCall) throw new Error("Could not parse tool call from response");
-
-            toolName = toolCall.name || toolCall.tool_name || 'unknown';
-            
-            // Fallback inference for malformed but readable tool calls
-            if (toolName === 'unknown') {
-                if (toolCall.day) toolName = 'get_day_schedule';
-                else if (toolCall.code) toolName = 'execute_math';
-                else if (toolCall.query) {
-                    toolName = (fullContent.toLowerCase().includes('video') || fullContent.toLowerCase().includes('youtube')) 
-                        ? 'youtube_search' 
-                        : 'web_search';
-                } else if (toolCall.url) toolName = 'web_fetch';
-                else if (toolCall.question) toolName = toolCall.options ? 'ask_user_choice' : 'ask_user';
-            }
-
-            if (toolName === 'unknown') throw new Error("Missing tool name");
-            
-            // Respect showThinkingProcess setting
-            if (assistantSettings.showThinkingProcess) {
-                await writer.write(encoder.encode(`\nSTATUS:${toolName.includes('search') ? 'SEARCHING' : toolName.includes('fetch') ? 'FETCHING' : toolName.includes('math') ? 'COMPUTING' : 'PROCESSING'}\n`));
-                await writer.write(encoder.encode(`\nTOOL_USED:${toolName}\n`));
-            }
-            
-            let result = '';
-            let customInstruction = '';
-
-            const isAcademicTool = ['get_grades', 'get_financials', 'get_today_schedule', 'get_weekly_schedule', 'get_day_schedule'].includes(toolName);
-            
-            if (isAcademicTool && !assistantSettings.contextAwareness) {
-                result = "ERROR: Academic context awareness is disabled by the student. You cannot access this data.";
-            } else if (toolName === 'get_grades') result = JSON.stringify(await getStudentGrades(userId), null, 2);
-            else if (toolName === 'get_financials') result = JSON.stringify(await getStudentFinancials(userId), null, 2);
-            else if (toolName === 'get_today_schedule' || toolName === 'get_weekly_schedule' || toolName === 'get_day_schedule') {
-              const schedule = await getStudentSchedule(userId);
-              if (toolName === 'get_today_schedule') {
-                const dayAbbr = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][new Date().getDay()];
-                result = JSON.stringify(schedule.filter((s: any) => s.time?.toUpperCase().includes(dayAbbr)), null, 2);
-              } else if (toolName === 'get_day_schedule') {
-                const rawDay = toolCall.day || toolCall.parameters?.day || '';
-                const dayMap: Record<string, string> = {
-                  'monday': 'MON', 'tuesday': 'TUE', 'wednesday': 'WED', 'thursday': 'THU', 
-                  'friday': 'FRI', 'saturday': 'SAT', 'sunday': 'SUN'
-                };
-                const dayAbbr = dayMap[rawDay.toLowerCase()] || rawDay.substring(0, 3).toUpperCase();
-                result = JSON.stringify(schedule.filter((s: any) => s.time?.toUpperCase().includes(dayAbbr)), null, 2);
-              } else result = JSON.stringify(schedule, null, 2);
-            }
-            else if (toolName === 'execute_math') {
-                result = await performMathExecution(toolCall.code || toolCall.parameters?.code);
-                customInstruction = "\n\nINSTRUCTION: Provide the final answer based on this output. Show your reasoning, the math formula in LaTeX, and the Python code used. You MUST output the Python code in a Markdown block for transparency.";
-            }
-            else if (toolName === 'web_search') result = await performWebSearch(toolCall.query || toolCall.parameters?.query);
-            else if (toolName === 'web_fetch') result = await performWebFetch(toolCall.url || toolCall.parameters?.url);
-            else if (toolName === 'youtube_search') result = await performYoutubeSearch(toolCall.query || toolCall.parameters?.query);
-            else if (['ask_user', 'ask_user_choice'].includes(toolName)) {
-              const normalized = {
-                name: toolName,
-                parameters: {
-                  question: toolCall.question || toolCall.parameters?.question,
-                  placeholder: toolCall.placeholder || toolCall.parameters?.placeholder,
-                  options: toolCall.options || toolCall.parameters?.options
-                }
-              };
-              await writer.write(encoder.encode(`\nTOOL_CALL:${JSON.stringify(normalized)}\n`));
-              break;
-            } else if (toolName === 'render_html') {
-              const desc = toolCall.description || toolCall.parameters?.description;
-              const title = toolCall.title || toolCall.parameters?.title;
-              const fullScreen = toolCall.fullScreen || toolCall.parameters?.fullScreen;
-              
-              // Call Specialized Agent to generate the HTML
-              if (assistantSettings.showThinkingProcess) {
-                await writer.write(encoder.encode(`\nSTATUS:DESIGNING\n`));
-              }
-
-              const html = await generateVisualization(desc, JSON.stringify(student));
-              
-              if (!html) {
-                console.error("[Assistant API] Specialized agent returned empty HTML for:", desc);
-                result = "The visualization specialized agent failed to produce output. Please try rephrasing.";
-              } else {
-                console.log(`[Assistant API] Specialized agent generated HTML (length: ${html.length} chars). Preview:`, html.substring(0, 200));
-                const normalized = {
-                  name: toolName,
-                  parameters: { html, title, fullScreen }
-                };
-                await writer.write(encoder.encode(`\nTOOL_CALL:${JSON.stringify(normalized)}\n`));
-                break;
-              }
+          for await (const chunk of stream) {
+            if (!aggregatedChunk) {
+                aggregatedChunk = chunk as AIMessageChunk;
             } else {
-              result = `Error: Unknown tool "${toolName}".`;
+                aggregatedChunk = aggregatedChunk.concat(chunk) as AIMessageChunk;
             }
 
-            history.push(new HumanMessage(`TOOL_RESULT (${toolName}): ${result || "No data returned."}`));
+            const content = chunk.content;
+            let textChunk = "";
             
-            currentInput = `Based on the TOOL_RESULT above, provide the final answer to the student's original request: "${input}". 
-STRICT: Do NOT repeat your previous preamble or the tool call. Go straight to the final response.${customInstruction}`;
-          } catch (e: any) {
-            console.error(`[Assistant API] Self-Correction triggered (${toolName || 'parsing_failed'}):`, e.message);
+            if (typeof content === 'string') {
+                textChunk = content;
+            } else if (Array.isArray(content)) {
+                 for (const part of content) {
+                     if (part.type === 'text' && typeof part.text === 'string') {
+                         textChunk += part.text;
+                     }
+                 }
+            }
             
-            // Feed the error back to the model for self-correction
-            history.push(new HumanMessage(`ERROR: Your previous tool call failed with message: "${e.message}". 
-${toolJsonStr ? `Partially generated JSON: ${toolJsonStr.substring(0, 500)}...` : ""}
-Please FIX your output. Ensure the JSON is valid, complete, and follows all structural rules. If you hit the token limit, provide a more concise version.`));
-            
-            currentInput = "Please provide the CORRECTED tool call now.";
-            // The loop continues, giving the model another 'turn' to fix itself
+            if (textChunk) {
+                fullContent += textChunk;
+                
+                // Start buffering if the very first character (trimmed) is '{'
+                if (fullContent.trim().length > 0 && fullContent.trim().startsWith('{')) {
+                    isBuffering = true;
+                }
+                
+                // If we are NOT buffering, stream immediately
+                if (!isBuffering) {
+                    await writer.write(encoder.encode(textChunk));
+                }
+            }
+          }
+          
+          let collectedToolCalls = aggregatedChunk?.tool_calls || [];
+          const collectedContent = aggregatedChunk?.content || "";
+
+          // Fallback: Check if the buffered content is a raw JSON tool call
+          if (collectedToolCalls.length === 0 && isBuffering) {
+              try {
+                  // Attempt to parse the full content as JSON
+                  // We use a regex to extract the JSON object in case there's extra whitespace/text
+                  const jsonMatch = fullContent.match(/\{[\s\S]*\}/);
+                  if (jsonMatch) {
+                      const parsed = JSON.parse(jsonMatch[0]);
+                      if (parsed.name) {
+                          collectedToolCalls = [{
+                              name: parsed.name,
+                              args: parsed.arguments || parsed.parameters || parsed.args || {},
+                              id: `call_${Date.now()}`,
+                              type: 'tool_call'
+                          }];
+                          // Valid tool call found in buffer. Do NOT flush to user.
+                      } else {
+                          // Valid JSON but not a tool call? Flush it.
+                          await writer.write(encoder.encode(fullContent));
+                      }
+                  } else {
+                      // Not valid JSON. Flush it.
+                      await writer.write(encoder.encode(fullContent));
+                  }
+              } catch (e) {
+                  // Parsing failed. Flush the buffer.
+                  await writer.write(encoder.encode(fullContent));
+              }
+          } else if (isBuffering && collectedToolCalls.length > 0) {
+              // Standard tool calls were detected by the model, but we buffered the text.
+              // The text might be an explanation or the tool call itself.
+              // If it's the tool call JSON, we shouldn't flush it.
+              // If it's "Thinking...", we might want to.
+              // For now, if tool calls exist, we usually suppress the text if it looks like JSON.
+               if (!fullContent.trim().startsWith('{')) {
+                   await writer.write(encoder.encode(fullContent));
+               }
+          }
+
+          if (collectedToolCalls.length > 0) {
+            // It was a tool call turn.
+            // 1. Add AIMessage with tool calls to history
+            const aiMsg = new AIMessage({
+                content: collectedContent,
+                tool_calls: collectedToolCalls
+            });
+            history.push(aiMsg);
+
+            // 2. Execute tools
+            // (Thinking process message removed as per request)
+
+            for (const toolCall of collectedToolCalls) {
+                // Notify Client of Tool Usage
+                await writer.write(encoder.encode(`TOOL_USED: ${toolCall.name}\n`));
+
+                const selectedTool = tools.find(t => t.name === toolCall.name);
+                let output = "Error: Tool not found.";
+                if (selectedTool) {
+                    try {
+                        output = await (selectedTool as any).invoke(toolCall.args);
+                        
+                        // Special Handling for Client UI (render_html)
+                        if (toolCall.name === 'render_html') {
+                             const clientPayload = {
+                                 name: 'render_html',
+                                 parameters: {
+                                     html: output,
+                                     title: toolCall.args.title || 'Visualization',
+                                     fullScreen: false
+                                 }
+                             };
+                             await writer.write(encoder.encode(`TOOL_CALL: ${JSON.stringify(clientPayload)}\n`));
+                        }
+
+                    } catch (e: any) {
+                        output = `Tool Execution Error: ${e.message}`;
+                    }
+                }
+                history.push(new ToolMessage({
+                    tool_call_id: toolCall.id!,
+                    content: output,
+                    name: toolCall.name
+                }));
+            }
+            // Loop continues to generate response based on tool outputs
+          } else {
+            // No tool calls, we are done.
+            history.push(new AIMessage(collectedContent));
+            break;
           }
         }
       } catch (err: any) {
-        console.error("[Assistant API] Streaming loop error:", err);
+        console.error("Agent Error:", err);
         await writer.write(encoder.encode(`\n\n[System Error: ${err.message}]`));
       } finally {
         await writer.close();
@@ -632,4 +436,9 @@ Please FIX your output. Ensure the JSON is valid, complete, and follows all stru
     console.error("[Assistant API] Fatal POST error:", error);
     return new Response('Error: ' + error.message, { status: 500 });
   }
+}
+
+interface Message {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
 }

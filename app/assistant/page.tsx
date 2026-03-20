@@ -391,16 +391,68 @@ export default function AssistantPage() {
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
 
   const cleanTextForTTS = (text: string) => {
-    return text
+    let cleaned = text
       .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-      .replace(/`[^`]*`/g, '')       // Remove inline code
       .replace(/!\[[^\]]*\]\([^\)]+\)/g, '') // Remove images
       .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Keep link text, remove URL
-      .replace(/https?:\/\/\S+/g, '') // Remove standalone URLs
-      .replace(/₱/g, ' Pesos ')       // Replace Peso sign with word
-      .replace(/[*#~>|]/g, '')      // Remove markdown special characters
-      .replace(/\s+/g, ' ')          // Normalize whitespace
+      .replace(/https?:\/\/\S+/g, ''); // Remove standalone URLs
+
+    // Handle LaTeX and Math
+    cleaned = cleaned
+      .replace(/\$\$([\s\S]+?)\$\$/g, ' $1 ') // Block math
+      .replace(/\$([\s\S]+?)\$/g, ' $1 ')     // Inline math
+      .replace(/\\\[([\s\S]+?)\\\]/g, ' $1 ') // \[ \] math
+      .replace(/\\\(([\s\S]+?)\\\)/g, ' $1 ') // \( \) math
+      
+      // Common LaTeX command replacements
+      .replace(/\\frac\{(.+?)\}\{(.+?)\}/g, '$1 over $2')
+      .replace(/\\sqrt\{(.+?)\}/g, 'square root of $1')
+      .replace(/\\times/g, ' times ')
+      .replace(/\\div/g, ' divided by ')
+      .replace(/\\pm/g, ' plus or minus ')
+      .replace(/\\cdot/g, ' times ')
+      .replace(/\\approx/g, ' approximately ')
+      .replace(/\\ne/g, ' not equal to ')
+      .replace(/\\le/g, ' less than or equal to ')
+      .replace(/\\ge/g, ' greater than or equal to ')
+      .replace(/\\infty/g, ' infinity ')
+      .replace(/\\pi/g, ' pi ')
+      .replace(/\\sum/g, ' the sum of ')
+      .replace(/\\int/g, ' the integral of ')
+      
+      // Greek letters
+      .replace(/\\alpha/g, ' alpha ')
+      .replace(/\\beta/g, ' beta ')
+      .replace(/\\gamma/g, ' gamma ')
+      .replace(/\\theta/g, ' theta ')
+      .replace(/\\lambda/g, ' lambda ')
+      .replace(/\\mu/g, ' mu ')
+      .replace(/\\sigma/g, ' sigma ')
+      .replace(/\\Delta/g, ' delta ')
+      
+      // Clean up remaining LaTeX commands and braces
+      .replace(/\\text\{(.+?)\}/g, ' $1 ')
+      .replace(/\\([a-zA-Z]+)/g, ' ')
+      .replace(/[\{\}]/g, ' ');
+
+    // Spoken math operators
+    cleaned = cleaned
+      .replace(/ \+ /g, ' plus ')
+      .replace(/ - /g, ' minus ')
+      .replace(/ \* /g, ' times ')
+      .replace(/ \/ /g, ' divided by ')
+      .replace(/ = /g, ' equals ')
+      .replace(/\^(\d+)/g, ' to the power of $1')
+      .replace(/\^\{(.+?)\}/g, ' to the power of $1');
+
+    // Final cleanup
+    cleaned = cleaned
+      .replace(/₱/g, ' Pesos ')
+      .replace(/[*#~>|]/g, '')      // Remove remaining markdown markers
+      .replace(/\s+/g, ' ')
       .trim();
+
+    return cleaned;
   };
 
   const handleSpeak = async (messageId: string, content: string) => {
@@ -994,8 +1046,8 @@ export default function AssistantPage() {
                             )}
 
                             {m.inlineHtml && (
-                              <div className={`${m.content ? 'mt-6' : ''} h-[500px] relative group`}>
-                                <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 flex gap-2">
+                              <div className={`${m.content ? 'mt-6' : ''} h-[500px] relative group border border-border/40 rounded-xl overflow-hidden bg-background/50`}>
+                                <div className="absolute top-4 right-4 z-20 flex gap-2">
                                   <button 
                                     onClick={() => {
                                       setHtmlModalContent(m.inlineHtml!.html);
@@ -1003,16 +1055,12 @@ export default function AssistantPage() {
                                       setHtmlModalFullScreen(!!m.inlineHtml!.fullScreen);
                                       setIsHtmlModalOpen(true);
                                     }}
-                                    className="p-2.5 bg-primary/90 text-primary-foreground hover:bg-primary rounded-xl shadow-xl backdrop-blur-md border border-white/10 active:scale-95 transition-all"
+                                    className="flex items-center gap-2 px-3 py-2 bg-primary/90 text-primary-foreground hover:bg-primary rounded-xl shadow-lg backdrop-blur-md border border-white/10 active:scale-95 transition-all text-[10px] font-black uppercase tracking-wider"
                                     title="View Fullscreen"
                                   >
-                                    <Maximize2 className="h-4 w-4" />
+                                    <Maximize2 className="h-3.5 w-3.5" />
+                                    <span>Expand View</span>
                                   </button>
-                                </div>
-                                <div className="absolute top-4 left-4 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                                  <div className="px-3 py-1.5 bg-card/80 backdrop-blur-md border border-border rounded-lg text-[10px] font-bold text-foreground uppercase tracking-wider shadow-lg">
-                                    {m.inlineHtml.title || 'Interactive Content'}
-                                  </div>
                                 </div>
                                 <iframe
                                   srcDoc={getIframeSrcDoc(m.inlineHtml.html)}

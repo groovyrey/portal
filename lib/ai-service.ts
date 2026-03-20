@@ -41,18 +41,19 @@ export async function generateVisualization(
     ### 3. INTERACTIVITY & LIBRARIES (Pre-installed)
     - **Charts (Chart.js):** \`<canvas id="myChart"></canvas>\` + \`<script>new Chart(...)</script>\`.
     - **Animations (GSAP):** \`gsap.from(".card", {y: 20, opacity: 0, stagger: 0.1})\`.
-    - **3D SIMULATIONS (Three.js):** 
-      - Use for complex spatial concepts, engineering models, or interactive math demos.
-      - **Robust Setup:** Initialize with a clear Scene, Camera (Perspective), and Renderer with alpha:true for transparency.
-      - **Lighting:** Always include basic lighting (AmbientLight + DirectionalLight) to ensure materials are visible.
-      - **Interactivity:** Use \`OrbitControls\` if the user needs to inspect the model.
-      - **Performance:** Use \`requestAnimationFrame\` for the render loop and handle window resizing.
+    - **Canvas (HTML5):** Use \`<canvas>\` for custom drawing, physics simulations, games, or particle effects. Ensure you handle the \`requestAnimationFrame\` loop for smooth performance.
+
+    ### 4. SIMULATION BEST PRACTICES (MANDATORY FOR DEMOS)
+    - **Control Panel:** Always include a floating, **collapsible** glassmorphism control panel (\`absolute top-4 right-4 z-50 max-w-[250px]\`) that defaults to a compact state (e.g., a "Settings" icon button) to avoid blocking the view. When expanded, it should show sliders and buttons with clear labels.
+    - **Physics:** Use \`deltaTime\` (time between frames) for smooth, framerate-independent animation.
+    - **Resizing:** Listen to \`resize\` events to update canvas dimensions and maintain crisp rendering on all devices.
+    - **Polish:** Use particle trails, glow effects (shadowBlur), and smooth easing to make the simulation feel "premium" and "organic".
     
-    ### 4. DATA HANDLING
+    ### 5. DATA HANDLING
     - If specific student data (grades, schedule, finance) is provided in the context, visualize it accurately.
     - **Functional Demos:** Create actual interactive prototypes (clickable buttons, state management, simulated logic) that the user can play with.
     
-    ### 5. OUTPUT RULES
+    ### 6. OUTPUT RULES
     - Return **ONLY** the raw HTML code. 
     - **DO NOT** use markdown code blocks (\`\`\`).
     - **DO NOT** include \`<!DOCTYPE html>\` or \`<html>\` tags. Return the component fragment only.
