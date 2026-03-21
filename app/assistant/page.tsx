@@ -359,6 +359,10 @@ export default function AssistantPage() {
       case 'get_today_schedule':
       case 'get_day_schedule': return Calendar;
       case 'get_weekly_schedule': return CalendarDays;
+      case 'get_grades': return Check;
+      case 'get_financials': return Wallet;
+      case 'get_full_student_data': return BrainCircuit;
+      case 'render_html': return Sparkles;
       default: return Zap;
     }
   };
@@ -510,7 +514,9 @@ export default function AssistantPage() {
       <script src="https://unpkg.com/lucide@latest"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     `;
 
     const lucideInit = `

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { Sandbox } from '@vercel/sandbox';
 import { 
   ChatPromptTemplate, 
@@ -17,7 +17,8 @@ import {
   getStudentProfile, 
   getStudentSchedule, 
   getStudentFinancials, 
-  getStudentGrades 
+  getStudentGrades,
+  getFullStudentData
 } from '@/lib/data-service';
 import { generateVisualization } from '@/lib/ai-service';
 import { query } from '@/lib/turso';
@@ -123,6 +124,50 @@ async function performMathExecution(code: string) {
   finally { if (sandbox) await sandbox.stop().catch(() => {}); }
 }
 
+async function performWebFetch(url: string) {
+  try {
+    let targetUrl = url.trim();
+    if (!/^https?:\/\//i.test(targetUrl)) {
+      targetUrl = 'https://' + targetUrl;
+    }
+
+    const response = await fetch(targetUrl, { 
+      signal: AbortSignal.timeout(15000),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+    if (!response.ok) return `Failed to fetch URL: ${response.statusText} (${response.status})`;
+    const html = await response.text();
+    const $ = cheerio.load(html);
+    
+    // Remove script, style, and navigation elements
+    $('script, style, nav, footer, header, noscript, iframe').remove();
+    
+    // Extract Links
+    const links: string[] = [];
+    $('a[href]').each((_, el) => {
+      const href = $(el).attr('href');
+      const text = $(el).text().trim();
+      if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
+        try {
+          const absoluteUrl = new URL(href, targetUrl).toString();
+          links.push(`${text}: ${absoluteUrl}`);
+        } catch (e) {}
+      }
+    });
+
+    let text = $('body').text().replace(/\s+/g, ' ').trim();
+    if (text.length > 4000) text = text.substring(0, 4000) + '... [Truncated]';
+    
+    const linksText = links.length > 0 ? `\n\nLINKS FOUND:\n${links.slice(0, 20).join('\n')}` : "";
+    
+    return (text || "No readable content found.") + linksText;
+  } catch (e: any) {
+    return `Error fetching URL: ${e.message}`;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { messages, timezone = 'Asia/Manila' }: { messages: Message[], timezone?: string } = await req.json();
@@ -187,19 +232,63 @@ export async function POST(req: NextRequest) {
         description: "Get schedule for a specific day.",
         schema: z.object({ day: z.string().describe("Day of the week (e.g., 'Monday', 'MON')") })
       }),
+      tool(async () => {
+        const data = await getFullStudentData(userId);
+        return JSON.stringify(data);
+      }, {
+        name: "get_full_student_data",
+        description: "Get all student data (profile, grades, GPA, schedule, financials) in one call.",
+        schema: z.object({})
+      }),
       tool(async ({ query }) => await performWebSearch(query), {
         name: "web_search",
         description: "Search the web for info.",
         schema: z.object({ query: z.string() })
       }),
+      tool(async ({ url }) => await performWebFetch(url), {
+        name: "web_fetch",
+        description: "Fetch and read the content of a specific URL.",
+        schema: z.object({ url: z.string().describe("The URL to fetch") })
+      }),
+      tool(async ({ query }) => await performYoutubeSearch(query), {
+        name: "youtube_search",
+        description: "Search YouTube for educational videos.",
+        schema: z.object({ query: z.string() })
+      }),
+      tool(async ({ question, options }) => {
+        return `Presented user with options: ${options.join(', ')}. Waiting for selection...`;
+      }, {
+        name: "ask_user_choice",
+        description: "Present the user with a set of options to choose from. Use this when there are multiple valid paths or specific categories to filter.",
+        schema: z.object({ 
+          question: z.string().describe("The question or instruction for the user"),
+          options: z.array(z.string()).describe("List of options for the user to select from")
+        })
+      }),
+      tool(async ({ question, placeholder }) => {
+        return `Asked user: "${question}". Waiting for response...`;
+      }, {
+        name: "ask_user",
+        description: "Ask the user for specific text input, clarification, or missing details. Use this when you need more information to proceed.",
+        schema: z.object({ 
+          question: z.string().describe("The question to ask the user"),
+          placeholder: z.string().optional().describe("Hint for the input field")
+        })
+      }),
       tool(async ({ description, title }) => {
-         const fullData = await getStudentGrades(userId);
-         return await generateVisualization(description, JSON.stringify(fullData));
+         const [grades, financials, schedule] = await Promise.all([
+           getStudentGrades(userId),
+           getStudentFinancials(userId),
+           getStudentSchedule(userId)
+         ]);
+         
+         const combinedContext = JSON.stringify({ grades, financials, schedule });
+         return await generateVisualization(description, combinedContext);
       }, {
         name: "render_html",
-        description: "Generate interactive, animated, and responsive visual components, simulations, and educational demos.",
+        description: "Generate interactive, animated, and fully responsive visual components, simulations, and educational demos.",
         schema: z.object({ 
-          description: z.string().describe("Description of the visualization"),
+          description: z.string().describe("EXTREMELY DETAILED description for the Visualization Agent. Include specific UI requirements, interactive elements, physics parameters, color schemes, and expected behavior. IMPORTANT: Mandate FULL RESPONSIVENESS so it fits perfectly on any screen size (mobile, tablet, desktop). This is a prompt for another AI to generate code."),
           title: z.string().describe("Title of the component")
         })
       })
@@ -209,27 +298,52 @@ export async function POST(req: NextRequest) {
 You are the "Portal Assistant", a sophisticated academic advisor and computational engine for ${SCHOOL_INFO.name}.
 
 ### CORE DIRECTIVES
-1.  **Professionalism:** Maintain a formal, academic, and supportive tone. Be concise and precise. Avoid casual slang or excessive emojis.
-2.  **Data-Driven:** Base all answers strictly on the data provided by tools. **Do not hallucinate** grades, schedules, or financial details. If data is missing, state it clearly.
-3.  **Tool Usage:** You must use the provided tools to fetch student data (grades, schedule, financials) or perform calculations.
+1.  **Professionalism & Engagement:** Maintain a formal yet supportive tone. Your responses should be **informative and engaging**. Provide detailed explanations and additional context when helpful, but avoid being unnecessarily verbose.
+2.  **Data-Driven Insights:** Base all answers strictly on the data provided by tools. **Do not hallucinate**. When you fetch data (like grades or financials), don't just list them—**analyze them** and provide helpful insights or advice.
+3.  **Tool Usage:** Use provided tools for student data or math. Output ONLY the tool call prefix "|||" and the JSON if you need to call a tool. Wait for tool results before final answer.
 4.  **Math & Science:**
     *   ALWAYS use **LaTeX** for mathematical expressions (e.g., $E = mc^2$).
-    *   Show step-by-step derivations for complex problems.
+    *   Show step-by-step derivations for complex problems. Be thorough in your explanations.
     *   Use the \`execute_math\` tool for any non-trivial calculation.
 5.  **Visualization & Simulation:**
-    *   **Proactively use the \`render_html\` tool** to create interactive demonstrations, 2D physics simulations, or dynamic charts for any concept that benefits from visual explanation.
-    *   Do not just describe a phenomenon; **show it** with code.
-    *   Prioritize this for science (physics, chemistry), math (graphs, geometry), and financial data visualization.
+    *   **Proactively use the \`render_html\` tool** for simulations, demos, or dynamic charts.
+    *   Do not just describe a phenomenon; **show it** with code. If a student asks about a concept, create a visual aid for it.
+    *   **Crucial:** When using \`render_html\`, the \`description\` argument in the tool call MUST be an **EXTREMELY DETAILED technical prompt** for a specialized visualization agent. Describe UI layout, interactive controls, animations, color palette, and any mathematical or physical laws the simulation must follow.
+    *   **Responsiveness:** Explicitly instruct the agent to make the visualization **FULLY RESPONSIVE** and mobile-friendly so it fits perfectly on any screen size.
+    *   In your response to the student, provide a **detailed, engaging, and educational description** explaining what the visualization represents, how to interact with it, and the key concepts it demonstrates. Do not just output the tool call; explain the "why" and "how" behind it.
 6.  **Personalization:**
     *   Refer to the student by their **first name** (e.g., "Hello Juan").
-    *   Refer to them as an **"LCCian"** where appropriate to build community spirit.
+    *   Refer to them as an **"LCCian"** where appropriate.
 7.  **Formatting:**
+    *   **Markdown:** Proactively use **Markdown** (including tables, bold text, and lists) for all responses to ensure high readability and visual appeal.
     *   Use **bold** for key concepts, dates, and figures.
-    *   Use bullet points for lists to improve readability.
-    *   Keep paragraphs short and focused.
+    *   Use bullet points for lists.
+    *   **Structure:** Use headers (###) to organize responses into logical sections.
+
+### TOOLS PROTOCOL
+To call a tool, you MUST output ONLY the "|||" prefix followed by a single JSON object.
+**CRITICAL:** 
+- NO conversational text before or after the tool call.
+- NO markdown code blocks (e.g., no \`\`\`json).
+- Example: ||| { "name": "get_grades", "args": {} }
+Wait for the tool result before giving your final response to the student.
+
+AVAILABLE TOOLS:
+1. execute_math: { "code": string } - Execute Python for advanced math.
+2. get_grades: {} - Get student's grades and GPA.
+3. get_financials: {} - Get student's financial balance.
+4. get_today_schedule: {} - Get schedule for today.
+5. get_day_schedule: { "day": string } - Get schedule for a specific day.
+6. web_search: { "query": string } - Search the web for information.
+7. web_fetch: { "url": string } - Fetch and read the content of a specific URL.
+8. youtube_search: { "query": string } - Search YouTube for educational videos.
+9. get_full_student_data: {} - Get all student info (grades, gpa, schedule, financials) at once.
+10. ask_user_choice: { "question": string, "options": string[] } - Show options to user.
+11. ask_user: { "question": string, "placeholder": string } - Ask user for input.
+12. render_html: { "description": string, "title": string } - Create visualizations.
 
 ### OPERATIONAL CONSTRAINTS
-*   **No Proactive Summaries:** Do not list all student data at the start of a conversation. Wait for a specific question.
+*   **No Proactive Summaries:** Do not list all student data at the start. Wait for questions.
 *   **Privacy:** Only discuss the logged-in student's data.
 *   **Identity:** You are an AI assistant for LCC, not a human.
 
@@ -243,33 +357,33 @@ STUDENT DATA:
 - Date: ${dateStr}, ${timeStr}
 `.trim();
 
-    const model = new ChatOpenAI({
-      model: "@cf/moonshotai/kimi-k2.5",
-      apiKey: process.env.ASSISTANT_KEY || '',
-      configuration: {
-        baseURL: `https://api.cloudflare.com/client/v4/accounts/${process.env.ASSISTANT_ID}/ai/v1`,
-      },
-      maxTokens: 4096,
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemma-3-27b-it",
+      apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY,
+      maxOutputTokens: 4096,
       streaming: true,
       temperature: 0.3, 
-    }).bindTools(tools);
+    });
 
     const encoder = new TextEncoder();
     const transformStream = new TransformStream();
     const writer = transformStream.writable.getWriter();
 
     const history: BaseMessage[] = [];
-    // Load ALL messages into history, including the latest one.
-    // If not saving history, at least load the current user message.
+    
+    // Gemma 3 workaround: System prompt as Human message at the very beginning
+    history.push(new HumanMessage(`${systemPrompt}\n\n${studentContext}`));
+    history.push(new AIMessage("Understood. I am now initialized as the LCC Portal Assistant. I will use the tool calling format provided. How can I help you?"));
+
+    // Load messages into history
     const messagesToLoad = assistantSettings.saveHistory ? messages : [messages[messages.length - 1]];
 
     messagesToLoad.forEach((m: any) => {
       if (m.role === 'assistant') history.push(new AIMessage(m.content));
-      else history.push(new HumanMessage(m.content));
+      else if (m.role === 'user') history.push(new HumanMessage(m.content));
     });
 
     const promptTemplate = ChatPromptTemplate.fromMessages([
-        ["system", "{system_prompt}\n\n{student_context}"],
         new MessagesPlaceholder("history"),
     ]);
 
@@ -284,13 +398,12 @@ STUDENT DATA:
           const chain = promptTemplate.pipe(model);
           const stream = await chain.stream({
               history,
-              system_prompt: systemPrompt,
-              student_context: studentContext,
           });
 
           let aggregatedChunk: AIMessageChunk | null = null;
           let fullContent = "";
           let isBuffering = false;
+          let lastWrittenIndex = 0;
           
           for await (const chunk of stream) {
             if (!aggregatedChunk) {
@@ -315,17 +428,30 @@ STUDENT DATA:
             if (textChunk) {
                 fullContent += textChunk;
                 
-                // Start buffering if the very first character (trimmed) is '{'
-                if (fullContent.trim().length > 0 && fullContent.trim().startsWith('{')) {
-                    isBuffering = true;
-                }
+                const toolMatch = fullContent.substring(lastWrittenIndex).match(/\|{2,3}/);
                 
-                // If we are NOT buffering, stream immediately
-                if (!isBuffering) {
+                if (toolMatch) {
+                    const relativeIndex = toolMatch.index!;
+                    const absoluteIndex = lastWrittenIndex + relativeIndex;
+                    
+                    if (!isBuffering) {
+                        // Write everything up to the start of the ||| marker
+                        if (absoluteIndex > lastWrittenIndex) {
+                            const toWrite = fullContent.substring(lastWrittenIndex, absoluteIndex);
+                            await writer.write(encoder.encode(toWrite));
+                            lastWrittenIndex = absoluteIndex;
+                        }
+                        isBuffering = true;
+                    }
+                } else if (!isBuffering) {
+                    // Normal streaming: write the chunk and update lastWrittenIndex
                     await writer.write(encoder.encode(textChunk));
+                    lastWrittenIndex = fullContent.length;
                 }
             }
           }
+
+          console.log(`[Assistant Response Turn ${turn}]:`, fullContent);
           
           let collectedToolCalls = aggregatedChunk?.tool_calls || [];
           const collectedContent = aggregatedChunk?.content || "";
@@ -333,53 +459,99 @@ STUDENT DATA:
           // Fallback: Check if the buffered content is a raw JSON tool call
           if (collectedToolCalls.length === 0 && isBuffering) {
               try {
-                  // Attempt to parse the full content as JSON
-                  // We use a regex to extract the JSON object in case there's extra whitespace/text
-                  const jsonMatch = fullContent.match(/\{[\s\S]*\}/);
-                  if (jsonMatch) {
-                      const parsed = JSON.parse(jsonMatch[0]);
-                      if (parsed.name) {
-                          collectedToolCalls = [{
-                              name: parsed.name,
-                              args: parsed.arguments || parsed.parameters || parsed.args || {},
-                              id: `call_${Date.now()}`,
-                              type: 'tool_call'
-                          }];
-                          // Valid tool call found in buffer. Do NOT flush to user.
-                      } else {
-                          // Valid JSON but not a tool call? Flush it.
-                          await writer.write(encoder.encode(fullContent));
+                  const bufferedPart = fullContent.substring(lastWrittenIndex).trim();
+                  // More robust regex: find ALL ||| blocks and extract JSON from each
+                  const toolBlocks = bufferedPart.split(/\|{2,3}/).filter(block => block.trim().length > 0);
+                  
+                  for (const block of toolBlocks) {
+                      const jsonBlockMatch = block.match(/(\{[\s\S]*\})/);
+                      if (jsonBlockMatch) {
+                          try {
+                              let jsonStr = jsonBlockMatch[1];
+                              // Clean up potential markdown artifacts
+                              jsonStr = jsonStr.replace(/```json\s?/, '').replace(/```\s?/, '');
+
+                              // Sanitize unescaped backslashes
+                              const sanitizedJson = jsonStr.replace(/\\(?!"|\\|\/|b|f|n|r|t|u[0-9a-fA-F]{4})/g, "\\\\");
+
+                              const parsed = JSON.parse(sanitizedJson);
+                              
+                              if (parsed.name) {
+                                  let args = {};
+                                  if (parsed.args && typeof parsed.args === 'object') args = parsed.args;
+                                  else if (parsed.arguments && typeof parsed.arguments === 'object') args = parsed.arguments;
+                                  else if (parsed.parameters && typeof parsed.parameters === 'object') args = parsed.parameters;
+                                  else {
+                                      const { name, ...rest } = parsed;
+                                      args = rest;
+                                  }
+
+                                  collectedToolCalls.push({
+                                      name: parsed.name as any,
+                                      args: args,
+                                      id: `call_${Date.now()}_${collectedToolCalls.length}`,
+                                      type: 'tool_call' as const
+                                  });
+                              } else {
+                                  // HEURISTIC: Check if it's a tool call missing the 'name' field
+                                  // 1. Check for single key as tool name
+                                  const keys = Object.keys(parsed);
+                                  const knownToolNames = tools.map(t => t.name);
+
+                                  if (keys.length === 1 && (knownToolNames as string[]).includes(keys[0])) {
+                                      const toolName = keys[0];
+                                      collectedToolCalls.push({
+                                          name: toolName as any,
+                                          args: typeof parsed[toolName] === 'object' ? parsed[toolName] : {},
+                                          id: `call_${Date.now()}_${collectedToolCalls.length}`,
+                                          type: 'tool_call' as const
+                                      });
+                                  } 
+                                  // 2. Check for render_html signature (description + title)
+                                  else if (parsed.description && parsed.title) {
+                                      collectedToolCalls.push({
+                                          name: 'render_html',
+                                          args: parsed,
+                                          id: `call_${Date.now()}_${collectedToolCalls.length}`,
+                                          type: 'tool_call' as const
+                                      });
+                                  }
+                                  // 3. Check for execute_math signature (code)
+                                  else if (parsed.code && (parsed.code.includes('import') || parsed.code.includes('print'))) {
+                                      collectedToolCalls.push({
+                                          name: 'execute_math',
+                                          args: { code: parsed.code },
+                                          id: `call_${Date.now()}_${collectedToolCalls.length}`,
+                                          type: 'tool_call' as const
+                                      });
+                                  }
+                              }
+                          } catch (e) {
+                              console.error("JSON parse error in tool block:", e);
+                          }
                       }
-                  } else {
-                      // Not valid JSON. Flush it.
-                      await writer.write(encoder.encode(fullContent));
+                  }
+                  
+                  if (collectedToolCalls.length === 0) {
+                      await writer.write(encoder.encode(bufferedPart.replace(/^\|+/, '').trim()));
                   }
               } catch (e) {
-                  // Parsing failed. Flush the buffer.
-                  await writer.write(encoder.encode(fullContent));
+                  await writer.write(encoder.encode(fullContent.substring(lastWrittenIndex).replace(/^\|+/, '').trim()));
               }
           } else if (isBuffering && collectedToolCalls.length > 0) {
               // Standard tool calls were detected by the model, but we buffered the text.
               // The text might be an explanation or the tool call itself.
               // If it's the tool call JSON, we shouldn't flush it.
-              // If it's "Thinking...", we might want to.
-              // For now, if tool calls exist, we usually suppress the text if it looks like JSON.
-               if (!fullContent.trim().startsWith('{')) {
-                   await writer.write(encoder.encode(fullContent));
+               const bufferedPart = fullContent.substring(lastWrittenIndex).trim();
+               if (!bufferedPart.startsWith('{') && !bufferedPart.startsWith('|')) {
+                   await writer.write(encoder.encode(bufferedPart));
                }
           }
 
           if (collectedToolCalls.length > 0) {
             // It was a tool call turn.
-            // 1. Add AIMessage with tool calls to history
-            const aiMsg = new AIMessage({
-                content: collectedContent,
-                tool_calls: collectedToolCalls
-            });
-            history.push(aiMsg);
-
-            // 2. Execute tools
-            // (Thinking process message removed as per request)
+            // Add AIMessage with the raw content (which contains the tool call JSON)
+            history.push(new AIMessage(fullContent));
 
             for (const toolCall of collectedToolCalls) {
                 // Notify Client of Tool Usage
@@ -387,6 +559,8 @@ STUDENT DATA:
 
                 const selectedTool = tools.find(t => t.name === toolCall.name);
                 let output = "Error: Tool not found.";
+                let shouldStopAfterTool = false;
+
                 if (selectedTool) {
                     try {
                         output = await (selectedTool as any).invoke(toolCall.args);
@@ -403,16 +577,30 @@ STUDENT DATA:
                              };
                              await writer.write(encoder.encode(`TOOL_CALL: ${JSON.stringify(clientPayload)}\n`));
                         }
+                        
+                        // Handle Interaction Tools
+                        if (toolCall.name === 'ask_user' || toolCall.name === 'ask_user_choice') {
+                             const clientPayload = {
+                                 name: toolCall.name,
+                                 parameters: toolCall.args
+                             };
+                             await writer.write(encoder.encode(`TOOL_CALL: ${JSON.stringify(clientPayload)}\n`));
+                             shouldStopAfterTool = true;
+                        }
 
                     } catch (e: any) {
                         output = `Tool Execution Error: ${e.message}`;
                     }
                 }
-                history.push(new ToolMessage({
-                    tool_call_id: toolCall.id!,
-                    content: output,
-                    name: toolCall.name
-                }));
+                
+                // Add tool result as a HumanMessage to the history
+                history.push(new HumanMessage(`TOOL_RESULT (${toolCall.name}): ${output}`));
+
+                if (shouldStopAfterTool) {
+                    // Force break the turn loop to wait for user interaction
+                    turn = maxTurns; 
+                    break;
+                }
             }
             // Loop continues to generate response based on tool outputs
           } else {
