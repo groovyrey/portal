@@ -297,9 +297,9 @@ export async function POST(req: NextRequest) {
          return await generateVisualization(description, combinedContext);
       }, {
         name: "render_html",
-        description: "Generate interactive, animated, and fully responsive visual components, simulations, and educational demos.",
+        description: "Generate interactive, animated, and fully responsive 2D visual components, 2D charts, and 2D educational demos. NO 3D OR THREE.JS.",
         schema: z.object({ 
-          description: z.string().describe("EXTREMELY DETAILED description for the Visualization Agent. Include specific UI requirements, interactive elements, physics parameters, color schemes, and expected behavior. IMPORTANT: Mandate FULL RESPONSIVENESS so it fits perfectly on any screen size (mobile, tablet, desktop). This is a prompt for another AI to generate code."),
+          description: z.string().describe("EXTREMELY DETAILED description for the Visualization Agent. Include specific 2D UI requirements, interactive elements, physics parameters, color schemes, and expected behavior. **IMPORTANT: DO NOT USE 3D, WEBGL, OR THREE.JS. USE DOM/SVG/CANVAS 2D ONLY.** Mandate FULL RESPONSIVENESS."),
           title: z.string().describe("Title of the component")
         })
       })
@@ -332,7 +332,7 @@ ${tutorModeProtocol}
 9. get_full_student_data: {} - All info.
 10. ask_user_choice: { "question": string, "options": string[] }
 11. ask_user: { "question": string, "placeholder": string }
-12. render_html: { "description": string, "title": string } - Interactive UI/simulations.
+12. render_html: { "description": string, "title": string } - Interactive 2D UI/2D demos. NO 3D.
 
 ### CONSTRAINTS
 - **Privacy:** Logged-in student data only.
