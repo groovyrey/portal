@@ -186,7 +186,8 @@ export async function POST(req: NextRequest) {
     const assistantSettings = student.settings?.assistant || {
       saveHistory: true,
       contextAwareness: true,
-      showThinkingProcess: true
+      showThinkingProcess: true,
+      tutorMode: true
     };
 
     const now = new Date();
@@ -210,15 +211,6 @@ export async function POST(req: NextRequest) {
         description: "Get student's financial balance.",
         schema: z.object({})
       }),
-      tool(async () => {
-        const schedule = await getStudentSchedule(userId);
-        const dayAbbr = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][new Date().getDay()];
-        return JSON.stringify(schedule.filter((s: any) => s.time?.toUpperCase().includes(dayAbbr)));
-      }, {
-        name: "get_today_schedule",
-        description: "Get schedule for today.",
-        schema: z.object({})
-      }),
       tool(async ({ day }) => {
         const schedule = await getStudentSchedule(userId);
         const dayMap: Record<string, string> = {
@@ -226,11 +218,30 @@ export async function POST(req: NextRequest) {
           'friday': 'FRI', 'saturday': 'SAT', 'sunday': 'SUN'
         };
         const dayAbbr = dayMap[day.toLowerCase()] || day.substring(0, 3).toUpperCase();
-        return JSON.stringify(schedule.filter((s: any) => s.time?.toUpperCase().includes(dayAbbr)));
+        const filtered = schedule.filter((s: any) => s.time?.toUpperCase().includes(dayAbbr));
+        return filtered.length > 0 ? JSON.stringify(filtered) : `No classes scheduled for ${day}.`;
       }, {
         name: "get_day_schedule",
         description: "Get schedule for a specific day.",
         schema: z.object({ day: z.string().describe("Day of the week (e.g., 'Monday', 'MON')") })
+      }),
+      tool(async () => {
+        const schedule = await getStudentSchedule(userId);
+        const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+        const weeklySchedule: Record<string, any[]> = {};
+        
+        for (const day of days) {
+          const classes = schedule.filter((s: any) => s.time?.toUpperCase().includes(day));
+          if (classes.length > 0) {
+            weeklySchedule[day] = classes;
+          }
+        }
+        
+        return JSON.stringify(weeklySchedule);
+      }, {
+        name: "get_weekly_schedule",
+        description: "Get the full weekly schedule grouped by day.",
+        schema: z.object({})
       }),
       tool(async () => {
         const data = await getFullStudentData(userId);
@@ -294,60 +305,43 @@ export async function POST(req: NextRequest) {
       })
     ];
 
-    const systemPrompt = `
-You are the "Portal Assistant", a sophisticated academic advisor and computational engine for ${SCHOOL_INFO.name}.
+    const tutorModeProtocol = assistantSettings.tutorMode !== false // Default to true if undefined
+      ? `1. **Tutor Mode (Strict):** NEVER provide final answers or solutions (math/essays). Guide students through problem-solving, strategies, and "aha!" moments. **When a student provides an answer, you MUST calculate the correct result first (using tools if needed) to verify it. If WRONG, say 'No', explain the error, and guide them. If CORRECT, confirm and explain the reasoning.** Focus on 'How' and 'Why'.`
+      : `1. **Direct Answer Mode:** You may provide direct answers and solutions to problems when asked. However, still explain the steps and reasoning clearly so the student learns. Validate your answers with tools where applicable.`;
 
-### CORE DIRECTIVES
-1.  **Professionalism & Engagement:** Maintain a formal yet supportive tone. Your responses should be **informative and engaging**. Provide detailed explanations and additional context when helpful, but avoid being unnecessarily verbose.
-2.  **Data-Driven Insights:** Base all answers strictly on the data provided by tools. **Do not hallucinate**. When you fetch data (like grades or financials), don't just list them—**analyze them** and provide helpful insights or advice.
-3.  **Tool Usage:** Use provided tools for student data or math. Output ONLY the tool call prefix "|||" and the JSON if you need to call a tool. Wait for tool results before final answer.
-4.  **Math & Science:**
-    *   ALWAYS use **LaTeX** for mathematical expressions (e.g., $E = mc^2$).
-    *   Show step-by-step derivations for complex problems. Be thorough in your explanations.
-    *   Use the \`execute_math\` tool for any non-trivial calculation.
-5.  **Visualization & Simulation:**
-    *   **Proactively use the \`render_html\` tool** for simulations, demos, or dynamic charts.
-    *   Do not just describe a phenomenon; **show it** with code. If a student asks about a concept, create a visual aid for it.
-    *   **Crucial:** When using \`render_html\`, the \`description\` argument in the tool call MUST be an **EXTREMELY DETAILED technical prompt** for a specialized visualization agent. Describe UI layout, interactive controls, animations, color palette, and any mathematical or physical laws the simulation must follow.
-    *   **Responsiveness:** Explicitly instruct the agent to make the visualization **FULLY RESPONSIVE** and mobile-friendly so it fits perfectly on any screen size.
-    *   In your response to the student, provide a **detailed, engaging, and educational description** explaining what the visualization represents, how to interact with it, and the key concepts it demonstrates. Do not just output the tool call; explain the "why" and "how" behind it.
-6.  **Personalization:**
-    *   Refer to the student by their **first name** (e.g., "Hello Juan").
-    *   Refer to them as an **"LCCian"** where appropriate.
-7.  **Formatting:**
-    *   **Markdown:** Proactively use **Markdown** (including tables, bold text, and lists) for all responses to ensure high readability and visual appeal.
-    *   Use **bold** for key concepts, dates, and figures.
-    *   Use bullet points for lists.
-    *   **Structure:** Use headers (###) to organize responses into logical sections.
+const systemPrompt = `
+You are the "Portal Assistant", an academic advisor for ${SCHOOL_INFO.name}.
 
-### TOOLS PROTOCOL
-To call a tool, you MUST output ONLY the "|||" prefix followed by a single JSON object.
-**CRITICAL:** 
-- NO conversational text before or after the tool call.
-- NO markdown code blocks (e.g., no \`\`\`json).
-- Example: ||| { "name": "get_grades", "args": {} }
-Wait for the tool result before giving your final response to the student.
+### CORE PROTOCOLS
+${tutorModeProtocol}
+2. **Tools & Data:** Use tools for real data/math. **CALL TOOLS IMMEDIATELY.** Do not explain that you are going to call a tool, just call it. Output ONLY \`||| { "name": "...", "args": {...} }\` to call tools. No conversational text/markdown with calls. **STOP and wait for the tool result.** Analyze data (grades/finance) deeply; don't just list it.
+3. **Math/Science:** Use LaTeX ($E=mc^2$). Explain logic/formulas. **Use \`execute_math\` to verify student answers or check intermediate steps** but NEVER reveal final numerical results unless confirming a student's correct answer (or providing the answer in Direct Answer Mode).
+4. **Visualization:** Proactively use \`render_html\` for concepts/demos. \`description\` must be an EXTREMELY DETAILED technical prompt for a fully responsive, interactive UI. Explain the visualization's value to the student.
+5. **Persona:** Professional, supportive, engaging. Address user by first name or "LCCian".
+6. **Formatting:** Use Markdown (headers, bold, bullets) for readability. **CRITICAL: DO NOT WRAP YOUR RESPONSE IN A CODE BLOCK (\`\`\`). Only use code blocks for actual code snippets.**
 
-AVAILABLE TOOLS:
-1. execute_math: { "code": string } - Execute Python for advanced math.
-2. get_grades: {} - Get student's grades and GPA.
-3. get_financials: {} - Get student's financial balance.
-4. get_today_schedule: {} - Get schedule for today.
-5. get_day_schedule: { "day": string } - Get schedule for a specific day.
-6. web_search: { "query": string } - Search the web for information.
-7. web_fetch: { "url": string } - Fetch and read the content of a specific URL.
-8. youtube_search: { "query": string } - Search YouTube for educational videos.
-9. get_full_student_data: {} - Get all student info (grades, gpa, schedule, financials) at once.
-10. ask_user_choice: { "question": string, "options": string[] } - Show options to user.
-11. ask_user: { "question": string, "placeholder": string } - Ask user for input.
-12. render_html: { "description": string, "title": string } - Create visualizations.
+### TOOLS
+1. execute_math: { "code": string } - Python for math.
+2. get_grades: {} - Fetch grades/GPA.
+3. get_financials: {} - Fetch balance.
+4. get_day_schedule: { "day": string }
+5. get_weekly_schedule: {}
+6. web_search: { "query": string }
+7. web_fetch: { "url": string }
+8. youtube_search: { "query": string }
+9. get_full_student_data: {} - All info.
+10. ask_user_choice: { "question": string, "options": string[] }
+11. ask_user: { "question": string, "placeholder": string }
+12. render_html: { "description": string, "title": string } - Interactive UI/simulations.
 
-### OPERATIONAL CONSTRAINTS
-*   **No Proactive Summaries:** Do not list all student data at the start. Wait for questions.
-*   **Privacy:** Only discuss the logged-in student's data.
-*   **Identity:** You are an AI assistant for LCC, not a human.
+### CONSTRAINTS
+- **Privacy:** Logged-in student data only.
+- **No Spoilers:** Stop before final calculations (Unless in Direct Answer Mode).
+- **No Hallucinations:** Base answers on tool data.
+- **No Proactive Summaries:** Wait for user questions.
+- **NO RESPONSE WRAPPING:** Do NOT wrap your entire response in markdown code blocks.
 
-Knowledge Base: ${SCHOOL_INFO.name}, Vision: ${SCHOOL_INFO.vision}, Grading System: ${GRADING_SYSTEM}.
+Context: ${SCHOOL_INFO.name}, Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.
 `.trim();
 
     const studentContext = `
@@ -451,9 +445,8 @@ STUDENT DATA:
             }
           }
 
-          console.log(`[Assistant Response Turn ${turn}]:`, fullContent);
-          
           let collectedToolCalls = aggregatedChunk?.tool_calls || [];
+
           const collectedContent = aggregatedChunk?.content || "";
 
           // Fallback: Check if the buffered content is a raw JSON tool call

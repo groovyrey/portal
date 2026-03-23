@@ -12,7 +12,8 @@ import {
   CheckCircle2,
   Mic,
   MicOff,
-  AlertCircle
+  AlertCircle,
+  GraduationCap
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Student } from '@/types';
@@ -64,7 +65,8 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
     voiceModel: 'aura-helios-en',
     saveHistory: true,
     showThinkingProcess: true,
-    contextAwareness: true
+    contextAwareness: true,
+    tutorMode: true
   };
 
   const handleToggle = (key: keyof typeof assistantSettings) => {
@@ -221,6 +223,12 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
 
         <div className="divide-y divide-border/40 bg-card/50 border border-border/50 rounded-2xl overflow-hidden">
           {[
+            { 
+              id: 'tutorMode' as const, 
+              icon: GraduationCap, 
+              title: 'Tutor Mode', 
+              desc: 'Guide me instead of giving answers' 
+            },
             { 
               id: 'showThinkingProcess' as const, 
               icon: Zap, 

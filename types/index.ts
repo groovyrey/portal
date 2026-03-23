@@ -169,6 +169,7 @@ export interface Student {
       saveHistory: boolean;
       showThinkingProcess: boolean;
       contextAwareness: boolean;
+      tutorMode: boolean;
     };
   };
 }
