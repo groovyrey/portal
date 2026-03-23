@@ -21,8 +21,6 @@ export async function generateVisualization(
     Generate a high-performance, responsive, and aesthetically pleasing HTML/Tailwind/JS fragment.
 
     ### DESIGN STANDARDS
-    - **Container:** Use <div class="w-full h-full min-h-[400px] flex flex-col bg-card/60 backdrop-blur-md text-card-foreground rounded-3xl border border-border shadow-xl animate-in fade-in duration-500 overflow-hidden relative">.
-    - **Theming:** Support dark mode using "dark:" utilities and Tailwind's semantic colors (primary, card, border, etc.).
     - **Fluid Layout:** Use percentage-based widths (e.g., "w-full", "w-1/2") or "flex-1" for main content areas. Avoid fixed pixel widths for containers. Ensure content resizes gracefully.
     - **Mobile-First:** Ensure all layouts flow naturally on small screens (flex-col on mobile, flex-row on desktop). Controls should be touch-friendly (min-height 44px).
 

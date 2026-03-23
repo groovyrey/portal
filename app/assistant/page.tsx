@@ -551,30 +551,6 @@ export default function AssistantPage() {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
           ${libraries}
-          <script>
-            tailwind.config = {
-              darkMode: 'class',
-              theme: {
-                extend: {
-                  colors: {
-                    background: '${isDark ? '#020617' : '#f4f8ff'}',
-                    foreground: '${isDark ? '#f8faff' : '#020817'}',
-                    card: '${isDark ? '#050b1d' : '#ffffff'}',
-                    'card-foreground': '${isDark ? '#f8faff' : '#020817'}',
-                    primary: '${isDark ? '#3b82f6' : '#2563eb'}',
-                    'primary-foreground': '#ffffff',
-                    secondary: '${isDark ? '#0f172a' : '#e0ebff'}',
-                    'secondary-foreground': '${isDark ? '#f1f5f9' : '#1e40af'}',
-                    muted: '${isDark ? '#070d1f' : '#f0f5ff'}',
-                    'muted-foreground': '${isDark ? '#94a3b8' : '#64748b'}',
-                    accent: '${isDark ? '#0f172a' : '#eef4ff'}',
-                    'accent-foreground': '${isDark ? '#f1f5f9' : '#1e40af'}',
-                    border: '${isDark ? '#141e33' : '#e2eaff'}',
-                  }
-                }
-              }
-            }
-          </script>
           <style>
             body { 
               font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
