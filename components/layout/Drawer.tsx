@@ -33,7 +33,7 @@ export default function Drawer({ isOpen, onClose, title, children, side = 'right
           {/* Backdrop */}
           <div
             onClick={onClose}
-            className="fixed inset-0 bg-foreground/40 z-[150] backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-black/40 dark:bg-black/60 z-[150] backdrop-blur-sm transition-opacity"
           />
           
           {/* Drawer Panel */}

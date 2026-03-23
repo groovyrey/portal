@@ -59,7 +59,7 @@ export default function Modal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-foreground/40 dark:bg-card/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
             aria-hidden="true"
           />
 

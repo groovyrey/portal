@@ -62,17 +62,12 @@ async function testAssistant() {
   const history = [
     new HumanMessage(`${systemPrompt}\n\n${studentContext}`),
     new AIMessage("Understood. I am now initialized as the LCC Portal Assistant. I will use the tool calling format provided. How can I help you?"),
-    
-    // Few-shot example
-    new HumanMessage("What is my current balance?"),
-    new AIMessage("||| { \"name\": \"get_financials\", \"args\": {} }"),
-    new HumanMessage("TOOL_RESPONSE: { \"balance\": \"0.00\", \"total\": \"15000.00\" }"),
-    new AIMessage("Hello Juan! Your current financial balance is **₱0.00** out of a total assessment of **₱15,000.00**. You are all cleared!"),
-
-    new HumanMessage("What's my schedule for today?")
+    new HumanMessage("What's my schedule for today?"),
+    new AIMessage("||| { \"name\": \"get_day_schedule\", \"args\": { \"day\": \"Monday\" } }"),
+    new HumanMessage("TOOL_RESULT (get_day_schedule): [{\"subject\":\"CS101\",\"time\":\"08:00 AM - 10:00 AM\",\"room\":\"CL1\"}]")
   ];
 
-  console.log("Asking Assistant: What's my schedule for today?");
+  console.log("Asking for final response after tool result...");
   
   try {
     const res = await model.invoke(history);

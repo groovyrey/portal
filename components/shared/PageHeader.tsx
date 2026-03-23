@@ -32,7 +32,7 @@ export default function PageHeader() {
   if (pathname === '/' || !title) return null;
 
   return (
-    <div className="bg-background/80 border-b border-border sticky top-16 z-[90] backdrop-blur-md">
+    <div className="bg-background/80 dark:bg-[#020617]/90 border-b border-border sticky top-16 z-[90] backdrop-blur-md">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center gap-4">
         <AnimatePresence mode="wait">
           <motion.button

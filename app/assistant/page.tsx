@@ -356,7 +356,6 @@ export default function AssistantPage() {
       case 'execute_math': return Calculator;
       case 'ask_user': return HelpCircle;
       case 'ask_user_choice': return List;
-      case 'get_today_schedule':
       case 'get_day_schedule': return Calendar;
       case 'get_weekly_schedule': return CalendarDays;
       case 'get_grades': return Check;
@@ -369,7 +368,7 @@ export default function AssistantPage() {
 
   const [suggestions, setSuggestions] = useState([
     { text: "What's my current balance?", icon: Wallet, color: "text-primary", bg: "bg-primary/10" },
-    { text: "Show my schedule for today", icon: Calendar, color: "text-primary", bg: "bg-primary/10" },
+    { text: "What's my schedule for today", icon: Calendar, color: "text-primary", bg: "bg-primary/10" },
     { text: "Summarize: laconcepcioncollege.com", icon: Globe, color: "text-primary", bg: "bg-primary/10" }
   ]);
 
@@ -1023,7 +1022,12 @@ export default function AssistantPage() {
                                   video: ({...props}) => <video className="max-w-full rounded-xl border border-border shadow-sm my-4" controls {...props} />,
                                 }}
                               >
-                                {m.content}
+                                {(() => {
+                                  // Strip wrapping code blocks if they are markdown, text, txt, or generic
+                                  const content = m.content.trim();
+                                  const match = content.match(/^```(?:markdown|text|txt)?\s*([\s\S]*?)\s*```$/i);
+                                  return match ? match[1] : m.content;
+                                })()}
                               </ReactMarkdown>
                             )}
 

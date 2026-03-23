@@ -232,15 +232,13 @@ export async function POST(req: NextRequest) {
         
         for (const day of days) {
           const classes = schedule.filter((s: any) => s.time?.toUpperCase().includes(day));
-          if (classes.length > 0) {
-            weeklySchedule[day] = classes;
-          }
+          weeklySchedule[day] = classes; // Include empty array if no classes
         }
         
         return JSON.stringify(weeklySchedule);
       }, {
         name: "get_weekly_schedule",
-        description: "Get the full weekly schedule grouped by day.",
+        description: "Get the full weekly schedule grouped by day (MON, TUE, WED, THU, FRI, SAT, SUN).",
         schema: z.object({})
       }),
       tool(async () => {
@@ -314,18 +312,18 @@ You are the "Portal Assistant", an academic advisor for ${SCHOOL_INFO.name}.
 
 ### CORE PROTOCOLS
 ${tutorModeProtocol}
-2. **Tools & Data:** Use tools for real data/math. **CALL TOOLS IMMEDIATELY.** Do not explain that you are going to call a tool, just call it. Output ONLY \`||| { "name": "...", "args": {...} }\` to call tools. No conversational text/markdown with calls. **STOP and wait for the tool result.** Analyze data (grades/finance) deeply; don't just list it.
+2. **Tools & Data:** **PRIORITY #1: CALL TOOLS IMMEDIATELY.** If a user asks a question requiring data (grades, schedule, finance, etc.), your **VERY FIRST OUTPUT** must be the tool call. Do **NOT** say "I will check that for you," "Let me look," or any conversational filler. Just output \`||| { "name": "...", "args": {...} }\`. Analyze data deeply after receiving it.
 3. **Math/Science:** Use LaTeX ($E=mc^2$). Explain logic/formulas. **Use \`execute_math\` to verify student answers or check intermediate steps** but NEVER reveal final numerical results unless confirming a student's correct answer (or providing the answer in Direct Answer Mode).
 4. **Visualization:** Proactively use \`render_html\` for concepts/demos. \`description\` must be an EXTREMELY DETAILED technical prompt for a fully responsive, interactive UI. Explain the visualization's value to the student.
 5. **Persona:** Professional, supportive, engaging. Address user by first name or "LCCian".
-6. **Formatting:** Use Markdown (headers, bold, bullets) for readability. **CRITICAL: DO NOT WRAP YOUR RESPONSE IN A CODE BLOCK (\`\`\`). Only use code blocks for actual code snippets.**
+6. **Formatting:** **MANDATORY: Use Markdown Tables** for all structured data (schedule, grades, financial breakdown). Use bolding for key figures (grades, amounts). Organize long text with headers and bullets. **CRITICAL: DO NOT WRAP YOUR RESPONSE IN A CODE BLOCK (\` \` \`). Only use code blocks for actual code snippets.**
 
 ### TOOLS
 1. execute_math: { "code": string } - Python for math.
 2. get_grades: {} - Fetch grades/GPA.
 3. get_financials: {} - Fetch balance.
 4. get_day_schedule: { "day": string }
-5. get_weekly_schedule: {}
+5. get_weekly_schedule: {} - Get weekly schedule (MON, TUE, etc.).
 6. web_search: { "query": string }
 7. web_fetch: { "url": string }
 8. youtube_search: { "query": string }
@@ -339,7 +337,13 @@ ${tutorModeProtocol}
 - **No Spoilers:** Stop before final calculations (Unless in Direct Answer Mode).
 - **No Hallucinations:** Base answers on tool data.
 - **No Proactive Summaries:** Wait for user questions.
-- **NO RESPONSE WRAPPING:** Do NOT wrap your entire response in markdown code blocks.
+- **ABSOLUTELY NO MARKDOWN CODE BLOCKS:** Do NOT wrap your entire response in \` \` \` code blocks. NEVER EVER wrap your response. Use plain markdown.
+
+
+
+
+
+
 
 Context: ${SCHOOL_INFO.name}, Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.
 `.trim();
@@ -367,14 +371,32 @@ STUDENT DATA:
     
     // Gemma 3 workaround: System prompt as Human message at the very beginning
     history.push(new HumanMessage(`${systemPrompt}\n\n${studentContext}`));
-    history.push(new AIMessage("Understood. I am now initialized as the LCC Portal Assistant. I will use the tool calling format provided. How can I help you?"));
+    history.push(new AIMessage("Understood. I am now initialized as the LCC Portal Assistant. I will provide direct responses in plain markdown (no outer code blocks) and use the `||| { \"name\": ... }` format for tool calls."));
 
-    // Load messages into history
+    // Add few-shot examples to reinforce NO CODE BLOCKS
+    history.push(new HumanMessage("Hi, what's my name?"));
+    history.push(new AIMessage(`Hello ${student.name.split(' ')[0]}! I'm your LCC Assistant. How can I help you today?`));
+    
+    history.push(new HumanMessage("What's my balance?"));
+    history.push(new AIMessage(`||| { "name": "get_financials", "args": {} }`));
+    history.push(new HumanMessage(`TOOL_RESULT (get_financials): {"balance": "500.00"}`));
+    history.push(new AIMessage(`Your current balance is **₱500.00**. You're almost cleared!`));
+
+    // Load messages into history and STRIP code blocks to prevent pattern mimicry
     const messagesToLoad = assistantSettings.saveHistory ? messages : [messages[messages.length - 1]];
 
     messagesToLoad.forEach((m: any) => {
-      if (m.role === 'assistant') history.push(new AIMessage(m.content));
-      else if (m.role === 'user') history.push(new HumanMessage(m.content));
+      let content = m.content;
+      if (m.role === 'assistant') {
+        content = content.trim();
+        // If it starts and ends with triple backticks, strip them
+        if (content.startsWith('```') && content.endsWith('```')) {
+          content = content.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```$/, '').trim();
+        }
+      }
+      
+      if (m.role === 'assistant') history.push(new AIMessage(content));
+      else if (m.role === 'user') history.push(new HumanMessage(content));
     });
 
     const promptTemplate = ChatPromptTemplate.fromMessages([

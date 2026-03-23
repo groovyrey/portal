@@ -253,7 +253,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-background/80 border-b border-border fixed top-0 left-0 right-0 z-[100] backdrop-blur-md">
+      <nav className="bg-background/80 dark:bg-[#020617]/90 border-b border-border fixed top-0 left-0 right-0 z-[100] backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-3">
@@ -322,7 +322,7 @@ export default function Navbar() {
                       </button>
 
                       {isDropdownOpen && (
-                        <div className="absolute left-0 mt-3 w-56 bg-background/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl py-2 z-[110] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <div className="absolute left-0 mt-3 w-56 bg-background/95 dark:bg-[#020617]/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl py-2 z-[110] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                           <div className="px-1.5 space-y-0.5">
                             {link.children.map((child: any) => {
                               const ChildIcon = child.icon;
@@ -405,7 +405,7 @@ export default function Navbar() {
                       </button>
 
                       {isMoreOpen && (
-                        <div className="absolute right-0 mt-3 w-48 bg-background/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl py-2 z-[110] animate-in fade-in zoom-in-95 duration-200">
+                        <div className="absolute right-0 mt-3 w-48 bg-background/95 dark:bg-[#020617]/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl py-2 z-[110] animate-in fade-in zoom-in-95 duration-200">
                           <div className="px-1.5 space-y-0.5">
                             {desktopMore.map((link) => {
                               const Icon = link.icon;
@@ -474,7 +474,7 @@ export default function Navbar() {
       >
         {/* Overlay */}
         <div 
-          className="absolute inset-0 bg-foreground/40 dark:bg-card/60 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
         ></div>
         
