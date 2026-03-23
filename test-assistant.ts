@@ -85,7 +85,7 @@ async function testAssistant() {
     } else {
         console.log("✅ TEST PASSED: No unexpected code blocks found.");
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error invoking model:", error.message);
   }
 }
