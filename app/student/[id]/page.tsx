@@ -25,6 +25,8 @@ import Skeleton from '@/components/ui/Skeleton';
 import BadgeDisplay from '@/components/shared/BadgeDisplay';
 import Modal from '@/components/ui/Modal';
 
+import Image from 'next/image';
+
 function ProfileContent() {
   const queryClient = useQueryClient();
   const { student: currentUserData, isLoading: isUserLoading } = useStudent();
@@ -254,11 +256,14 @@ function ProfileContent() {
         <div className="px-6 sm:px-8 pb-8 relative">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
             <div className="shrink-0 -mt-12 sm:-mt-16 relative z-10">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-card border-4 border-white shadow-md">
-                <img 
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=f1f5f9&color=64748b&size=256&font-size=0.33&bold=true`}
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl overflow-hidden bg-secondary/50 border-4 border-card shadow-xl flex items-center justify-center">
+                <Image 
+                  src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${student.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
                   alt={student.name}
+                  width={128}
+                  height={128}
                   className="w-full h-full object-cover"
+                  unoptimized
                 />
               </div>
             </div>

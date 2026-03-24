@@ -27,6 +27,7 @@ import {
 import { CommunityPost, Student } from '@/types';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 interface PostCardProps {
   post: CommunityPost;
@@ -163,8 +164,15 @@ export default function PostCard({
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center text-muted-foreground font-bold text-sm">
-            {post.userName.charAt(0).toUpperCase()}
+          <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary/50 border border-border shadow-sm flex items-center justify-center">
+            <Image 
+              src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${post.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+              alt={post.userName}
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+              unoptimized
+            />
           </div>
           <div className="min-w-0">
             {isProfileView ? (

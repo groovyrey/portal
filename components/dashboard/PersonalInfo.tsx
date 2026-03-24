@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+import Image from 'next/image';
+
 interface PersonalInfoProps {
   student: Student;
   isPublic?: boolean;
@@ -22,6 +24,9 @@ interface PersonalInfoProps {
 export default function PersonalInfo({ student, isPublic = false }: PersonalInfoProps) {
   const showAcademic = !isPublic || (student.settings?.showAcademicInfo ?? true);
   
+  // Use DiceBear adventurer avatar based on student ID (more neutral/inclusive)
+  const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${student.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+
   const details = [
     { label: 'Full Name', value: student.name, icon: User, visible: true },
     { label: 'Degree / Course', value: student.course, icon: GraduationCap, visible: showAcademic },
@@ -48,8 +53,15 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
     >
       <div className="p-6">
         <div className="flex items-center gap-4 mb-8">
-          <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-xl font-black text-primary border border-primary/20">
-            {initials}
+          <div className="relative h-14 w-14 rounded-2xl bg-secondary/50 overflow-hidden border border-primary/20 shadow-sm flex items-center justify-center">
+            <Image 
+              src={avatarUrl} 
+              alt={`${student.name}'s avatar`}
+              width={56}
+              height={56}
+              className="object-cover"
+              unoptimized
+            />
           </div>
           <div>
             <h3 className="text-base font-black text-foreground uppercase tracking-tight">Academic Profile</h3>

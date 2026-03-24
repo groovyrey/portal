@@ -35,6 +35,7 @@ import {
   Check
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Skeleton from '@/components/ui/Skeleton';
 import Modal from '@/components/ui/Modal';
 import { CommunityPost, Student, CommunityComment } from '@/types';
@@ -388,8 +389,15 @@ export default function PostPage() {
           <div className="space-y-6">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-full bg-accent flex items-center justify-center text-muted-foreground font-bold text-base border border-border">
-                  {post.userName.charAt(0).toUpperCase()}
+                <div className="relative h-11 w-11 rounded-xl overflow-hidden bg-secondary/50 flex items-center justify-center border border-border shadow-sm">
+                  <Image 
+                    src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${post.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                    alt={post.userName}
+                    width={44}
+                    height={44}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
                 </div>
                 <div>
                   <Link href={`/student/${post.userId}`} className="block group">
@@ -662,8 +670,15 @@ export default function PostPage() {
                         href={`/student/${comment.userId}`}
                         className="shrink-0"
                       >
-                        <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center text-muted-foreground font-bold text-sm border border-border group-hover:bg-card transition-colors">
-                          {comment.userName.charAt(0).toUpperCase()}
+                        <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary/50 border border-border group-hover:bg-card transition-all flex items-center justify-center shadow-sm">
+                          <Image 
+                            src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${comment.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                            alt={comment.userName}
+                            width={40}
+                            height={40}
+                            className="w-full h-full object-cover"
+                            unoptimized
+                          />
                         </div>
                       </Link>
                       <div className="flex-1 min-w-0">
@@ -783,10 +798,17 @@ export default function PostPage() {
                 key={user.id} 
                 href={`/student/${user.id}`}
                 onClick={() => setReactors(null)}
-                className="flex items-center gap-4 p-3 rounded-2xl hover:bg-accent transition-all"
+                className="flex items-center gap-4 p-3 rounded-2xl hover:bg-accent transition-all group"
               >
-                <div className="h-10 w-10 rounded-full bg-foreground text-background flex items-center justify-center font-bold text-sm">
-                  {user.name.charAt(0)}
+                <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary/50 border border-border group-hover:bg-card transition-all flex items-center justify-center shadow-sm">
+                  <Image 
+                    src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${user.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                    alt={user.name}
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
                 </div>
                 <span className="text-sm font-bold text-foreground">
                   {user.name}

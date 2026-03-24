@@ -67,6 +67,39 @@ async function performWebSearch(query: string) {
   } catch (e) { return "Web search timed out."; }
 }
 
+async function performWikipediaSearch(query: string) {
+  try {
+    // 1. Search for the most relevant page title
+    const searchRes = await fetch(
+      `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`,
+      { signal: AbortSignal.timeout(8000) }
+    );
+    if (!searchRes.ok) return "Wikipedia search service error.";
+    const searchData = await searchRes.json();
+    const topResult = searchData.query?.search?.[0];
+
+    if (!topResult) return `No Wikipedia article found for "${query}".`;
+
+    // 2. Fetch the summary for that title
+    const title = topResult.title;
+    const summaryRes = await fetch(
+      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/\s+/g, '_'))}`,
+      { signal: AbortSignal.timeout(8000) }
+    );
+
+    if (!summaryRes.ok) return `Found article "${title}" but failed to fetch summary.`;
+    const data = await summaryRes.json();
+
+    if (data.type === 'disambiguation') {
+      return `"${title}" is a disambiguation page. Please be more specific. Top options: ${data.extract}`;
+    }
+
+    return `**${data.title}**\n\n${data.extract}\n\nSource: ${data.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`}`;
+  } catch (e) {
+    return "Wikipedia fetch timed out or failed.";
+  }
+}
+
 async function performMathExecution(code: string) {
   let sandbox;
   try {
@@ -264,6 +297,11 @@ export async function POST(req: NextRequest) {
         description: "Search YouTube for educational videos.",
         schema: z.object({ query: z.string() })
       }),
+      tool(async ({ query }) => await performWikipediaSearch(query), {
+        name: "wikipedia_search",
+        description: "Search Wikipedia for factual summaries on people, places, events, or concepts. Use this for quick encyclopedic information.",
+        schema: z.object({ query: z.string().describe("The search term or topic") })
+      }),
       tool(async ({ question, options }) => {
         return `Presented user with options: ${options.join(', ')}. Waiting for selection...`;
       }, {
@@ -326,11 +364,12 @@ ${tutorModeProtocol}
 5. get_weekly_schedule: {} - Get weekly schedule (MON, TUE, etc.).
 6. web_search: { "query": string }
 7. web_fetch: { "url": string }
-8. youtube_search: { "query": string }
-9. get_full_student_data: {} - All info.
-10. ask_user_choice: { "question": string, "options": string[] }
-11. ask_user: { "question": string, "placeholder": string }
-12. render_html: { "description": string, "title": string } - Interactive 2D UI/2D demos. NO 3D.
+9. youtube_search: { "query": string }
+10. wikipedia_search: { "query": string } - Fetch encyclopedic summaries.
+11. get_full_student_data: {} - All info.
+12. ask_user_choice: { "question": string, "options": string[] }
+13. ask_user: { "question": string, "placeholder": string }
+14. render_html: { "description": string, "title": string } - Interactive 2D UI/2D demos. NO 3D.
 
 ### CONSTRAINTS
 - **Privacy:** Logged-in student data only.

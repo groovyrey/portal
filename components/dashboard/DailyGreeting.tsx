@@ -1,8 +1,9 @@
 'use client';
 
 import { Student } from '@/types';
-import { Cloud, Sun, CloudRain, Moon, Sparkles, Loader2, PartyPopper } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Cloud, Sun, CloudRain, Moon, Sparkles, Loader2, PartyPopper, RotateCcw } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
 
 const FALLBACK_QUOTES = [
   { q: "Education is the most powerful weapon which you can use to change the world.", a: "Nelson Mandela" },
@@ -29,48 +30,78 @@ export default function DailyGreeting({ student }: { student: Student }) {
   const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening'>('morning');
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  useEffect(() => {
-    async function fetchQuote() {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/quotes');
-        if (!response.ok) throw new Error();
-        const data = await response.json();
+  const fetchQuote = useCallback(async (force = false) => {
+    const today = currentDate.toDateString();
+    try {
+      setLoading(true);
+      
+      // Check if we have a quote for today in localStorage (skip if force is true)
+      if (!force) {
+        const cachedQuoteStr = localStorage.getItem('daily_quote_data');
+        if (cachedQuoteStr) {
+          const cached = JSON.parse(cachedQuoteStr);
+          if (cached.date === today) {
+            setQuote(cached.quote);
+            setAuthor(cached.author);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
+      const response = await fetch('/api/quotes');
+      if (!response.ok) throw new Error();
+      const data = await response.json();
+      
+      if (data && data.quote) {
+        setQuote(data.quote);
+        setAuthor(data.author);
         
-        if (data && data.quote) {
-          setQuote(data.quote);
-          setAuthor(data.author);
-        } else {
-          throw new Error();
-        }
-      } catch (err) {
-        const fallback = FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
-        setQuote(fallback.q);
-        setAuthor(fallback.a);
-      } finally {
-        setLoading(false);
+        // Cache for today
+        localStorage.setItem('daily_quote_data', JSON.stringify({
+          quote: data.quote,
+          author: data.author,
+          date: today
+        }));
+      } else {
+        throw new Error();
       }
+    } catch (err) {
+      const fallback = FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
+      setQuote(fallback.q);
+      setAuthor(fallback.a);
+
+      // Cache the fallback for today as well
+      localStorage.setItem('daily_quote_data', JSON.stringify({
+        quote: fallback.q,
+        author: fallback.a,
+        date: today
+      }));
+    } finally {
+      setLoading(false);
     }
+  }, [currentDate]);
 
-    async function checkHoliday() {
-      try {
-        const year = currentDate.getFullYear();
-        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
-        const day = currentDate.getDate().toString().padStart(2, '0');
-        const todayStr = `${year}-${month}-${day}`;
+  const checkHoliday = useCallback(async () => {
+    try {
+      const year = currentDate.getFullYear();
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+      const day = currentDate.getDate().toString().padStart(2, '0');
+      const todayStr = `${year}-${month}-${day}`;
 
-        // Fetch from the internal API
-        const response = await fetch(`/api/student/holidays?year=${year}`);
-        if (response.ok) {
-          const holidays: Holiday[] = await response.json();
-          const todayHoliday = holidays.find(h => h.date === todayStr);
-          if (todayHoliday) setHoliday(todayHoliday);
-        }
-      } catch (e) {
-        console.error('Failed to fetch holidays', e);
+      // Fetch from the internal API
+      const response = await fetch(`/api/student/holidays?year=${year}`);
+      if (response.ok) {
+        const holidays: Holiday[] = await response.json();
+        const todayHoliday = holidays.find(h => h.date === todayStr);
+        if (todayHoliday) setHoliday(todayHoliday);
       }
+    } catch (e) {
+      console.error('Failed to fetch holidays', e);
     }
+  }, [currentDate]);
 
+  useEffect(() => {
     fetchQuote();
     checkHoliday();
     
@@ -78,7 +109,17 @@ export default function DailyGreeting({ student }: { student: Student }) {
     if (hour < 12) setTimeOfDay('morning');
     else if (hour < 18) setTimeOfDay('afternoon');
     else setTimeOfDay('evening');
-  }, [currentDate]);
+
+    // Update date periodically (every minute) to handle day transition while tab is open
+    const timer = setInterval(() => {
+      const now = new Date();
+      if (now.toDateString() !== currentDate.toDateString()) {
+        setCurrentDate(now);
+      }
+    }, 60000);
+
+    return () => clearInterval(timer);
+  }, [currentDate, fetchQuote, checkHoliday]);
 
   const getIcon = () => {
     switch (timeOfDay) {
@@ -146,27 +187,41 @@ export default function DailyGreeting({ student }: { student: Student }) {
         </div>
       )}
 
-      <div className="relative mt-8 pt-6 border-t border-border/50 flex items-start gap-3">
-        <div className="mt-1 shrink-0">
-          <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
-        </div>
-        {loading ? (
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-3 w-3 text-muted-foreground animate-spin" />
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Fetching inspiration...</span>
+      <div className="relative mt-8 pt-6 border-t border-border/50 flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="mt-1 shrink-0">
+            <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
           </div>
-        ) : (
-          <div className="space-y-1">
-            <p className="text-xs font-bold italic text-muted-foreground leading-relaxed">
-              "{quote}"
-            </p>
-            {author && (
-              <p className="text-[9px] font-black uppercase tracking-widest text-primary/70">
-                — {author}
+          {loading ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-3 w-3 text-muted-foreground animate-spin" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Fetching inspiration...</span>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <p className="text-xs font-bold italic text-muted-foreground leading-relaxed">
+                "{quote}"
               </p>
-            )}
-          </div>
-        )}
+              {author && (
+                <p className="text-[9px] font-black uppercase tracking-widest text-primary/70">
+                  — {author}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <motion.button
+          onClick={() => fetchQuote(true)}
+          disabled={loading}
+          whileHover={{ rotate: -180 }}
+          whileTap={{ scale: 0.8 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors shrink-0"
+          title="Refresh Quote"
+        >
+          <RotateCcw className={`h-3 w-3 ${loading ? 'animate-spin-reverse' : ''}`} />
+        </motion.button>
       </div>
     </div>
   );
