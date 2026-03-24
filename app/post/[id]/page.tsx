@@ -683,9 +683,9 @@ export default function PostPage() {
                       </Link>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1 gap-4">
-                          <Link href={`/student/${comment.userId}`} className="truncate">
-                            <span className={`text-sm font-bold truncate hover:text-primary transition-colors ${isMe ? 'text-primary' : 'text-foreground'}`}>
-                              {isMe ? 'You' : comment.userName}
+                          <Link href={`/student/${comment.userId}`} className="break-words">
+                            <span className={`text-sm font-bold break-words hover:text-primary transition-colors ${isMe ? 'text-primary' : 'text-foreground'}`}>
+                              {comment.userName}
                             </span>
                           </Link>
                           <div className="flex items-center gap-3">

@@ -10,17 +10,20 @@ import LottieAnimation from '@/components/ui/LottieAnimation';
 import Skeleton from '@/components/ui/Skeleton';
 import { useStudent } from '@/lib/hooks';
 
+type ExtendedGrade = SubjectGrade & { semester: string };
+
 export default function GradesPage() {
   const { student } = useStudent();
   const [isInitialized, setIsInitialized] = useState(false);
-  const [allGrades, setAllGrades] = useState<SubjectGrade[]>([]);
+  const [allGrades, setAllGrades] = useState<ExtendedGrade[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
 
   useEffect(() => {
     const savedAllGrades = localStorage.getItem('all_grades_cache');
     if (savedAllGrades) {
       try {
-        setAllGrades(JSON.parse(savedAllGrades));
+        const parsed = JSON.parse(savedAllGrades);
+        setAllGrades(parsed);
       } catch (e) {
         console.error('Failed to parse saved grades data');
       }
@@ -32,7 +35,7 @@ export default function GradesPage() {
     if (!student || !student.availableReports || isCalculating) return;
     setIsCalculating(true);
     const statsToast = toast.loading('Gathering academic data across semesters...');
-    let gathered: SubjectGrade[] = [];
+    let gathered: ExtendedGrade[] = [];
 
     try {
       // Fetch each semester in parallel - Session cookie handles auth
@@ -48,9 +51,15 @@ export default function GradesPage() {
       );
 
       const results = await Promise.all(promises);
-      results.forEach(res => {
-        if (res.success && res.subjects) {
-          gathered = [...gathered, ...res.subjects];
+
+      results.forEach((res, index) => {
+        if (res.success && res.subjects && student.availableReports) {
+          const semesterName = student.availableReports[index].text;
+          const subjectsWithSemester = res.subjects.map((s: SubjectGrade) => ({
+            ...s,
+            semester: semesterName
+          }));
+          gathered = [...gathered, ...subjectsWithSemester];
         }
       });
 
@@ -62,12 +71,40 @@ export default function GradesPage() {
 
       // De-duplicate gathered grades
       const seen = new Set();
-      const unique = gathered.filter(g => {
-        const key = `${g.description}-${g.grade}`.toLowerCase();
+      let unique = gathered.filter(g => {
+        const key = `${g.code}-${g.description}-${g.semester}`.toLowerCase();
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
       });
+
+      // Enrich with units from Prospectus (offeredSubjects) if missing or mismatched
+      if (student?.offeredSubjects && student.offeredSubjects.length > 0) {
+        unique = unique.map(g => {
+          const u = parseFloat(g.units || '0');
+          // If code looks like a section (contains semester/year info or matches common patterns)
+          const looksLikeSection = /^[A-Z]{2,}\d[A-Z]$/i.test(g.code) || g.code.includes('-');
+
+          // Populate section field if empty and code looks like one
+          const currentSection = g.section || (looksLikeSection ? g.code : '');
+
+          // Find in prospectus by description or code
+          const match = student.offeredSubjects?.find(s => 
+            s.description.trim().toLowerCase() === g.description.trim().toLowerCase() ||
+            s.code.trim().toLowerCase() === g.code.trim().toLowerCase()
+          );
+
+          if (match) {
+            return { 
+              ...g, 
+              section: currentSection,
+              units: (isNaN(u) || u === 0) ? (match.units || g.units) : g.units
+            };
+          }
+
+          return { ...g, section: currentSection };
+        });
+      }
 
       setAllGrades(unique);
       localStorage.setItem('all_grades_cache', JSON.stringify(unique));

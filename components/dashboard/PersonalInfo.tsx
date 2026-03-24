@@ -77,7 +77,7 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.15em] mb-1">{detail.label}</p>
-                <p className="text-sm font-bold text-foreground truncate leading-tight">{detail.value}</p>
+                <p className="text-sm font-bold text-foreground break-words leading-tight">{detail.value}</p>
               </div>
             </div>
           ))}

@@ -123,7 +123,7 @@ export default function AdminPage() {
           <div className="p-4 border-t border-border/50 bg-muted/20">
             <div className="p-3 rounded-xl bg-background/50 border border-border/50">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Signed in as</p>
-              <p className="text-xs font-bold truncate text-foreground">{currentUser.name}</p>
+              <p className="text-xs font-bold break-words text-foreground">{currentUser.name}</p>
             </div>
           </div>
         </aside>

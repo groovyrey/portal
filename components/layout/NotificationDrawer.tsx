@@ -341,7 +341,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3 mb-1">
-                      <h4 className={`text-sm font-bold truncate ${
+                      <h4 className={`text-sm font-bold break-words ${
                         notif.isRead ? 'text-foreground' : 'text-primary'
                       }`}>
                         {notif.title}
@@ -366,7 +366,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                         </button>
                       </div>
                     </div>
-                    <p className={`text-xs leading-relaxed line-clamp-2 ${
+                    <p className={`text-xs leading-relaxed break-words ${
                       notif.isRead ? 'text-muted-foreground' : 'text-muted-foreground'
                     }`}>
                       {notif.message}

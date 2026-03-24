@@ -215,7 +215,7 @@ export default function MonitoringTab() {
                           </div>
                         )}
                       </div>
-                      <p className="text-muted-foreground font-medium text-[10px] mt-1 line-clamp-1">{job.desc}</p>
+                      <p className="text-muted-foreground font-medium text-[10px] mt-1 break-words">{job.desc}</p>
                     </div>
                   </div>
 

@@ -9,7 +9,7 @@ export default function Toaster() {
   return (
     <SonnerToaster
       position="top-center"
-      theme={resolvedTheme}
+      theme={(resolvedTheme as 'light' | 'dark' | 'system') || 'system'}
       expand={false}
       closeButton={false}
       visibleToasts={3}

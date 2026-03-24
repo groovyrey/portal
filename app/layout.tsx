@@ -53,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased text-foreground bg-background min-h-screen flex flex-col selection:bg-primary selection:text-primary-foreground`}>
         <Providers>
           <RealtimeProvider>

@@ -562,25 +562,30 @@ export class ScraperService {
 
           let code = "";
           let desc = "";
+          let section = "";
+          let units = "";
           let grade = "";
           let remarks = "";
 
           if (cells.length === 3) {
-              // Check if col0 looks like a section (e.g. BSCS-1A)
-              const isSectionAtStart = /^[A-Z]{2,}-\d[A-Z]$/i.test(col0) || col0.includes('-');
-              if (isSectionAtStart) {
+              // Stricter check: only consider it a section if it matches typical patterns
+              // e.g. BSCS-1A, BSIS1B, NSTP1-IS-A
+              const isSectionAtStart = /^[A-Z]{2,}-?\d[A-Z]$/i.test(col0) || /^[A-Z]{2,}\d-?[A-Z]{1,2}-?[A-Z]?$/i.test(col0);
+              
+              if (isSectionAtStart && col0.length < 15) {
                   code = col1;
                   grade = col2;
-                  desc = "Unknown Subject"; // Description missing in 3-col if col0 is section
+                  desc = "Unknown Subject";
               } else {
                   desc = col0;
-                  code = col1;
+                  section = col1;
+                  code = col1; 
                   grade = col2;
               }
               remarks = "N/A";
           } else {
-              // DETECT IF FIRST COLUMN IS SECTION (e.g. "BSCS-1A", "BSIT-2B", etc.)
-              const isSectionAtStart = cells.length >= 4 && (/^[A-Z]{2,}-\d[A-Z]$/i.test(col0) || col0.includes('-'));
+              // DETECT IF FIRST COLUMN IS SECTION
+              const isSectionAtStart = cells.length >= 4 && (/^[A-Z]{2,}-?\d[A-Z]$/i.test(col0) || /^[A-Z]{2,}\d-?[A-Z]{1,2}-?[A-Z]?$/i.test(col0)) && col0.length < 15;
               
               if (isSectionAtStart) {
                 code = col1;
@@ -590,15 +595,65 @@ export class ScraperService {
                 desc = col1;
               }
               
+              units = "";
+              const numericCells: { idx: number, val: string }[] = [];
+
               cells.each((cIdx, cell) => {
                   const cellText = $rc(cell).text().trim();
                   if (/^(\d+\.?\d*|INC|DRP|PASS|FAIL)$/i.test(cellText) && cIdx > 1) {
-                      grade = cellText;
-                      remarks = $rc(cells[cIdx + 1]).text().trim() || $rc(cells[cells.length - 1]).text().trim();
+                      // Keep track of potential numeric/grade cells
+                      numericCells.push({ idx: cIdx, val: cellText });
+                      
+                      // Default logic: assume the last "grade-like" cell is the grade
+                      // But usually Remarks is after Grade.
+                      // If we hit a cell that is DEFINITELY a grade status (INC/DRP/PASS/FAIL), that's the grade column (or remarks).
+                      // If it's a number, it could be Units or Grade.
                   }
               });
 
+              // Heuristic:
+              // If we have >= 2 numeric cells:
+              // - The one immediately preceding Remarks is Grade.
+              // - The one before that is Units.
+              // - Or if strictly 2 numbers, 1st is Units, 2nd is Grade.
+              
+              if (numericCells.length >= 2) {
+                  // Assume last one is Grade, second to last is Units?
+                  // Be careful with "Passed" being in numericCells due to regex.
+                  // Filter out explicit text status from "units" candidates.
+                  
+                  const gradeCandidate = numericCells[numericCells.length - 1];
+                  grade = gradeCandidate.val;
+                  remarks = $rc(cells[gradeCandidate.idx + 1]).text().trim() || $rc(cells[cells.length - 1]).text().trim();
+
+                  // Try to find units before grade
+                  const unitsCandidate = numericCells[numericCells.length - 2];
+                  if (unitsCandidate && /^\d+(\.\d+)?$/.test(unitsCandidate.val)) {
+                      // Check if it looks like valid units (0.5 to 10.0)
+                      const uVal = parseFloat(unitsCandidate.val);
+                      if (uVal > 0 && uVal <= 10) {
+                          units = unitsCandidate.val;
+                      }
+                  }
+                  
+                  // If grade was actually "Passed" or "INC" (non-numeric), then it is the grade.
+                  // And the number before it is likely the final grade score? No, usually: Units | Final Grade | Remarks
+                  // Or: Prelim | Midterm | Final | Remarks.
+                  // If multiple numbers, and one is 1.0-5.0, that's grade.
+                  
+                  // Let's refine:
+                  // If we captured 'units', remove it from 'grade' consideration if we blindly overwrote.
+                  // Actually, my previous logic `grade = cellText` overwrites.
+                  // So `grade` is currently the LAST matched cell.
+                  // If `3.0` then `1.25`, grade is `1.25`. `3.0` was overwritten.
+                  // So checking `numericCells` allows us to recover `3.0`.
+              } else if (numericCells.length === 1) {
+                  grade = numericCells[0].val;
+                  remarks = $rc(cells[numericCells[0].idx + 1]).text().trim() || $rc(cells[cells.length - 1]).text().trim();
+              }
+
               if (!grade && cells.length >= 4) {
+                  // ... fallback logic (keep existing)
                   if (cells.length >= 7) {
                       grade = $rc(cells[cells.length - 2]).text().trim();
                       remarks = $rc(cells[cells.length - 1]).text().trim();
@@ -626,7 +681,9 @@ export class ScraperService {
               subjects.push({ 
                   code: code || "SUBJ", 
                   description: desc, 
+                  section: section,
                   grade: grade || "---", 
+                  units: units || "0",
                   remarks: finalRemarks
               });
           }

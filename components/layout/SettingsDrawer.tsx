@@ -131,7 +131,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                     />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-lg text-foreground leading-tight truncate">{student?.name || '?'}</h3>
+                    <h3 className="font-bold text-lg text-foreground leading-tight break-words">{student?.name || '?'}</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="px-1.5 py-0.5 bg-blue-50 dark:bg-blue-950/30 text-[9px] font-bold text-blue-600 dark:text-blue-400 rounded border border-blue-100 dark:border-blue-900/50 uppercase">ID</span>
                       <p className="text-[11px] text-muted-foreground font-mono font-bold">{student?.id || '?'}</p>
@@ -358,12 +358,12 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                           
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
                             <div className="flex items-center justify-between gap-2">
-                              <h4 className="text-[11px] font-bold text-foreground truncate uppercase tracking-tight">{log.action}</h4>
+                              <h4 className="text-[11px] font-bold text-foreground break-words uppercase tracking-tight">{log.action}</h4>
                               <span className={`text-[9px] font-bold shrink-0 uppercase ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground/50'}`}>
                                 {isToday ? 'Today' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                               </span>
                             </div>
-                            <p className="text-[11px] text-muted-foreground font-medium leading-snug line-clamp-1">{log.details}</p>
+                            <p className="text-[11px] text-muted-foreground font-medium leading-snug break-words">{log.details}</p>
                           </div>
 
                           {log.link && (
@@ -421,7 +421,7 @@ function DrawerInfoItem({ icon, label, value }: { icon: React.ReactNode, label: 
       </div>
       <div className="min-w-0">
         <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">{label}</p>
-        <p className="text-xs font-bold text-foreground truncate">{value || '?'}</p>
+        <p className="text-xs font-bold text-foreground break-words">{value || '?'}</p>
       </div>
     </div>
   );

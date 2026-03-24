@@ -178,10 +178,10 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
           {nextClass ? (
             <div className="flex-1 space-y-4">
               <div>
-                <h3 className="text-xl font-black leading-tight truncate uppercase tracking-tight">
+                <h3 className="text-xl font-black leading-tight break-words uppercase tracking-tight">
                   {nextClass.subject.split(' - ')[0]}
                 </h3>
-                <p className="text-xs font-bold text-primary-foreground/70 truncate mt-1">
+                <p className="text-xs font-bold text-primary-foreground/70 break-words mt-1">
                   {nextClass.subject.split(' - ')[1] || 'Lecture'}
                 </p>
               </div>

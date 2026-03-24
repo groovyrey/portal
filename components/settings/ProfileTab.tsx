@@ -32,19 +32,20 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
   const [selectedCampus, setSelectedCampus] = useState(student.settings?.campus || '');
   const [isSaving, setIsSaving] = useState(false);
   const { resolvedTheme } = useTheme();
+  const currentTheme = (resolvedTheme || 'light') as 'light' | 'dark';
 
   const muiTheme = useMemo(() => createTheme({
     palette: {
-      mode: resolvedTheme,
+      mode: currentTheme,
       primary: {
         main: '#3b82f6', // blue-500
       },
       background: {
-        paper: resolvedTheme === 'dark' ? '#1e293b' : '#ffffff', // slate-800 or white
+        paper: currentTheme === 'dark' ? '#1e293b' : '#ffffff', // slate-800 or white
       },
       text: {
-        primary: resolvedTheme === 'dark' ? '#f8fafc' : '#0f172a',
-        secondary: resolvedTheme === 'dark' ? '#94a3b8' : '#64748b',
+        primary: currentTheme === 'dark' ? '#f8fafc' : '#0f172a',
+        secondary: currentTheme === 'dark' ? '#94a3b8' : '#64748b',
       }
     },
     typography: {
@@ -56,7 +57,7 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
           root: {
             backgroundImage: 'none',
             borderRadius: '12px',
-            border: resolvedTheme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+            border: currentTheme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
           }
         }
       },
@@ -65,10 +66,10 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
           root: {
             borderRadius: '12px',
             '& .MuiOutlinedInput-notchedOutline': {
-              borderColor: resolvedTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+              borderColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
             },
             '&:hover .MuiOutlinedInput-notchedOutline': {
-              borderColor: resolvedTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+              borderColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
               borderColor: '#3b82f6',
@@ -101,7 +102,7 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
         }
       }
     }
-  }), [resolvedTheme]);
+  }), [currentTheme]);
 
   const handleCampusChange = (event: SelectChangeEvent) => {
     setSelectedCampus(event.target.value as string);
@@ -129,7 +130,7 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
               />
           </div>
           <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-xl text-foreground leading-tight truncate">{student.name}</h3>
+              <h3 className="font-bold text-xl text-foreground leading-tight break-words">{student.name}</h3>
               <div className="flex items-center gap-2 mt-2">
                 <span className="px-2 py-0.5 bg-blue-500/10 text-[10px] font-bold text-blue-600 dark:text-blue-400 rounded border border-blue-500/20 uppercase tracking-wider">ID</span>
                 <p className="text-xs text-muted-foreground font-mono font-bold tracking-tight">{student.id}</p>

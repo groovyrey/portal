@@ -27,7 +27,7 @@ const StudentRow = memo(({
       <span className="font-bold text-foreground">{student.name}</span>
     </td>
     <td className="px-6 py-4">
-      <span className="text-[10px] font-black text-muted-foreground uppercase truncate block max-w-[200px]">
+      <span className="text-[10px] font-black text-muted-foreground uppercase break-words block">
         {student.course}
       </span>
     </td>

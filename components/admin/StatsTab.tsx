@@ -115,8 +115,7 @@ export default function StatsTab() {
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Most Students</p>
             <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-primary" />
-                <span className="text-xs font-bold text-foreground truncate">{stats.courses[0]?.name}</span>
-            </div>
+                <span className="text-xs font-bold text-foreground break-words">{stats.courses[0]?.name}</span>            </div>
         </div>
       </div>
 

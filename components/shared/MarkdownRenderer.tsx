@@ -36,7 +36,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
                 key={i} 
                 href={`#${header.id}`} 
                 className={`
-                  text-sm font-bold transition-colors py-1 truncate
+                  text-sm font-bold transition-colors py-1 break-words
                   ${header.level === 1 ? 'text-primary mt-2' : 'text-muted-foreground hover:text-foreground pl-2'}
                 `}
               >

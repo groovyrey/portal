@@ -133,7 +133,7 @@ export default function ActivityTab() {
                     
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                       <div className="flex items-center justify-between gap-3 mb-1">
-                        <h4 className="text-sm font-bold text-foreground truncate uppercase tracking-tight">
+                        <h4 className="text-sm font-bold text-foreground break-words uppercase tracking-tight">
                           {typeof log.details === 'object' && log.details.message ? log.details.message : log.action}
                         </h4>
                         <span className={`text-[10px] font-bold shrink-0 uppercase tracking-wider ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground/50'}`}>

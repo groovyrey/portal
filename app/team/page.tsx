@@ -82,11 +82,11 @@ export default function TeamPage() {
                   </div>
                   <div className="min-w-0">
                     <Link href={`/student/${member.id}`}>
-                      <h4 className="font-black text-sm uppercase tracking-tight truncate hover:text-primary transition-colors">
+                      <h4 className="font-black text-sm uppercase tracking-tight break-words hover:text-primary transition-colors">
                         {member.parsedName?.firstName} {member.parsedName?.lastName}
                       </h4>
                     </Link>
-                    <div className="flex items-center gap-2 mt-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">
+                    <div className="flex items-center gap-2 mt-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest break-words">
                       <GraduationCap className="h-3 w-3 shrink-0" />
                       {member.course}
                     </div>

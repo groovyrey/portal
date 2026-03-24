@@ -86,7 +86,7 @@ function InfoItem({ label, value, icon }: { label: string, value: string, icon: 
       </div>
       <div className="min-w-0">
         <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider leading-none mb-1">{label}</p>
-        <p className="text-sm font-medium text-foreground leading-none truncate">{value}</p>
+        <p className="text-sm font-medium text-foreground leading-none break-words">{value}</p>
       </div>
     </div>
   );

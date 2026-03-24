@@ -227,7 +227,7 @@ const SchoolInfoPage = () => {
                                 <div className="space-y-1">
                                     {campus.phone && <p className="text-xs font-bold text-foreground">Tel: {campus.phone}</p>}
                                     {campus.mobile && <p className="text-xs font-bold text-foreground">Cel: {campus.mobile}</p>}
-                                    {campus.email && <p className="text-xs font-bold text-primary truncate">{campus.email}</p>}
+                                    {campus.email && <p className="text-xs font-bold text-primary break-words">{campus.email}</p>}
                                 </div>
                             </div>
                         </div>

@@ -52,6 +52,7 @@ export interface ProspectusSubject {
 export interface SubjectGrade {
   code: string;
   description: string;
+  section?: string;
   grade: string;
   units?: string;
   remarks: string;

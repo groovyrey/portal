@@ -87,11 +87,11 @@ export default function GradesList({ reports }: GradesListProps) {
                       : 'bg-accent text-muted-foreground hover:bg-accent/80 border-border hover:border-muted-foreground/30'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <FileText className={`h-4 w-4 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
-                    <span className="truncate">{report.text.replace('Grades of ', '')}</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <FileText className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+                    <span className="break-words text-left">{report.text.replace('Grades of ', '')}</span>
                   </div>
-                  <ChevronRight className={`h-4 w-4 ${isActive ? 'opacity-100' : 'opacity-30 group-hover:opacity-100'}`} />
+                  <ChevronRight className={`h-4 w-4 shrink-0 ${isActive ? 'opacity-100' : 'opacity-30 group-hover:opacity-100'}`} />
                 </button>
               );
             })}
@@ -128,37 +128,63 @@ export default function GradesList({ reports }: GradesListProps) {
                   </div>
                 </div>
   
-                <div className="space-y-2">
-                  {grades.map((sub, sIdx) => {
-                    const isPassed = sub.remarks.toLowerCase().includes('pass') || (parseFloat(sub.grade) <= 3.0 && parseFloat(sub.grade) > 0);
-                    return (
-                      <div key={sIdx} className="p-4 bg-card border border-border rounded-xl hover:border-muted-foreground transition-all">
-                        <div className="flex justify-between items-start gap-4 mb-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-foreground uppercase leading-snug truncate">{sub.description}</p>
-                            <span className="text-[10px] font-bold text-muted-foreground font-mono uppercase">{sub.code}</span>
-                          </div>
-                          <div className={`text-base font-bold px-3 py-1 rounded-lg border ${
-                            isPassed
-                              ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50'
-                              : 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/50'
-                          }`}>
-                            {sub.grade}
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between pt-3 border-t border-border">
-                          <div className="flex items-center gap-1.5">
-                            <div className={`h-1.5 w-1.5 rounded-full ${isPassed ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                            <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                              isPassed ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                            }`}>
-                              {sub.remarks}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border bg-accent/20">
+                          <th className="px-4 py-3">Code</th>
+                          <th className="px-4 py-3">Subject Description</th>
+                          <th className="px-4 py-3 text-center">Section</th>
+                          <th className="px-4 py-3 text-center">Grade</th>
+                          <th className="px-4 py-3 text-right">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/50">
+                        {grades.map((sub, sIdx) => {
+                          const isPassed = sub.remarks.toLowerCase().includes('pass') || (parseFloat(sub.grade) <= 3.0 && parseFloat(sub.grade) > 0);
+                          return (
+                            <tr key={sIdx} className="hover:bg-accent/50 transition-colors group">
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <span className="font-mono text-[10px] font-bold text-muted-foreground bg-accent group-hover:bg-background px-2 py-1 rounded transition-colors uppercase">
+                                  {sub.code}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <p className="text-[11px] font-bold text-foreground uppercase leading-tight break-words">
+                                  {sub.description}
+                                </p>
+                              </td>
+                              <td className="px-4 py-3 text-center whitespace-nowrap">
+                                <span className="text-[10px] font-bold text-muted-foreground bg-accent/50 px-2 py-0.5 rounded uppercase">
+                                  {sub.section || '---'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-center whitespace-nowrap">
+                                <span className={`text-xs font-black px-2 py-1 rounded-lg border ${
+                                  isPassed
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50'
+                                    : 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/50'
+                                }`}>
+                                  {sub.grade}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right whitespace-nowrap">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <div className={`h-1.5 w-1.5 rounded-full ${isPassed ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                                  <span className={`text-[9px] font-black uppercase tracking-widest ${
+                                    isPassed ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                                  }`}>
+                                    {sub.remarks}
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             ) : (

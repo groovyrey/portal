@@ -295,14 +295,14 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                               className={`
                                 w-full h-full rounded-lg p-1.5 flex flex-col items-center justify-center text-center
                                 transition-all border ${getSubjectColor(classToRender.subject)}
-                                shadow-sm hover:shadow-md active:opacity-70 overflow-hidden
+                                shadow-sm hover:shadow-md active:opacity-70 overflow-hidden whitespace-normal
                               `}
                             >
-                              <span className="text-[10px] font-black leading-tight truncate w-full">
+                              <span className="text-[10px] font-black leading-tight break-words w-full">
                                 {getSubjectCode(classToRender.subject)}
                               </span>
                               {duration > 1 && (
-                                <span className="text-[8px] font-bold opacity-60 mt-0.5 truncate w-full">
+                                <span className="text-[8px] font-bold opacity-60 mt-0.5 break-words w-full">
                                   {classToRender.room || '?'}
                                 </span>
                               )}
