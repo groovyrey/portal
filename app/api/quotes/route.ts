@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 
-// Fallback quotes to use when API rate limit is reached or fails
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const FALLBACK_QUOTES = [
   { q: "The beautiful thing about learning is that no one can take it away from you.", a: "B.B. King" },
   { q: "Education is the passport to the future, for tomorrow belongs to those who prepare for it today.", a: "Malcolm X" },
@@ -14,53 +16,43 @@ const FALLBACK_QUOTES = [
   { q: "The future belongs to those who believe in the beauty of their dreams.", a: "Eleanor Roosevelt" }
 ];
 
-let lastFetchTime = 0;
 let cachedQuotes: any[] = [];
+let lastFetchTime = 0;
 
 export async function GET() {
   const now = Date.now();
 
-  // Simple in-memory cache (resets on server restart/redeploy)
-  // Cache for 1 hour (3600000 ms) to be very safe with rate limits
-  if (cachedQuotes.length > 0 && (now - lastFetchTime < 3600000)) {
-    const randomQuote = cachedQuotes[Math.floor(Math.random() * cachedQuotes.length)];
-    return NextResponse.json({
-      quote: randomQuote.q,
-      author: randomQuote.a
-    });
-  }
-
-  try {
-    // Fetch a batch of quotes to cache
-    const response = await fetch('https://zenquotes.io/api/quotes', {
-      next: { revalidate: 3600 }
-    });
-
-    if (!response.ok) {
-      throw new Error(`ZenQuotes API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (Array.isArray(data) && data.length > 0) {
-      cachedQuotes = data;
-      lastFetchTime = now;
-      const randomQuote = data[0];
-      return NextResponse.json({
-        quote: randomQuote.q,
-        author: randomQuote.a
+  // Refresh cache every 30 minutes to keep variety high
+  if (cachedQuotes.length === 0 || (now - lastFetchTime > 1800000)) {
+    try {
+      const response = await fetch('https://zenquotes.io/api/quotes', {
+        cache: 'no-store'
       });
-    } else {
-       throw new Error('Invalid data format');
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          cachedQuotes = data;
+          lastFetchTime = now;
+        }
+      }
+    } catch (error) {
+      console.warn('API Fetch failed, using fallback pool');
     }
-
-  } catch (error) {
-    console.warn('Using fallback quotes due to API error:', error);
-    // Serve from fallback list
-    const randomFallback = FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
-    return NextResponse.json({
-      quote: randomFallback.q,
-      author: randomFallback.a
-    });
   }
+
+  // Always pick a random quote from the available pool
+  const pool = cachedQuotes.length > 0 ? cachedQuotes : FALLBACK_QUOTES;
+  const randomIndex = Math.floor(Math.random() * pool.length);
+  const selected = pool[randomIndex];
+
+  // Map fields to match client expectation (q -> quote, a -> author)
+  return NextResponse.json({
+    quote: selected.q || selected.quote,
+    author: selected.a || selected.author
+  }, {
+    headers: {
+      'Cache-Control': 'no-store, max-age=0, must-revalidate',
+      'Pragma': 'no-cache'
+    }
+  });
 }

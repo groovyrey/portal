@@ -9,7 +9,7 @@ import { usePathname } from 'next/navigation';
 export default function ClientLayoutWrapper({ children }: { children: React.ReactNode }) {
   const [isRestricted, setIsRestricted] = useState(false);
   const pathname = usePathname();
-  const isTestPage = pathname === '/test';
+  const isStudyMode = pathname === '/study-mode';
 
   useEffect(() => {
     // Check if the restricted cookie exists
@@ -25,7 +25,7 @@ export default function ClientLayoutWrapper({ children }: { children: React.Reac
     return () => clearInterval(interval);
   }, []);
 
-  if (isTestPage) {
+  if (isStudyMode) {
     return (
       <main className="flex-1">
         {children}

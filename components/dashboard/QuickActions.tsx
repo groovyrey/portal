@@ -8,7 +8,8 @@ import {
   MessageSquare, 
   Settings, 
   BookOpen,
-  LayoutGrid
+  LayoutGrid,
+  BrainCircuit
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -18,6 +19,12 @@ const actions = [
     icon: GraduationCap, 
     href: '/grades', 
     color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' 
+  },
+  { 
+    label: 'Study Mode', 
+    icon: BrainCircuit, 
+    href: '/study-mode', 
+    color: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20' 
   },
   { 
     label: 'Class Schedule', 
@@ -42,12 +49,6 @@ const actions = [
     icon: BookOpen, 
     href: '/subjects', 
     color: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20' 
-  },
-  { 
-    label: 'Account Settings', 
-    icon: Settings, 
-    href: '/settings', 
-    color: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20' 
   },
 ];
 

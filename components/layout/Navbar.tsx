@@ -212,6 +212,7 @@ export default function Navbar() {
 
   const workspaceLinks = [
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit, desc: 'AI Study Buddy' },
+    { name: 'Study Mode', href: '/study-mode', icon: Monitor, desc: 'Focused Study' },
   ];
 
   const socialLinks = [
