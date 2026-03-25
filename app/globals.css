@@ -41,22 +41,23 @@
   @keyframes fadeInUp {
     from { 
       opacity: 0; 
-      transform: translateY(10px); 
+      /* transform: translateY(10px); removed movement */
     }
     to { 
       opacity: 1; 
-      transform: translateY(0); 
+      /* transform: translateY(0); removed movement */
     }
   }
 
   @keyframes cursorPulse {
-    0%, 100% { transform: scale(1); opacity: 0.5; }
-    50% { transform: scale(1.5); opacity: 1; }
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
   }
 
   @keyframes spin-reverse {
-    from { transform: rotate(360deg); }
-    to { transform: rotate(0deg); }
+    /* Removed rotation */
+    from { opacity: 0.5; }
+    to { opacity: 1; }
   }
 }
 

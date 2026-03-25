@@ -346,9 +346,9 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                       return (
                         <motion.div 
                           layout
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
                           key={log.id} 
                           className="group flex gap-3 p-3 bg-card hover:bg-accent rounded-xl border border-border transition-all active:scale-[0.99]"
                         >
@@ -464,8 +464,8 @@ function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon:
         </div>
       </div>
       <div className={`w-10 h-5 rounded-full relative transition-colors shadow-inner ${isOn ? 'bg-primary' : 'bg-muted'}`}>
-        <motion.div
-          animate={{ x: isOn ? 22 : 2 }}
+        <div
+          style={{ transform: `translateX(${isOn ? 22 : 2}px)` }}
           className={`absolute top-1 w-3 h-3 rounded-full shadow-sm transition-colors ${
             isOn ? 'bg-primary-foreground' : 'bg-white'
           }`}

@@ -36,7 +36,6 @@ import { APP_VERSION } from '@/lib/version';
 import NotificationDrawer from './NotificationDrawer';
 import { useNotificationsQuery, useStudentQuery } from '@/lib/hooks';
 import { Notification } from '@/types';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
   const router = useRouter();

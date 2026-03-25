@@ -37,9 +37,9 @@ export default function PageHeader() {
         <AnimatePresence mode="wait">
           <motion.button
             key="back-button"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={() => router.back()}
             className="p-1.5 hover:bg-accent rounded-lg transition-all text-muted-foreground hover:text-foreground active:scale-95"
           >
@@ -50,9 +50,9 @@ export default function PageHeader() {
         <AnimatePresence mode="wait">
           <motion.div
             key={title}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="flex items-center gap-2"
           >
             <div className="h-1 w-1 rounded-full bg-blue-500" />

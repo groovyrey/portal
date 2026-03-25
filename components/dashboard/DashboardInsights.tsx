@@ -125,7 +125,6 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       {/* 1. Next Class Spotlight */}
       <motion.div 
-        whileHover={{ y: -5 }}
         className="bg-primary rounded-3xl p-6 text-primary-foreground shadow-xl shadow-primary/20 relative overflow-hidden group"
       >
         <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
@@ -180,7 +179,6 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
 
       {/* 2. Weekly Workload Graph */}
       <motion.div 
-        whileHover={{ y: -5 }}
         className="bg-card rounded-3xl p-6 border border-border shadow-sm flex flex-col group"
       >
         <div className="flex items-center justify-between mb-6">
@@ -214,7 +212,6 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
 
       {/* 3. Academic & Financial Pulse */}
       <motion.div 
-        whileHover={{ y: -5 }}
         className="bg-card rounded-3xl p-6 border border-border shadow-sm flex flex-col justify-between group"
       >
         <div className="space-y-6">

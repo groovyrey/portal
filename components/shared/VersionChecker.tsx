@@ -9,18 +9,15 @@ export default function VersionChecker() {
   const [checking, setChecking] = useState(false);
 
   useEffect(() => {
-    // Immediate check on mount to wake up the DB (via /api/version)
-    checkVersion();
-
-    // Initial check after 5 seconds
+    // Initial check after 10 seconds to prioritize TTI
     const initialTimer = setTimeout(() => {
       checkVersion();
-    }, 5000);
+    }, 10000);
 
-    // Periodic check every 30 minutes
+    // Periodic check every hour
     const interval = setInterval(() => {
       checkVersion();
-    }, 1000 * 60 * 30);
+    }, 1000 * 60 * 60);
 
     return () => {
       clearTimeout(initialTimer);

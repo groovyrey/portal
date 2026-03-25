@@ -121,9 +121,9 @@ export default function ActivityTab() {
                 return (
                   <motion.div 
                     layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     key={log.id} 
                     className="group flex gap-4 py-5 px-1 hover:bg-accent/20 transition-all"
                   >

@@ -272,8 +272,8 @@ export default function SecuritySettings() {
       <AnimatePresence>
         {debugHtml && (
           <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             className="mt-8 pt-8 border-t border-border"
           >
             <div className="flex items-center justify-between mb-4">

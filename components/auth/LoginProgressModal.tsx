@@ -37,7 +37,6 @@ export default function LoginProgressModal({ isOpen }: LoginProgressModalProps) 
               <motion.div
                 key={i}
                 animate={{
-                  scale: [1, 1.5, 1],
                   opacity: [0.3, 1, 0.3],
                 }}
                 transition={{

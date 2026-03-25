@@ -139,9 +139,9 @@ export default function ManageTab() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       className="space-y-6"
     >
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col min-h-[600px]">

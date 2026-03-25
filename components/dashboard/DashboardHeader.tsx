@@ -22,8 +22,8 @@ export default function DashboardHeader({ student }: DashboardHeaderProps) {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           className="bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-500"
         >
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">

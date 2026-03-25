@@ -44,9 +44,8 @@ export default function UpcomingHolidays() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       className="bg-card border border-border rounded-3xl p-6 shadow-sm group"
     >
       <div className="flex items-center gap-3 mb-4">

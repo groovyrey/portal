@@ -83,8 +83,8 @@ export default function StatsTab() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       className="space-y-6 pb-10"
     >
       {/* Metrics Row */}

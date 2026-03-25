@@ -37,7 +37,6 @@ export default function PostReviewModal({ isOpen }: PostReviewModalProps) {
               <motion.div
                 key={i}
                 animate={{
-                  scale: [1, 1.2, 1],
                   opacity: [0.3, 1, 0.3],
                 }}
                 transition={{

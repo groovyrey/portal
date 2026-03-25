@@ -47,10 +47,28 @@ export function useNotificationsQuery(enabled = true) {
       const data = await res.json();
       return data.notifications || [];
     },
-    staleTime: 1000 * 60, // 1 minute
-    refetchInterval: 1000 * 60 * 2, // 2 minutes auto-poll as backup
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchInterval: 1000 * 60 * 15, // 15 minutes (fallback)
+    refetchOnWindowFocus: false,
     enabled,
   });
+}
+
+export function usePageVisibility() {
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsVisible(!document.hidden);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  return isVisible;
 }
 
 export function useStudentQuery() {
@@ -76,7 +94,7 @@ export function useStudentQuery() {
       }
       return null;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    refetchOnWindowFocus: false,
   });
 }

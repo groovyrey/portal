@@ -47,8 +47,8 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm"
     >
       <div className="p-6">

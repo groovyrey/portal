@@ -214,8 +214,6 @@ export default function DailyGreeting({ student }: { student: Student }) {
         <motion.button
           onClick={() => fetchQuote(true)}
           disabled={loading}
-          whileHover={{ rotate: -180 }}
-          whileTap={{ scale: 0.8 }}
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
           className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors shrink-0"
           title="Refresh Quote"

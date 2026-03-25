@@ -100,8 +100,8 @@ function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon:
         </div>
       </div>
       <div className={`w-11 h-6 rounded-full relative transition-colors shadow-inner shrink-0 ${isOn ? 'bg-primary' : 'bg-muted'}`}>
-        <motion.div
-          animate={{ x: isOn ? 22 : 3 }}
+        <div
+          style={{ transform: `translateX(${isOn ? 22 : 3}px)` }}
           className={`absolute top-1.5 w-3 h-3 rounded-full shadow-sm transition-colors ${
             isOn ? 'bg-primary-foreground' : 'bg-white'
           }`}

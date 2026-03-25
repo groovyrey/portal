@@ -56,9 +56,10 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
   }, [queryClient, studentId]);
 
   useEffect(() => {
-    // Only initialize Ably if we have a studentId (logged in)
-    if (!studentId) {
+    // Only initialize Ably if we have a studentId (logged in) AND not in study mode
+    if (!studentId || pathname === '/study-mode') {
       if (ablyRef.current) {
+        console.log('Closing Ably connection (Study Mode or Logout)');
         ablyRef.current.close();
         ablyRef.current = null;
       }
@@ -230,12 +231,15 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
     updatePresence();
 
     return () => {
+      // Don't attempt cleanup if we've already closed the connection for study mode
+      if (pathname === '/study-mode' || !ablyRef.current) return;
+
       communityChannel.unsubscribe('update', onUpdate);
       if (studentChannel) studentChannel.unsubscribe('update', onStudentUpdate);
       communityChannel.presence.unsubscribe(['enter', 'leave', 'present'], updatePresence);
       if (studentId) communityChannel.presence.leave();
     };
-  }, [queryClient, studentId, activePostId]);
+  }, [queryClient, studentId, activePostId, pathname]);
 
   useEffect(() => {
     return () => {

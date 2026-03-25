@@ -52,8 +52,8 @@ export default function StatCards({ student }: { student: Student }) {
       {stats.map((stat, idx) => (
         <Link key={idx} href={stat.href} className="group">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: idx * 0.05 }}
             className="bg-card border border-border p-5 rounded-2xl hover:border-primary/20 hover:shadow-md transition-all active:scale-95 flex flex-col gap-3"
           >

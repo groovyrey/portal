@@ -17,12 +17,6 @@ export default function Marquee({ subjects, className = "" }: MarqueeProps) {
   return (
     <div className={`relative overflow-hidden pointer-events-none opacity-80 dark:opacity-90 py-2 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)] ${className}`}>
       <motion.div 
-        animate={{ x: ["0%", "-50%"] }}
-        transition={{ 
-          duration: 120, 
-          repeat: Infinity, 
-          ease: "linear" 
-        }}
         className="flex whitespace-nowrap items-center w-fit"
       >
         {/* Double the content for seamless looping */}
