@@ -4,9 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import PageHeader from '@/components/shared/PageHeader';
 import Footer from '@/components/layout/Footer';
+import { usePathname } from 'next/navigation';
 
 export default function ClientLayoutWrapper({ children }: { children: React.ReactNode }) {
   const [isRestricted, setIsRestricted] = useState(false);
+  const pathname = usePathname();
+  const isTestPage = pathname === '/test';
 
   useEffect(() => {
     // Check if the restricted cookie exists
@@ -21,6 +24,14 @@ export default function ClientLayoutWrapper({ children }: { children: React.Reac
     const interval = setInterval(checkRestricted, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  if (isTestPage) {
+    return (
+      <main className="flex-1">
+        {children}
+      </main>
+    );
+  }
 
   return (
     <>

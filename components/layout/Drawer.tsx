@@ -8,7 +8,7 @@ interface DrawerProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  side?: 'right' | 'bottom';
+  side?: 'right' | 'left' | 'bottom';
 }
 
 export default function Drawer({ isOpen, onClose, title, children, side = 'right' }: DrawerProps) {
@@ -25,6 +25,17 @@ export default function Drawer({ isOpen, onClose, title, children, side = 'right
   }, [isOpen]);
 
   const isBottom = side === 'bottom';
+  const isLeft = side === 'left';
+
+  let positionClasses = '';
+  if (isBottom) {
+    positionClasses = 'inset-x-0 bottom-0 max-h-[90vh] rounded-t-3xl translate-y-0 border-t';
+  } else if (isLeft) {
+    positionClasses = 'left-0 top-0 bottom-0 w-full max-w-[300px] translate-x-0 border-r';
+  } else {
+    // Right (default)
+    positionClasses = 'right-0 top-0 bottom-0 w-full max-w-md translate-x-0 border-l';
+  }
 
   return (
     <>
@@ -38,11 +49,7 @@ export default function Drawer({ isOpen, onClose, title, children, side = 'right
           
           {/* Drawer Panel */}
           <div
-            className={`fixed bg-card shadow-2xl z-[160] flex flex-col transition-transform duration-300 ease-in-out border-l border-border ${
-              isBottom 
-                ? 'inset-x-0 bottom-0 max-h-[90vh] rounded-t-3xl translate-y-0 border-t' 
-                : 'right-0 top-0 bottom-0 w-full max-w-md translate-x-0'
-            }`}
+            className={`fixed bg-card shadow-2xl z-[160] flex flex-col transition-transform duration-300 ease-in-out border-border ${positionClasses}`}
           >
             {isBottom && (
               <div className="w-12 h-1.5 bg-secondary rounded-full mx-auto mt-3 mb-1 shrink-0" />

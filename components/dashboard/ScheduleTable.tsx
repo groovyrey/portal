@@ -198,6 +198,31 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
     return map[dayAbbr] ? [map[dayAbbr]] : null;
   };
 
+  const groupedSchedule = useMemo(() => {
+    const grouped: Record<string, ScheduleItem[]> = {};
+    
+    schedule.forEach(item => {
+      const days = getDays(item.time);
+      if (days) {
+        days.forEach(day => {
+          if (!grouped[day]) grouped[day] = [];
+          grouped[day].push(item);
+        });
+      }
+    });
+
+    // Sort by time
+    Object.keys(grouped).forEach(day => {
+      grouped[day].sort((a, b) => {
+        const timeA = parseTimeRange(a.time)?.start || 0;
+        const timeB = parseTimeRange(b.time)?.start || 0;
+        return timeA - timeB;
+      });
+    });
+
+    return grouped;
+  }, [schedule]);
+
   if (!schedule || schedule.length === 0) {
     return (
       <div className="bg-card rounded-3xl p-12 text-center border border-border shadow-sm">
@@ -240,7 +265,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
 
       <div id="schedule-capture-area" ref={tableRef} className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
         <div className="overflow-x-auto custom-scrollbar">
-        <table className="w-full border-collapse table-fixed min-w-full sm:min-w-[800px]">
+        <table className="w-full border-collapse table-fixed min-w-[800px]">
           <thead>
             <tr className="bg-accent/50">
               <th className="w-10 sm:w-14 py-2 border-b border-border"></th>

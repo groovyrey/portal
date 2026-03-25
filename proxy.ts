@@ -26,6 +26,11 @@ const protectedRoutes = [
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // EXPLICITLY skip for audio proxy
+  if (pathname.startsWith('/api/audio/proxy')) {
+    return NextResponse.next();
+  }
+
   // Check if the current route is protected
   const isProtected = protectedRoutes.some(route => pathname.startsWith(route));
 
@@ -72,7 +77,11 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public (public files)
+     * - api/audio/proxy (audio proxy)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public|api/audio/proxy).*)',
   ],
 };
+
+// Default export as well just in case
+export default proxy;
