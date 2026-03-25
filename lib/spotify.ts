@@ -4,8 +4,8 @@ import axios from 'axios';
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const REDIRECT_URI = process.env.NEXT_PUBLIC_BASE_URL 
-  ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/spotify/callback` 
-  : 'http://localhost:3000/api/spotify/callback';
+  ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback/spotify` 
+  : 'http://localhost:3000/api/auth/callback/spotify';
 
 export async function getSpotifyToken(userId: string) {
   if (!adminDb) return null;
