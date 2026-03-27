@@ -4,7 +4,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-import rehypeRaw from 'rehype-raw';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
 import 'highlight.js/styles/github-dark.css';
@@ -35,7 +34,7 @@ interface PostCardProps {
   onLike: (postId: string, isLiked: boolean) => void;
   onVote: (postId: string, optionIndex: number) => void;
   onOpen: (post: CommunityPost) => void;
-  onFetchReactors: (postId: string) => void;
+  onFetchReactors?: (postId: string) => void;
   onReport: (postId: string) => void;
   onDelete?: (postId: string) => void;
   isProfileView?: boolean;
@@ -134,7 +133,7 @@ export default function PostCard({
   const handlePointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
     longPressTimer.current = setTimeout(() => {
-      if ((post.likes || []).length > 0) {
+      if (onFetchReactors && (post.likes || []).length > 0) {
         onFetchReactors(post.id);
       }
       longPressTimer.current = null;
@@ -278,7 +277,7 @@ export default function PostCard({
       <div className="prose prose-slate dark:prose-invert max-w-none prose-sm font-normal text-muted-foreground leading-relaxed mb-4 px-0.5">
         <ReactMarkdown 
           remarkPlugins={[remarkGfm, remarkMath]}
-          rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
+          rehypePlugins={[rehypeHighlight, rehypeKatex]}
           components={{
             a: ({ ...props }) => (
               <a 

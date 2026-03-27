@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Trophy, CheckCircle, XCircle, Loader2, BrainCircuit, RefreshCw, Play } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Trophy, CheckCircle, XCircle, Loader2, BrainCircuit } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 interface TriviaQuestion {
@@ -13,6 +13,8 @@ interface TriviaQuestion {
   correct_answer: string;
   incorrect_answers: string[];
 }
+
+const TOTAL_QUESTIONS = 5;
 
 export default function DailyQuestTab() {
   const [loading, setLoading] = useState(true);
@@ -44,8 +46,8 @@ export default function DailyQuestTab() {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      // Fetch 5 random questions
-      const res = await fetch('https://opentdb.com/api.php?amount=5&type=multiple');
+      // Fetch daily random questions
+      const res = await fetch('https://opentdb.com/api.php?amount=' + TOTAL_QUESTIONS + '&type=multiple');
       const data = await res.json();
       
       if (data.results && data.results.length > 0) {
@@ -119,37 +121,41 @@ export default function DailyQuestTab() {
     return txt.value;
   };
 
+  const answeredCount = currentIndex + (isAnswered ? 1 : 0);
+  const currentCorrectRate = answeredCount > 0 ? Math.round((score / answeredCount) * 100) : 0;
+  const todayCorrectRate = dailyScore !== null ? Math.round((dailyScore / TOTAL_QUESTIONS) * 100) : 0;
+
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+      <div className="flex flex-col items-center justify-center min-h-[360px] gap-3">
         <Loader2 className="h-10 w-10 text-primary animate-spin" />
-        <p className="text-muted-foreground font-medium animate-pulse">Summoning the Quest Master...</p>
+        <p className="text-sm text-muted-foreground">Summoning the Quest Master...</p>
       </div>
     );
   }
 
   if (hasPlayedToday) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-6 text-center animate-fade-in">
-        <div className="relative">
-          <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
-          <Trophy className="h-24 w-24 text-primary relative z-10" />
-        </div>
+      <div className="flex min-h-[360px] flex-col items-center justify-center gap-4 text-center">
+        <Trophy className="h-16 w-16 text-primary" />
         
         <div className="space-y-2">
-          <h2 className="text-2xl font-black uppercase tracking-tight">Quest Completed</h2>
-          <p className="text-muted-foreground font-medium">You have finished today&apos;s challenge.</p>
+          <h2 className="text-2xl font-semibold">Quest Completed</h2>
+          <p className="text-sm text-muted-foreground">You have finished today&apos;s challenge.</p>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-sm">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Today&apos;s Score</p>
+        <div className="w-full max-w-sm rounded-lg border border-border bg-card p-4">
+          <p className="mb-2 text-xs text-muted-foreground">Today&apos;s Score</p>
           <div className="flex items-center justify-center gap-2">
-             <span className="text-5xl font-black text-primary">{dailyScore}</span>
-             <span className="text-xl font-bold text-muted-foreground">/ 5</span>
+             <span className="text-4xl font-semibold text-primary">{dailyScore}</span>
+             <span className="text-lg text-muted-foreground">/ {TOTAL_QUESTIONS}</span>
           </div>
+          <p className="mt-2 text-xs font-semibold text-muted-foreground">
+            Correct Answer Rate: <span className="text-foreground">{todayCorrectRate}%</span>
+          </p>
         </div>
 
-        <div className="p-4 bg-accent/50 rounded-xl max-w-md">
+        <div className="max-w-md rounded-md border border-border bg-muted/20 p-3">
            <p className="text-xs font-medium text-muted-foreground">
              New quest available tomorrow at 12:00 AM.
            </p>
@@ -161,20 +167,21 @@ export default function DailyQuestTab() {
   const currentQ = questions[currentIndex];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+    <div className="mx-auto max-w-2xl space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+          <div className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-background text-muted-foreground">
             <BrainCircuit className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-lg font-bold uppercase tracking-tight">Daily Trivia</h2>
+            <h2 className="text-lg font-semibold">Daily Trivia</h2>
             <p className="text-xs font-medium text-muted-foreground">Question {currentIndex + 1} of {questions.length}</p>
           </div>
         </div>
-        <div className="px-3 py-1 bg-accent rounded-full border border-border">
-          <span className="text-xs font-bold text-foreground">Score: {score}</span>
+        <div className="px-3 py-1 bg-muted rounded-md border border-border text-right">
+          <p className="text-xs font-medium">Score: {score}</p>
+          <p className="text-[10px] text-muted-foreground">Rate: {currentCorrectRate}%</p>
         </div>
       </div>
 
@@ -189,12 +196,12 @@ export default function DailyQuestTab() {
       </div>
 
       {/* Question Card */}
-      <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-sm">
+      <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
         <div className="mb-6">
-           <span className="inline-block px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider mb-3">
+           <span className="mb-3 inline-block rounded-md border border-border bg-muted/20 px-2 py-0.5 text-[10px] text-muted-foreground">
              {decode(currentQ.category)}
            </span>
-           <span className={`inline-block ml-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider mb-3 ${
+           <span className={`inline-block ml-2 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide mb-3 ${
              currentQ.difficulty === 'easy' ? 'bg-emerald-500/10 text-emerald-600' :
              currentQ.difficulty === 'medium' ? 'bg-amber-500/10 text-amber-600' :
              'bg-rose-500/10 text-rose-600'
@@ -231,7 +238,7 @@ export default function DailyQuestTab() {
                  onClick={() => handleAnswer(answer)}
                  disabled={isAnswered}
                  className={`
-                   relative w-full text-left p-4 rounded-xl border-2 transition-all duration-200
+                   relative w-full text-left p-4 rounded-lg border transition-colors duration-200
                    font-semibold text-sm sm:text-base
                    ${buttonStyle}
                  `}

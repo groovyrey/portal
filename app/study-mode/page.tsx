@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ChevronLeft, ChevronRight, Play, Pause, ListMusic, Battery, Zap, Clock, Lock, Unlock, RefreshCw, Settings, ImageOff, Image as ImageIcon, Sun, Moon, Wifi, SignalHigh, Bluetooth } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight, Play, Pause, ListMusic, Battery, Zap, Clock, RefreshCw, Settings, ImageOff, Image as ImageIcon, Sun, Moon, Wifi, SignalHigh, Volume2, VolumeX } from 'lucide-react';
 import { usePageVisibility } from '@/lib/hooks';
 
 // Extend Navigator type for Network Information API
@@ -11,13 +12,27 @@ interface NetworkInformation extends EventTarget {
   readonly type?: 'bluetooth' | 'cellular' | 'ethernet' | 'none' | 'wifi' | 'wimax' | 'other' | 'unknown';
   readonly effectiveType?: '2g' | '3g' | '4g';
   readonly saveData?: boolean;
-  onchange?: (this: NetworkInformation, ev: Event) => any;
+  onchange?: (this: NetworkInformation, ev: Event) => void;
 }
 
-interface NavigatorWithNetwork extends Navigator {
+type NavigatorWithNetwork = Navigator & {
   readonly connection?: NetworkInformation;
   readonly mozConnection?: NetworkInformation;
   readonly webkitConnection?: NetworkInformation;
+};
+
+interface WakeLockSentinelLike {
+  release: () => Promise<void>;
+}
+
+type NavigatorWithWakeLock = Navigator & {
+  readonly wakeLock?: {
+    request: (type: 'screen') => Promise<WakeLockSentinelLike>;
+  };
+};
+
+interface WindowWithWebkitAudioContext extends Window {
+  webkitAudioContext?: typeof AudioContext;
 }
 
 interface CloudinaryResource {
@@ -70,7 +85,12 @@ const CALM_TRACKS: MusicTrack[] = [
   { id: 'flux-yoga', name: 'Yoga Sounds', url: 'https://fluxmusic.api.radiosphere.io/channels/yogasounds/stream.mp3' },
 ];
 
+const STUDY_MODE_SETTINGS_KEY = 'study_mode_settings_v1';
 
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return `${error.name}, ${error.message}`;
+  return String(error);
+};
 
 // Helper to optimize Cloudinary URLs
 const optimizeCloudinaryUrl = (url: string, width: number = 1200) => {
@@ -93,15 +113,12 @@ export default function StudyModePage() {
   const [audioError, setAudioError] = useState<string | null>(null);
   const [isMobileMode, setIsMobileMode] = useState<boolean | null>(null);
   const [isLowPowerMode, setIsLowPowerMode] = useState(false);
-  const [isBackgroundLocked, setIsBackgroundLocked] = useState(false);
   const [isBackgroundDisabled, setIsBackgroundDisabled] = useState(false);
   const [isWakeLockActive, setIsWakeLockActive] = useState(false);
   const [isCellular, setIsCellular] = useState(false);
-  const [isBluetoothConnected, setIsBluetoothConnected] = useState(false);
-  const [bluetoothDeviceName, setBluetoothDeviceName] = useState<string | null>(null);
+  const [volume, setVolume] = useState(0.65);
   
   // Sleep Timer State
-  const [sleepTimerDuration, setSleepTimerDuration] = useState<number | null>(null); // in minutes
   const [sleepTimerLeft, setSleepTimerLeft] = useState<number | null>(null); // in seconds
 
   const isVisible = usePageVisibility();
@@ -109,61 +126,145 @@ export default function StudyModePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const wakeLockRef = useRef<any>(null);
+  const wakeLockRef = useRef<WakeLockSentinelLike | null>(null);
+  const settingsMenuRef = useRef<HTMLDivElement | null>(null);
+  const settingsPanelRef = useRef<HTMLDivElement | null>(null);
+  const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
+  const previousVolumeRef = useRef(volume);
+  const sleepMenuRef = useRef<HTMLDivElement | null>(null);
+  const musicMenuRef = useRef<HTMLDivElement | null>(null);
 
   // Wake Lock Request Logic
-  const requestWakeLock = async () => {
-    if ('wakeLock' in navigator) {
-      try {
-        wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
-        setIsWakeLockActive(true);
-      } catch (err: any) {
-        console.error(`${err.name}, ${err.message}`);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STUDY_MODE_SETTINGS_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (typeof parsed.isLowPowerMode === 'boolean') setIsLowPowerMode(parsed.isLowPowerMode);
+      if (typeof parsed.isBackgroundDisabled === 'boolean') setIsBackgroundDisabled(parsed.isBackgroundDisabled);
+      if (typeof parsed.volume === 'number') setVolume(Math.min(1, Math.max(0, parsed.volume)));
+      if (typeof parsed.currentTrackId === 'string') {
+        const match = CALM_TRACKS.find((t) => t.id === parsed.currentTrackId);
+        if (match) setCurrentTrack(match);
       }
+    } catch (error) {
+      console.error('Failed to load study mode settings:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        STUDY_MODE_SETTINGS_KEY,
+        JSON.stringify({
+          isLowPowerMode,
+          isBackgroundDisabled,
+          volume,
+          currentTrackId: currentTrack.id,
+        })
+      );
+    } catch (error) {
+      console.error('Failed to save study mode settings:', error);
+    }
+  }, [isLowPowerMode, isBackgroundDisabled, volume, currentTrack.id]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+    if (volume > 0) {
+      previousVolumeRef.current = volume;
+    }
+  }, [volume]);
+
+  useEffect(() => {
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      const inSettings = settingsMenuRef.current?.contains(target);
+      const inSleep = sleepMenuRef.current?.contains(target);
+      const inMusic = musicMenuRef.current?.contains(target);
+      if (!inSettings && !inSleep && !inMusic) {
+        setShowSettingsMenu(false);
+        setShowSleepMenu(false);
+        setShowMusicMenu(false);
+      }
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowSettingsMenu(false);
+        setShowSleepMenu(false);
+        setShowMusicMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('touchstart', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('touchstart', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!showSettingsMenu || !settingsPanelRef.current) return;
+
+    const focusableElements = settingsPanelRef.current.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+
+    firstFocusable?.focus();
+
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || focusableElements.length === 0) return;
+
+      if (event.shiftKey && document.activeElement === firstFocusable) {
+        event.preventDefault();
+        lastFocusable?.focus();
+      } else if (!event.shiftKey && document.activeElement === lastFocusable) {
+        event.preventDefault();
+        firstFocusable?.focus();
+      }
+    };
+
+    const settingsButtonEl = settingsButtonRef.current;
+    document.addEventListener('keydown', trapFocus);
+    return () => {
+      document.removeEventListener('keydown', trapFocus);
+      settingsButtonEl?.focus();
+    };
+  }, [showSettingsMenu]);
+
+  const requestWakeLock = async () => {
+    const nav = navigator as NavigatorWithWakeLock;
+    if (!nav.wakeLock) return;
+
+    try {
+      wakeLockRef.current = await nav.wakeLock.request('screen');
+      setIsWakeLockActive(true);
+    } catch (err: unknown) {
+      console.error(getErrorMessage(err));
     }
   };
 
   const releaseWakeLock = async () => {
-    if (wakeLockRef.current) {
-      try {
-        await wakeLockRef.current.release();
-        wakeLockRef.current = null;
-        setIsWakeLockActive(false);
-      } catch (err: any) {
-        console.error(`${err.name}, ${err.message}`);
-      }
-    }
-  };
-
-  // Bluetooth Connection Logic
-  const connectBluetooth = async () => {
-    if (!('bluetooth' in navigator)) {
-      setAudioError("Bluetooth not supported in this browser");
-      return;
-    }
+    if (!wakeLockRef.current) return;
 
     try {
-      const device = await (navigator as any).bluetooth.requestDevice({
-        acceptAllDevices: true
-      });
-
-      const server = await device.gatt.connect();
-      setIsBluetoothConnected(true);
-      setBluetoothDeviceName(device.name || "Device");
-
-      device.addEventListener('gattserverdisconnected', () => {
-        setIsBluetoothConnected(false);
-        setBluetoothDeviceName(null);
-      });
-    } catch (err) {
-      console.error("Bluetooth connection failed:", err);
+      await wakeLockRef.current.release();
+      wakeLockRef.current = null;
+      setIsWakeLockActive(false);
+    } catch (err: unknown) {
+      console.error(getErrorMessage(err));
     }
   };
 
-  const disconnectBluetooth = () => {
-    setIsBluetoothConnected(false);
-    setBluetoothDeviceName(null);
-  };
 
   // Re-acquire wake lock on visibility change
   useEffect(() => {
@@ -183,7 +284,8 @@ export default function StudyModePage() {
     
     const checkNetwork = () => {
       if (connection) {
-        const cellular = connection.type === 'cellular' || (connection as any).effectiveType === '3g' || (connection as any).effectiveType === '2g';
+        const effectiveType = connection.effectiveType;
+        const cellular = connection.type === 'cellular' || effectiveType === '3g' || effectiveType === '2g';
         setIsCellular(cellular);
         if (cellular || connection.saveData) {
           setIsLowPowerMode(true);
@@ -212,7 +314,7 @@ export default function StudyModePage() {
       
       if (!analyserRef.current) {
         try {
-          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+          const AudioContext = window.AudioContext || (window as WindowWithWebkitAudioContext).webkitAudioContext;
           const audioCtx = new AudioContext();
           const analyser = audioCtx.createAnalyser();
           const source = audioCtx.createMediaElementSource(audioRef.current);
@@ -232,8 +334,8 @@ export default function StudyModePage() {
       if (analyserRef.current && analyserRef.current.context.state === 'suspended') {
         try {
           await (analyserRef.current.context as AudioContext).resume();
-        } catch (e) {
-          console.error("Failed to resume AudioContext:", e);
+        } catch (error) {
+          console.error("Failed to resume AudioContext:", error);
         }
       }
     };
@@ -318,7 +420,7 @@ export default function StudyModePage() {
   // Fetch images
   useEffect(() => {
     if (isMobileMode === null) return;
-    
+
     // Skip fetching if not visible to save bandwidth/battery
     if (!isVisible && images.length > 0) return;
 
@@ -338,7 +440,7 @@ export default function StudyModePage() {
       }
     }
     fetchImages();
-  }, [isMobileMode, isVisible]); 
+  }, [isMobileMode, isVisible, images.length]);
 
   const fetchNewQuote = useCallback(async () => {
     // Skip if not visible
@@ -381,7 +483,7 @@ export default function StudyModePage() {
   useEffect(() => {
     fetchNewQuote(); // Initial fetch
     // Intervals removed as per user request for manual refresh
-  }, []); // Empty dependency array ensures this only runs once on mount
+  }, [fetchNewQuote]);
 
   // Sleep Timer Logic
   useEffect(() => {
@@ -391,7 +493,6 @@ export default function StudyModePage() {
       // Timer finished
       if (audioRef.current) audioRef.current.pause();
       setIsPlaying(false);
-      setSleepTimerDuration(null);
       setSleepTimerLeft(null);
       return;
     }
@@ -409,6 +510,7 @@ export default function StudyModePage() {
     } else {
       setShowSleepMenu(true);
       setShowMusicMenu(false);
+      setShowSettingsMenu(false);
     }
   };
 
@@ -418,15 +520,14 @@ export default function StudyModePage() {
     } else {
       setShowMusicMenu(true);
       setShowSleepMenu(false);
+      setShowSettingsMenu(false);
     }
   };
 
   const setSleepTimer = (minutes: number | null) => {
     if (minutes === null) {
-      setSleepTimerDuration(null);
       setSleepTimerLeft(null);
     } else {
-      setSleepTimerDuration(minutes);
       setSleepTimerLeft(minutes * 60);
     }
     setShowSleepMenu(false);
@@ -446,6 +547,16 @@ export default function StudyModePage() {
   useEffect(() => {
     // Background rotation is now manual via navigation controls
   }, []);
+
+  const toggleMute = () => {
+    if (volume === 0) {
+      setVolume(previousVolumeRef.current > 0 ? previousVolumeRef.current : 0.65);
+      return;
+    }
+
+    previousVolumeRef.current = volume;
+    setVolume(0);
+  };
 
   const toggleAudio = () => {
     if (!audioRef.current) return;
@@ -521,7 +632,7 @@ export default function StudyModePage() {
               return;
             }
           }
-        } catch (e) {
+        } catch {
           // Direct fetch failed, likely CORS or connection timeout
         }
 
@@ -537,13 +648,13 @@ export default function StudyModePage() {
               return;
             }
           }
-        } catch (e) {
+        } catch {
           // Proxy failed
         }
 
         // If all else fails, reset to station name
         setNowPlaying(null);
-      } catch (err) {
+      } catch {
         setNowPlaying(null);
       }
     };
@@ -638,14 +749,21 @@ export default function StudyModePage() {
       </div>
 
       {/* Header */}
-      <header className="relative z-[100] p-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="relative z-[100] px-4 pt-4 pb-3 sm:p-6 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <Link
+            href="/student"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-black/50 px-2.5 py-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] text-white/80 transition-colors hover:bg-black/70 hover:text-white whitespace-nowrap"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            Back to Dashboard
+          </Link>
           <Image src="/logo.png" alt="Logo" width={32} height={32} className="opacity-90" />
-          <span className="text-sm font-bold tracking-wider uppercase opacity-80 drop-shadow-sm">LCC Hub</span>
+          <span className="text-xs sm:text-sm font-bold tracking-wider uppercase opacity-80 drop-shadow-sm">LCC Hub</span>
         </div>
         
         {/* Navigation Controls moved to Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           {!isBackgroundDisabled && (
             <>
               <div className="flex gap-1 mr-2 hidden sm:flex">
@@ -667,18 +785,32 @@ export default function StudyModePage() {
           
           <div className="flex gap-1">
             {/* Settings Menu */}
-            <div className="relative ml-2">
-              <button 
-                onClick={() => setShowSettingsMenu(!showSettingsMenu)} 
+            <div ref={settingsMenuRef} className="relative">
+              <button
+                ref={settingsButtonRef}
+                id="study-settings-button"
+                aria-label="Open study settings"
+                aria-haspopup="dialog"
+                aria-expanded={showSettingsMenu}
+                aria-controls="study-settings-menu"
+                onClick={() => { setShowSettingsMenu((prev) => !prev); setShowSleepMenu(false); setShowMusicMenu(false); }}
                 className={`p-1.5 rounded-lg border transition-all ${showSettingsMenu ? 'bg-white/20 text-white border-white/40 shadow-[0_0_10px_rgba(255,255,255,0.1)]' : 'bg-black/60 border-white/10 text-white/60 hover:bg-black/80 hover:text-white'}`}
                 title="Settings"
               >
                 <Settings className="w-4 h-4" />
               </button>
               
-              <div className={`absolute top-full right-0 mt-2 w-56 bg-neutral-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-[110] transition-all duration-150 origin-top-right ${showSettingsMenu ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+              <div
+                id="study-settings-menu"
+                ref={settingsPanelRef}
+                role="dialog"
+                aria-modal="false"
+                aria-labelledby="study-settings-title"
+                tabIndex={-1}
+                className={`absolute top-full right-0 mt-2 w-[min(88vw,14rem)] sm:w-56 bg-neutral-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-[110] transition-all duration-150 origin-top-right ${showSettingsMenu ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}`}
+              >
                 <div className="px-5 py-3 border-b border-white/5 bg-white/[0.02]">
-                  <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Preferences</span>
+                  <span id="study-settings-title" className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Preferences</span>
                 </div>
 
                 {/* Efficiency Mode Toggle */}
@@ -692,6 +824,37 @@ export default function StudyModePage() {
                   <span>Efficiency Mode</span>
                   {isLowPowerMode ? <Battery className="w-3.5 h-3.5 text-yellow-500" /> : <Zap className="w-3.5 h-3.5" />}
                 </button>
+
+                {/* Volume */}
+                <div className="px-5 py-4 border-b border-white/5">
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-white/60 mb-3">
+                    <span>Volume</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={toggleMute}
+                        className="inline-flex items-center justify-center rounded-md border border-white/15 p-1 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                        aria-label={volume === 0 ? 'Unmute audio' : 'Mute audio'}
+                        title={volume === 0 ? 'Unmute' : 'Mute'}
+                      >
+                        {volume === 0 ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                      </button>
+                      <span className="inline-flex items-center gap-1.5 text-white/70 tabular-nums">
+                        {Math.round(volume * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                  <input
+                    aria-label="Study mode volume"
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={volume}
+                    onChange={(event) => setVolume(Number(event.target.value))}
+                    className="w-full accent-white"
+                  />
+                </div>
 
                 {/* Wake Lock Toggle */}
                 <button 
@@ -717,30 +880,7 @@ export default function StudyModePage() {
                   {isBackgroundDisabled ? <ImageOff className="w-3.5 h-3.5 text-red-400" /> : <ImageIcon className="w-3.5 h-3.5" />}
                 </button>
 
-                {/* Background Lock Toggle */}
-                <button 
-                  onClick={() => {
-                    setIsBackgroundLocked(!isBackgroundLocked);
-                    setShowSettingsMenu(false);
-                  }} 
-                  className={`w-full flex items-center justify-between px-5 py-4 text-[10px] font-bold transition-all uppercase tracking-wider ${isBackgroundDisabled ? 'hidden' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}
-                >
-                  <span>Lock Background</span>
-                  {isBackgroundLocked ? <Lock className="w-3.5 h-3.5 text-blue-400" /> : <Unlock className="w-3.5 h-3.5" />}
-                </button>
 
-                {/* Bluetooth Toggle */}
-                <button 
-                  onClick={() => {
-                    if (isBluetoothConnected) disconnectBluetooth();
-                    else connectBluetooth();
-                    setShowSettingsMenu(false);
-                  }} 
-                  className="w-full flex items-center justify-between px-5 py-4 text-[10px] font-bold text-white/60 hover:bg-white/5 hover:text-white transition-all uppercase tracking-wider"
-                >
-                  <span>Bluetooth Device</span>
-                  <Bluetooth className={`w-3.5 h-3.5 ${isBluetoothConnected ? 'text-blue-500' : ''}`} />
-                </button>
               </div>
             </div>
           </div>
@@ -748,10 +888,10 @@ export default function StudyModePage() {
       </header>
 
               {/* Main Content */}
-              <main className="relative z-10 max-w-xl mx-auto px-6 h-[calc(100vh-100px)] flex flex-col">
+              <main className="relative z-10 w-full max-w-2xl mx-auto px-4 sm:px-6 h-[calc(100dvh-88px)] sm:h-[calc(100vh-100px)] flex flex-col">
 
               {/* Quote Display Area */}
-              <div className="flex-1 flex flex-col items-center justify-center p-4 text-center z-10 overflow-hidden">
+              <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 text-center z-10 overflow-hidden">
               <AnimatePresence mode="wait">
               {currentMessage && (
               <motion.div 
@@ -760,11 +900,11 @@ export default function StudyModePage() {
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 1.05, filter: "blur(10px)" }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              className="max-w-3xl flex flex-col items-center gap-6 w-full max-h-full overflow-y-auto overflow-x-hidden scrollbar-hide px-2"
+              className="max-w-3xl flex flex-col items-center gap-4 sm:gap-6 w-full max-h-full overflow-y-auto overflow-x-hidden scrollbar-hide px-1 sm:px-2"
               >
               {currentMessage.type === 'system' ? (
-                 <div className="px-8 py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl shrink-0 max-w-full flex items-center gap-4">
-                    <p className="text-xs md:text-sm font-bold tracking-widest text-white/90 uppercase break-words">
+                 <div className="px-4 sm:px-8 py-3 sm:py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-full shadow-2xl shrink-0 max-w-full flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                    <p className="text-[11px] sm:text-xs md:text-sm font-bold tracking-[0.15em] sm:tracking-widest text-white/90 uppercase break-words text-left sm:text-center">
                       {currentMessage.quote}
                     </p>
                     <button 
@@ -777,9 +917,9 @@ export default function StudyModePage() {
                  </div>
               ) : (
                 <>
-                  <div className="relative inline-block px-8 py-2 shrink-0 max-w-full">
+                  <div className="relative inline-block px-4 sm:px-8 py-2 shrink-0 max-w-full">
                      <span className="absolute -top-4 -left-2 text-6xl md:text-8xl text-white/10 font-serif leading-none select-none">“</span>
-                     <p className="text-xl md:text-2xl lg:text-3xl font-medium leading-tight text-white drop-shadow-xl font-serif tracking-wide text-balance break-words">
+                     <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium leading-tight text-white drop-shadow-xl font-serif tracking-wide text-balance break-words">
                       {currentMessage.quote}
                      </p>
                      <span className="absolute -bottom-8 -right-2 text-6xl md:text-8xl text-white/10 font-serif leading-none select-none">”</span>
@@ -787,8 +927,8 @@ export default function StudyModePage() {
 
                   <div className="flex flex-col items-center mt-1 gap-3 opacity-90 shrink-0 pb-4">
                     <div className="h-px w-24 bg-gradient-to-r from-transparent via-white/60 to-transparent" />
-                    <div className="flex items-center gap-3">
-                      <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-white shadow-black drop-shadow-sm break-all">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                      <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.18em] sm:tracking-[0.3em] text-white shadow-black drop-shadow-sm break-all">
                         {currentMessage.author}
                       </span>
                       <button 
@@ -808,16 +948,16 @@ export default function StudyModePage() {
               </div>
 
               {/* Player Area */}
-              <div className="pb-6 pt-4 border-t border-white/5 mt-auto z-30">
-              <div className="relative group rounded-[1.5rem] bg-transparent border-2 border-neutral-800 shadow-[0_15px_35px_rgba(0,0,0,0.5)] p-1">
-              <div className="relative bg-transparent rounded-[1.3rem] border border-white/10 p-3">
+              <div className="pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:pt-4 border-t border-white/5 mt-auto z-30">
+              <div className="relative group rounded-[1.25rem] sm:rounded-[1.5rem] bg-transparent border-2 border-neutral-800 shadow-[0_15px_35px_rgba(0,0,0,0.5)] p-1">
+              <div className="relative bg-transparent rounded-[1.1rem] sm:rounded-[1.3rem] border border-white/10 p-2.5 sm:p-3">
 
-              <div className="relative flex items-center gap-4 z-10">
+              <div className="relative flex items-center gap-2 sm:gap-4 z-10">
               {/* Play Button - Tactile Knob Style */}
               <div className="relative">
                 <button 
                   onClick={toggleAudio} 
-                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border-2 active:scale-95 ${
+                  className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 border-2 active:scale-95 ${
                     isPlaying 
                       ? 'bg-white border-white/20 text-black shadow-[0_0_20px_rgba(255,255,255,0.2)]' 
                       : 'bg-neutral-800 border-neutral-700 text-white/40 hover:text-white hover:border-neutral-600 shadow-lg'
@@ -828,7 +968,7 @@ export default function StudyModePage() {
               </div>
 
               {/* Digital Display Area */}
-              <div className="flex-1 min-w-0 bg-black/60 rounded-xl p-3 border border-white/5 shadow-inner relative overflow-hidden group/display">
+              <div className="flex-1 min-w-0 bg-black/60 rounded-xl p-2.5 sm:p-3 border border-white/5 shadow-inner relative overflow-hidden group/display">
                  {/* Audio Visualizer as Background (Clipped) */}
                  {!isLowPowerMode && (
                    <div className="absolute inset-0 pointer-events-none opacity-50">
@@ -843,7 +983,6 @@ export default function StudyModePage() {
 
                  {/* Status Indicators Top Right */}
                  <div className="absolute top-2.5 right-3 flex items-center gap-2 h-2.5">
-                    {isBluetoothConnected && <Bluetooth className="w-2.5 h-2.5 text-blue-500 animate-pulse" />}
                     {isWakeLockActive && <Sun className="w-2.5 h-2.5 text-orange-400" />}
                     {isCellular ? <SignalHigh className="w-2.5 h-2.5 text-white/40" /> : <Wifi className="w-2.5 h-2.5 text-white/40" />}
 
@@ -865,11 +1004,6 @@ export default function StudyModePage() {
                         Eco
                       </span>
                    )}
-                   {isBluetoothConnected && (
-                      <span className="text-[7px] font-black text-blue-400 tracking-[0.2em] uppercase truncate max-w-[80px]">
-                        {bluetoothDeviceName}
-                      </span>
-                   )}
                  </div>
                  <div className="font-mono space-y-0.5">
                   {nowPlaying ? (
@@ -885,7 +1019,7 @@ export default function StudyModePage() {
                 {/* Vertical Controls Area */}
                 <div className="flex flex-col gap-1.5">
                   {/* Sleep Timer */}
-                  <div className="relative">
+                  <div ref={sleepMenuRef} className="relative">
                     <button 
                       onClick={toggleSleepMenu} 
                       className={`w-9 h-9 flex items-center justify-center transition-all rounded-lg border ${sleepTimerLeft ? 'bg-white/10 border-white/20 text-white' : 'bg-neutral-800/50 border-white/5 text-white/40 hover:text-white hover:bg-neutral-800'}`}
@@ -897,7 +1031,7 @@ export default function StudyModePage() {
                         <Clock className="w-4 h-4" />
                       )}
                     </button>
-                    <div className={`absolute bottom-full right-0 mb-3 w-32 bg-neutral-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl z-20 transition-all duration-150 origin-bottom-right ${showSleepMenu ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+                    <div className={`absolute bottom-full right-0 mb-3 w-36 sm:w-32 bg-neutral-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl z-20 transition-all duration-150 origin-bottom-right ${showSleepMenu ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
                       {[15, 30, 45, 60].map((min) => (
                         <button key={min} onClick={() => setSleepTimer(min)} className="w-full text-left px-4 py-2 text-[9px] font-bold text-white/60 hover:bg-white/10 hover:text-white transition-all uppercase tracking-wider">
                           {min} Minutes
@@ -910,14 +1044,14 @@ export default function StudyModePage() {
                   </div>
 
                   {/* Track List */}
-                  <div className="relative">
+                  <div ref={musicMenuRef} className="relative">
                     <button 
                       onClick={toggleMusicMenu} 
                       className={`w-9 h-9 flex items-center justify-center transition-all rounded-lg border ${showMusicMenu ? 'bg-white/10 border-white/20 text-white' : 'bg-neutral-800/50 border-white/5 text-white/40 hover:text-white hover:bg-neutral-800'}`}
                     >
                       <ListMusic className="w-4 h-4" />
                     </button>
-                    <div className={`absolute bottom-full right-0 mb-3 w-56 bg-neutral-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl z-20 max-h-64 overflow-y-auto scrollbar-hide transition-all duration-150 origin-bottom-right ${showMusicMenu ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+                    <div className={`absolute bottom-full right-0 mb-3 w-[min(88vw,14rem)] sm:w-56 bg-neutral-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl z-20 max-h-64 overflow-y-auto scrollbar-hide transition-all duration-150 origin-bottom-right ${showMusicMenu ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
                       <div className="px-4 py-2.5 border-b border-white/5 bg-white/[0.02]">
                           <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">Stations</span>
                       </div>
@@ -932,14 +1066,14 @@ export default function StudyModePage() {
               </div>
             </div>
           </div>
-          <div className="flex justify-center mt-3">
-             <span className="text-[7px] font-bold text-white/10 tracking-[0.3em] uppercase">High Fidelity Audio Receiver</span>
+          <div className="flex justify-center mt-2 sm:mt-3">
+             <span className="text-[7px] font-bold text-white/10 tracking-[0.2em] sm:tracking-[0.3em] uppercase text-center">High Fidelity Audio Receiver</span>
           </div>
         </div>
       </main>
 
       {audioError && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 text-[9px] font-bold uppercase tracking-widest opacity-90 flex items-center gap-2 bg-red-900/90 px-3 py-1 rounded-full border border-white/10 shadow-lg">
+        <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 text-[9px] font-bold uppercase tracking-[0.16em] opacity-90 flex items-center gap-2 bg-red-900/90 px-3 py-1.5 rounded-xl border border-white/10 shadow-lg max-w-[90vw] text-center">
           <AlertCircle className="w-3 h-3" />
           {audioError}
         </div>

@@ -12,7 +12,7 @@ interface OverviewTabProps {
 
 export default function OverviewTab({ student }: OverviewTabProps) {
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6">
       <DailyGreeting student={student} />
       
       <StatCards student={student} />

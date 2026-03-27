@@ -18,7 +18,6 @@ const protectedRoutes = [
   '/api/student/settings',
   '/api/student/change-password',
   '/api/student/logout',
-  '/api/ratings',
   '/api/community',
   '/api/ai'
 ];

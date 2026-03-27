@@ -54,7 +54,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased text-foreground bg-background min-h-screen flex flex-col selection:bg-primary selection:text-primary-foreground`}>
+      <body className={`${inter.variable} font-sans antialiased simplified-ui text-foreground bg-background min-h-screen flex flex-col selection:bg-primary selection:text-primary-foreground`}>
         <Providers>
           <RealtimeProvider>
             <VersionChecker />

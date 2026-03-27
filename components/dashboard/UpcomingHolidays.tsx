@@ -2,7 +2,6 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { PartyPopper } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface Holiday {
   date: string;
@@ -43,18 +42,12 @@ export default function UpcomingHolidays() {
   if (upcomingHolidays.length === 0) return null;
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="bg-card border border-border rounded-3xl p-6 shadow-sm group"
-    >
+    <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400">
+        <div className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background text-muted-foreground">
           <PartyPopper size={16} />
         </div>
-        <h3 className="text-sm font-black text-foreground uppercase tracking-wider">
-          Upcoming Holidays
-        </h3>
+        <h3 className="text-sm font-medium">Upcoming holidays</h3>
       </div>
 
       <div className="space-y-3">
@@ -65,7 +58,7 @@ export default function UpcomingHolidays() {
           return (
             <div 
               key={idx}
-              className="flex items-center justify-between p-3 rounded-xl bg-secondary/30 hover:bg-secondary/60 transition-colors"
+              className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-3 py-2"
             >
               <div className="flex items-center gap-4">
                 <div className={`flex flex-col items-center justify-center h-10 w-10 rounded-lg border ${isToday ? 'bg-emerald-500 border-emerald-600 text-white' : 'bg-background border-border text-muted-foreground'}`}>
@@ -94,6 +87,6 @@ export default function UpcomingHolidays() {
           );
         })}
       </div>
-    </motion.div>
+    </div>
   );
 }

@@ -48,12 +48,15 @@ function CommunityContent() {
   const searchQuery = searchParams.get('search') || '';
   const selectedType = searchParams.get('type') || 'all';
   const sortBy = searchParams.get('sort') || 'newest';
-  const limit = parseInt(searchParams.get('limit') || '5', 10);
 
-  const [postsToShow, setPostsToShow] = useState(limit);
+  const PAGE_SIZE = 10;
+  const [offset, setOffset] = useState(0);
+  const [allPosts, setAllPosts] = useState<CommunityPost[]>([]);
+  const [hasMore, setHasMore] = useState(false);
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
-  
+
+  const [searchInput, setSearchInput] = useState(searchQuery);
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [student, setStudent] = useState<Student | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -62,22 +65,17 @@ function CommunityContent() {
   const updateSearchParams = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === 'All' || value === 'all' || (key === 'sort' && value === 'newest') || (key === 'limit' && value === '5')) {
+      if (value === null || value === 'All' || value === 'all' || (key === 'sort' && value === 'newest')) {
         params.delete(key);
       } else {
         params.set(key, value);
       }
     });
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  useEffect(() => {
-    setPostsToShow(limit);
-  }, [limit]);
-
   const handleLoadMore = () => {
-    const nextLimit = postsToShow + 5;
-    updateSearchParams({ limit: nextLimit.toString() });
+    setOffset((prev) => prev + PAGE_SIZE);
   };
 
   const topics = ['All', 'Academics', 'Campus Life', 'Career', 'Well-being', 'General'];
@@ -93,37 +91,71 @@ function CommunityContent() {
   ];
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 500);
-    return () => clearTimeout(timer);
+    setSearchInput(searchQuery);
   }, [searchQuery]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== searchQuery) {
+        updateSearchParams({ search: searchInput || null });
+      }
+      setDebouncedSearch(searchInput);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchInput, searchQuery]);
+
+  useEffect(() => {
+    setOffset(0);
+    setAllPosts([]);
+    setHasMore(false);
+  }, [selectedTopic, selectedType, sortBy, debouncedSearch]);
 
   useEffect(() => {
     const checkStudent = () => {
       const savedStudent = localStorage.getItem('student_data');
       if (savedStudent) setStudent(JSON.parse(savedStudent));
     };
+
     checkStudent();
     window.addEventListener('local-storage-update', checkStudent);
     return () => window.removeEventListener('local-storage-update', checkStudent);
   }, []);
 
-  const { data: posts = [], isLoading: loading, isError, error, refetch } = useQuery({
-    queryKey: ['community-posts', selectedTopic, debouncedSearch, selectedType, sortBy],
+  const { data, isLoading: loading, isError, refetch } = useQuery({
+    queryKey: ['community-posts', selectedTopic, debouncedSearch, selectedType, sortBy, offset],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedTopic !== 'All') params.append('topic', selectedTopic);
       if (debouncedSearch) params.append('search', debouncedSearch);
       if (selectedType !== 'all') params.append('type', selectedType);
       if (sortBy !== 'newest') params.append('sort', sortBy);
-      
+      params.append('limit', PAGE_SIZE.toString());
+      params.append('offset', offset.toString());
+
       const res = await fetch(`/api/community?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch posts');
-      const data = await res.json();
-      return data.success ? (data.posts as CommunityPost[]) : [];
-    }
+      const result = await res.json();
+      return {
+        posts: result.success ? (result.posts as CommunityPost[]) : [],
+        hasMore: !!result.hasMore,
+      };
+    },
   });
+
+  useEffect(() => {
+    if (!data) return;
+
+    if (offset === 0) {
+      setAllPosts(data.posts);
+    } else {
+      setAllPosts((prev) => [...prev, ...data.posts]);
+    }
+
+    setHasMore(data.hasMore);
+  }, [data, offset]);
+
+  const posts = allPosts;
 
   const handleLike = async (postId: string, isLiked: boolean) => {
     if (!student) return;
@@ -210,7 +242,7 @@ function CommunityContent() {
   };
 
   const openPostModal = (post: CommunityPost) => {
-    router.push(`/post/${post.id}`);
+    router.replace(`/post/${post.id}`);
   };
 
   return (
@@ -243,8 +275,8 @@ function CommunityContent() {
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1 group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input type="text" value={searchQuery} onChange={(e) => updateSearchParams({ search: e.target.value })} placeholder="Search..." className="w-full pl-9 pr-9 py-2 bg-card border border-border rounded-xl text-sm font-medium focus:outline-none focus:border-primary transition-all text-foreground" />
-              {searchQuery && <button onClick={() => updateSearchParams({ search: null })} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" /></button>}
+              <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="Search..." className="w-full pl-9 pr-9 py-2 bg-card border border-border rounded-xl text-sm font-medium focus:outline-none focus:border-primary transition-all text-foreground" />
+              {searchInput && <button onClick={() => setSearchInput('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" /></button>}
             </div>
             <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider border transition-all ${showFilters || selectedType !== 'all' || sortBy !== 'newest' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-muted-foreground border-border hover:border-muted-foreground shadow-sm'}`}><SlidersHorizontal className="h-3.5 w-3.5" />Filters</button>
           </div>
@@ -291,7 +323,7 @@ function CommunityContent() {
             </div>
           ) : (
             <>
-              {posts.slice(0, postsToShow).map(post => (
+              {posts.map(post => (
                 <PostCard
                   key={post.id}
                   post={post}
@@ -299,12 +331,11 @@ function CommunityContent() {
                   onLike={handleLike}
                   onVote={handleVote}
                   onOpen={openPostModal}
-                  onFetchReactors={() => {}}
                   onReport={handleReport}
                   onDelete={setPostToDelete}
                 />
               ))}
-              {posts.length > postsToShow && (
+              {hasMore && (
                 <button onClick={handleLoadMore} className="w-full py-3 bg-card border border-border rounded-xl text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-all active:scale-95">Load More</button>
               )}
             </>

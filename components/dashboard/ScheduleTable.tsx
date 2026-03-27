@@ -20,14 +20,14 @@ const HOURS = [
 ];
 
 const SUBJECT_COLORS = [
-  'bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-200/50 dark:border-blue-800/50 hover:bg-blue-500/20 dark:hover:bg-blue-500/30',
-  'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200/50 dark:border-emerald-800/50 hover:bg-emerald-500/20 dark:hover:bg-emerald-500/30',
-  'bg-violet-500/10 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-200/50 dark:border-violet-800/50 hover:bg-violet-500/20 dark:hover:bg-violet-500/30',
-  'bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200/50 dark:border-amber-800/50 hover:bg-amber-500/20 dark:hover:bg-amber-500/30',
-  'bg-rose-500/10 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200/50 dark:border-rose-800/50 hover:bg-rose-500/20 dark:hover:bg-rose-500/30',
-  'bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-200/50 dark:border-cyan-800/50 hover:bg-cyan-500/20 dark:hover:bg-cyan-500/30',
-  'bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-200/50 dark:border-indigo-800/50 hover:bg-indigo-500/20 dark:hover:bg-indigo-500/30',
-  'bg-orange-500/10 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-200/50 dark:border-orange-800/50 hover:bg-orange-500/20 dark:hover:bg-orange-500/30',
+  'bg-muted/40 text-foreground border-border',
+  'bg-muted/40 text-foreground border-border',
+  'bg-muted/40 text-foreground border-border',
+  'bg-muted/40 text-foreground border-border',
+  'bg-muted/40 text-foreground border-border',
+  'bg-muted/40 text-foreground border-border',
+  'bg-muted/40 text-foreground border-border',
+  'bg-muted/40 text-foreground border-border',
 ];
 
 export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTableProps) {
@@ -225,28 +225,28 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
 
   if (!schedule || schedule.length === 0) {
     return (
-      <div className="bg-card rounded-3xl p-12 text-center border border-border shadow-sm">
+      <div className="bg-card rounded-xl p-10 text-center border border-border">
         <h3 className="text-foreground font-bold mb-1">No Schedule</h3>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background text-muted-foreground">
             <Calendar className="h-4 w-4" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-foreground tracking-tight">Schedule</h2>
+            <h2 className="text-lg font-semibold">Schedule</h2>
           </div>
         </div>
 
         <button
           onClick={downloadImage}
           disabled={isExporting}
-          className="flex items-center gap-2 px-3 py-1.5 bg-accent hover:bg-muted text-muted-foreground hover:text-foreground rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
           title="Save as Image"
         >
           {isExporting ? <Camera className="h-3.5 w-3.5 animate-pulse" /> : <Download className="h-3.5 w-3.5" />}
@@ -254,16 +254,16 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
         </button>
       </div>
 
-      <div className="bg-accent/50 border border-border rounded-xl p-3 flex items-start gap-3">
-        <div className="h-5 w-5 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+      <div className="rounded-md border border-border bg-muted/20 p-3 flex items-start gap-3">
+        <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border bg-background text-muted-foreground">
           <Info className="h-3 w-3" />
         </div>
-        <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
           Tap on any class to view full details and location.
         </p>
       </div>
 
-      <div id="schedule-capture-area" ref={tableRef} className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+      <div id="schedule-capture-area" ref={tableRef} className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto custom-scrollbar">
         <table className="w-full border-collapse table-fixed min-w-[800px]">
           <thead>
@@ -320,7 +320,7 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                               className={`
                                 w-full h-full rounded-lg p-1.5 flex flex-col items-center justify-center text-center
                                 transition-all border ${getSubjectColor(classToRender.subject)}
-                                shadow-sm hover:shadow-md active:opacity-70 overflow-hidden whitespace-normal
+                                active:opacity-80 overflow-hidden whitespace-normal
                               `}
                             >
                               <span className="text-[10px] font-black leading-tight break-words w-full">
@@ -359,15 +359,15 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                   {selectedItem.section || '?'}
                 </div>
               </div>
-              <h3 className="text-lg font-bold leading-tight uppercase tracking-tight">
+              <h3 className="text-lg font-semibold leading-tight">
                 {getSubjectName(selectedItem.subject) || '?'}
               </h3>
-              <p className="text-[10px] font-bold uppercase tracking-wider opacity-60 mt-1">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {getSubjectCode(selectedItem.subject) || '?'}
               </p>
             </div>
 
-            <div className="p-5 space-y-4">
+            <div className="p-5 space-y-3">
               <div className="flex items-center gap-4 group">
                 <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
                   <Clock className="h-4 w-4" />
@@ -415,14 +415,14 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
                     const code = getSubjectCode(selectedItem.subject);
                     router.push(`/subjects/${encodeURIComponent(code)}`);
                   }}
-                  className="w-full py-2.5 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-wider rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 group shadow-sm shadow-primary/20"
+                  className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-background py-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/30"
                 >
                   View Catalog
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button 
                   onClick={() => setSelectedItem(null)}
-                  className="w-full py-2.5 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-accent/80 transition-colors"
+                  className="w-full rounded-md border border-border bg-muted/20 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/30"
                 >
                   Close
                 </button>

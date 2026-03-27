@@ -69,30 +69,30 @@ const item = {
 
 export default function QuickActions() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center gap-2 px-1">
-        <div className="h-6 w-6 rounded-lg bg-foreground text-background flex items-center justify-center">
+        <div className="h-6 w-6 rounded-md bg-foreground text-background flex items-center justify-center">
           <LayoutGrid className="h-3.5 w-3.5" />
         </div>
-        <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Quick Access</h3>
+        <h3 className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Quick Access</h3>
       </div>
       
       <motion.div 
         variants={container}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-2 sm:grid-cols-3 gap-3"
+        className="grid grid-cols-2 sm:grid-cols-3 gap-2.5"
       >
         {actions.map((action, idx) => (
           <Link key={idx} href={action.href} className="block group">
             <motion.div 
               variants={item}
-              className="h-full bg-card hover:bg-accent border border-border p-4 rounded-2xl transition-all active:scale-95 flex flex-col items-center text-center gap-3 shadow-sm group-hover:shadow-md"
+              className="h-full bg-card border border-border p-3 rounded-xl transition-colors active:scale-95 flex flex-col items-center text-center gap-2.5"
             >
-              <div className={`h-10 w-10 rounded-xl flex items-center justify-center border ${action.color}`}>
+              <div className={`h-9 w-9 rounded-lg flex items-center justify-center border ${action.color}`}>
                 <action.icon className="h-5 w-5" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-tight text-foreground leading-tight">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-foreground leading-tight">
                 {action.label}
               </span>
             </motion.div>

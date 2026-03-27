@@ -21,6 +21,7 @@ import { useStudent } from '@/lib/hooks';
 import { AnimatePresence } from 'framer-motion';
 import { APP_VERSION } from '@/lib/version';
 
+import { Student } from '@/types';
 // Tab Components
 import ProfileTab from '@/components/settings/ProfileTab';
 import SecurityTab from '@/components/settings/SecurityTab';
@@ -45,7 +46,7 @@ export default function SettingsPage() {
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab && ['profile', 'security', 'notifications', 'privacy', 'activity', 'support'].includes(tab)) {
-      setActiveTab(tab as any);
+      setActiveTab(tab as SettingsTab);
     }
   }, [searchParams]);
 
@@ -61,11 +62,12 @@ export default function SettingsPage() {
       setLoading(false);
     }
   }, [student]);
-
-  const updateSettings = async (newSettings: any) => {
+  const updateSettings = async (newSettings: Student['settings']) => {
     if (!student) return;
-    
-    // Optimistic update
+
+    const previousRaw = localStorage.getItem('student_data');
+    const previousStudent = previousRaw ? JSON.parse(previousRaw) : student;
+
     const updatedStudent = { ...student, settings: newSettings };
     localStorage.setItem('student_data', JSON.stringify(updatedStudent));
     window.dispatchEvent(new Event('local-storage-update'));
@@ -76,10 +78,12 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settings: newSettings }),
       });
-      
+
       if (!res.ok) throw new Error('Failed to update settings');
       toast.success('Settings updated');
-    } catch (e) {
+    } catch {
+      localStorage.setItem('student_data', JSON.stringify(previousStudent));
+      window.dispatchEvent(new Event('local-storage-update'));
       toast.error('Failed to save settings');
     }
   };

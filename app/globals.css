@@ -244,3 +244,64 @@ body {
     background: var(--foreground);
   }
 }
+
+/* Global simplified UI mode */
+.simplified-ui {
+  --radius: 0.5rem;
+}
+
+.simplified-ui [class*='shadow'] {
+  box-shadow: none !important;
+}
+
+.simplified-ui [class*='rounded-2xl'],
+.simplified-ui [class*='rounded-3xl'],
+.simplified-ui [class*='rounded-xl'] {
+  border-radius: 0.5rem !important;
+}
+
+.simplified-ui [class*='backdrop-blur'] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.simplified-ui [class*='bg-gradient'] {
+  background-image: none !important;
+}
+
+.simplified-ui [class*='from-'],
+.simplified-ui [class*='via-'],
+.simplified-ui [class*='to-'] {
+  --tw-gradient-from: transparent !important;
+  --tw-gradient-stops: transparent !important;
+  --tw-gradient-to: transparent !important;
+}
+
+.simplified-ui [class*='animate-'] {
+  animation-duration: 0.15s !important;
+  animation-iteration-count: 1 !important;
+}
+
+.simplified-ui [class*='tracking-widest'],
+.simplified-ui [class*='tracking-wider'],
+.simplified-ui [class*='uppercase'] {
+  letter-spacing: normal !important;
+}
+
+.simplified-ui [class*='uppercase'] {
+  text-transform: none !important;
+}
+
+.simplified-ui [class*='border-primary/'],
+.simplified-ui [class*='bg-primary/'] {
+  border-color: var(--border) !important;
+}
+
+.simplified-ui [class*='bg-primary/'] {
+  background-color: color-mix(in srgb, var(--primary), transparent 92%) !important;
+}
+
+.simplified-ui [class*='hover:scale-'],
+.simplified-ui [class*='active:scale-'] {
+  transform: none !important;
+}

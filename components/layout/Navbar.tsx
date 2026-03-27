@@ -29,6 +29,7 @@ import {
   ShieldCheck,
   Monitor
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { ThemeToggle } from '../shared/ThemeToggle';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -36,6 +37,23 @@ import { APP_VERSION } from '@/lib/version';
 import NotificationDrawer from './NotificationDrawer';
 import { useNotificationsQuery, useStudentQuery } from '@/lib/hooks';
 import { Notification } from '@/types';
+
+type NavLeaf = {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+  desc?: string;
+};
+
+type NavGroup = {
+  name: string;
+  icon: LucideIcon;
+  children: NavLeaf[];
+};
+
+type NavItem = NavLeaf | NavGroup;
+
+const isNavGroup = (link: NavItem): link is NavGroup => 'children' in link;
 
 export default function Navbar() {
   const router = useRouter();
@@ -195,13 +213,13 @@ export default function Navbar() {
     };
   }, [isOpen]);
 
-  const publicLinks = [
+  const publicLinks: NavLeaf[] = [
     { name: 'About', href: '/about', icon: Info },
     { name: 'Team', href: '/team', icon: Users },
     { name: 'Disclaimer', href: '/disclaimer', icon: ShieldAlert },
   ];
 
-  const portalLinks = [
+  const portalLinks: NavLeaf[] = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Subjects', href: '/subjects', icon: BookOpen },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
@@ -209,51 +227,55 @@ export default function Navbar() {
     { name: 'EAF', href: '/eaf', icon: FileText },
   ];
 
-  const workspaceLinks = [
+  const workspaceLinks: NavLeaf[] = [
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit, desc: 'AI Study Buddy' },
     { name: 'Study Mode', href: '/study-mode', icon: Monitor, desc: 'Focused Study' },
   ];
 
-  const socialLinks = [
+  const socialLinks: NavLeaf[] = [
     { name: 'Profile', href: studentId ? `/student/${studentId}` : '/student', icon: UserIcon },
     { name: 'Community', href: '/community', icon: MessageSquare },
   ];
 
-  const adminLinks = [
+  const adminLinks: NavLeaf[] = [
     { name: 'Panel', href: '/admin', icon: ShieldCheck },
   ];
 
-  const authLinks = [
+  const staffAdminGroup: NavGroup[] = isStaff
+    ? [{ name: 'Admin', icon: ShieldCheck, children: adminLinks }]
+    : [];
+
+  const authLinks: NavItem[] = [
     { name: 'Portal', icon: LayoutDashboard, children: portalLinks },
     { name: 'Workspace', icon: Monitor, children: workspaceLinks },
     { name: 'Social', icon: Users, children: socialLinks },
-    ...(isStaff ? [{ name: 'Admin', icon: ShieldCheck, children: adminLinks }] : []),
+    ...staffAdminGroup,
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'Team', href: '/team', icon: Users },
     { name: 'About', href: '/about', icon: Info },
   ];
 
   // For desktop view: show a few primary links and the rest in "More"
-  const desktopPrimary = isLoggedIn ? [
+  const desktopPrimary: NavGroup[] = isLoggedIn ? [
     { name: 'Portal', icon: LayoutDashboard, children: portalLinks },
     { name: 'Workspace', icon: DatabaseZap, children: workspaceLinks },
     { name: 'Social', icon: Users, children: socialLinks },
-    ...(isStaff ? [{ name: 'Admin', icon: ShieldCheck, children: adminLinks }] : []),
+    ...staffAdminGroup,
   ] : [];
 
-  const desktopMore = isLoggedIn ? [
+  const desktopMore: NavLeaf[] = isLoggedIn ? [
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'Team', href: '/team', icon: Users },
     { name: 'About', href: '/about', icon: Info },
   ] : [];
 
-  const navLinks = isLoggedIn ? authLinks : [];
+  const navLinks: NavItem[] = isLoggedIn ? authLinks : [];
 
   const isActive = (path: string) => pathname === path;
 
   return (
     <>
-      <nav className="bg-card/80 dark:bg-background/90 border-b border-border fixed top-0 left-0 right-0 z-[100] backdrop-blur-md">
+      <nav className="fixed top-0 left-0 right-0 z-[100] border-b border-border bg-background/95">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-3">
@@ -276,10 +298,10 @@ export default function Navbar() {
 
             {/* Desktop Menu */}
             <div className="hidden lg:flex items-center space-x-1">
-              {(isLoggedIn ? desktopPrimary : publicLinks).map((link: any) => {
+              {(isLoggedIn ? desktopPrimary : publicLinks).map((link) => {
                 const Icon = link.icon;
                 
-                if (link.children) {
+                if (isNavGroup(link)) {
                   const isDropdownOpen = link.name === 'Portal' ? isPortalOpen : link.name === 'Workspace' ? isWorkspaceOpen : link.name === 'Social' ? isSocialOpen : isAdminOpen;
                   
                   return (
@@ -310,8 +332,8 @@ export default function Navbar() {
                           }
                           setIsMoreOpen(false);
                         }}
-                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all group ${
-                          isDropdownOpen || link.children.some((child: any) => isActive(child.href))
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isDropdownOpen || link.children.some((child) => isActive(child.href))
                             ? 'bg-primary/5 text-primary'
                             : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
@@ -322,15 +344,15 @@ export default function Navbar() {
                       </button>
 
                       {isDropdownOpen && (
-                        <div className="absolute left-0 mt-3 w-56 bg-card/95 dark:bg-background/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl py-2 z-[110] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <div className="absolute left-0 mt-3 w-56 bg-card border border-border rounded-lg shadow-lg py-1.5 z-[110] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                           <div className="px-1.5 space-y-0.5">
-                            {link.children.map((child: any) => {
+                            {link.children.map((child) => {
                               const ChildIcon = child.icon;
                               return (
                                 <Link
                                   key={child.name}
                                   href={child.href}
-                                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all group/item ${
+                                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors group/item ${
                                     isActive(child.href)
                                       ? 'bg-primary/10 text-primary'
                                       : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -352,7 +374,7 @@ export default function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       isActive(link.href)
                         ? 'bg-primary/5 text-primary'
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -371,10 +393,10 @@ export default function Navbar() {
                   <>
                     <button
                       onClick={() => setIsNotifOpen(true)}
-                      className={`relative h-9 w-9 flex items-center justify-center rounded-xl transition-all duration-200 ${
+                      className={`relative h-9 w-9 flex items-center justify-center rounded-md transition-colors ${
                         isNotifOpen 
-                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 border border-primary' 
-                          : 'bg-card text-muted-foreground hover:bg-accent hover:text-foreground border border-border shadow-sm'
+                          ? 'bg-primary/10 text-primary border border-primary' 
+                          : 'bg-card text-muted-foreground hover:bg-accent hover:text-foreground border border-border'
                       }`}
                     >
                       <Bell className="h-5 w-5" />
@@ -394,7 +416,7 @@ export default function Navbar() {
                           setIsSocialOpen(false);
                           setIsAdminOpen(false);
                         }}
-                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                           isMoreOpen || desktopMore.some(link => isActive(link.href))
                             ? 'bg-primary/5 text-primary'
                             : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -405,7 +427,7 @@ export default function Navbar() {
                       </button>
 
                       {isMoreOpen && (
-                        <div className="absolute right-0 mt-3 w-48 bg-card/95 dark:bg-background/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl py-2 z-[110] animate-in fade-in zoom-in-95 duration-200">
+                        <div className="absolute right-0 mt-3 w-48 bg-card border border-border rounded-lg shadow-lg py-1.5 z-[110] animate-in fade-in zoom-in-95 duration-200">
                           <div className="px-1.5 space-y-0.5">
                             {desktopMore.map((link) => {
                               const Icon = link.icon;
@@ -413,7 +435,7 @@ export default function Navbar() {
                                 <Link
                                   key={link.name}
                                   href={link.href}
-                                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                                     isActive(link.href)
                                       ? 'bg-primary/10 text-primary'
                                       : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -439,7 +461,7 @@ export default function Navbar() {
               {isLoggedIn && (
                 <button
                   onClick={() => setIsNotifOpen(true)}
-                  className="relative h-9 w-9 flex items-center justify-center rounded-xl border border-border bg-card text-muted-foreground active:bg-accent transition-all shadow-sm"
+                  className="relative h-9 w-9 flex items-center justify-center rounded-md border border-border bg-card text-muted-foreground active:bg-accent transition-colors"
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
@@ -474,19 +496,19 @@ export default function Navbar() {
       >
         {/* Overlay */}
         <div 
-          className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/35"
           onClick={() => setIsOpen(false)}
         ></div>
         
         {/* Drawer */}
         <div 
-          className={`absolute right-0 top-0 bottom-0 w-72 bg-card shadow-2xl border-l border-border transition-transform duration-300 transform ${
+          className={`absolute right-0 top-0 bottom-0 w-72 bg-card border-l border-border shadow-lg transition-transform duration-300 transform ${
             isOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
           <div className="flex flex-col h-full">
-            <div className="p-6 border-b border-border">
-              <div className="flex items-center justify-between mb-6">
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="relative h-5 w-5">
                     <Image 
@@ -526,10 +548,10 @@ export default function Navbar() {
                       handleManualSync();
                     }}
                     disabled={isSyncing}
-                    className={`p-2 rounded-xl border transition-all ${
+                    className={`p-2 rounded-md border transition-colors ${
                       isSyncing 
                         ? 'bg-accent border-border text-muted-foreground cursor-not-allowed' 
-                        : 'bg-primary border-primary text-primary-foreground hover:opacity-90 shadow-sm shadow-primary/20'
+                        : 'bg-primary border-primary text-primary-foreground hover:opacity-90'
                     }`}
                     title="Manual Sync"
                   >
@@ -539,11 +561,11 @@ export default function Navbar() {
               )}
             </div>
             
-            <div className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-              {(isLoggedIn ? navLinks : publicLinks).map((link: any) => {
+            <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
+              {(isLoggedIn ? navLinks : publicLinks).map((link) => {
                 const Icon = link.icon;
                 
-                if (link.children) {
+                if (isNavGroup(link)) {
                   const isExpanded = link.name === 'Portal' ? isPortalExpanded : link.name === 'Workspace' ? isWorkspaceExpanded : link.name === 'Social' ? isSocialExpanded : isAdminExpanded;
                   const setIsExpanded = link.name === 'Portal' ? setIsPortalExpanded : link.name === 'Workspace' ? setIsWorkspaceExpanded : link.name === 'Social' ? setIsSocialExpanded : setIsAdminExpanded;
                   
@@ -551,10 +573,10 @@ export default function Navbar() {
                     <div key={link.name} className="space-y-1 py-1">
                       <button 
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className="w-full flex items-center justify-between px-4 py-3 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
+                        className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-xl bg-accent group-active:bg-primary/10">
+                          <div className="p-1.5 rounded-md bg-accent">
                             <Icon className="h-5 w-5" />
                           </div>
                           {link.name}
@@ -563,17 +585,17 @@ export default function Navbar() {
                       </button>
                       
                       {isExpanded && (
-                        <div className="space-y-1 px-2 pb-2">
-                          {link.children.map((child: any) => {
+                        <div className="space-y-1 px-2 pb-1">
+                          {link.children.map((child) => {
                             const ChildIcon = child.icon;
                             return (
                               <Link
                                 key={child.name}
                                 href={child.href}
                                 onClick={() => setIsOpen(false)}
-                                className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all ${
+                                className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
                                   isActive(child.href)
-                                    ? 'text-primary bg-primary/5'
+                                    ? 'text-primary bg-primary/10'
                                     : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                                 }`}
                               >
@@ -593,9 +615,9 @@ export default function Navbar() {
                     key={link.name}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
                       isActive(link.href)
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                        ? 'bg-primary/10 text-primary'
                         : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                     }`}
                   >
@@ -606,7 +628,7 @@ export default function Navbar() {
               })}
             </div>
 
-            <div className="p-6 border-t border-border text-center">
+            <div className="p-4 border-t border-border text-center">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">Version {APP_VERSION}</p>
             </div>
           </div>

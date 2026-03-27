@@ -10,12 +10,12 @@ interface DashboardHeaderProps {
 
 export default function DashboardHeader({ student }: DashboardHeaderProps) {
     return (
-      <div className="mb-8 space-y-6">
+      <div className="mb-6 space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
           </div>
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-emerald-500/5 rounded-full border border-emerald-500/10">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-muted rounded-md border border-border">
             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
             <span className="text-[10px] font-semibold text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider">System Online</span>
           </div>
@@ -24,11 +24,11 @@ export default function DashboardHeader({ student }: DashboardHeaderProps) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-500"
+          className="bg-card border border-border rounded-xl p-5 sm:p-6 relative"
         >
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-              <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 transition-transform duration-500 group-hover:scale-105">
+              <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 ">
                 <span className="text-2xl font-bold">
                   {(student.parsedName?.firstName?.[0] || student.name?.[0] || '?').toUpperCase()}
                 </span>
@@ -60,7 +60,7 @@ export default function DashboardHeader({ student }: DashboardHeaderProps) {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center sm:justify-start lg:justify-end gap-3 pt-6 lg:pt-0 border-t lg:border-t-0 border-border/50">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start lg:justify-end gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 border-border">
               <StatItem 
                 label="Year Level" 
                 value={student.yearLevel || '?'} 
@@ -94,7 +94,7 @@ function InfoItem({ label, value, icon }: { label: string, value: string, icon: 
 
 function StatItem({ label, value, icon }: { label: string, value: string, icon: React.ReactNode }) {
   return (
-    <div className="bg-muted/30 border border-border/50 p-4 rounded-xl flex-1 min-w-[120px] transition-all hover:bg-card hover:shadow-sm duration-300">
+    <div className="bg-muted/30 border border-border p-3 rounded-lg flex-1 min-w-[120px]">
       <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{label}</p>
       <div className="flex items-center gap-2.5">
         <div className="p-1.5 bg-card rounded-lg text-primary/80 border border-border/50">

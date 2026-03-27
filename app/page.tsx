@@ -127,13 +127,13 @@ export default function Home() {
   ] as const;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-background font-sans text-foreground pb-20 lg:pb-0">
+    <div className="min-h-[calc(100vh-4rem)] bg-background text-foreground pb-16 lg:pb-0">
       <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
         {/* Desktop Sidebar Navigation */}
-        <aside className="hidden lg:flex w-64 flex-col border-r border-border bg-background/95 backdrop-blur-xl sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar">
-          <div className="p-6 border-b border-border/50">
+        <aside className="hidden lg:flex w-64 flex-col border-r border-border bg-background sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+          <div className="p-5 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
+              <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center text-primary-foreground">
                 <School className="h-5 w-5" />
               </div>
               <div>
@@ -143,15 +143,15 @@ export default function Home() {
             </div>
           </div>
 
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 p-3 space-y-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id as any)}
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${
                   activeTab === tab.id 
-                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/10' 
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                 }`}
               >
                 <tab.icon className={`h-5 w-5 transition-transform group-hover:scale-110 ${activeTab === tab.id ? 'text-primary-foreground' : 'text-primary'}`} />
@@ -163,8 +163,8 @@ export default function Home() {
             ))}
           </nav>
 
-          <div className="p-4 border-t border-border/50 space-y-2 bg-muted/20">
-             <div className="p-3 rounded-xl bg-background/50 border border-border/50">
+          <div className="p-3 border-t border-border bg-muted/10">
+             <div className="p-3 rounded-lg bg-background border border-border">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Signed in as</p>
               <p className="text-xs font-bold break-words text-foreground">{student.name}</p>
             </div>
@@ -173,20 +173,20 @@ export default function Home() {
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="lg:hidden h-16 border-b border-border flex items-center gap-4 px-4 bg-background/95 backdrop-blur-xl sticky top-16 z-30">
+          <header className="lg:hidden h-16 border-b border-border flex items-center gap-3 px-4 bg-background sticky top-16 z-30">
             <div className="flex items-center gap-2">
               <School className="h-5 w-5 text-primary" />
               <span className="font-bold text-sm uppercase">Dashboard</span>
             </div>
           </header>
 
-          <div className="lg:hidden flex items-center gap-1 bg-muted/30 p-2 border-b border-border overflow-x-auto no-scrollbar sticky top-32 z-20 backdrop-blur-xl">
+          <div className="lg:hidden flex items-center gap-1 bg-muted/20 p-2 border-b border-border overflow-x-auto no-scrollbar sticky top-32 z-20">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id as any)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-                  activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  activeTab === tab.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <tab.icon className="h-3.5 w-3.5" />
@@ -195,7 +195,7 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="flex-1 p-4 md:p-8">
+          <div className="flex-1 p-4 md:p-6">
             <div className="max-w-5xl mx-auto">
               <div className="mb-8 hidden lg:block">
                 <h1 className="text-2xl font-bold text-foreground uppercase tracking-tight">

@@ -1,21 +1,17 @@
 'use client';
 
-import React, { useState, useEffect, Suspense, useRef } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Student, CommunityPost } from '@/types';
-import { 
-  GraduationCap, 
+import {
+  GraduationCap,
   IdCard,
   Loader2,
   Lock,
   MessageSquare,
-  X,
   Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { db } from '@/lib/db';
-import { doc, getDoc } from 'firebase/firestore';
-import { parseStudentName } from '@/lib/utils';
 import PostCard from '@/components/community/PostCard';
 import { toast } from 'sonner';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
@@ -24,7 +20,6 @@ import { useRealtime } from '@/components/shared/RealtimeProvider';
 import Skeleton from '@/components/ui/Skeleton';
 import BadgeDisplay from '@/components/shared/BadgeDisplay';
 import Modal from '@/components/ui/Modal';
-
 import Image from 'next/image';
 
 function ProfileContent() {
@@ -36,7 +31,7 @@ function ProfileContent() {
   const profileId = params.id as string;
 
   const isOnline = profileId ? onlineUsers.has(profileId) : false;
-  
+
   const [student, setStudent] = useState<Student | null>(() => {
     if (currentUserData && profileId === currentUserData.id) {
       return currentUserData;
@@ -45,6 +40,7 @@ function ProfileContent() {
   });
   const [loading, setLoading] = useState(true);
   const [isPublicView, setIsPublicView] = useState(false);
+  const [isPrivateProfile, setIsPrivateProfile] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   const { data: posts = [], isLoading: loadingPosts } = useQuery({
@@ -71,38 +67,29 @@ function ProfileContent() {
 
       if (viewingOthers) {
         setLoading(true);
+        setIsPrivateProfile(false);
+
         try {
           const res = await fetch(`/api/student/profile?id=${profileId}`);
           const result = await res.json();
-          if (result.success) {
+
+          if (res.status === 403) {
+            setIsPrivateProfile(true);
+            setStudent(null);
+          } else if (result.success) {
             setStudent(result.data);
           } else {
-            const docRef = doc(db, 'students', profileId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-              const data = docSnap.data();
-              setStudent({
-                id: profileId,
-                name: data.name,
-                parsedName: parseStudentName(data.name),
-                course: data.course,
-                yearLevel: data.year_level,
-                semester: data.semester,
-                email: data.email,
-                settings: data.settings || {
-                  notifications: true,
-                  isPublic: true,
-                  showAcademicInfo: true
-                }
-              } as any);
-            }
+            setStudent(null);
           }
         } catch (err) {
           console.error('Failed to fetch public profile', err);
+          setStudent(null);
         } finally {
           setLoading(false);
         }
       } else {
+        setIsPrivateProfile(false);
+
         if (currentUserData) {
           setStudent(currentUserData);
           setLoading(false);
@@ -112,7 +99,7 @@ function ProfileContent() {
             const res = await fetch('/api/student/me');
             const result = await res.json();
             if (result.success) {
-                setStudent(result.data);
+              setStudent(result.data);
             }
           } catch (e) {
             console.error('Failed to fetch own profile', e);
@@ -138,7 +125,7 @@ function ProfileContent() {
       queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
       queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
-    } catch (err) {
+    } catch {
       toast.error('Failed to update reaction');
     }
   };
@@ -155,25 +142,25 @@ function ProfileContent() {
       queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
       queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
-    } catch (err) {
+    } catch {
       toast.error('Failed to cast vote');
     }
   };
 
   const handleReport = async (postId: string) => {
     if (!currentUserData) return;
-    
+
     const toastId = toast.loading('Reporting post to AI...');
-    
+
     try {
       const res = await fetch('/api/community/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ postId }),
       });
-      
+
       const data = await res.json();
-      
+
       if (data.success) {
         if (data.decision === 'REJECTED') {
           toast.success('Post removed: AI analysis confirmed community guideline violations.', { id: toastId });
@@ -185,7 +172,7 @@ function ProfileContent() {
       } else {
         toast.error(data.error || 'Failed to report post', { id: toastId });
       }
-    } catch (err) {
+    } catch {
       toast.error('Network error while reporting', { id: toastId });
     }
   };
@@ -207,7 +194,7 @@ function ProfileContent() {
       } else {
         toast.error(data.error || 'Failed to delete post', { id: deleteToast });
       }
-    } catch (e) {
+    } catch {
       toast.error('Failed to delete post', { id: deleteToast });
     } finally {
       setPostToDelete(null);
@@ -224,15 +211,7 @@ function ProfileContent() {
     </div>
   );
 
-  if (!student) return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center p-8 text-center">
-      <IdCard className="h-12 w-12 text-slate-200 mb-4" />
-      <h2 className="text-xl font-bold text-foreground">Profile Not Found</h2>
-      <Link href="/" className="mt-4 text-blue-600 dark:text-blue-400 font-semibold">Return Home</Link>
-    </div>
-  );
-
-  if (isPublicView && student.settings && !student.settings.isPublic) return (
+  if (isPrivateProfile) return (
     <div className="max-w-3xl mx-auto py-10 px-4">
       <div className="bg-card border border-border rounded-2xl p-12 text-center shadow-sm">
         <div className="h-16 w-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-6 border border-border">
@@ -246,7 +225,16 @@ function ProfileContent() {
     </div>
   );
 
+  if (!student) return (
+    <div className="min-h-[80vh] flex flex-col items-center justify-center p-8 text-center">
+      <IdCard className="h-12 w-12 text-slate-200 mb-4" />
+      <h2 className="text-xl font-bold text-foreground">Profile Not Found</h2>
+      <Link href="/" className="mt-4 text-blue-600 dark:text-blue-400 font-semibold">Return Home</Link>
+    </div>
+  );
+
   const showAcademic = !isPublicView || (student.settings?.showAcademicInfo ?? true);
+  const canShowStudentId = !isPublicView || (student.settings?.showStudentId ?? false);
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-4">
@@ -257,7 +245,7 @@ function ProfileContent() {
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
             <div className="shrink-0 -mt-12 sm:-mt-16 relative z-10">
               <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl overflow-hidden bg-secondary/50 border-4 border-card shadow-xl flex items-center justify-center">
-                <Image 
+                <Image
                   src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${student.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
                   alt={student.name}
                   width={128}
@@ -272,9 +260,11 @@ function ProfileContent() {
               <div className="space-y-1">
                 <h1 className="text-2xl font-bold text-foreground tracking-tight">{student.name || '?'}</h1>
                 <div className="flex items-center justify-center sm:justify-start gap-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-900/50">
-                    {student.id || '?'}
-                  </span>
+                  {canShowStudentId && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-900/50">
+                      {student.id || '?'}
+                    </span>
+                  )}
                   <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
                     <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                     {isOnline ? 'Online' : 'Offline'}
@@ -298,17 +288,17 @@ function ProfileContent() {
 
           {student.badges && student.badges.length > 0 && (
             <div className="mt-10 pt-8 border-t border-border">
-               <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-4">
                 <div className="h-6 w-6 rounded-lg bg-foreground text-background flex items-center justify-center">
                   <IdCard className="h-3.5 w-3.5" />
                 </div>
                 <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Academic Badges</h3>
               </div>
               <div className="bg-accent p-5 rounded-2xl border border-border">
-                <BadgeDisplay 
-                  badgeIds={student.badges} 
-                  size="lg" 
-                  showName={true} 
+                <BadgeDisplay
+                  badgeIds={student.badges}
+                  size="lg"
+                  showName={true}
                 />
               </div>
             </div>
@@ -352,14 +342,13 @@ function ProfileContent() {
                 onLike={handleLike}
                 onVote={handleVote}
                 onOpen={openPostModal}
-                onFetchReactors={() => {}}
                 onReport={handleReport}
                 onDelete={setPostToDelete}
                 isProfileView={true}
               />
             ))}
-            <Link 
-              href="/community" 
+            <Link
+              href="/community"
               className="block text-center py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-blue-600 dark:text-blue-400 transition-colors"
             >
               Back to Community Feed
@@ -368,31 +357,30 @@ function ProfileContent() {
         )}
       </div>
 
-      {/* Delete Post Confirmation */}
-      <Modal 
-        isOpen={!!postToDelete} 
+      <Modal
+        isOpen={!!postToDelete}
         onClose={() => setPostToDelete(null)}
         maxWidth="max-w-xs"
         className="p-8 text-center"
       >
         <div className="h-16 w-16 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
-            <Trash2 className="h-8 w-8" />
+          <Trash2 className="h-8 w-8" />
         </div>
         <h3 className="text-lg font-bold text-foreground mb-2">Delete Post?</h3>
         <p className="text-xs text-muted-foreground font-bold leading-relaxed mb-8">This action cannot be undone. Are you sure you want to remove this post?</p>
         <div className="flex flex-col gap-3">
-            <button 
-                onClick={handleDeletePost}
-                className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-red-500/10 active:scale-95"
-            >
-                Delete Post
-            </button>
-            <button 
-                onClick={() => setPostToDelete(null)}
-                className="w-full py-3.5 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
-            >
-                Cancel
-            </button>
+          <button
+            onClick={handleDeletePost}
+            className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-red-500/10 active:scale-95"
+          >
+            Delete Post
+          </button>
+          <button
+            onClick={() => setPostToDelete(null)}
+            className="w-full py-3.5 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
+          >
+            Cancel
+          </button>
         </div>
       </Modal>
     </div>
