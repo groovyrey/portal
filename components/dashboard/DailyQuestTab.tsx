@@ -1,7 +1,21 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Trophy, CheckCircle, XCircle, Loader2, BrainCircuit } from 'lucide-react';
+import { 
+  Trophy, 
+  CheckCircle, 
+  XCircle, 
+  Loader2, 
+  BrainCircuit, 
+  Monitor, 
+  Calculator, 
+  FlaskConical, 
+  History, 
+  Map, 
+  Gamepad2, 
+  Palette,
+  LayoutGrid
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -16,8 +30,28 @@ interface TriviaQuestion {
 
 const TOTAL_QUESTIONS = 5;
 
+const CATEGORIES = [
+  { id: 9, name: 'General', icon: LayoutGrid },
+  { id: 18, name: 'Computers', icon: Monitor },
+  { id: 19, name: 'Math', icon: Calculator },
+  { id: 17, name: 'Science', icon: FlaskConical },
+  { id: 23, name: 'History', icon: History },
+  { id: 22, name: 'Geography', icon: Map },
+  { id: 21, name: 'Sports', icon: Trophy },
+  { id: 15, name: 'Gaming', icon: Gamepad2 },
+  { id: 25, name: 'Art', icon: Palette },
+];
+
+const DIFFICULTIES = [
+  { id: 'easy', name: 'Easy', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+  { id: 'medium', name: 'Medium', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+  { id: 'hard', name: 'Hard', color: 'bg-rose-500/10 text-rose-600 border-rose-500/20' },
+];
+
 export default function DailyQuestTab() {
   const [loading, setLoading] = useState(true);
+  const [selectedCat, setSelectedCat] = useState<number | null>(null);
+  const [categorySelected, setCategorySelected] = useState(false);
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -39,22 +73,44 @@ export default function DailyQuestTab() {
       setDailyScore(lastScore ? parseInt(lastScore) : 0);
       setLoading(false);
     } else {
-      fetchQuestions();
+      // Don't fetch questions immediately, show category select first
+      setLoading(false);
     }
   }, []);
 
-  const fetchQuestions = async () => {
+  const fetchQuestions = async (categoryId?: number, difficulty?: string) => {
     setLoading(true);
     try {
       // Fetch daily random questions
-      const res = await fetch('https://opentdb.com/api.php?amount=' + TOTAL_QUESTIONS + '&type=multiple');
+      let url = `https://opentdb.com/api.php?amount=${TOTAL_QUESTIONS}&type=multiple`;
+      if (categoryId) {
+        url += `&category=${categoryId}`;
+      }
+      if (difficulty) {
+        url += `&difficulty=${difficulty}`;
+      }
+      
+      const res = await fetch(url);
       const data = await res.json();
       
       if (data.results && data.results.length > 0) {
-        setQuestions(data.results);
-        prepareQuestion(data.results[0]);
+        // Pre-decode all questions to avoid DOM calls in render
+        const decodedResults = data.results.map((q: TriviaQuestion) => ({
+          ...q,
+          question: decode(q.question),
+          correct_answer: decode(q.correct_answer),
+          incorrect_answers: q.incorrect_answers.map(a => decode(a)),
+          category: decode(q.category)
+        }));
+        
+        setQuestions(decodedResults);
+        prepareQuestion(decodedResults[0]);
+        setCategorySelected(true);
       } else {
-        toast.error('Failed to load quest data.');
+        toast.error('No questions found for this combination. Try another.');
+        if (difficulty) {
+           setCategorySelected(false);
+        }
       }
     } catch (e) {
       toast.error('Network error. Could not fetch quest.');
@@ -64,8 +120,6 @@ export default function DailyQuestTab() {
   };
 
   const prepareQuestion = (question: TriviaQuestion) => {
-    // Decode HTML entities in question and answers if necessary (OpenTDB returns HTML entities)
-    // For simplicity, we'll just shuffle here. Decoding is better done with a utility or DOMParser.
     const allAnswers = [...question.incorrect_answers, question.correct_answer];
     setShuffledAnswers(allAnswers.sort(() => Math.random() - 0.5));
     setSelectedAnswer(null);
@@ -164,6 +218,81 @@ export default function DailyQuestTab() {
     );
   }
 
+  if (!categorySelected || questions.length === 0) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-6">
+        <div className="text-center space-y-2">
+          <div className="flex justify-center mb-4">
+            <div className="h-16 w-16 bg-primary/10 text-primary rounded-full flex items-center justify-center">
+              <Trophy className="h-8 w-8" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold">Daily Quest</h2>
+          <p className="text-sm text-muted-foreground">
+            {selectedCat === null 
+              ? "Choose a category to start your daily trivia challenge."
+              : "Now choose your difficulty level."}
+          </p>
+        </div>
+
+        {selectedCat === null ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCat(cat.id)}
+                className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/50 hover:bg-primary/5 active:scale-95 group"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+                  <cat.icon className="h-6 w-6" />
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider">{cat.name}</span>
+              </button>
+            ))}
+            <button
+              onClick={() => setSelectedCat(0)} // 0 means any
+              className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/50 hover:bg-primary/5 active:scale-95 group"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+                <BrainCircuit className="h-6 w-6" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider">Any Topic</span>
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {DIFFICULTIES.map((diff) => (
+                <button
+                  key={diff.id}
+                  onClick={() => fetchQuestions(selectedCat || undefined, diff.id)}
+                  className={`flex items-center justify-between gap-3 rounded-xl border p-4 transition-all hover:bg-accent active:scale-95 group ${diff.color}`}
+                >
+                  <span className="font-bold uppercase tracking-wider">{diff.name}</span>
+                  <Trophy className="h-5 w-5 opacity-20 group-hover:opacity-100 transition-opacity" />
+                </button>
+              ))}
+              <button
+                onClick={() => fetchQuestions(selectedCat || undefined)}
+                className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:bg-accent active:scale-95 group"
+              >
+                <span className="text-muted-foreground font-bold uppercase tracking-wider text-sm">Mixed Difficulty</span>
+                <BrainCircuit className="h-5 w-5 opacity-20 group-hover:opacity-100 transition-opacity" />
+              </button>
+            </div>
+            
+            <button 
+              onClick={() => setSelectedCat(null)}
+              className="w-full py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Back to Categories
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   const currentQ = questions[currentIndex];
 
   return (
@@ -199,7 +328,7 @@ export default function DailyQuestTab() {
       <div className="rounded-lg border border-border bg-card p-5 sm:p-6">
         <div className="mb-6">
            <span className="mb-3 inline-block rounded-md border border-border bg-muted/20 px-2 py-0.5 text-[10px] text-muted-foreground">
-             {decode(currentQ.category)}
+             {currentQ.category}
            </span>
            <span className={`inline-block ml-2 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide mb-3 ${
              currentQ.difficulty === 'easy' ? 'bg-emerald-500/10 text-emerald-600' :
@@ -209,7 +338,7 @@ export default function DailyQuestTab() {
              {currentQ.difficulty}
            </span>
            <h3 className="text-xl sm:text-2xl font-bold text-foreground leading-tight">
-             {decode(currentQ.question)}
+             {currentQ.question}
            </h3>
         </div>
 
@@ -244,7 +373,7 @@ export default function DailyQuestTab() {
                  `}
                >
                  <div className="flex items-center justify-between">
-                   <span>{decode(answer)}</span>
+                   <span>{answer}</span>
                    {showResult && isCorrect && <CheckCircle className="h-5 w-5 text-emerald-500" />}
                    {showResult && isSelected && !isCorrect && <XCircle className="h-5 w-5 text-rose-500" />}
                  </div>

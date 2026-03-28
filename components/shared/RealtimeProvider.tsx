@@ -6,14 +6,19 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
 
+interface MemberStatus {
+  isOnline: boolean;
+  isStudying: boolean;
+}
+
 const RealtimeContext = createContext<{ 
   activePostId: string | null; 
   setActivePostId: (id: string | null) => void;
-  onlineUsers: Set<string>;
+  onlineMembers: Map<string, MemberStatus>;
 }>({
   activePostId: null,
   setActivePostId: () => {},
-  onlineUsers: new Set(),
+  onlineMembers: new Map(),
 });
 
 export const useRealtime = () => useContext(RealtimeContext);
@@ -23,7 +28,7 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
   const pathname = usePathname();
   const [activePostId, setActivePostId] = useState<string | null>(null);
   const [studentId, setStudentId] = useState<string | null>(null);
-  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+  const [onlineMembers, setOnlineMembers] = useState<Map<string, MemberStatus>>(new Map());
   const ablyRef = useRef<Ably.Realtime | null>(null);
 
   useEffect(() => {
@@ -33,7 +38,6 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
         const parsed = JSON.parse(data);
         if (parsed.id !== studentId) {
           setStudentId(parsed.id);
-          // Only invalidate if it's not the initial mount to avoid double-fetching
           if (!isInitial) {
             queryClient.invalidateQueries({ queryKey: ['community-posts'] });
             queryClient.invalidateQueries({ queryKey: ['student-data'] });
@@ -45,7 +49,6 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
     };
 
     const handleUpdate = () => checkLogin(false);
-
     checkLogin(true);
     window.addEventListener('local-storage-update', handleUpdate);
     window.addEventListener('storage', handleUpdate);
@@ -56,10 +59,9 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
   }, [queryClient, studentId]);
 
   useEffect(() => {
-    // Only initialize Ably if we have a studentId (logged in) AND not in study mode
-    if (!studentId || pathname === '/study-mode') {
+    // Only initialize Ably if we have a studentId (logged in)
+    if (!studentId) {
       if (ablyRef.current) {
-        console.log('Closing Ably connection (Study Mode or Logout)');
         ablyRef.current.close();
         ablyRef.current = null;
       }
@@ -72,27 +74,46 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
         authUrl: '/api/ably/auth',
         closeOnUnload: true
       });
-
-      ablyRef.current.connection.on('connected', () => {
-        console.log('Ably Connected');
-        // Toast removed as requested
-      });
-
-      ablyRef.current.connection.on('failed', () => {
-        console.error('Ably Connection Failed');
-        toast.error('Real-time connection failed', {
-          description: 'Live updates may be delayed. Try reloading if the issue persists.',
-        });
-      });
-      
-      ablyRef.current.connection.on('closed', () => {
-        console.log('Ably Connection Closed');
-      });
     }
 
     const ably = ablyRef.current;
     const communityChannel = ably.channels.get('community');
     const studentChannel = studentId ? ably.channels.get(`student-${studentId}`) : null;
+
+    // Presence Logic
+    const isStudying = pathname === '/study-mode';
+    
+    const updatePresenceData = async () => {
+      try {
+        const members = await communityChannel.presence.get();
+        const memberMap = new Map<string, MemberStatus>();
+        
+        members.forEach(m => {
+          if (m.clientId && m.clientId !== 'anonymous') {
+            memberMap.set(m.clientId, {
+              isOnline: true,
+              isStudying: m.data?.isStudying || false
+            });
+          }
+        });
+        
+        setOnlineMembers(memberMap);
+      } catch (err) {
+        console.error('Failed to fetch presence:', err);
+      }
+    };
+
+    const enterPresence = () => {
+      communityChannel.presence.enter({ isStudying });
+    };
+
+    // Update presence data when we are in study mode or not
+    if (ably.connection.state === 'connected') {
+      communityChannel.presence.update({ isStudying });
+    }
+
+    ably.connection.on('connected', enterPresence);
+    communityChannel.presence.subscribe(['enter', 'leave', 'present', 'update'], updatePresenceData);
 
     const onUpdate = (message: any) => {
       const { type, postId, userName, userId, isLiked, optionId } = message.data;
@@ -210,33 +231,14 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
     communityChannel.subscribe('update', onUpdate);
     if (studentChannel) studentChannel.subscribe('update', onStudentUpdate);
 
-    // Presence logic
-    if (studentId) {
-      communityChannel.presence.enter();
-    }
-
-    const updatePresence = async () => {
-      try {
-        const members = await communityChannel.presence.get();
-        const clientIds = members
-          .filter(m => m.clientId && m.clientId !== 'anonymous')
-          .map(m => m.clientId!);
-        setOnlineUsers(new Set(clientIds));
-      } catch (err) {
-        console.error('Failed to fetch presence:', err);
-      }
-    };
-
-    communityChannel.presence.subscribe(['enter', 'leave', 'present'], updatePresence);
-    updatePresence();
-
     return () => {
-      // Don't attempt cleanup if we've already closed the connection for study mode
-      if (pathname === '/study-mode' || !ablyRef.current) return;
+      // Don't attempt cleanup if we've already closed the connection for Logout
+      if (!ablyRef.current) return;
 
       communityChannel.unsubscribe('update', onUpdate);
       if (studentChannel) studentChannel.unsubscribe('update', onStudentUpdate);
-      communityChannel.presence.unsubscribe(['enter', 'leave', 'present'], updatePresence);
+      communityChannel.presence.unsubscribe(['enter', 'leave', 'present', 'update'], updatePresenceData);
+      ably.connection.off('connected', enterPresence);
       if (studentId) communityChannel.presence.leave();
     };
   }, [queryClient, studentId, activePostId, pathname]);
@@ -251,7 +253,7 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
   }, []);
 
   return (
-    <RealtimeContext.Provider value={{ activePostId, setActivePostId, onlineUsers }}>
+    <RealtimeContext.Provider value={{ activePostId, setActivePostId, onlineMembers }}>
       {children}
     </RealtimeContext.Provider>
   );

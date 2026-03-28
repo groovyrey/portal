@@ -8,7 +8,8 @@ import {
   Loader2,
   Lock,
   MessageSquare,
-  Trash2
+  Trash2,
+  BrainCircuit
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -25,12 +26,14 @@ import Image from 'next/image';
 function ProfileContent() {
   const queryClient = useQueryClient();
   const { student: currentUserData, isLoading: isUserLoading } = useStudent();
-  const { onlineUsers } = useRealtime();
+  const { onlineMembers } = useRealtime();
   const params = useParams();
   const router = useRouter();
   const profileId = params.id as string;
 
-  const isOnline = profileId ? onlineUsers.has(profileId) : false;
+  const memberStatus = profileId ? onlineMembers.get(profileId) : null;
+  const isOnline = !!memberStatus;
+  const isStudying = !!memberStatus?.isStudying;
 
   const [student, setStudent] = useState<Student | null>(() => {
     if (currentUserData && profileId === currentUserData.id) {
@@ -245,9 +248,10 @@ function ProfileContent() {
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
             <div className="shrink-0 -mt-12 sm:-mt-16 relative z-10">
               <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl overflow-hidden bg-secondary/50 border-4 border-card shadow-xl flex items-center justify-center">
-                <Image
-                  src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${student.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
-                  alt={student.name}
+                <Image 
+                  src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${student.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`}
+                  alt={`${student.name}'s avatar`}
+
                   width={128}
                   height={128}
                   className="w-full h-full object-cover"
@@ -272,6 +276,12 @@ function ProfileContent() {
                     <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-slate-300 dark:bg-slate-700'}`} />
                     {isOnline ? 'Online' : 'Offline'}
                   </div>
+                  {isStudying && (
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary animate-pulse">
+                      <BrainCircuit className="h-3 w-3" />
+                      Studying
+                    </div>
+                  )}
                 </div>
               </div>
 

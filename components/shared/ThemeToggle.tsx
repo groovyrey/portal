@@ -16,7 +16,7 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <div className="h-9 w-9 rounded-xl border border-border bg-card" />
+      <div className="h-9 w-9 rounded-[var(--radius)] border border-border bg-card" />
     );
   }
 
@@ -29,7 +29,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="relative h-9 w-9 flex items-center justify-center rounded-xl border border-border bg-card text-foreground hover:bg-accent transition-colors shadow-sm active:scale-95"
+      className="relative h-9 w-9 flex items-center justify-center rounded-[var(--radius)] border border-border bg-card text-foreground hover:bg-accent transition-colors shadow-sm active:scale-95"
       title={`Current: ${theme} (resolved: ${resolvedTheme})`}
     >
       <AnimatePresence mode="wait" initial={false}>

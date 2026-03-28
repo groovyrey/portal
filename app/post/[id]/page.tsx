@@ -391,7 +391,7 @@ export default function PostPage() {
               <div className="flex items-center gap-2.5">
                 <div className="relative h-10 w-10 rounded-lg overflow-hidden bg-muted flex items-center justify-center border border-border/40 shadow-sm">
                   <Image 
-                    src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${post.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                    src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${post.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`}
                     alt={post.userName}
                     width={40}
                     height={40}
@@ -672,7 +672,7 @@ export default function PostPage() {
                       >
                         <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary/50 border border-border group-hover:bg-card transition-all flex items-center justify-center shadow-sm">
                           <Image 
-                            src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${comment.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                            src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${comment.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`}
                             alt={comment.userName}
                             width={40}
                             height={40}
@@ -802,7 +802,7 @@ export default function PostPage() {
               >
                 <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary/50 border border-border group-hover:bg-card transition-all flex items-center justify-center shadow-sm">
                   <Image 
-                    src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${user.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                    src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${user.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`}
                     alt={user.name}
                     width={40}
                     height={40}

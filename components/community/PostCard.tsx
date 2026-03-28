@@ -21,12 +21,14 @@ import {
   Share2, 
   User,
   Copy,
-  Check
+  Check,
+  BrainCircuit
 } from 'lucide-react';
 import { CommunityPost, Student } from '@/types';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { useRealtime } from '@/components/shared/RealtimeProvider';
 
 interface PostCardProps {
   post: CommunityPost;
@@ -82,10 +84,15 @@ export default function PostCard({
   onDelete,
   isProfileView = false
 }: PostCardProps) {
+  const { onlineMembers } = useRealtime();
   const isLiked = (post.likes || []).includes(student?.id || '');
   const topic = post.topic || 'General';
   const isAuthor = student?.id === post.userId;
   const [showMenu, setShowMenu] = useState(false);
+  
+  const memberStatus = onlineMembers.get(post.userId);
+  const isStudying = memberStatus?.isStudying;
+
   const menuRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -165,7 +172,7 @@ export default function PostCard({
         <div className="flex items-center gap-2.5">
           <div className="relative h-9 w-9 rounded-lg overflow-hidden bg-muted flex items-center justify-center border border-border/40">
             <Image 
-              src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${post.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+              src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${post.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`}
               alt={post.userName}
               width={36}
               height={36}
@@ -175,14 +182,24 @@ export default function PostCard({
           </div>
           <div className="min-w-0">
             {isProfileView ? (
-               <h4 className="text-sm font-bold text-foreground leading-none mb-1">{post.userName}</h4>
+               <div className="flex items-center gap-1.5 mb-1">
+                 <h4 className="text-sm font-bold text-foreground leading-none">{post.userName}</h4>
+                 {isStudying && (
+                    <BrainCircuit className="h-3 w-3 text-primary animate-pulse" />
+                 )}
+               </div>
             ) : (
               <Link 
                 href={`/student/${post.userId}`} 
                 onClick={(e) => e.stopPropagation()}
                 className="block group/link"
               >
-                  <h4 className="text-sm font-bold text-foreground leading-none mb-1 group-hover/link:text-primary transition-colors">{post.userName}</h4>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <h4 className="text-sm font-bold text-foreground leading-none group-hover/link:text-primary transition-colors">{post.userName}</h4>
+                    {isStudying && (
+                      <BrainCircuit className="h-3 w-3 text-primary animate-pulse" />
+                    )}
+                  </div>
               </Link>
             )}
             <div className="flex items-center gap-1.5 flex-wrap">

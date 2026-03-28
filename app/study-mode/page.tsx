@@ -45,31 +45,7 @@ interface QuoteData {
   author: string;
   id: string;
   timestamp: Date;
-  type?: 'quote' | 'system';
 }
-
-const SYSTEM_MESSAGES = [
-  "Tip: You can access your grades and schedule even when the official portal is offline!",
-  "Did you know? LCC Hub uses AI to help you analyze your academic performance.",
-  "How's your experience with the new portal so far? We'd love to hear your feedback!",
-  "LCC Hub: Modernizing your student experience at La Concepcion College.",
-  "Fact: The AI assistant can execute Python code to help you with complex math problems.",
-  "Check out the Community tab to see what's happening around the campus!",
-  "LCC Hub is designed to be mobile-first, so you can check your status on the go.",
-  "Security: Your credentials are encrypted and stored securely using AES-256 encryption.",
-  "Stay updated: Real-time notifications keep you informed about class changes.",
-  "Productivity: Use the 'Insights' tab to see a detailed breakdown of your grade trends.",
-  "Customization: You can change your theme and notification settings in the profile menu.",
-  "Did you know? LCC Hub caches your data locally for near-instant loading times.",
-  "Community: Share your thoughts and connect with other LCCians in the forum.",
-  "Pro Tip: Ask the AI assistant to 'summarize my grades' for a quick academic overview.",
-  "Financials: Track your balance and payment history directly from the dashboard.",
-  "LCC Hub is built by students, for students, to make college life a bit easier.",
-  "Need help? The AI assistant can answer questions about school policies and events.",
-  "Fact: You can see upcoming school holidays and events in the Schedule tab.",
-  "Is there a feature you'd like to see added? Let us know in the feedback section!",
-  "LCC Hub: Fast, Secure, and AI-Powered.",
-];
 
 interface MusicTrack {
   id: string;
@@ -419,10 +395,7 @@ export default function StudyModePage() {
 
   // Fetch images
   useEffect(() => {
-    if (isMobileMode === null) return;
-
-    // Skip fetching if not visible to save bandwidth/battery
-    if (!isVisible && images.length > 0) return;
+    if (isMobileMode === null || images.length > 0) return;
 
     async function fetchImages() {
       try {
@@ -440,11 +413,11 @@ export default function StudyModePage() {
       }
     }
     fetchImages();
-  }, [isMobileMode, isVisible, images.length]);
+  }, [isMobileMode, images.length]);
 
   const fetchNewQuote = useCallback(async () => {
     // Skip if not visible
-    if (!isVisible) return;
+    if (document.hidden) return;
 
     try {
       const response = await fetch(`/api/quotes?t=${Date.now()}`, { cache: 'no-store' });
@@ -454,36 +427,21 @@ export default function StudyModePage() {
           quote: data.quote,
           author: data.author,
           id: Math.random().toString(36).substr(2, 9),
-          timestamp: new Date(),
-          type: 'quote'
+          timestamp: new Date()
         };
         setCurrentMessage(newMessage);
       }
     } catch (error) {
       console.error('Failed to fetch quote:', error);
     }
-  }, [isVisible]);
+  }, []);
 
-  const sendSystemMessage = useCallback(() => {
-     // Skip if not visible
-    if (!isVisible) return;
-
-    const randomMsg = SYSTEM_MESSAGES[Math.floor(Math.random() * SYSTEM_MESSAGES.length)];
-    const newMessage: QuoteData = {
-      quote: randomMsg,
-      author: 'LCC Hub',
-      id: Math.random().toString(36).substr(2, 9),
-      timestamp: new Date(),
-      type: 'system'
-    };
-    setCurrentMessage(newMessage);
-  }, [isVisible]);
-
-  // Message intervals
+  // Initial fetch
   useEffect(() => {
-    fetchNewQuote(); // Initial fetch
-    // Intervals removed as per user request for manual refresh
-  }, [fetchNewQuote]);
+    if (!currentMessage) {
+      fetchNewQuote();
+    }
+  }, [fetchNewQuote, currentMessage]);
 
   // Sleep Timer Logic
   useEffect(() => {
@@ -902,21 +860,6 @@ export default function StudyModePage() {
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="max-w-3xl flex flex-col items-center gap-4 sm:gap-6 w-full max-h-full overflow-y-auto overflow-x-hidden scrollbar-hide px-1 sm:px-2"
               >
-              {currentMessage.type === 'system' ? (
-                 <div className="px-4 sm:px-8 py-3 sm:py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-full shadow-2xl shrink-0 max-w-full flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                    <p className="text-[11px] sm:text-xs md:text-sm font-bold tracking-[0.15em] sm:tracking-widest text-white/90 uppercase break-words text-left sm:text-center">
-                      {currentMessage.quote}
-                    </p>
-                    <button 
-                      onClick={sendSystemMessage} 
-                      className="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/20 transition-all text-white/60 hover:text-white hover:scale-110 active:scale-95"
-                      title="New Tip"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                    </button>
-                 </div>
-              ) : (
-                <>
                   <div className="relative inline-block px-4 sm:px-8 py-2 shrink-0 max-w-full">
                      <span className="absolute -top-4 -left-2 text-6xl md:text-8xl text-white/10 font-serif leading-none select-none">“</span>
                      <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium leading-tight text-white drop-shadow-xl font-serif tracking-wide text-balance break-words">
@@ -940,8 +883,6 @@ export default function StudyModePage() {
                       </button>
                     </div>
                   </div>
-                </>
-              )}
               </motion.div>
               )}
               </AnimatePresence>
