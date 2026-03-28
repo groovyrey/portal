@@ -30,10 +30,8 @@ export default function DailyGreeting({ student }: { student: Student }) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const fetchQuote = useCallback(async (force = false) => {
-    const today = currentDate.toDateString();
+    const today = new Date().toDateString();
     try {
-      setLoading(true);
-
       if (!force) {
         const cachedQuoteStr = localStorage.getItem('daily_quote_data');
         if (cachedQuoteStr) {
@@ -47,6 +45,7 @@ export default function DailyGreeting({ student }: { student: Student }) {
         }
       }
 
+      setLoading(true);
       const response = await fetch('/api/quotes');
       if (!response.ok) throw new Error();
       const data = await response.json();
@@ -60,7 +59,7 @@ export default function DailyGreeting({ student }: { student: Student }) {
           JSON.stringify({
             quote: data.quote,
             author: data.author,
-            date: today
+            date: new Date().toDateString()
           })
         );
       } else {
@@ -76,13 +75,13 @@ export default function DailyGreeting({ student }: { student: Student }) {
         JSON.stringify({
           quote: fallback.q,
           author: fallback.a,
-          date: today
+          date: new Date().toDateString()
         })
       );
     } finally {
       setLoading(false);
     }
-  }, [currentDate]);
+  }, []);
 
   const checkHoliday = useCallback(async () => {
     try {

@@ -35,7 +35,7 @@ LCC Hub is a sophisticated student portal for La Concepcion College (LCC) studen
 *   **Orchestrator:** **LangChain**
 *   **LLM:** **Google Gemini** (`gemma-3-27b-it` via `ChatGoogleGenerativeAI`).
 *   **Code Execution:** **Vercel Sandbox** (`@vercel/sandbox`) for running Python math/data analysis secure.
-*   **Visualization:** **Cloudflare Workers AI** (`@cf/qwen/qwen2.5-coder-32b-instruct`) for generating interactive HTML/JS components on the fly.
+* **Visualization:** **Cloudflare Workers AI** (`@cf/nvidia/nemotron-3-120b-a12b`) for generating interactive HTML/JS components on the fly.
 *   **Voice:** **Deepgram** for speech-to-text.
 
 ## 3. Key Workflows & Implementation Details

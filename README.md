@@ -9,7 +9,7 @@
   <p>
     <img src="https://img.shields.io/badge/Status-Beta-blue?style=for-the-badge" alt="Status" />
     <img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js" alt="Framework" />
-    <img src="https://img.shields.io/badge/AI-Gemma_3_&_Qwen_2.5-orange?style=for-the-badge&logo=google-gemini" alt="AI" />
+    <img src="https://img.shields.io/badge/AI-Gemma_3_&_Nemotron_3-orange?style=for-the-badge&logo=google-gemini" alt="AI" />
     <img src="https://img.shields.io/badge/Realtime-Ably-green?style=for-the-badge&logo=ably" alt="Realtime" />
   </p>
 </div>
@@ -26,7 +26,7 @@
 | :--- | :--- |
 | **🎓 Student Dashboard** | Instant access to grades, schedules, and financials in a unified, **mobile-first** interface built with Tailwind CSS v4. Widgets include **Grade Stats**, **Financial Summary**, **Schedule Table**, and **Upcoming Holidays**. |
 | **🤖 Portal Assistant** | A specialized ReAct agent powered by **Gemma 3 27B**. It possesses a deep understanding of student records and can perform complex math, web searches, and YouTube lookups. |
-| **🎨 AI Architect** | A secondary agent powered by **Cloudflare Qwen 2.5 Coder**. It generates interactive **2D visualizations**, **Dynamic Charts**, and **GSAP animations** on demand to visualize academic concepts. |
+| **🎨 AI Architect** | A secondary agent powered by **Nvidia Nemotron 3 120B**. It generates interactive **2D visualizations**, **Dynamic Charts**, and **GSAP animations** on demand to visualize academic concepts. |
 | **⚡ Realtime Sync** | Powered by **Ably**, providing instant notifications for grades and announcements. The **Dual-Database** strategy (Firestore + Turso) ensures data is always available, even offline. |
 | **🏆 Badge System** | Gamified academic tracking. The system automatically awards badges (e.g., **'Perfect Grade'** for 1.00 GPAs) during data synchronization. |
 | **🛡️ Secure & Private** | **AES-256-CBC** encryption for session data. No passwords are ever stored. Granular privacy controls for AI data access. |
@@ -88,8 +88,9 @@ For math and data analysis, the assistant executes **Python 3.13** code in a sec
 *   **Capabilities:** Symbolic math, statistical analysis of grades, and complex model simulations.
 
 ### 3. The Visualization Architect (Cloudflare Workers AI)
-Delegates to a specialized **"Visualizer"** agent (powered by \`Qwen 2.5 Coder 32B\`) to generate raw HTML/JS payloads.
-*   **Interactive Demos:** 2D Visualizations, Interactive Charts (\`Chart.js\`), and SVG Animations.
+Delegates to a specialized **"Visualizer"** agent (powered by `Nvidia Nemotron 3 120B`) to generate raw HTML/JS payloads.
+*   **Interactive Demos:** 2D Visualizations, Interactive Charts (`Chart.js`), and SVG Animations.
+
 *   **Responsiveness:** All generated visualizations are designed to be fully responsive and mobile-friendly.
 
 ### 4. Knowledge & Voice

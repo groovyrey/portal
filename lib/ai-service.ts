@@ -1,10 +1,9 @@
 "use server";
 
-import { Student } from "@/types";
 
 /**
  * Specialized Visualization Agent
- * Uses Cloudflare Qwen 2.5 Coder 32B to generate high-performance HTML/Tailwind/JS payloads.
+ * Uses Cloudflare Nvidia Nemotron 3 120B to generate high-performance HTML/Tailwind/JS payloads.
  */
 export async function generateVisualization(
   prompt: string,
@@ -12,7 +11,7 @@ export async function generateVisualization(
 ) {
   const API_TOKEN = process.env.AI_WORKER_API;
   const ACCOUNT_ID = process.env.ACCOUNT_ID;
-  const MODEL = "@cf/qwen/qwen2.5-coder-32b-instruct"; 
+  const MODEL = "@cf/nvidia/nemotron-3-120b-a12b"; 
 
   if (!API_TOKEN) throw new Error("Academic system configuration is missing.");
 
@@ -82,7 +81,7 @@ export async function generateVisualization(
     
     // Robust Extraction Logic:
     const extractHtml = (str: string) => {
-        let content = str.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+        const content = str.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
         
         // 1. Check for markdown code blocks
         const match = content.match(/```(?:html|xml|javascript|js|css)?\s*([\s\S]*?)```/i);
