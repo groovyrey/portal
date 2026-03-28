@@ -85,8 +85,8 @@ function InfoItem({ label, value, icon }: { label: string, value: string, icon: 
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider leading-none mb-1">{label}</p>
-        <p className="text-sm font-medium text-foreground leading-none break-words">{value}</p>
+        <p className="text-[9px] font-black text-blue-500/80 dark:text-blue-400/80 uppercase tracking-widest leading-none mb-1.5">{label}</p>
+        <p className="text-sm font-bold text-foreground leading-none break-words">{value}</p>
       </div>
     </div>
   );
@@ -95,7 +95,7 @@ function InfoItem({ label, value, icon }: { label: string, value: string, icon: 
 function StatItem({ label, value, icon }: { label: string, value: string, icon: React.ReactNode }) {
   return (
     <div className="bg-muted/30 border border-border p-3 rounded-lg flex-1 min-w-[120px]">
-      <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{label}</p>
+      <p className="text-[9px] font-black text-muted-foreground/80 dark:text-muted-foreground uppercase tracking-widest mb-2.5">{label}</p>
       <div className="flex items-center gap-2.5">
         <div className="p-1.5 bg-card rounded-lg text-primary/80 border border-border/50">
           {icon}

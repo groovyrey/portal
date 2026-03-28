@@ -90,7 +90,7 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
                 <Hash className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em] leading-none mb-1">Student Identifier</p>
+                <p className="text-[8px] font-black text-blue-500/70 dark:text-blue-400/80 uppercase tracking-[0.2em] leading-none mb-1">Student Identifier</p>
                 <p className="text-sm font-mono font-bold text-foreground leading-none">{student.id}</p>
               </div>
             </div>

@@ -261,12 +261,15 @@ function ProfileContent() {
                 <h1 className="text-2xl font-bold text-foreground tracking-tight">{student.name || '?'}</h1>
                 <div className="flex items-center justify-center sm:justify-start gap-3">
                   {canShowStudentId && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-900/50">
-                      {student.id || '?'}
-                    </span>
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800/50 shadow-sm">
+                      <span className="text-[8px] font-black uppercase tracking-[0.15em] text-blue-500 dark:text-blue-400/80">ID</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-300">
+                        {student.id || '?'}
+                      </span>
+                    </div>
                   )}
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
-                    <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/80 dark:text-muted-foreground">
+                    <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-slate-300 dark:bg-slate-700'}`} />
                     {isOnline ? 'Online' : 'Offline'}
                   </div>
                 </div>
@@ -274,11 +277,11 @@ function ProfileContent() {
 
               {showAcademic && (
                 <div className="flex flex-wrap justify-center sm:justify-start gap-2">
-                  <div className="flex items-center gap-1.5 bg-accent px-3 py-1.5 rounded-xl">
-                    <GraduationCap className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs font-bold text-muted-foreground tracking-tight">{student.course || '?'}</span>
+                  <div className="flex items-center gap-1.5 bg-accent/80 dark:bg-accent/40 px-3 py-1.5 rounded-xl border border-border/50">
+                    <GraduationCap className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
+                    <span className="text-xs font-bold text-foreground/80 dark:text-foreground/90 tracking-tight">{student.course || '?'}</span>
                   </div>
-                  <div className="bg-accent px-3 py-1.5 rounded-xl text-xs font-bold text-muted-foreground tracking-tight">
+                  <div className="bg-accent/80 dark:bg-accent/40 px-3 py-1.5 rounded-xl text-xs font-bold text-foreground/80 dark:text-foreground/90 tracking-tight border border-border/50">
                     Year {student.yearLevel || '?'} • Sem {student.semester || '?'}
                   </div>
                 </div>
@@ -289,10 +292,10 @@ function ProfileContent() {
           {student.badges && student.badges.length > 0 && (
             <div className="mt-10 pt-8 border-t border-border">
               <div className="flex items-center gap-2 mb-4">
-                <div className="h-6 w-6 rounded-lg bg-foreground text-background flex items-center justify-center">
+                <div className="h-6 w-6 rounded-lg bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
                   <IdCard className="h-3.5 w-3.5" />
                 </div>
-                <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Academic Badges</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.15em] text-foreground/50 dark:text-foreground/60">Academic Badges</h3>
               </div>
               <div className="bg-accent p-5 rounded-2xl border border-border">
                 <BadgeDisplay
@@ -309,10 +312,10 @@ function ProfileContent() {
       <div className="mt-10">
         <div className="flex items-center justify-between mb-6 px-2">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-foreground text-background flex items-center justify-center">
+            <div className="h-6 w-6 rounded-lg bg-emerald-600 dark:bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
               <MessageSquare className="h-3.5 w-3.5" />
             </div>
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Activity Feed</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.15em] text-foreground/50 dark:text-foreground/60">Activity Feed</h3>
           </div>
         </div>
 

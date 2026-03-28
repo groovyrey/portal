@@ -386,33 +386,33 @@ export default function PostPage() {
             <Skeleton className="h-40 w-full rounded-2xl" />
           </div>
         ) : post && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="relative h-11 w-11 rounded-xl overflow-hidden bg-secondary/50 flex items-center justify-center border border-border shadow-sm">
+              <div className="flex items-center gap-2.5">
+                <div className="relative h-10 w-10 rounded-lg overflow-hidden bg-muted flex items-center justify-center border border-border/40 shadow-sm">
                   <Image 
                     src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${post.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
                     alt={post.userName}
-                    width={44}
-                    height={44}
+                    width={40}
+                    height={40}
                     className="w-full h-full object-cover"
                     unoptimized
                   />
                 </div>
                 <div>
                   <Link href={`/student/${post.userId}`} className="block group">
-                    <h2 className="text-base font-bold text-foreground group-hover:text-primary transition-colors">{post.userName}</h2>
+                    <h2 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{post.userName}</h2>
                   </Link>
-                  <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                    <p className="text-[10px] font-medium text-muted-foreground">
+                  <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                    <p className="text-[10px] font-medium text-muted-foreground/60">
                       {new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
-                    <div className="h-1 w-1 rounded-full bg-border" />
-                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${getTopicStyle(post.topic || 'General')}`}>
+                    <div className="h-0.5 w-0.5 rounded-full bg-border" />
+                    <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${getTopicStyle(post.topic || 'General')}`}>
                       {post.topic || 'General'}
                     </span>
                     {post.isUnreviewed && (
-                      <span className="bg-amber-500/10 text-amber-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/20">
+                      <span className="bg-amber-500/5 text-amber-500/80 text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border border-amber-500/10">
                         Pending
                       </span>
                     )}
@@ -423,9 +423,9 @@ export default function PostPage() {
               <div className="relative" ref={postMenuRef}>
                 <button 
                   onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}
-                  className="p-2 rounded-xl hover:bg-accent text-muted-foreground transition-all"
+                  className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-all"
                 >
-                  <MoreVertical className="h-5 w-5" />
+                  <MoreVertical className="h-4 w-4" />
                 </button>
                 {activeMenu === post.id && (
                   <div className="absolute right-0 mt-2 w-48 bg-card rounded-2xl shadow-xl border border-border py-1.5 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
@@ -485,7 +485,7 @@ export default function PostPage() {
               </div>
             </div>
 
-            <div className="prose prose-slate dark:prose-invert max-w-none prose-base font-normal text-muted-foreground leading-relaxed px-0.5">
+            <div className="prose prose-slate dark:prose-invert max-w-none prose-sm font-normal text-muted-foreground/90 leading-relaxed px-0.5">
               <ReactMarkdown 
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
@@ -552,9 +552,9 @@ export default function PostPage() {
             </div>
 
             {post.poll && (
-              <div className="p-5 bg-accent/50 rounded-3xl border border-border space-y-4">
-                <h4 className="text-base font-bold text-foreground tracking-tight">{post.poll.question}</h4>
-                <div className="space-y-2.5">
+              <div className="p-4 bg-muted/40 rounded-2xl border border-border/40 space-y-3.5">
+                <h4 className="text-sm font-bold text-foreground tracking-tight">{post.poll.question}</h4>
+                <div className="space-y-2">
                   {post.poll.options.map((option, idx) => {
                     const totalVotes = post.poll?.options.reduce((acc, curr) => acc + curr.votes.length, 0) || 0;
                     const percentage = totalVotes > 0 ? Math.round((option.votes.length / totalVotes) * 100) : 0;
@@ -566,10 +566,10 @@ export default function PostPage() {
                         key={idx}
                         disabled={!student || hasVoted}
                         onClick={() => handleVote(post.id, idx)}
-                        className={`w-full relative h-12 rounded-2xl overflow-hidden border transition-all duration-300 ${
+                        className={`w-full relative h-10 rounded-xl overflow-hidden border transition-all duration-300 ${
                           hasVoted 
-                            ? isSelected ? 'border-primary/50 bg-card' : 'border-border bg-transparent opacity-60'
-                            : !student ? 'border-border bg-card/50 cursor-not-allowed' : 'border-border bg-card hover:border-primary'
+                            ? isSelected ? 'border-primary/30 bg-card' : 'border-border/40 bg-transparent opacity-60'
+                            : !student ? 'border-border/40 bg-card/50 cursor-not-allowed' : 'border-border/40 bg-card hover:border-primary/40'
                         }`}
                       >
                         {hasVoted && (
@@ -578,12 +578,12 @@ export default function PostPage() {
                             style={{ width: `${percentage}%` }}
                           />
                         )}
-                        <div className="absolute inset-0 px-5 flex items-center justify-between">
-                          <span className={`text-sm font-bold ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>
+                        <div className="absolute inset-0 px-4 flex items-center justify-between">
+                          <span className={`text-[13px] font-bold ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>
                             {option.text}
                           </span>
                           {hasVoted && (
-                            <span className="text-xs font-bold text-muted-foreground tabular-nums">
+                            <span className="text-[11px] font-bold text-muted-foreground tabular-nums">
                               {percentage}%
                             </span>
                           )}
@@ -592,13 +592,13 @@ export default function PostPage() {
                     );
                   })}
                 </div>
-                <p className="text-[10px] font-bold text-muted-foreground px-1 uppercase tracking-wider">
+                <p className="text-[9px] font-black text-muted-foreground/60 px-1 uppercase tracking-widest">
                   {post.poll.options.reduce((acc, curr) => acc + curr.votes.length, 0)} total votes
                 </p>
               </div>
             )}
 
-            <div className="flex items-center gap-3 py-6 border-y border-border">
+            <div className="flex items-center gap-2 py-4 border-y border-border/40">
                 <button 
                     onClick={() => handleLike(post.id, isLiked || false)}
                     onContextMenu={(e) => {
@@ -606,23 +606,23 @@ export default function PostPage() {
                       fetchReactors(post.id);
                     }}
                     disabled={!student}
-                    className={`flex items-center gap-2.5 px-5 py-2 rounded-xl transition-all duration-300 border
+                    className={`flex items-center gap-2 px-4 py-1.5 rounded-lg transition-all duration-300 border
                         ${isLiked 
-                            ? 'bg-destructive/10 text-destructive border-destructive/20' 
+                            ? 'bg-rose-500/5 text-rose-500 border-rose-500/10' 
                             : !student 
-                              ? 'bg-accent/50 text-muted-foreground/30 cursor-not-allowed border-transparent'
-                              : 'bg-accent/50 text-muted-foreground hover:bg-accent border-transparent'}`}
+                              ? 'bg-transparent text-muted-foreground/30 cursor-not-allowed border-transparent'
+                              : 'bg-muted/50 text-muted-foreground hover:bg-muted border-transparent'}`}
                 >
                     <Heart 
-                        className={`h-5 w-5 transition-transform duration-300 active:scale-125 ${ isLiked ? 'fill-current' : ''}`} 
+                        className={`h-4 w-4 transition-transform duration-300 active:scale-125 ${ isLiked ? 'fill-current' : ''}`} 
                     />
                     <span className="text-sm font-bold">
                         {(post.likes || []).length}
                     </span>
                 </button>
 
-                <div className="flex items-center gap-2.5 px-5 py-2 rounded-xl bg-accent/50 text-muted-foreground border border-transparent">
-                    <MessageSquare className="h-5 w-5" />
+                <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-muted/50 text-muted-foreground border border-transparent">
+                    <MessageSquare className="h-4 w-4" />
                     <span className="text-sm font-bold">
                         {post.commentCount || 0}
                     </span>
