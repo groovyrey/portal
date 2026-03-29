@@ -333,9 +333,9 @@ export async function POST(req: NextRequest) {
          return await generateVisualization(description, combinedContext);
       }, {
         name: "render_html",
-        description: "Generate interactive, animated, and fully responsive 2D visual components, 2D charts, and 2D educational demos. NO 3D OR THREE.JS.",
+        description: "Generate interactive, animated, and fully responsive 2D visual components, 2D charts, and 2D educational demos. NO 3D OR THREE.JS. Supports Tailwind CSS and Bootstrap 5.",
         schema: z.object({ 
-          description: z.string().describe("EXTREMELY DETAILED description for the Visualization Agent. Include specific 2D UI requirements, interactive elements, physics parameters, color schemes, and expected behavior. **IMPORTANT: DO NOT USE 3D, WEBGL, OR THREE.JS. USE DOM/SVG/CANVAS 2D ONLY.** Mandate FULL RESPONSIVENESS."),
+          description: z.string().describe("EXTREMELY DETAILED description for the Visualization Agent. Include specific 2D UI requirements using Tailwind CSS, Bootstrap 5, or both. Include interactive elements, physics parameters, color schemes, and expected behavior. **IMPORTANT: DO NOT USE 3D, WEBGL, OR THREE.JS. USE DOM/SVG/CANVAS 2D ONLY.** Mandate FULL RESPONSIVENESS."),
           title: z.string().describe("Title of the component")
         })
       })
@@ -369,7 +369,7 @@ ${tutorModeProtocol}
 11. get_full_student_data: {} - All info.
 12. ask_user_choice: { "question": string, "options": string[] }
 13. ask_user: { "question": string, "placeholder": string }
-14. render_html: { "description": string, "title": string } - Interactive 2D UI/2D demos. NO 3D.
+14. render_html: { "description": string, "title": string } - Interactive 2D UI/2D demos. NO 3D. Supports Tailwind CSS and Bootstrap 5.
 
 ### CONSTRAINTS
 - **Privacy:** Logged-in student data only.

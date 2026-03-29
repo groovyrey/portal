@@ -509,6 +509,8 @@ export default function AssistantPage() {
     const isDark = typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : false;
     
     const libraries = `
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
       <script src="https://cdn.tailwindcss.com"></script>
       <script src="https://unpkg.com/lucide@latest"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -532,9 +534,6 @@ export default function AssistantPage() {
     // Check if content already contains a full HTML structure
     if (content.trim().toLowerCase().includes('<!doctype html>') || content.trim().toLowerCase().includes('<html')) {
       let finalContent = content;
-      if (isDark && !content.includes('class="dark"') && !content.includes("class='dark'")) {
-        finalContent = content.replace('<html', '<html class="dark"');
-      }
       
       // Inject libraries and init if they seem to be missing
       if (!content.includes('tailwind')) finalContent = finalContent.replace('</head>', `${libraries}</head>`);
@@ -545,7 +544,7 @@ export default function AssistantPage() {
 
     return `
       <!DOCTYPE html>
-      <html class="${isDark ? 'dark' : ''}">
+      <html lang="en" data-bs-theme="light">
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -555,17 +554,17 @@ export default function AssistantPage() {
               font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
               margin: 0;
               padding: 0;
-              background: transparent;
+              background: white;
               overflow-x: hidden;
-              color: ${isDark ? '#f1f5f9' : '#0f172a'};
+              color: #0f172a;
             }
             #app-root { min-height: 100vh; }
             ::-webkit-scrollbar { width: 5px; }
             ::-webkit-scrollbar-track { background: transparent; }
-            ::-webkit-scrollbar-thumb { background: ${isDark ? '#1e293b' : '#cbd5e1'}; border-radius: 5px; }
+            ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
           </style>
         </head>
-        <body class="${isDark ? 'bg-transparent text-slate-200' : 'bg-transparent text-slate-800'}">
+        <body class="bg-white text-slate-800">
           <div id="app-root">
             ${content}
           </div>
