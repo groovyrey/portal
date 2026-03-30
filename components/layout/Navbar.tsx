@@ -228,7 +228,6 @@ export default function Navbar() {
   ];
 
   const workspaceLinks: NavLeaf[] = [
-    { name: 'Assistant', href: '/assistant', icon: BrainCircuit, desc: 'AI Study Buddy' },
     { name: 'Study Mode', href: '/study-mode', icon: Monitor, desc: 'Focused Study' },
   ];
 
@@ -250,6 +249,7 @@ export default function Navbar() {
     { name: 'Workspace', icon: Monitor, children: workspaceLinks },
     { name: 'Social', icon: Users, children: socialLinks },
     ...staffAdminGroup,
+    { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'Team', href: '/team', icon: Users },
     { name: 'About', href: '/about', icon: Info },
@@ -264,6 +264,7 @@ export default function Navbar() {
   ] : [];
 
   const desktopMore: NavLeaf[] = isLoggedIn ? [
+    { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'Team', href: '/team', icon: Users },
     { name: 'About', href: '/about', icon: Info },

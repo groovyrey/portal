@@ -15,7 +15,6 @@ import {
   AlertCircle,
   GraduationCap
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { Student } from '@/types';
 import { toast } from 'sonner';
 
@@ -51,7 +50,6 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setMicPermission('granted');
-      // Stop the stream immediately after getting permission
       stream.getTracks().forEach(track => track.stop());
       toast.success('Microphone access granted');
     } catch (err) {
@@ -69,10 +67,10 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
     tutorMode: true
   };
 
-  const handleToggle = (key: keyof typeof assistantSettings) => {
+  const handleToggle = (key: string) => {
     const newAssistantSettings = {
       ...assistantSettings,
-      [key]: !assistantSettings[key]
+      [key]: !assistantSettings[key as keyof typeof assistantSettings]
     };
     const newFullSettings = {
       ...student?.settings,
@@ -100,49 +98,78 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
   ];
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-10 py-2"
-    >
-      {/* Modern Header */}
-      <div className="flex items-center gap-5">
-        <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-          <Bot size={28} />
+    <div className="space-y-6">
+      {/* Header Card (Simplified) */}
+      <div className="flex items-center gap-4 p-5 bg-card rounded-2xl border border-border shadow-sm overflow-hidden relative group">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-accent rounded-full -mr-12 -mt-12 group-hover:bg-primary/5 transition duration-700 opacity-50"></div>
+        <div className="w-12 h-12 rounded-xl bg-accent border border-border shrink-0 flex items-center justify-center relative z-10 shadow-sm">
+          <Bot className="h-6 w-6 text-primary" />
         </div>
-        <div>
-          <h2 className="text-xl font-bold text-foreground tracking-tight">Assistant Preferences</h2>
-          <p className="text-xs text-muted-foreground font-medium mt-0.5">Configure your AI study companion</p>
+        <div className="relative z-10">
+          <h3 className="font-bold text-base text-foreground leading-tight">AI Settings</h3>
+          <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Configure your academic companion.</p>
         </div>
       </div>
 
-      {/* Voice Selection Section */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 px-1">
-          <Sparkles size={14} className="text-primary" />
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Voice Synthesis</h3>
+      {/* Interaction Style Section */}
+      <div className="space-y-3">
+        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Interaction Style</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <SettingsToggle 
+            icon={<GraduationCap />} 
+            title="Tutor Mode" 
+            description="Guide me through problems"
+            enabled={assistantSettings.tutorMode}
+            onToggle={() => handleToggle('tutorMode')}
+          />
+          <SettingsToggle 
+            icon={<Zap />} 
+            title="Show Thinking" 
+            description="Visible reasoning process"
+            enabled={assistantSettings.showThinkingProcess}
+            onToggle={() => handleToggle('showThinkingProcess')}
+          />
+          <SettingsToggle 
+            icon={<History />} 
+            title="Session Memory" 
+            description="Remember chat context"
+            enabled={assistantSettings.saveHistory}
+            onToggle={() => handleToggle('saveHistory')}
+          />
+          <SettingsToggle 
+            icon={<Shield />} 
+            title="Context Awareness" 
+            description="Access academic data"
+            enabled={assistantSettings.contextAwareness}
+            onToggle={() => handleToggle('contextAwareness')}
+          />
         </div>
+      </div>
+
+      {/* Voice & Audio Section */}
+      <div className="space-y-4 pt-4 border-t border-border/50">
+        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Voice & Audio</h4>
         
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {voices.map((voice) => {
             const isSelected = assistantSettings.voiceModel === voice.id;
             return (
               <button
                 key={voice.id}
                 onClick={() => setVoiceModel(voice.id)}
-                className={`relative flex flex-col items-start p-4 rounded-2xl border transition-all duration-300 text-left ${
+                className={`flex flex-col items-start p-3 rounded-xl border transition-all duration-300 text-left ${
                   isSelected 
-                    ? 'bg-primary/5 border-primary shadow-sm' 
-                    : 'bg-card border-border/50 hover:border-primary/30 hover:bg-accent/50'
+                    ? 'bg-card border-primary shadow-sm' 
+                    : 'bg-accent/30 border-border/50 hover:bg-card hover:border-border'
                 }`}
               >
-                <div className="flex w-full justify-between items-start mb-2">
-                  <span className={`text-xs font-bold ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                <div className="flex w-full justify-between items-center mb-1">
+                  <span className={`text-[11px] font-bold ${isSelected ? 'text-primary' : 'text-foreground'}`}>
                     {voice.name}
                   </span>
-                  {isSelected && <CheckCircle2 size={14} className="text-primary" />}
+                  {isSelected && <CheckCircle2 size={10} className="text-primary" />}
                 </div>
-                <span className="text-[10px] text-muted-foreground font-medium leading-none">
+                <span className="text-[9px] text-muted-foreground font-medium leading-none">
                   {voice.desc}
                 </span>
               </button>
@@ -150,136 +177,98 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
           })}
         </div>
 
-        {/* Microphone Access Card */}
-        <div className="flex flex-col gap-3 p-4 bg-accent/30 rounded-2xl mt-4">
-          <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <SettingsToggle 
+            icon={<Volume2 />} 
+            title="Auto-Read" 
+            description="Speak responses automatically"
+            enabled={assistantSettings.autoSpeak}
+            onToggle={() => handleToggle('autoSpeak')}
+          />
+
+          <div className="flex items-center justify-between p-4 bg-accent/30 rounded-2xl border border-border/50">
             <div className="flex items-center gap-3">
-              <Mic size={18} className={micPermission === 'granted' ? 'text-emerald-500' : 'text-muted-foreground'} />
-              <div>
-                <p className="text-xs font-bold text-foreground">Microphone Access</p>
-                <p className="text-[10px] text-muted-foreground font-medium">Talk to Assistant</p>
+              <div className={`h-9 w-9 rounded-lg flex items-center justify-center border transition-all ${
+                micPermission === 'granted' ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-card border-border text-muted-foreground'
+              }`}>
+                <Mic size={16} />
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-bold text-foreground">Microphone</p>
+                <p className="text-[10px] font-medium text-muted-foreground">Voice interactions</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
-              {micPermission === 'granted' ? (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                  <CheckCircle2 size={12} />
-                  <span className="text-[10px] font-black uppercase tracking-wider">Access Granted</span>
-                </div>
-              ) : micPermission === 'denied' ? (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 border border-red-500/20">
-                  <MicOff size={12} />
-                  <span className="text-[10px] font-black uppercase tracking-wider">Access Blocked</span>
-                </div>
-              ) : (
-                <button
-                  onClick={requestMicPermission}
-                  className="px-3 py-1.5 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all"
-                >
-                  Grant Access
-                </button>
-              )}
-            </div>
+            {micPermission === 'granted' ? (
+              <div className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[9px] font-bold uppercase tracking-wider">
+                Enabled
+              </div>
+            ) : micPermission === 'denied' ? (
+              <div className="px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 border border-red-500/20 text-[9px] font-bold uppercase tracking-wider">
+                Blocked
+              </div>
+            ) : (
+              <button
+                onClick={requestMicPermission}
+                className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-[9px] font-bold uppercase tracking-wider hover:opacity-90 active:scale-95 transition-all"
+              >
+                Grant Access
+              </button>
+            )}
           </div>
 
           {micPermission === 'denied' && (
-            <div className="mt-1 flex gap-2 p-2.5 bg-red-500/5 rounded-xl border border-red-500/10">
+            <div className="flex gap-2 p-3 bg-red-500/5 rounded-xl border border-red-500/10">
               <AlertCircle size={12} className="text-red-500 shrink-0 mt-0.5" />
-              <p className="text-[9px] text-red-600/80 font-bold uppercase leading-tight">
-                Permission was denied. Please reset microphone permissions in your browser settings to enable voice input.
+              <p className="text-[10px] text-red-600/80 font-medium leading-tight">
+                Microphone access is blocked. Please update your browser settings.
               </p>
             </div>
           )}
         </div>
+      </div>
 
-        <div className="flex items-center justify-between p-4 bg-accent/30 rounded-2xl">
-          <div className="flex items-center gap-3">
-            <Volume2 size={18} className="text-muted-foreground" />
-            <div>
-              <p className="text-xs font-bold text-foreground">Auto-Read Responses</p>
-              <p className="text-[10px] text-muted-foreground font-medium">Speak output immediately</p>
-            </div>
-          </div>
-          <button
-            onClick={() => handleToggle('autoSpeak')}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-              assistantSettings.autoSpeak ? 'bg-primary' : 'bg-muted-foreground/20'
-            }`}
-          >
-            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-              assistantSettings.autoSpeak ? 'translate-x-5' : 'translate-x-1'
-            }`} />
-          </button>
+      <div className="p-4 bg-primary rounded-xl text-primary-foreground flex items-center gap-4 shadow-lg shadow-primary/20">
+        <div className="p-2.5 bg-primary-foreground/10 rounded-lg">
+          <Shield className="h-4 w-4 text-primary-foreground" />
         </div>
-      </section>
-
-      {/* Experience Section */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 px-1">
-          <Zap size={14} className="text-primary" />
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Interaction Style</h3>
-        </div>
-
-        <div className="divide-y divide-border/40 bg-card/50 border border-border/50 rounded-2xl overflow-hidden">
-          {[
-            { 
-              id: 'tutorMode' as const, 
-              icon: GraduationCap, 
-              title: 'Tutor Mode', 
-              desc: 'Guide me instead of giving answers' 
-            },
-            { 
-              id: 'showThinkingProcess' as const, 
-              icon: Zap, 
-              title: 'Visible Reasoning', 
-              desc: 'Show tool usage and thinking steps' 
-            },
-            { 
-              id: 'saveHistory' as const, 
-              icon: History, 
-              title: 'Session Memory', 
-              desc: 'Remember context in current chat' 
-            },
-            { 
-              id: 'contextAwareness' as const, 
-              icon: Shield, 
-              title: 'Academic Context', 
-              desc: 'Access grades and schedules safely' 
-            }
-          ].map((item) => (
-            <div key={item.id} className="flex items-center justify-between p-4 hover:bg-accent/20 transition-colors">
-              <div className="flex items-center gap-3">
-                <item.icon size={18} className="text-primary/70" />
-                <div>
-                  <p className="text-xs font-bold text-foreground">{item.title}</p>
-                  <p className="text-[10px] text-muted-foreground font-medium">{item.desc}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => handleToggle(item.id)}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                  assistantSettings[item.id] ? 'bg-primary' : 'bg-muted-foreground/20'
-                }`}
-              >
-                <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                  assistantSettings[item.id] ? 'translate-x-5' : 'translate-x-1'
-                }`} />
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Modern Footer */}
-      <div className="p-4 bg-muted/20 rounded-2xl flex gap-3 border border-border/30">
-        <div className="shrink-0 mt-0.5">
-            <Info size={14} className="text-muted-foreground" />
-        </div>
-        <p className="text-[10px] text-muted-foreground/80 font-medium leading-relaxed">
-          These preferences are stored in your profile and applied to all assistant interactions. We use enterprise-grade TTS and private models to ensure your academic data remains confidential.
+        <p className="text-[10px] text-primary-foreground/80 font-medium leading-relaxed">
+          Your assistant preferences are private and encrypted. Academic data remains confidential.
         </p>
       </div>
-    </motion.div>
+    </div>
+  );
+}
+
+function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon: React.ReactNode, title: string, description: string, enabled: boolean, onToggle?: () => void }) {
+  return (
+    <button 
+      onClick={onToggle}
+      className={`group flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
+        enabled
+          ? 'bg-card border-primary/40 shadow-sm'
+          : 'bg-accent/40 border-border/50 text-muted-foreground hover:bg-card hover:border-border'
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <div className={`h-9 w-9 rounded-lg flex items-center justify-center border transition-all shadow-sm ${
+          enabled ? 'bg-primary border-primary text-primary-foreground' : 'bg-card border-border text-muted-foreground'
+        }`}>
+          {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 16 }) : icon}
+        </div>
+        <div className="text-left">
+          <p className="text-xs font-bold text-foreground leading-none mb-1">{title}</p>
+          <p className="text-[10px] font-medium text-muted-foreground leading-tight">{description}</p>
+        </div>
+      </div>
+      <div className={`w-9 h-5 rounded-full relative transition-colors shadow-inner shrink-0 ${enabled ? 'bg-primary' : 'bg-muted'}`}>
+        <div
+          style={{ transform: `translateX(${enabled ? 18 : 2}px)` }}
+          className={`absolute top-1 w-3 h-3 rounded-full shadow-sm transition-colors ${
+            enabled ? 'bg-primary-foreground' : 'bg-white'
+          }`}
+        />
+      </div>
+    </button>
   );
 }

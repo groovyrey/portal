@@ -367,9 +367,9 @@ export default function AssistantPage() {
   };
 
   const [suggestions, setSuggestions] = useState([
-    { text: "What's my current balance?", icon: Wallet, color: "text-primary", bg: "bg-primary/10" },
-    { text: "What's my schedule for today", icon: Calendar, color: "text-primary", bg: "bg-primary/10" },
-    { text: "Summarize: laconcepcioncollege.com", icon: Globe, color: "text-primary", bg: "bg-primary/10" }
+    { text: "What are my classes for today?", icon: Calendar, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { text: "Check my remaining balance", icon: Wallet, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { text: "Explain school policies", icon: Info, color: "text-purple-500", bg: "bg-purple-500/10" }
   ]);
 
   // Modal state for ask_user tool
@@ -670,12 +670,16 @@ export default function AssistantPage() {
         
         // Process STATUS markers
         const statusRegex = /STATUS:(SEARCHING|PROCESSING|FETCHING|FINALIZING|COMPUTING|DESIGNING)\n?/g;
+        const showThinking = student?.settings?.assistant?.showThinkingProcess !== false;
+        
         let match;
         while ((match = statusRegex.exec(buffer)) !== null) {
           const statusVal = match[1];
-          setMessages((prev) => prev.map((msg) => 
-            msg.id === activeAssistantMessageId ? { ...msg, status: statusVal } : msg
-          ));
+          if (showThinking) {
+            setMessages((prev) => prev.map((msg) => 
+              msg.id === activeAssistantMessageId ? { ...msg, status: statusVal } : msg
+            ));
+          }
         }
         
         // Clean up status markers from buffer after processing
@@ -696,7 +700,8 @@ export default function AssistantPage() {
 
           if (endOfUsed !== -1) {
             const toolName = buffer.substring(usedIndex + toolUsedPrefix.length, endOfUsed).trim();
-            if (toolName) {
+            
+            if (toolName && showThinking) {
               setMessages((prev) => prev.map((msg) => 
                 msg.id === activeAssistantMessageId 
                   ? { ...msg, tools: Array.from(new Set([...(msg.tools || []), toolName])) } 
@@ -804,7 +809,7 @@ export default function AssistantPage() {
       setIsLoading(false);
       abortControllerRef.current = null;
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, student]);
 
   const handleClear = React.useCallback(() => {
     if (messages.length === 0) return;
@@ -856,9 +861,9 @@ export default function AssistantPage() {
                 Assistant AI
               </div>
 
-              <h2 className="text-2xl font-bold text-foreground mb-3 tracking-tight">How can I help?</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-3 tracking-tight">Welcome, {student?.parsedName?.firstName || 'LCCian'}!</h2>
               <p className="text-sm text-muted-foreground mb-8 leading-relaxed font-medium">
-                I&apos;m Assistant, your study buddy connected to your academic records. Ask about your <span className="text-foreground font-bold">grades</span>, <span className="text-foreground font-bold">fees</span>, or <span className="text-foreground font-bold">schedules</span>.
+                I&apos;m your <span className="text-primary font-bold italic">LCC Hub</span> Companion. I have direct access to your <span className="text-foreground font-bold">academic records</span> and <span className="text-foreground font-bold">financial status</span>. How can I assist you today?
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">

@@ -229,9 +229,12 @@ export async function POST(req: NextRequest) {
 
     // Define Tools with Zod Schemas
     const tools = [
-      tool(async ({ code }) => await performMathExecution(code), {
+      tool(async ({ code }) => {
+        const result = await performMathExecution(code);
+        return `tool result: ${result}`;
+      }, {
         name: "execute_math",
-        description: "Execute Python for advanced math.",
+        description: "Execute Python for complex math problems (calculus, statistics, advanced algebra).",
         schema: z.object({ code: z.string().describe("The Python code to execute") })
       }),
       tool(async () => JSON.stringify(await getStudentGrades(userId)), {
@@ -342,22 +345,33 @@ export async function POST(req: NextRequest) {
     ];
 
     const tutorModeProtocol = assistantSettings.tutorMode !== false // Default to true if undefined
-      ? `1. **Tutor Mode (Strict):** NEVER provide final answers or solutions (math/essays). Guide students through problem-solving, strategies, and "aha!" moments. **When a student provides an answer, you MUST calculate the correct result first (using tools if needed) to verify it. If WRONG, say 'No', explain the error, and guide them. If CORRECT, confirm and explain the reasoning.** Focus on 'How' and 'Why'.`
-      : `1. **Direct Answer Mode:** You may provide direct answers and solutions to problems when asked. However, still explain the steps and reasoning clearly so the student learns. Validate your answers with tools where applicable.`;
+      ? `1. **Tutor Mode (Strict):**
+   - **Educational Approach:** Explain clearly using core concepts, intuitive ideas, and relatable analogies. Your goal is deep understanding, not just task completion. Break down complex topics into simple, logical steps that a student can easily follow.
+   - **Intent Detection:** Carefully distinguish between a student **ASKING** for a result (e.g., "What is 15+5?") and a student **ATTEMPTING** an answer (e.g., "Is it 20?").
+   - **Handling Questions:** If a student is asking a question, DO NOT provide the answer. Provide a hint, a conceptual explanation, or a simplified version of the problem to guide them.
+   - **Handling Attempts:** Only if the student provides a specific numerical guess should you verify it.
+   - **Verification:** Calculate the result (mentally for simple math, tool for complex). If they are WRONG, point out the conceptual mistake and give a guiding hint. If CORRECT, confirm and explain the underlying reasoning.
+   - **Strict Rule:** NEVER reveal the final numerical answer or solution to an inquiry. Stop at the step before the final calculation.`
+      : `1. **Direct Answer Mode:** Provide direct, accurate, and immediate answers to all student questions. Do NOT use hints; give the solution and explain the steps. **CRITICAL: When using tools, present the result as your own findings. NEVER congratulate the student or say "That's great!" for a result provided by a tool, as the student hasn't answered yet.**`;
+
+    const contextProtocol = assistantSettings.contextAwareness === false
+      ? `\n**IMPORTANT: Academic Context (Grades/Schedule/Finance) is DISABLED by the student.** You CANNOT access their specific grades, schedules, or balances. If they ask about these, politely explain that "Academic Context" must be enabled in Assistant Settings.`
+      : "";
 
 const systemPrompt = `
 You are the "Portal Assistant", an academic advisor for ${SCHOOL_INFO.name}.
 
 ### CORE PROTOCOLS
-${tutorModeProtocol}
-2. **Tools & Data:** **PRIORITY #1: CALL TOOLS IMMEDIATELY.** If a user asks a question requiring data (grades, schedule, finance, etc.), your **VERY FIRST OUTPUT** must be the tool call. Do **NOT** say "I will check that for you," "Let me look," or any conversational filler. Just output \`||| { "name": "...", "args": {...} }\`. Analyze data deeply after receiving it.
-3. **Math/Science:** Use LaTeX ($E=mc^2$). Explain logic/formulas. **Use \`execute_math\` to verify student answers or check intermediate steps** but NEVER reveal final numerical results unless confirming a student's correct answer (or providing the answer in Direct Answer Mode).
+0. **STRICT FORMATTING:** NEVER wrap your entire response in markdown code blocks (\`\`\` or \` \` \`). Use plain markdown text only. Only use code blocks for specific, isolated code snippets or technical data if absolutely necessary.
+${tutorModeProtocol}${contextProtocol}
+2. **Tools & Data:** **PRIORITY #1: CALL TOOLS IMMEDIATELY.** If a user asks a question requiring data, your **VERY FIRST OUTPUT** must be the tool call. **Wait for the system to provide the data with the prefix \`[SYSTEM_DATA_RETRIEVED]\`.** This data is **NOT** from the student; it is from your internal systems. NEVER thank or congratulate the student for data provided with this prefix.
+3. **Math/Science:** Use LaTeX ($E=mc^2$). Explain logic/formulas. **Use \`execute_math\` ONLY for complex math problems (e.g., calculus, statistics, complex algebra).** NEVER use it for simple arithmetic. In **Direct Answer Mode**, give the solution immediately. In **Tutor Mode**, give hints only. **IMPORTANT: All numerical results or data you want to see from \`execute_math\` MUST be explicitly printed using \`print()\`.**
 4. **Visualization:** Proactively use \`render_html\` for concepts/demos. \`description\` must be an EXTREMELY DETAILED technical prompt for a fully responsive, interactive UI. Explain the visualization's value to the student.
-5. **Persona:** Professional, supportive, engaging. Address user by first name or "LCCian".
+5. **Persona:** You are a professional, supportive, and engaging academic advisor. **You are talking directly to a student.** You MUST always address the user by their **first name** (provided in the context) or as "LCCian" to maintain a warm, personal connection.
 6. **Formatting:** **MANDATORY: Use Markdown Tables** for all structured data (schedule, grades, financial breakdown). Use bolding for key figures (grades, amounts). Organize long text with headers and bullets. **CRITICAL: DO NOT WRAP YOUR RESPONSE IN A CODE BLOCK (\` \` \`). Only use code blocks for actual code snippets.**
 
 ### TOOLS
-1. execute_math: { "code": string } - Python for math.
+1. execute_math: { "code": string } - Python for complex math ONLY. NO SIMPLE ARITHMETIC. **IMPORTANT: You MUST use \`print()\` to output any results you want to see, otherwise the tool will return an empty string.**
 2. get_grades: {} - Fetch grades/GPA.
 3. get_financials: {} - Fetch balance.
 4. get_day_schedule: { "day": string }
@@ -387,9 +401,12 @@ ${tutorModeProtocol}
 Context: ${SCHOOL_INFO.name}, Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.
 `.trim();
 
+    const firstName = student.name.split(',')[0].split(' ').filter(n => n.length > 1)[0] || student.name.split(' ')[0];
+
     const studentContext = `
 STUDENT DATA:
-- Name: ${student.name}
+- First Name: ${firstName}
+- Full Name: ${student.name}
 - Course: ${student.course}
 - Date: ${dateStr}, ${timeStr}
 `.trim();
@@ -410,16 +427,7 @@ STUDENT DATA:
     
     // Gemma 3 workaround: System prompt as Human message at the very beginning
     history.push(new HumanMessage(`${systemPrompt}\n\n${studentContext}`));
-    history.push(new AIMessage("Understood. I am now initialized as the LCC Portal Assistant. I will provide direct responses in plain markdown (no outer code blocks) and use the `||| { \"name\": ... }` format for tool calls."));
-
-    // Add few-shot examples to reinforce NO CODE BLOCKS
-    history.push(new HumanMessage("Hi, what's my name?"));
-    history.push(new AIMessage(`Hello ${student.name.split(' ')[0]}! I'm your LCC Assistant. How can I help you today?`));
-    
-    history.push(new HumanMessage("What's my balance?"));
-    history.push(new AIMessage(`||| { "name": "get_financials", "args": {} }`));
-    history.push(new HumanMessage(`TOOL_RESULT (get_financials): {"balance": "500.00"}`));
-    history.push(new AIMessage(`Your current balance is **₱500.00**. You're almost cleared!`));
+    history.push(new AIMessage("Understood. I am now initialized as the LCC Portal Assistant. I will provide direct responses in plain markdown only (I will NEVER wrap my entire response in code blocks). I will use the `||| { \"name\": ... }` format for tool calls."));
 
     // Load messages into history and STRIP code blocks to prevent pattern mimicry
     const messagesToLoad = assistantSettings.saveHistory ? messages : [messages[messages.length - 1]];
@@ -608,8 +616,25 @@ STUDENT DATA:
             history.push(new AIMessage(fullContent));
 
             for (const toolCall of collectedToolCalls) {
-                // Notify Client of Tool Usage
-                await writer.write(encoder.encode(`TOOL_USED: ${toolCall.name}\n`));
+                // Security Check: Block sensitive tools if context awareness is disabled
+                const sensitiveTools = ['get_grades', 'get_financials', 'get_day_schedule', 'get_weekly_schedule', 'get_full_student_data', 'render_html'];
+                if (assistantSettings.contextAwareness === false && sensitiveTools.includes(toolCall.name)) {
+                    const output = "Error: Academic Context Access is disabled in your Assistant Settings. Please enable it to access this information.";
+                    history.push(new HumanMessage(`TOOL_RESULT (${toolCall.name}): ${output}`));
+                    continue;
+                }
+
+                // Notify Client of Tool Usage & Status (if enabled)
+                if (assistantSettings.showThinkingProcess !== false) {
+                    let status = "PROCESSING";
+                    if (toolCall.name === 'execute_math') status = "COMPUTING";
+                    else if (['get_grades', 'get_financials', 'get_day_schedule', 'get_weekly_schedule', 'get_full_student_data', 'web_fetch'].includes(toolCall.name)) status = "FETCHING";
+                    else if (['web_search', 'youtube_search', 'wikipedia_search'].includes(toolCall.name)) status = "SEARCHING";
+                    else if (toolCall.name === 'render_html') status = "DESIGNING";
+                    
+                    await writer.write(encoder.encode(`STATUS:${status}\n`));
+                    await writer.write(encoder.encode(`TOOL_USED: ${toolCall.name}\n`));
+                }
 
                 const selectedTool = tools.find(t => t.name === toolCall.name);
                 let output = "Error: Tool not found.";
@@ -647,8 +672,8 @@ STUDENT DATA:
                     }
                 }
                 
-                // Add tool result as a HumanMessage to the history
-                history.push(new HumanMessage(`TOOL_RESULT (${toolCall.name}): ${output}`));
+                // Add tool result as a message to the history
+                history.push(new HumanMessage(`[SYSTEM_DATA_RETRIEVED] (${toolCall.name}): ${output}`));
 
                 if (shouldStopAfterTool) {
                     // Force break the turn loop to wait for user interaction
