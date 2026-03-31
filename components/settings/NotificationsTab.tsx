@@ -49,8 +49,9 @@ export default function NotificationsTab({ student, updateSettings }: Notificati
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4 p-6 bg-card rounded-2xl border border-border shadow-sm overflow-hidden relative group">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-accent rounded-full -mr-16 -mt-16 group-hover:bg-primary/5 transition duration-700 opacity-50"></div>
+      <div className="surface-cyan flex items-center gap-4 p-6 rounded-2xl border border-border/80 shadow-sm overflow-hidden relative group ring-1 ring-black/5 dark:ring-white/10">
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-cyan-500 via-sky-400 to-indigo-400 opacity-70" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-accent rounded-full -mr-16 -mt-16 group-hover:bg-primary/10 transition duration-700 opacity-50"></div>
         <div className="w-14 h-14 rounded-2xl bg-accent border border-border shrink-0 flex items-center justify-center relative z-10 shadow-sm">
           <Bell className="h-7 w-7 text-primary" />
         </div>
@@ -84,8 +85,8 @@ export default function NotificationsTab({ student, updateSettings }: Notificati
         />
       </div>
 
-      <div className="p-5 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 flex items-start gap-4">
-        <div className="p-2.5 bg-card rounded-xl shadow-sm shrink-0 border border-emerald-500/20">
+      <div className="surface-emerald p-5 rounded-2xl border border-emerald-500/20 flex items-start gap-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+        <div className="p-2.5 bg-gradient-to-br from-white to-emerald-50 dark:from-card dark:to-emerald-950/30 rounded-xl shadow-sm shrink-0 border border-emerald-500/20">
           <ShieldCheck className="h-5 w-5 text-emerald-500" />
         </div>
         <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium leading-relaxed">
@@ -117,13 +118,13 @@ function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon:
       onClick={handleToggle}
       className={`group w-full flex items-center justify-between p-5 rounded-2xl border transition-all duration-300 ${
         isOn
-          ? 'bg-card border-primary/50 shadow-sm'
-          : 'bg-accent/50 border-border text-muted-foreground hover:bg-card hover:border-border'
+          ? 'surface-sky border-primary/40 shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+          : 'surface-neutral border-border text-muted-foreground hover:border-border hover:shadow-sm'
       }`}
     >
       <div className="flex items-center gap-4">
         <div className={`h-11 w-11 rounded-xl flex items-center justify-center border transition-all shadow-sm ${
-          isOn ? 'bg-primary border-primary text-primary-foreground' : 'bg-card border-border text-muted-foreground'
+          isOn ? 'bg-primary border-primary text-primary-foreground' : 'bg-gradient-to-br from-white to-slate-100 dark:from-card dark:to-slate-900 border-border text-muted-foreground'
         }`}>
           {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 20 }) : icon}
         </div>

@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       console.error('Fallback reviewer (xAI) failed:', xaiError.message);
     }
 
-    // 3. Last Resort Fallback
+    // Note: 3. Last Resort Fallback
     return NextResponse.json({
         decision: "APPROVED",
         topic: "General",

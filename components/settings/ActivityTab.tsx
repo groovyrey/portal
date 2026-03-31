@@ -46,7 +46,8 @@ export default function ActivityTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-border shadow-sm">
+      <div className="surface-sky relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-500 via-indigo-400 to-cyan-400 opacity-70" />
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
             <History className="h-6 w-6" />
@@ -81,19 +82,19 @@ export default function ActivityTab() {
 
       <div className="space-y-2">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4 bg-card rounded-2xl border border-border">
+          <div className="surface-emerald flex flex-col items-center justify-center py-24 gap-4 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
             <Loader2 className="h-8 w-8 text-primary animate-spin" />
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Retrieving logs...</p>
           </div>
         ) : logs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center bg-card rounded-2xl border border-border border-dashed">
+          <div className="surface-neutral flex flex-col items-center justify-center py-24 text-center rounded-2xl border border-border/80 border-dashed shadow-sm ring-1 ring-black/5 dark:ring-white/10">
             <div className="h-16 w-16 bg-accent rounded-full flex items-center justify-center mb-4">
               <History className="h-8 w-8 text-muted-foreground/30" />
             </div>
             <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">No Recent Activity</p>
           </div>
         ) : filteredLogs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center bg-card rounded-2xl border border-border border-dashed">
+          <div className="surface-neutral flex flex-col items-center justify-center py-24 text-center rounded-2xl border border-border/80 border-dashed shadow-sm ring-1 ring-black/5 dark:ring-white/10">
             <div className="h-16 w-16 bg-accent rounded-full flex items-center justify-center mb-4">
               <Search className="h-8 w-8 text-muted-foreground/30" />
             </div>

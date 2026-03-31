@@ -45,14 +45,14 @@ export default function GradeReportPage() {
         <div className="flex items-center justify-between gap-3">
           <Link
             href="/grades"
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border/80 surface-neutral text-sm font-medium text-muted-foreground hover:text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
           >
             <ChevronLeft className="h-4 w-4" />
             Back to Reports
           </Link>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-5">
+        <div className="surface-violet rounded-2xl border border-border/80 p-5 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
               <FileText className="h-4 w-4" />
@@ -65,7 +65,7 @@ export default function GradeReportPage() {
         </div>
 
         {!href ? (
-          <div className="text-center py-16 bg-accent rounded-xl border border-dashed border-border">
+          <div className="surface-sky text-center py-16 rounded-xl border border-dashed border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
             <p className="text-sm text-muted-foreground">Missing report link. Open a semester from the Grades page.</p>
           </div>
         ) : isLoading ? (
@@ -85,14 +85,14 @@ export default function GradeReportPage() {
           </div>
         ) : grades ? (
           <div className="space-y-6">
-            <div className="bg-secondary p-4 rounded-xl border border-border/50">
+            <div className="surface-emerald p-4 rounded-xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
               <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 <span>Semester Summary</span>
                 <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded shadow-sm">{grades.length} Subjects</span>
               </div>
             </div>
 
-            <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+            <div className="surface-neutral rounded-2xl border border-border/80 shadow-sm overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>

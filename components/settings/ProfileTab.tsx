@@ -121,7 +121,8 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4 p-6 bg-card rounded-2xl border border-border shadow-sm">
+      <div className="surface-sky relative overflow-hidden flex items-center gap-4 p-6 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-500 via-indigo-400 to-cyan-400 opacity-70" />
           <div className="w-20 h-20 rounded-full bg-accent border border-border shrink-0 overflow-hidden">
               <img 
                   src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=0f172a&color=f8fafc&size=256&bold=true`}
@@ -138,7 +139,8 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
           </div>
       </div>
 
-      <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-6">
+      <div className="surface-emerald relative overflow-hidden rounded-2xl border border-border/80 p-6 shadow-sm ring-1 ring-black/5 dark:ring-white/10 space-y-6">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 opacity-70" />
           <div>
             <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Personal Details</h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -201,7 +203,8 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
           </div>
       </div>
 
-      <div className="p-4 bg-primary rounded-xl text-primary-foreground flex items-center gap-4 shadow-lg shadow-primary/20">
+      <div className="relative overflow-hidden p-4 bg-gradient-to-r from-primary via-sky-500 to-indigo-500 rounded-xl text-primary-foreground flex items-center gap-4 shadow-lg shadow-primary/20">
+        <div className="absolute inset-x-0 top-0 h-1 bg-white/20" />
         <div className="p-2.5 bg-primary-foreground/10 rounded-lg">
           <Shield className="h-5 w-5 text-primary-foreground" />
         </div>
@@ -216,7 +219,7 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
 function InfoItem({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string }) {
   return (
     <div className="flex items-start gap-4">
-      <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center shrink-0 border border-border text-primary shadow-sm">
+      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-card flex items-center justify-center shrink-0 border border-border text-primary shadow-sm">
         {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 18 }) : icon}
       </div>
       <div className="min-w-0 flex-1">

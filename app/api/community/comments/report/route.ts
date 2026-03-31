@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const commentId = parseInt(commentIdStr, 10);
     if (isNaN(commentId)) return NextResponse.json({ error: 'Invalid comment ID' }, { status: 400 });
 
-    // 1. Authenticate reporter
+    // Note: 1. Authenticate reporter
     const sessionCookie = req.cookies.get('session_token');
     if (!sessionCookie?.value) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    // 2. Fetch comment details
+    // Note: 2. Fetch comment details
     const commentRes = await query('SELECT * FROM community_comments WHERE id = $1', [commentId]);
     if (commentRes.rows.length === 0) {
       return NextResponse.json({ error: 'Comment not found' }, { status: 404 });
@@ -66,7 +66,7 @@ COMMENT AUTHOR: ${comment.user_name}
 COMMENT CONTENT: ${comment.content}
 `.trim();
 
-    // 3. Inference Call
+    // Note: 3. Inference Call
     const hfToken = process.env.HUGGINGFACE_MODERATION_TOKEN || process.env.HUGGINGFACE_API_KEY;
     const aiModel = "google/gemma-3-27b-it";
 
@@ -99,12 +99,12 @@ COMMENT CONTENT: ${comment.content}
       };
     }
 
-    // 4. Handle Decision
+    // Note: 4. Handle Decision
     if (result.decision === 'REJECTED') {
-      // Delete the comment
+      // Note: Delete the comment
       await query('DELETE FROM community_comments WHERE id = $1', [commentId]);
 
-      // Notify the author
+      // Note: Notify the author
       await createNotification({
         userId: comment.user_id,
         title: 'Comment Removed',
@@ -113,7 +113,7 @@ COMMENT CONTENT: ${comment.content}
         link: `/post/${comment.post_id}`
       });
 
-      // Notify all clients of comment deletion
+      // Note: Notify all clients of comment deletion
       await publishUpdate('community', { type: 'COMMENT_DELETED', postId: comment.post_id });
     }
 

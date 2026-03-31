@@ -11,7 +11,7 @@ interface DashboardInsightsProps {
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export default function DashboardInsights({ student }: DashboardInsightsProps) {
-  const schedule = student.schedule || [];
+  const schedule = useMemo(() => student.schedule || [], [student.schedule]);
 
   const nextClass = useMemo(() => {
     if (schedule.length === 0) return null;
@@ -125,7 +125,9 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="surface-sky relative overflow-hidden rounded-lg border border-border/80 p-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+        <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-blue-400/10 blur-3xl dark:bg-blue-400/5" />
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 via-sky-400 to-cyan-400 opacity-70" />
         <div className="mb-3 flex items-center gap-2">
           <Clock className="h-4 w-4 text-muted-foreground" />
           <p className="text-xs text-muted-foreground">Next class</p>
@@ -154,7 +156,9 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
         )}
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="surface-emerald relative overflow-hidden rounded-lg border border-border/80 p-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+        <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-emerald-400/10 blur-3xl dark:bg-emerald-400/5" />
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 opacity-70" />
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -182,7 +186,9 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
         </div>
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-4">
+      <section className="surface-amber relative overflow-hidden rounded-lg border border-border/80 p-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+        <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-amber-400/10 blur-3xl dark:bg-amber-400/5" />
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-500 via-orange-400 to-rose-400 opacity-70" />
         <div className="mb-4 flex items-center gap-2">
           <CreditCard className="h-4 w-4 text-muted-foreground" />
           <p className="text-xs text-muted-foreground">Quick stats</p>

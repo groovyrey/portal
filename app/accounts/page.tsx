@@ -29,7 +29,7 @@ export default function AccountsPage() {
       const res = await fetch('/api/student/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}), // This triggers auto-sync using session cookies
+        body: JSON.stringify({}), // Note: This triggers auto-sync using session cookies
       });
       const result = await res.json();
       
@@ -164,7 +164,7 @@ export default function AccountsPage() {
 
           {/* Due Accounts Table */}
           {financials.dueAccounts && financials.dueAccounts.length > 0 && (
-            <motion.div variants={item} className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+            <motion.div variants={item} className="surface-amber rounded-2xl border border-border/80 overflow-hidden shadow-sm ring-1 ring-black/5 dark:ring-white/10">
               <div className="p-5 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="bg-orange-500/10 p-2 rounded-lg text-orange-500">
@@ -215,7 +215,7 @@ export default function AccountsPage() {
 
           {/* Payment History */}
           {financials.payments && financials.payments.length > 0 && (
-            <motion.div variants={item} className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+            <motion.div variants={item} className="surface-emerald rounded-2xl border border-border/80 overflow-hidden shadow-sm ring-1 ring-black/5 dark:ring-white/10">
               <div className="p-5 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="bg-emerald-500/10 p-2 rounded-lg text-emerald-500">
@@ -258,8 +258,8 @@ export default function AccountsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Assessment Details */}
             {financials.assessment && financials.assessment.length > 0 && (
-              <motion.div variants={item} className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm h-full">
-                <div className="p-4 border-b border-border flex items-center gap-3 bg-accent/30">
+              <motion.div variants={item} className="surface-sky rounded-2xl border border-border/80 overflow-hidden shadow-sm h-full ring-1 ring-black/5 dark:ring-white/10">
+                <div className="p-4 border-b border-border flex items-center gap-3 bg-accent/20">
                   <div className="bg-indigo-500/10 p-2 rounded-lg text-indigo-500">
                     <FileText className="h-4 w-4" />
                   </div>
@@ -283,8 +283,8 @@ export default function AccountsPage() {
             <div className="space-y-6">
               {/* Installments */}
               {financials.installments && financials.installments.length > 0 && (
-                <motion.div variants={item} className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-                  <div className="p-4 border-b border-border flex items-center gap-3 bg-accent/30">
+                <motion.div variants={item} className="surface-sky rounded-2xl border border-border/80 overflow-hidden shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+                  <div className="p-4 border-b border-border flex items-center gap-3 bg-accent/20">
                     <div className="bg-blue-500/10 p-2 rounded-lg text-blue-500">
                       <TrendingDown className="h-4 w-4" />
                     </div>
@@ -322,8 +322,8 @@ export default function AccountsPage() {
 
               {/* Adjustments */}
               {financials.adjustments && financials.adjustments.length > 0 && (
-                <motion.div variants={item} className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-                  <div className="p-4 border-b border-border flex items-center gap-3 bg-accent/30">
+                <motion.div variants={item} className="surface-violet rounded-2xl border border-border/80 overflow-hidden shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+                  <div className="p-4 border-b border-border flex items-center gap-3 bg-accent/20">
                     <div className="bg-purple-500/10 p-2 rounded-lg text-purple-500">
                       <AlertCircle className="h-4 w-4" />
                     </div>

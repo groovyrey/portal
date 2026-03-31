@@ -69,7 +69,7 @@ async function performWebSearch(query: string) {
 
 async function performWikipediaSearch(query: string) {
   try {
-    // 1. Search for the most relevant page title
+    // Note: 1. Search for the most relevant page title
     const searchRes = await fetch(
       `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`,
       { signal: AbortSignal.timeout(8000) }
@@ -80,7 +80,7 @@ async function performWikipediaSearch(query: string) {
 
     if (!topResult) return `No Wikipedia article found for "${query}".`;
 
-    // 2. Fetch the summary for that title
+    // Note: 2. Fetch the summary for that title
     const title = topResult.title;
     const summaryRes = await fetch(
       `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/\s+/g, '_'))}`,
@@ -106,7 +106,7 @@ async function performMathExecution(code: string) {
     if (!process.env.VERCEL_PROJECT_ID) process.env.VERCEL_PROJECT_ID = 'prj_NihkVuIjpWkHupQ1Z1zCd6wJunfR';
     if (!process.env.VERCEL_TEAM_ID) process.env.VERCEL_TEAM_ID = 'team_uHDJgys0cb2M6SdvUZ0rjZ9Y';
 
-    sandbox = await Sandbox.create({ runtime: 'python3.13', timeout: 180000 }); // 3 min
+    sandbox = await Sandbox.create({ runtime: 'python3.13', timeout: 180000 }); // Note: 3 min
     
     const libs = [];
     if (code.includes('sympy')) libs.push('sympy');
@@ -130,7 +130,7 @@ async function performMathExecution(code: string) {
     await sandbox.writeFiles(files);
 
     if (libs.length > 0) {
-      // Skip dnf install to save time; use --only-binary if needed or assume environment has basics
+      // Reminder: Skip dnf install to save time; use --only-binary if needed or assume environment has basics
       await sandbox.runCommand({ 
         cmd: 'pip', 
         args: ['install', '--upgrade', 'pip', '--quiet'], 
@@ -174,10 +174,10 @@ async function performWebFetch(url: string) {
     const html = await response.text();
     const $ = cheerio.load(html);
     
-    // Remove script, style, and navigation elements
+    // Note: Remove script, style, and navigation elements
     $('script, style, nav, footer, header, noscript, iframe').remove();
     
-    // Extract Links
+    // Note: Extract Links
     const links: string[] = [];
     $('a[href]').each((_, el) => {
       const href = $(el).attr('href');
@@ -227,7 +227,7 @@ export async function POST(req: NextRequest) {
     const dateStr = now.toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: timezone });
     const timeStr = now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: timezone });
 
-    // Define Tools with Zod Schemas
+    // Note: Define Tools with Zod Schemas
     const tools = [
       tool(async ({ code }) => {
         const result = await performMathExecution(code);
@@ -268,7 +268,7 @@ export async function POST(req: NextRequest) {
         
         for (const day of days) {
           const classes = schedule.filter((s: any) => s.time?.toUpperCase().includes(day));
-          weeklySchedule[day] = classes; // Include empty array if no classes
+          weeklySchedule[day] = classes; // Note: Include empty array if no classes
         }
         
         return JSON.stringify(weeklySchedule);
@@ -344,7 +344,7 @@ export async function POST(req: NextRequest) {
       })
     ];
 
-    const tutorModeProtocol = assistantSettings.tutorMode !== false // Default to true if undefined
+    const tutorModeProtocol = assistantSettings.tutorMode !== false // Note: Default to true if undefined
       ? `1. **Tutor Mode (Strict):**
    - **Educational Approach:** Explain clearly using core concepts, intuitive ideas, and relatable analogies. Your goal is deep understanding, not just task completion. Break down complex topics into simple, logical steps that a student can easily follow.
    - **Intent Detection:** Carefully distinguish between a student **ASKING** for a result (e.g., "What is 15+5?") and a student **ATTEMPTING** an answer (e.g., "Is it 20?").
@@ -370,6 +370,14 @@ ${tutorModeProtocol}${contextProtocol}
 5. **Persona:** You are a professional, supportive, and engaging academic advisor. **You are talking directly to a student.** You MUST always address the user by their **first name** (provided in the context) or as "LCCian" to maintain a warm, personal connection.
 6. **Formatting:** **MANDATORY: Use Markdown Tables** for all structured data (schedule, grades, financial breakdown). Use bolding for key figures (grades, amounts). Organize long text with headers and bullets. **CRITICAL: DO NOT WRAP YOUR RESPONSE IN A CODE BLOCK (\` \` \`). Only use code blocks for actual code snippets.**
 
+### TOOL CALL FORMAT
+- **MANDATORY:** Every tool call MUST be prefixed with \`|||\` and followed by a single JSON object.
+- **NO MARKDOWN:** NEVER wrap tool calls in markdown code blocks (\`\`\` or \` \` \`).
+- **SINGLE TURN:** You can only call tools or talk to the user in a single message. If you need data, output the tool call and STOP.
+
+**Correct Format:**
+||| { "name": "tool_name", "args": { ... } }
+
 ### TOOLS
 1. execute_math: { "code": string } - Python for complex math ONLY. NO SIMPLE ARITHMETIC. **IMPORTANT: You MUST use \`print()\` to output any results you want to see, otherwise the tool will return an empty string.**
 2. get_grades: {} - Fetch grades/GPA.
@@ -384,6 +392,25 @@ ${tutorModeProtocol}${contextProtocol}
 12. ask_user_choice: { "question": string, "options": string[] }
 13. ask_user: { "question": string, "placeholder": string }
 14. render_html: { "description": string, "title": string } - Interactive 2D UI/2D demos. NO 3D. Supports Tailwind CSS and Bootstrap 5.
+
+### FEW-SHOT EXAMPLES
+
+**Scenario 1: User asks for data**
+User: "What are my grades?"
+Assistant: ||| { "name": "get_grades" }
+
+**Scenario 2: System returns data**
+System: [SYSTEM_DATA_RETRIEVED] Grades: Math: 1.25, Science: 1.50.
+Assistant: Hello [FirstName]! I've retrieved your grades. You're doing excellent!
+
+| Subject | Grade |
+| :--- | :--- |
+| **Math** | 1.25 |
+| **Science** | 1.50 |
+
+**Scenario 3: Complex Math**
+User: "Solve x^2 + 5x + 6 = 0"
+Assistant: ||| { "name": "execute_math", "code": "import sympy as sp\\nx = sp.Symbol('x')\\neq = x**2 + 5*x + 6\\nsol = sp.solve(eq, x)\\nprint(sol)" }
 
 ### CONSTRAINTS
 - **Privacy:** Logged-in student data only.
@@ -425,18 +452,24 @@ STUDENT DATA:
 
     const history: BaseMessage[] = [];
     
-    // Gemma 3 workaround: System prompt as Human message at the very beginning
+    // Note: Gemma 3 workaround: System prompt as Human message at the very beginning
     history.push(new HumanMessage(`${systemPrompt}\n\n${studentContext}`));
     history.push(new AIMessage("Understood. I am now initialized as the LCC Portal Assistant. I will provide direct responses in plain markdown only (I will NEVER wrap my entire response in code blocks). I will use the `||| { \"name\": ... }` format for tool calls."));
 
-    // Load messages into history and STRIP code blocks to prevent pattern mimicry
+    // Note: Reinforced few-shots for Gemma 3
+    history.push(new HumanMessage("What is my balance?"));
+    history.push(new AIMessage("||| { \"name\": \"get_financials\" }"));
+    history.push(new HumanMessage("[SYSTEM_DATA_RETRIEVED] Financials: { \"balance\": 5400, \"status\": \"Paid\" }"));
+    history.push(new AIMessage(`Hello ${firstName}! Your current balance is **₱5,400.00**. Your account status is currently **Paid**. Is there anything else you'd like to help with?`));
+
+    // Note: Load messages into history and STRIP code blocks to prevent pattern mimicry
     const messagesToLoad = assistantSettings.saveHistory ? messages : [messages[messages.length - 1]];
 
     messagesToLoad.forEach((m: any) => {
       let content = m.content;
       if (m.role === 'assistant') {
         content = content.trim();
-        // If it starts and ends with triple backticks, strip them
+        // Note: If it starts and ends with triple backticks, strip them
         if (content.startsWith('```') && content.endsWith('```')) {
           content = content.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```$/, '').trim();
         }
@@ -522,7 +555,7 @@ STUDENT DATA:
           if (collectedToolCalls.length === 0 && isBuffering) {
               try {
                   const bufferedPart = fullContent.substring(lastWrittenIndex).trim();
-                  // More robust regex: find ALL ||| blocks and extract JSON from each
+                  // Note: More robust regex: find ALL ||| blocks and extract JSON from each
                   const toolBlocks = bufferedPart.split(/\|{2,3}/).filter(block => block.trim().length > 0);
                   
                   for (const block of toolBlocks) {
@@ -530,10 +563,10 @@ STUDENT DATA:
                       if (jsonBlockMatch) {
                           try {
                               let jsonStr = jsonBlockMatch[1];
-                              // Clean up potential markdown artifacts
+                              // Note: Clean up potential markdown artifacts
                               jsonStr = jsonStr.replace(/```json\s?/, '').replace(/```\s?/, '');
 
-                              // Sanitize unescaped backslashes
+                              // Note: Sanitize unescaped backslashes
                               const sanitizedJson = jsonStr.replace(/\\(?!"|\\|\/|b|f|n|r|t|u[0-9a-fA-F]{4})/g, "\\\\");
 
                               const parsed = JSON.parse(sanitizedJson);
@@ -555,8 +588,8 @@ STUDENT DATA:
                                       type: 'tool_call' as const
                                   });
                               } else {
-                                  // HEURISTIC: Check if it's a tool call missing the 'name' field
-                                  // 1. Check for single key as tool name
+                                  // Note: HEURISTIC: Check if it's a tool call missing the 'name' field
+                                  // Note: 1. Check for single key as tool name
                                   const keys = Object.keys(parsed);
                                   const knownToolNames = tools.map(t => t.name);
 
@@ -569,7 +602,7 @@ STUDENT DATA:
                                           type: 'tool_call' as const
                                       });
                                   } 
-                                  // 2. Check for render_html signature (description + title)
+                                  // Note: 2. Check for render_html signature (description + title)
                                   else if (parsed.description && parsed.title) {
                                       collectedToolCalls.push({
                                           name: 'render_html',
@@ -578,7 +611,7 @@ STUDENT DATA:
                                           type: 'tool_call' as const
                                       });
                                   }
-                                  // 3. Check for execute_math signature (code)
+                                  // Note: 3. Check for execute_math signature (code)
                                   else if (parsed.code && (parsed.code.includes('import') || parsed.code.includes('print'))) {
                                       collectedToolCalls.push({
                                           name: 'execute_math',
@@ -601,9 +634,9 @@ STUDENT DATA:
                   await writer.write(encoder.encode(fullContent.substring(lastWrittenIndex).replace(/^\|+/, '').trim()));
               }
           } else if (isBuffering && collectedToolCalls.length > 0) {
-              // Standard tool calls were detected by the model, but we buffered the text.
-              // The text might be an explanation or the tool call itself.
-              // If it's the tool call JSON, we shouldn't flush it.
+              // Note: Standard tool calls were detected by the model, but we buffered the text.
+              // Note: The text might be an explanation or the tool call itself.
+              // Note: If it's the tool call JSON, we shouldn't flush it.
                const bufferedPart = fullContent.substring(lastWrittenIndex).trim();
                if (!bufferedPart.startsWith('{') && !bufferedPart.startsWith('|')) {
                    await writer.write(encoder.encode(bufferedPart));
@@ -611,8 +644,8 @@ STUDENT DATA:
           }
 
           if (collectedToolCalls.length > 0) {
-            // It was a tool call turn.
-            // Add AIMessage with the raw content (which contains the tool call JSON)
+            // Note: It was a tool call turn.
+            // Note: Add AIMessage with the raw content (which contains the tool call JSON)
             history.push(new AIMessage(fullContent));
 
             for (const toolCall of collectedToolCalls) {
@@ -644,7 +677,7 @@ STUDENT DATA:
                     try {
                         output = await (selectedTool as any).invoke(toolCall.args);
                         
-                        // Special Handling for Client UI (render_html)
+                        // Note: Special Handling for Client UI (render_html)
                         if (toolCall.name === 'render_html') {
                              const clientPayload = {
                                  name: 'render_html',
@@ -657,7 +690,7 @@ STUDENT DATA:
                              await writer.write(encoder.encode(`TOOL_CALL: ${JSON.stringify(clientPayload)}\n`));
                         }
                         
-                        // Handle Interaction Tools
+                        // Note: Handle Interaction Tools
                         if (toolCall.name === 'ask_user' || toolCall.name === 'ask_user_choice') {
                              const clientPayload = {
                                  name: toolCall.name,
@@ -672,18 +705,18 @@ STUDENT DATA:
                     }
                 }
                 
-                // Add tool result as a message to the history
+                // Note: Add tool result as a message to the history
                 history.push(new HumanMessage(`[SYSTEM_DATA_RETRIEVED] (${toolCall.name}): ${output}`));
 
                 if (shouldStopAfterTool) {
-                    // Force break the turn loop to wait for user interaction
+                    // Note: Force break the turn loop to wait for user interaction
                     turn = maxTurns; 
                     break;
                 }
             }
-            // Loop continues to generate response based on tool outputs
+            // Note: Loop continues to generate response based on tool outputs
           } else {
-            // No tool calls, we are done.
+            // Note: No tool calls, we are done.
             history.push(new AIMessage(collectedContent));
             break;
           }

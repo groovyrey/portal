@@ -25,7 +25,7 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    // Server-side authorization check
+    // Note: Server-side authorization check
     if (!(await isStaff(adminId))) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
@@ -35,7 +35,7 @@ export async function POST(
       return NextResponse.json({ error: 'Badges must be an array.' }, { status: 400 });
     }
 
-    // Fetch Admin and Target Student Profiles for logging
+    // Note: Fetch Admin and Target Student Profiles for logging
     const [adminProfile, targetProfile] = await Promise.all([
       getStudentProfile(adminId),
       getStudentProfile(id)
@@ -50,7 +50,7 @@ export async function POST(
       badges: newBadges
     });
 
-    // Log the action
+    // Note: Log the action
     let detailedAction = 'No changes';
     if (added.length > 0 || removed.length > 0) {
       detailedAction = "";

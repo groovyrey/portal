@@ -28,8 +28,8 @@ export async function GET(request: Request) {
       .max_results(50)
       .execute();
 
-    // Mapping search results to match the structure the UI expects
-    // search result returns resources in an array, and each resource uses secure_url
+    // Note: Mapping search results to match the structure the UI expects
+    // Note: search result returns resources in an array, and each resource uses secure_url
     return NextResponse.json(result.resources);
     
   } catch (error: any) {

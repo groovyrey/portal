@@ -71,7 +71,8 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
 
   if (!student) {
     return (
-      <div className="bg-card rounded-2xl p-8 border border-border text-center space-y-4 shadow-sm">
+      <div className="surface-violet relative overflow-hidden rounded-2xl p-8 border border-border/80 text-center space-y-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-violet-500 via-fuchsia-400 to-pink-400 opacity-70" />
         <div className="h-12 w-12 bg-accent rounded-full flex items-center justify-center mx-auto">
           <User className="h-6 w-6 text-muted-foreground" />
         </div>
@@ -89,7 +90,8 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
   return (
     <>
       <div className="space-y-4">
-        <div className="bg-card rounded-2xl overflow-hidden border border-border shadow-sm focus-within:border-primary/30">
+        <div className="surface-sky relative overflow-hidden rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10 focus-within:border-primary/30">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-500 via-indigo-400 to-cyan-400 opacity-70" />
           <div className="flex border-b border-border">
             <button 
               type="button" 
@@ -107,7 +109,7 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
             </button>
           </div>
           
-          <form onSubmit={handlePost} className="p-5 space-y-4">
+          <form onSubmit={handlePost} className="relative z-10 p-5 space-y-4">
             <div>
               {activeTab === 'write' ? (
                 <div className="space-y-3">
@@ -152,7 +154,8 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
         </div>
 
         {showPollEditor && activeTab === 'write' && (
-          <div className="p-5 bg-card rounded-2xl border border-border shadow-sm space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="surface-amber relative overflow-hidden p-5 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-500 via-orange-400 to-rose-400 opacity-70" />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BarChart2 className="h-4 w-4 text-primary" />

@@ -166,8 +166,9 @@ export default function PostCard({
   return (
     <div 
       onClick={() => onOpen(post)}
-      className="bg-card rounded-xl p-4 border border-border/50 hover:border-primary/30 transition-all cursor-pointer group relative shadow-sm hover:shadow-md duration-300"
+      className="surface-neutral relative overflow-hidden rounded-xl p-4 border border-border/70 hover:border-primary/30 transition-all cursor-pointer group shadow-sm hover:shadow-md duration-300 ring-1 ring-black/5 dark:ring-white/10"
     >
+      <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-500 via-indigo-400 to-cyan-400 opacity-50" />
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <div className="relative h-9 w-9 rounded-lg overflow-hidden bg-muted flex items-center justify-center border border-border/40">
@@ -231,7 +232,7 @@ export default function PostCard({
           </button>
           
           {showMenu && (
-            <div className="absolute right-0 mt-1 w-44 bg-card border border-border rounded-xl shadow-xl z-10 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+            <div className="absolute right-0 mt-1 w-44 surface-neutral border border-border rounded-xl shadow-xl z-10 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
               <Link 
                 href={`/student/${post.userId}`}
                 onClick={(e) => e.stopPropagation()}

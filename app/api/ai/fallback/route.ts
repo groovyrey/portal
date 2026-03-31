@@ -83,7 +83,7 @@ POLL OPTIONS: ${poll.options.join(', ')}` : ''}
 
     const chain = prompt.pipe(structuredLlm);
 
-    // 3. Inference Call
+    // Note: 3. Inference Call
     try {
         const result = await chain.invoke({});
         return NextResponse.json(result);

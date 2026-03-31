@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const { content, userName, poll } = await req.json();
     
-    // 1. Authenticate
+    // Note: 1. Authenticate
     const sessionCookie = req.cookies.get('session_token');
     if (!sessionCookie?.value) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
@@ -58,9 +58,9 @@ ${poll ? `POLL QUESTION: ${poll.question}
 POLL OPTIONS: ${poll.options.join(', ')}` : ''}
 `.trim();
 
-    // 2. Inference Call
+    // Note: 2. Inference Call
     const hfToken = process.env.HUGGINGFACE_MODERATION_TOKEN || process.env.HUGGINGFACE_API_KEY;
-    const aiModel = "google/gemma-3-27b-it"; // High-quality reasoning model from Google
+    const aiModel = "google/gemma-3-27b-it"; // Note: High-quality reasoning model from Google
 
     if (!hfToken) {
        return NextResponse.json({ error: 'Moderation API token is not set.' }, { status: 500 });

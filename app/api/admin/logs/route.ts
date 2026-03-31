@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    // Server-side authorization check
+    // Note: Server-side authorization check
     if (!(await isStaff(userId))) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }

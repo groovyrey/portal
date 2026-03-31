@@ -42,7 +42,8 @@ export default function UpcomingHolidays() {
   if (upcomingHolidays.length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="surface-amber relative overflow-hidden rounded-lg border border-border p-4 shadow-sm">
+      <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-amber-400/10 blur-3xl dark:bg-amber-400/5" />
       <div className="flex items-center gap-3 mb-4">
         <div className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background text-muted-foreground">
           <PartyPopper size={16} />

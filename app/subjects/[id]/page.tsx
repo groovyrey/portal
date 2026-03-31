@@ -23,7 +23,7 @@ export default function SubjectDetailPage() {
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-3xl mx-auto space-y-8">
           <Skeleton className="h-10 w-48" />
-          <div className="bg-card rounded-3xl p-8 border border-border">
+          <div className="surface-sky rounded-3xl p-8 border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
             <Skeleton className="h-8 w-64 mb-6" />
             <div className="space-y-4">
               <Skeleton className="h-6 w-full" />
@@ -39,7 +39,7 @@ export default function SubjectDetailPage() {
   if (!subject) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
-        <div className="bg-card p-12 rounded-[2.5rem] border border-border shadow-sm max-w-md w-full">
+        <div className="surface-rose p-12 rounded-[2.5rem] border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10 max-w-md w-full">
           <div className="h-20 w-20 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-3xl flex items-center justify-center mx-auto mb-6">
             <AlertCircle size={40} />
           </div>
@@ -68,8 +68,8 @@ export default function SubjectDetailPage() {
           Back to Listing
         </button>
 
-        <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden mb-8">
-          <div className="p-8 md:p-10 border-b border-border bg-card">
+        <div className="surface-violet rounded-3xl border border-border/80 shadow-sm overflow-hidden mb-8 ring-1 ring-black/5 dark:ring-white/10">
+          <div className="p-8 md:p-10 border-b border-border bg-accent/20">
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className="px-2.5 py-1 bg-foreground text-background rounded-lg text-[10px] font-black font-mono tracking-wider">
                 {subject.code}
@@ -89,7 +89,7 @@ export default function SubjectDetailPage() {
                 <ShieldCheck size={14} className="text-blue-600 dark:text-blue-400" />
                 Prerequisites
               </h3>
-              <div className="p-6 rounded-2xl bg-accent/50 border border-border">
+              <div className="surface-neutral p-6 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
                 {subject.preReq ? (
                   <div className="flex flex-col gap-2">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Required Subjects</p>
@@ -97,7 +97,7 @@ export default function SubjectDetailPage() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 text-muted-foreground">
-                    <div className="h-8 w-8 rounded-lg bg-card border border-border flex items-center justify-center shrink-0">
+                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-white to-slate-100 dark:from-card dark:to-slate-900 border border-border flex items-center justify-center shrink-0">
                       <ShieldCheck size={16} className="text-slate-300" />
                     </div>
                     <p className="text-xs font-bold uppercase tracking-tight">No Prerequisite Required</p>

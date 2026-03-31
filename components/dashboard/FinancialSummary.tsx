@@ -1,5 +1,5 @@
 import { Financials } from '@/types';
-import { Wallet, Clock, AlertCircle, CreditCard, ArrowUpRight, TrendingDown } from 'lucide-react';
+import { Clock, CreditCard, TrendingDown } from 'lucide-react';
 
 interface FinancialSummaryProps {
   financials: Financials;
@@ -8,7 +8,8 @@ interface FinancialSummaryProps {
 export default function FinancialSummary({ financials }: FinancialSummaryProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-      <div className="bg-card p-6 rounded-2xl border border-border shadow-sm group hover:border-muted-foreground transition-all duration-300">
+      <div className="surface-sky p-6 rounded-2xl border border-border shadow-sm group hover:border-muted-foreground/70 transition-all duration-300 overflow-hidden relative">
+        <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-sky-400/10 blur-3xl dark:bg-sky-400/5" />
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-blue-50 dark:bg-blue-950/30 p-2 rounded-lg text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50">
             <CreditCard className="h-4 w-4" />
@@ -26,7 +27,8 @@ export default function FinancialSummary({ financials }: FinancialSummaryProps) 
         </div>
       </div>
 
-      <div className="bg-card p-6 rounded-2xl border border-border shadow-sm group hover:border-muted-foreground transition-all duration-300">
+      <div className="surface-amber p-6 rounded-2xl border border-border shadow-sm group hover:border-muted-foreground/70 transition-all duration-300 overflow-hidden relative">
+        <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-orange-400/10 blur-3xl dark:bg-orange-400/5" />
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-orange-50 dark:bg-orange-950/30 p-2 rounded-lg text-orange-600 dark:text-orange-400 border border-orange-100 dark:border-orange-900/50">
             <Clock className="h-4 w-4" />
@@ -44,7 +46,8 @@ export default function FinancialSummary({ financials }: FinancialSummaryProps) 
         </div>
       </div>
 
-      <div className="bg-card p-6 rounded-2xl border border-border shadow-sm group hover:border-muted-foreground transition-all duration-300 sm:col-span-2 lg:col-span-1">
+      <div className="surface-rose p-6 rounded-2xl border border-border shadow-sm group hover:border-muted-foreground/70 transition-all duration-300 sm:col-span-2 lg:col-span-1 overflow-hidden relative">
+        <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-rose-400/10 blur-3xl dark:bg-rose-400/5" />
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-red-50 dark:bg-red-950/30 p-2 rounded-lg text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/50">
             <TrendingDown className="h-4 w-4" />

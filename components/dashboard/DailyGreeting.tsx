@@ -141,7 +141,10 @@ export default function DailyGreeting({ student }: { student: Student }) {
   }).format(currentDate);
 
   return (
-    <section className="rounded-lg border border-border bg-card p-4 sm:p-5">
+    <section className="surface-sky relative overflow-hidden rounded-lg border border-border/80 p-4 sm:p-5 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+      <div className="pointer-events-none absolute -right-10 top-0 h-32 w-32 rounded-full bg-sky-400/10 blur-3xl dark:bg-sky-400/5" />
+      <div className="pointer-events-none absolute -left-10 bottom-0 h-28 w-28 rounded-full bg-indigo-400/10 blur-3xl dark:bg-indigo-400/5" />
+      <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-500 via-indigo-400 to-cyan-400 opacity-70" />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-muted-foreground">

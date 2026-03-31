@@ -275,14 +275,14 @@ function CommunityContent() {
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1 group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="Search..." className="w-full pl-9 pr-9 py-2 bg-card border border-border rounded-xl text-sm font-medium focus:outline-none focus:border-primary transition-all text-foreground" />
+              <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="Search..." className="w-full pl-9 pr-9 py-2 surface-neutral border border-border/80 rounded-xl text-sm font-medium focus:outline-none focus:border-primary transition-all text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10" />
               {searchInput && <button onClick={() => setSearchInput('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" /></button>}
             </div>
-            <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider border transition-all ${showFilters || selectedType !== 'all' || sortBy !== 'newest' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-muted-foreground border-border hover:border-muted-foreground shadow-sm'}`}><SlidersHorizontal className="h-3.5 w-3.5" />Filters</button>
+            <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider border transition-all ${showFilters || selectedType !== 'all' || sortBy !== 'newest' ? 'bg-primary text-primary-foreground border-primary' : 'surface-neutral text-muted-foreground border-border hover:border-muted-foreground shadow-sm'}`}><SlidersHorizontal className="h-3.5 w-3.5" />Filters</button>
           </div>
 
           {showFilters && (
-            <div className="bg-card rounded-xl border border-border p-4 shadow-sm space-y-4 animate-in slide-in-from-top-2 duration-200">
+            <div className="surface-violet rounded-xl border border-border/80 p-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10 space-y-4 animate-in slide-in-from-top-2 duration-200">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground px-1">Sort</label>
@@ -306,19 +306,19 @@ function CommunityContent() {
           {loading ? (
             <div className="space-y-4">
               {[1, 2].map(i => (
-                <div key={i} className="bg-card rounded-xl p-5 border border-border space-y-4">
+                <div key={i} className="surface-neutral rounded-xl p-5 border border-border/80 space-y-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
                   <div className="flex items-center gap-3"><Skeleton className="h-8 w-8 rounded-full" /><div className="space-y-1.5 flex-1"><Skeleton className="h-3.5 w-24" /><Skeleton className="h-2.5 w-16" /></div></div>
                   <div className="space-y-2"><Skeleton className="h-3.5 w-full" /><Skeleton className="h-3.5 w-2/3" /></div>
                 </div>
               ))}
             </div>
           ) : isError ? (
-            <div className="text-center py-16 bg-card rounded-2xl border border-red-500/20">
+            <div className="surface-rose text-center py-16 rounded-2xl border border-red-500/20 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
               <p className="text-xs font-bold text-red-500 uppercase tracking-wider mb-4">Failed to load posts</p>
               <button onClick={() => refetch()} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-[10px] font-bold uppercase tracking-wider hover:opacity-90 transition-colors">Retry</button>
             </div>
           ) : posts.length === 0 ? (
-            <div className="text-center py-16 bg-card rounded-2xl border border-border">
+            <div className="surface-sky text-center py-16 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">No posts found</p>
             </div>
           ) : (
@@ -336,7 +336,7 @@ function CommunityContent() {
                 />
               ))}
               {hasMore && (
-                <button onClick={handleLoadMore} className="w-full py-3 bg-card border border-border rounded-xl text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-all active:scale-95">Load More</button>
+                <button onClick={handleLoadMore} className="w-full py-3 surface-neutral border border-border/80 rounded-xl text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-all active:scale-95 shadow-sm ring-1 ring-black/5 dark:ring-white/10">Load More</button>
               )}
             </>
           )}

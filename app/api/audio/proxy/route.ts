@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
       if (value) responseHeaders.set(header, value);
     });
 
-    // Fallback content type
+    // Note: Fallback content type
     if (!responseHeaders.has('content-type')) {
       responseHeaders.set('content-type', 'audio/mpeg');
     }

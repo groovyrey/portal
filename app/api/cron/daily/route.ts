@@ -11,7 +11,7 @@ import { parseStudentName } from '@/lib/utils';
  * Handles all daily tasks and specific weekly tasks based on a map.
  */
 
-// Helper to parse time string for sorting
+// Note: Helper to parse time string for sorting
 function parseTimeValue(timeStr: string): number {
   try {
     const match = timeStr.match(/(\d{1,2}):(\d{2})\s*([AP]M)/i);
@@ -128,19 +128,19 @@ export async function GET(req: NextRequest) {
 
   try {
     const phTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Manila"}));
-    const dayIndex = phTime.getDay(); // 0=SUN, 1=MON, etc.
+    const dayIndex = phTime.getDay(); // Note: 0=SUN, 1=MON, etc.
     const baseUrl = process.env.NODE_ENV === 'production' ? 'https://lcchub.vercel.app' : `http://${req.headers.get('host')}`;
     
-    // --- Weekly Task Map ---
-    // Tasks that run every single day
+    // Note: --- Weekly Task Map ---
+    // Note: Tasks that run every single day
     const dailyTasks = ['scheduleReminders', 'paymentReminders'];
     
-    // Tasks that run only on specific days
+    // Note: Tasks that run only on specific days
     const weeklyTaskMap: Record<number, string[]> = {
-      0: [], // Sunday
-      1: ['weeklySummary'], // Monday
-      3: ['midWeekCheck'],  // Wednesday
-      5: ['weekendPreview'] // Friday
+      0: [], // Note: Sunday
+      1: ['weeklySummary'], // Note: Monday
+      3: ['midWeekCheck'],  // Note: Wednesday
+      5: ['weekendPreview'] // Note: Friday
     };
 
     const activeTasks = [...dailyTasks, ...(weeklyTaskMap[dayIndex] || [])];
@@ -153,7 +153,7 @@ export async function GET(req: NextRequest) {
       results.data.payments = await runPaymentReminders(phTime, baseUrl);
     }
 
-    // Log the consolidated run with unique ID for history
+    // Note: Log the consolidated run with unique ID for history
     const runRef = collection(db, 'cron_runs');
     await addDoc(runRef, {
       jobId: 'daily-consolidated',
@@ -163,7 +163,7 @@ export async function GET(req: NextRequest) {
       results: results.data
     });
 
-    // Cleanup: Keep only last 20 records total for this jobId
+    // Reminder: Cleanup: Keep only last 20 records total for this jobId
     const q = query(
       collection(db, 'cron_runs'), 
       where('jobId', '==', 'daily-consolidated'),

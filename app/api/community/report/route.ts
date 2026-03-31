@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const sessionData = JSON.parse(decrypted);
     const reporterUserId = sessionData.userId;
 
-    // 1. Fetch the post to be reported
+    // Note: 1. Fetch the post to be reported
     const postRes = await query(`
       SELECT p.* FROM community_posts p WHERE p.id = $1
     `, [postId]);
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     const post = postRes.rows[0];
 
-    // Fetch poll if exists
+    // Note: Fetch poll if exists
     let poll = null;
     if (post.poll_question) {
       const optionsRes = await query(`
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // 2. Call AI Review Service
+    // Note: 2. Call AI Review Service
     const origin = req.nextUrl.origin;
     const reviewRes = await fetch(`${origin}/api/ai/review`, {
       method: 'POST',
@@ -63,15 +63,15 @@ export async function POST(req: NextRequest) {
 
     const result = await reviewRes.json();
 
-    // 3. Take Action based on AI Decision
+    // Note: 3. Take Action based on AI Decision
     if (result.decision === 'REJECTED') {
       const authorId = post.user_id;
       const postPreview = post.content?.substring(0, 30) || 'your post';
 
-      // Delete the post if AI rejects it
+      // Note: Delete the post if AI rejects it
       await query('DELETE FROM community_posts WHERE id = $1', [postId]);
       
-      // Notify the author of the deletion and the reason
+      // Note: Notify the author of the deletion and the reason
       try {
         await createNotification({
           userId: authorId,
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
         console.error('Failed to notify author of post removal:', notifyError);
       }
 
-      // Notify all clients of post deletion
+      // Note: Notify all clients of post deletion
       await publishUpdate('community', { type: 'POST_DELETED', postId });
       
       return NextResponse.json({ 

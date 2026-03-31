@@ -18,7 +18,8 @@ export default function SupportTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4 p-6 bg-card rounded-2xl border border-border shadow-sm">
+      <div className="surface-violet relative overflow-hidden flex items-center gap-4 p-6 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-violet-500 via-fuchsia-400 to-pink-400 opacity-70" />
         <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
           <LifeBuoy className="h-7 w-7 text-primary-foreground" />
         </div>
@@ -29,7 +30,7 @@ export default function SupportTab() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col items-center text-center">
+        <div className="surface-amber rounded-2xl border border-border/80 p-6 shadow-sm flex flex-col items-center text-center ring-1 ring-black/5 dark:ring-white/10">
             <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center mb-4 border border-amber-500/20">
                 <Star className="h-6 w-6 text-amber-500" />
             </div>
@@ -69,10 +70,10 @@ function SupportItem({ icon, title, description, onClick }: { icon: React.ReactN
   return (
     <button 
       onClick={onClick}
-      className="w-full flex items-center justify-between p-4 bg-card hover:bg-accent/50 rounded-2xl border border-border transition-all group shadow-sm"
+      className="w-full flex items-center justify-between p-4 surface-neutral hover:bg-accent/50 rounded-2xl border border-border/80 transition-all group shadow-sm ring-1 ring-black/5 dark:ring-white/10"
     >
       <div className="flex items-center gap-4 text-left">
-        <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center border border-border group-hover:bg-card transition-colors">
+        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-white to-slate-100 dark:from-card dark:to-slate-900 flex items-center justify-center border border-border group-hover:bg-card transition-colors">
           {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 18, className: "text-primary" }) : icon}
         </div>
         <div>

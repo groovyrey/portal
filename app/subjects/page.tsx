@@ -64,8 +64,8 @@ export default function SubjectsPage() {
             <Skeleton className="h-10 w-64" />
             <Skeleton className="h-10 w-24" />
           </div>
-          <div className="bg-card rounded-xl border border-border overflow-hidden">
-            <div className="p-6 border-b border-border bg-accent">
+          <div className="surface-sky rounded-xl border border-border/80 overflow-hidden shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+            <div className="p-6 border-b border-border bg-accent/40">
               <Skeleton className="h-6 w-48 mb-2" />
               <Skeleton className="h-4 w-32" />
             </div>
@@ -142,7 +142,8 @@ export default function SubjectsPage() {
           </div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="surface-emerald relative overflow-hidden rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 opacity-70" />
           <div className="p-5 border-b border-border flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-foreground text-background flex items-center justify-center">
               <ChevronRight className="h-4 w-4 rotate-90" />
