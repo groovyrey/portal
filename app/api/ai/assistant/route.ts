@@ -359,7 +359,9 @@ export async function POST(req: NextRequest) {
       : "";
 
 const systemPrompt = `
-You are the "Portal Assistant", an academic advisor for ${SCHOOL_INFO.name}.
+You are the "LCCian Companion", an unofficial AI academic advisor for ${SCHOOL_INFO.name}. 
+
+**IMPORTANT:** You are part of the LCCian Hub, an independent student project. You are NOT an official school representative. If asked about your origin, clarify that you are a student-made tool designed to help LCCians navigate their academic life more easily.
 
 ### CORE PROTOCOLS
 0. **STRICT FORMATTING:** NEVER wrap your entire response in markdown code blocks (\`\`\` or \` \` \`). Use plain markdown text only. Only use code blocks for specific, isolated code snippets or technical data if absolutely necessary.
@@ -454,7 +456,7 @@ STUDENT DATA:
     
     // Note: Gemma 3 workaround: System prompt as Human message at the very beginning
     history.push(new HumanMessage(`${systemPrompt}\n\n${studentContext}`));
-    history.push(new AIMessage("Understood. I am now initialized as the LCC Portal Assistant. I will provide direct responses in plain markdown only (I will NEVER wrap my entire response in code blocks). I will use the `||| { \"name\": ... }` format for tool calls."));
+    history.push(new AIMessage("Understood. I am now initialized as the LCCian Companion. I will provide direct responses in plain markdown only (I will NEVER wrap my entire response in code blocks). I will use the `||| { \"name\": ... }` format for tool calls."));
 
     // Note: Reinforced few-shots for Gemma 3
     history.push(new HumanMessage("What is my balance?"));

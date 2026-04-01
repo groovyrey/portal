@@ -8,7 +8,6 @@ export default function SecurityTab() {
   return (
     <div className="space-y-6">
       <div className="surface-amber relative overflow-hidden flex items-center gap-4 p-4 rounded-xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-500 via-orange-400 to-rose-400 opacity-70" />
         <div className="p-2 bg-primary/10 rounded-lg">
           <Info className="h-5 w-5 text-primary" />
         </div>

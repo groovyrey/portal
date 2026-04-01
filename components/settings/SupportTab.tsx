@@ -19,7 +19,6 @@ export default function SupportTab() {
   return (
     <div className="space-y-6">
       <div className="surface-violet relative overflow-hidden flex items-center gap-4 p-6 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-violet-500 via-fuchsia-400 to-pink-400 opacity-70" />
         <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
           <LifeBuoy className="h-7 w-7 text-primary-foreground" />
         </div>
@@ -73,7 +72,7 @@ function SupportItem({ icon, title, description, onClick }: { icon: React.ReactN
       className="w-full flex items-center justify-between p-4 surface-neutral hover:bg-accent/50 rounded-2xl border border-border/80 transition-all group shadow-sm ring-1 ring-black/5 dark:ring-white/10"
     >
       <div className="flex items-center gap-4 text-left">
-        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-white to-slate-100 dark:from-card dark:to-slate-900 flex items-center justify-center border border-border group-hover:bg-card transition-colors">
+        <div className="h-10 w-10 rounded-xl bg-accent dark:bg-card flex items-center justify-center border border-border group-hover:bg-card transition-colors">
           {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 18, className: "text-primary" }) : icon}
         </div>
         <div>

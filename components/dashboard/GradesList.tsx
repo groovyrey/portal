@@ -12,7 +12,6 @@ export default function GradesList({ reports }: GradesListProps) {
   return (
     <div className="space-y-6">
       <div className="surface-violet relative overflow-hidden rounded-2xl border border-border/80 p-6 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-violet-500 via-fuchsia-400 to-pink-400 opacity-70" />
         <div className="flex items-center gap-3 mb-6">
           <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
             <BookOpenCheck className="h-4 w-4" />

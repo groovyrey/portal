@@ -22,7 +22,7 @@ const GUIDELINES = [
   {
     icon: <AlertTriangle className="h-5 w-5 text-amber-500" />,
     title: "No Bullying or Shaming",
-    description: "Zero tolerance for harassment. Never mock someone for their grades, course, or questions. AI review will block toxic content."
+    description: "Zero tolerance for harassment. Never mock someone for their grades, course, or questions. Aegis will block toxic content."
   },
   {
     icon: <ShieldCheck className="h-5 w-5 text-green-500" />,

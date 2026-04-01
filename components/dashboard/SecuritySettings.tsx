@@ -163,6 +163,7 @@ export default function SecuritySettings() {
             required
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
+            maxLength={64}
             className="w-full bg-accent border border-border rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
             placeholder="Enter current password"
           />
@@ -185,6 +186,7 @@ export default function SecuritySettings() {
             required
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
+            maxLength={64}
             className="w-full bg-accent border border-border rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
             placeholder="Min 8 characters recommended"
           />
@@ -233,6 +235,7 @@ export default function SecuritySettings() {
             required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            maxLength={64}
             className="w-full bg-accent border border-border rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
             placeholder="Repeat new password"
           />
@@ -304,7 +307,6 @@ export default function SecuritySettings() {
                 value={debugHtml}
                 className="w-full h-48 bg-muted text-foreground text-[10px] font-mono p-4 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none custom-scrollbar"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-muted/50 to-transparent pointer-events-none rounded-xl" />
             </div>
           </motion.div>
         )}

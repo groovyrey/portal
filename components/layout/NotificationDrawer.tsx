@@ -31,6 +31,7 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
   const queryClient = useQueryClient();
   const { data: notifications = [], isLoading } = useNotificationsQuery(isOpen);
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('unread');
+  const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
   const [confirmConfig, setConfirmConfig] = useState<{
     isOpen: boolean;
     title: string;
@@ -288,6 +289,77 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
           </div>
         </Modal>
 
+        {/* Full Notification View Modal */}
+        <Modal
+          isOpen={!!selectedNotif}
+          onClose={() => setSelectedNotif(null)}
+          title={
+            selectedNotif && (
+              <h3 className="text-sm font-black text-foreground uppercase tracking-widest break-words">
+                {selectedNotif.title}
+              </h3>
+            )
+          }
+        >
+          {selectedNotif && (
+            <div className="p-6 pt-0 space-y-6">
+              <div className="flex items-center justify-between gap-4 pt-6">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                  selectedNotif.type === 'error' ? 'bg-rose-500/10 dark:bg-rose-500/20 shadow-sm shadow-rose-500/10' : 
+                  selectedNotif.type === 'success' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 shadow-sm shadow-emerald-500/10' : 
+                  selectedNotif.type === 'warning' ? 'bg-amber-500/10 dark:bg-amber-500/20 shadow-sm shadow-amber-500/10' : 
+                  'bg-primary/10 shadow-sm shadow-primary/10'
+                }`}>
+                  {getIcon(selectedNotif.type)}
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.1em] flex items-center justify-end gap-1.5">
+                    <Clock className="h-3 w-3" />
+                    {getTimeAgo(selectedNotif.createdAt)}
+                  </p>
+                  <p className={`text-[9px] font-black uppercase tracking-widest mt-0.5 ${
+                    selectedNotif.type === 'error' ? 'text-rose-500' : 
+                    selectedNotif.type === 'success' ? 'text-emerald-500' : 
+                    selectedNotif.type === 'warning' ? 'text-amber-500' : 
+                    'text-primary'
+                  }`}>
+                    {selectedNotif.type}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-medium">
+                  {selectedNotif.message}
+                </p>
+              </div>
+
+              <div className="pt-2">
+                {selectedNotif.link ? (
+                  <Link 
+                    href={selectedNotif.link}
+                    onClick={() => {
+                      setSelectedNotif(null);
+                      onClose();
+                    }}
+                    className="w-full py-4 px-4 rounded-2xl text-[10px] font-black text-white bg-primary hover:opacity-90 transition-all uppercase tracking-[0.2em] shadow-lg shadow-primary/20 flex items-center justify-center gap-2.5 active:scale-95"
+                  >
+                    View Details
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => setSelectedNotif(null)}
+                    className="w-full py-4 px-4 rounded-2xl text-[10px] font-black text-muted-foreground bg-accent hover:bg-accent/80 transition-all uppercase tracking-[0.2em] active:scale-95"
+                  >
+                    Dismiss
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </Modal>
+
         {isLoading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
@@ -366,25 +438,39 @@ export default function NotificationDrawer({ isOpen, onClose }: NotificationDraw
                         </button>
                       </div>
                     </div>
-                    <p className={`text-xs leading-relaxed break-words ${
+                    <p className={`text-xs leading-relaxed break-words line-clamp-2 mb-2 ${
                       notif.isRead ? 'text-muted-foreground' : 'text-muted-foreground'
                     }`}>
                       {notif.message}
                     </p>
-                    
-                    {notif.link && (
-                      <Link 
-                        href={notif.link}
+
+                    <div className="flex items-center justify-between mt-2">
+                      <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          onClose();
+                          setSelectedNotif(notif);
+                          if (!notif.isRead) markAsRead(notif.id);
                         }}
-                        className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-primary hover:underline"
+                        className="text-[10px] font-black text-primary hover:opacity-80 flex items-center gap-1.5 transition-colors uppercase tracking-widest"
                       >
-                        View details
-                        <ExternalLink className="h-3 w-3" />
-                      </Link>
-                    )}
+                        Read More
+                        <Info className="h-3 w-3" />
+                      </button>
+                      
+                      {notif.link && (
+                        <Link 
+                          href={notif.link}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onClose();
+                          }}
+                          className="inline-flex items-center gap-1.5 text-[10px] font-black text-primary hover:underline uppercase tracking-widest"
+                        >
+                          View details
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -153,7 +153,7 @@ function ProfileContent() {
   const handleReport = async (postId: string) => {
     if (!currentUserData) return;
 
-    const toastId = toast.loading('Reporting post to AI...');
+    const toastId = toast.loading('Reporting post to Aegis...');
 
     try {
       const res = await fetch('/api/community/report', {
@@ -166,11 +166,11 @@ function ProfileContent() {
 
       if (data.success) {
         if (data.decision === 'REJECTED') {
-          toast.success('Post removed: AI analysis confirmed community guideline violations.', { id: toastId });
+          toast.success('Post removed: Aegis confirmed community guideline violations.', { id: toastId });
           queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
           queryClient.invalidateQueries({ queryKey: ['community-posts'] });
         } else {
-          toast.success('Report processed: AI determined this post follows community guidelines.', { id: toastId });
+          toast.success('Report processed: Aegis determined this post follows community guidelines.', { id: toastId });
         }
       } else {
         toast.error(data.error || 'Failed to report post', { id: toastId });

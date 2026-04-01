@@ -284,14 +284,14 @@ export default function Navbar() {
                 <div className="relative h-8 w-8">
                   <Image 
                     src="/logo.png" 
-                    alt="LCC Hub Logo" 
+                    alt="LCCian Hub Logo" 
                     fill
                     className="object-contain"
                     priority
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-lg tracking-tight text-foreground">LCC Hub</span>
+                  <span className="font-bold text-lg tracking-tight text-foreground">LCCian Hub</span>
                   <span className="px-1.5 py-0.5 rounded bg-secondary text-[9px] font-bold text-muted-foreground border border-border uppercase tracking-wider">Beta</span>
                 </div>
               </Link>

@@ -47,7 +47,6 @@ export default function ActivityTab() {
   return (
     <div className="space-y-6">
       <div className="surface-sky relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-500 via-indigo-400 to-cyan-400 opacity-70" />
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
             <History className="h-6 w-6" />

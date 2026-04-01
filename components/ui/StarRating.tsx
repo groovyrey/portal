@@ -108,12 +108,20 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
       </div>
 
       <div className="space-y-3">
-        <textarea
-          value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
-          placeholder="What do you think of LCC Hub? (Optional)"
-          className="w-full bg-accent/50 dark:bg-accent/20 border border-border rounded-2xl p-4 text-sm focus:bg-card focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none min-h-[100px] resize-none text-foreground placeholder:text-muted-foreground/50"
-        />
+        <div className="relative">
+          <textarea
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+            maxLength={500}
+            placeholder="What do you think of LCC Hub? (Optional)"
+            className="w-full bg-accent/50 dark:bg-accent/20 border border-border rounded-2xl p-4 text-sm focus:bg-card focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none min-h-[100px] resize-none text-foreground placeholder:text-muted-foreground/50"
+          />
+          <div className="absolute bottom-3 right-4">
+            <span className={`text-[9px] font-bold uppercase tracking-widest ${feedback.length >= 450 ? 'text-red-500' : 'text-muted-foreground/30'}`}>
+              {feedback.length}/500
+            </span>
+          </div>
+        </div>
         <button
           onClick={handleSubmit}
           disabled={isSubmitting || rating === 0}

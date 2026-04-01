@@ -7,9 +7,11 @@ interface LoginFormProps {
   onLogin: (id: string, pass: string) => void;
   loading: boolean;
   error?: string;
+  requiresPasswordChange?: boolean;
+  portalUrl?: string;
 }
 
-export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
+export default function LoginForm({ onLogin, loading, error, requiresPasswordChange, portalUrl }: LoginFormProps) {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -25,17 +27,22 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
     <div className="flex min-h-screen bg-background items-center justify-center p-4">
       <div className="bg-card border border-border rounded-2xl shadow-sm w-full max-w-sm overflow-hidden">
         <div className="p-6 pb-2">
-          <div className="relative h-12 w-12 mb-4">
-            <Image 
-              src="/logo.png" 
-              alt="LCC Hub Logo" 
-              fill
-              className="object-contain"
-              priority
-            />
+          <div className="flex items-center justify-between mb-4">
+            <div className="relative h-12 w-12">
+              <Image 
+                src="/logo.png" 
+                alt="LCCian Hub Logo" 
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[9px] font-black uppercase tracking-widest">
+              Unofficial
+            </div>
           </div>
-          <h1 className="text-xl font-bold text-foreground">Portal Access</h1>
-          <p className="text-xs text-muted-foreground mt-0.5 font-medium">Authentication required to continue</p>
+          <h1 className="text-xl font-bold text-foreground">LCCian Hub</h1>
+          <p className="text-xs text-muted-foreground mt-0.5 font-medium italic">Student-Made Academic Workspace</p>
         </div>
         
         <div className="p-6 pt-4">
@@ -48,6 +55,7 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
                   required
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
+                  maxLength={20}
                   className="block w-full px-4 py-2.5 border border-border rounded-xl bg-muted placeholder-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-all text-sm font-medium text-foreground"
                   placeholder="ID Number"
                 />
@@ -62,6 +70,7 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  maxLength={64}
                   className="block w-full pl-4 pr-10 py-2.5 border border-border rounded-xl bg-muted placeholder-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-all text-sm font-medium text-foreground"
                   placeholder="Password"
                 />
@@ -90,9 +99,22 @@ export default function LoginForm({ onLogin, loading, error }: LoginFormProps) {
             </div>
 
             {error && (
-              <div className="flex gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive">
-                <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                <p className="text-[10px] font-bold leading-tight uppercase tracking-tight">{error}</p>
+              <div className="flex flex-col gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive transition-all">
+                <div className="flex gap-2">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  <p className="text-[10px] font-bold leading-tight uppercase tracking-tight">{error}</p>
+                </div>
+                {requiresPasswordChange && portalUrl && (
+                  <a 
+                    href={portalUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="mt-1 flex items-center justify-center gap-1.5 py-1.5 bg-destructive/20 hover:bg-destructive/30 border border-destructive/20 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all active:scale-95"
+                  >
+                    Change Password on Portal
+                    <LayoutDashboard className="h-3 w-3" />
+                  </a>
+                )}
               </div>
             )}
 

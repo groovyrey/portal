@@ -22,8 +22,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
+    let reporterUserId: string;
     try {
-      decrypt(sessionCookie.value);
+      const decrypted = decrypt(sessionCookie.value);
+      const sessionData = JSON.parse(decrypted);
+      reporterUserId = sessionData.userId;
     } catch (e) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
@@ -112,6 +115,19 @@ COMMENT CONTENT: ${comment.content}
         type: 'error',
         link: `/post/${comment.post_id}`
       });
+
+      // Note: Notify the reporter
+      try {
+        await createNotification({
+          userId: reporterUserId,
+          title: 'Report Successful',
+          message: `The comment you reported was reviewed and removed by Aegis. Thank you for your contribution to community safety!`,
+          type: 'success',
+          link: `/post/${comment.post_id}`
+        });
+      } catch (notifyError) {
+        console.error('Failed to notify reporter of comment removal:', notifyError);
+      }
 
       // Note: Notify all clients of comment deletion
       await publishUpdate('community', { type: 'COMMENT_DELETED', postId: comment.post_id });

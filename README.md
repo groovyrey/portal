@@ -1,8 +1,8 @@
 <div align="center">
-  <h1>LCC HUB</h1>
-  <h3>The Intelligent Student Portal</h3>
+  <h1>LCCian Hub</h1>
+  <h3>The Intelligent Student Companion (Unofficial)</h3>
   <p>
-    A next-generation academic ecosystem for La Concepcion College. <br />
+    An unofficial student-led academic workspace for La Concepcion College. <br />
     Refining the student experience with AI, Realtime Sync, and Modern Design.
   </p>
 
@@ -16,7 +16,7 @@
 
 <br />
 
-> **LCC Hub** fundamentally re-imagines the academic experience by wrapping the legacy ASP.NET "Schoolista" portal in a modern, responsive, and AI-enhanced interface. Beyond simple data viewing, it acts as an intelligent study companion.
+> **LCCian Hub** is an unofficial, student-made academic workspace that re-imagines the LCC experience. It wraps the legacy ASP.NET "Schoolista" portal in a modern, responsive, and AI-enhanced interface. It is an independent project and is NOT affiliated with, authorized, or endorsed by La Concepcion College.
 
 ---
 

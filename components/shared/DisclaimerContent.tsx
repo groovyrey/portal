@@ -16,7 +16,7 @@ export default function DisclaimerContent() {
           </div>
           <h2 className="text-2xl font-bold mb-4">How & Why We Use Your Data</h2>
           <p className="text-primary-foreground/80 leading-relaxed font-medium mb-6">
-            LCC Hub is made to make your student life easier. We use your data only to show your grades, schedule, and financial status in a better, mobile-friendly way.
+            LCCian Hub is an unofficial, student-led workspace made to make your academic life easier. We use your data only to show your grades, schedule, and financial status in a better, mobile-friendly way.
           </p>
           <ul className="grid md:grid-cols-2 gap-4 text-sm font-semibold text-primary-foreground/90">
             <li className="flex items-start gap-3">
@@ -49,14 +49,14 @@ export default function DisclaimerContent() {
             <ShieldAlert className="h-6 w-6" />
           </div>
           <h2 className="text-2xl font-bold text-foreground mb-4">
-            Not an Official School App
+            Independent Student Project
           </h2>
           <div className="prose prose-slate dark:prose-invert max-w-none">
             <p className="text-muted-foreground leading-relaxed text-lg font-medium">
-              This app is <span className="font-bold text-foreground">not an official school publication</span>. It is made by students for students to make portal navigation easier. 
+              This app is <span className="font-bold text-foreground">NOT an official school publication</span>. It is an independent project made by students, for students, to simplify portal navigation. 
             </p>
             <p className="text-muted-foreground/80 mt-4 italic leading-relaxed">
-              LCC (La Concepcion College) is not responsible for how this app works or the data it shows. Using this app is your choice.
+              LCC (La Concepcion College) does not endorse, authorize, or take responsibility for this application. Using this app is entirely at your own discretion.
             </p>
           </div>
         </div>
@@ -116,7 +116,7 @@ export default function DisclaimerContent() {
           <div className="grid gap-6 text-primary-foreground/80 text-sm leading-relaxed">
             <div>
               <h4 className="text-primary-foreground font-bold mb-2">1. Agreeing to the Rules</h4>
-              <p>By logging into LCC Hub, you agree to these rules. If you do not agree, please stop using the app right away.</p>
+              <p>By logging into LCCian Hub, you agree to these rules. If you do not agree, please stop using the app right away.</p>
             </div>
             
             <div>
@@ -126,7 +126,7 @@ export default function DisclaimerContent() {
 
             <div>
               <h4 className="text-primary-foreground font-bold mb-2">3. Service as it is</h4>
-              <p>LCC Hub is a convenience tool. We can&apos;t guarantee it will always be online or always work with the school portal. We can change or stop the app at any time.</p>
+              <p>LCCian Hub is a convenience tool. We can&apos;t guarantee it will always be online or always work with the school portal. We can change or stop the app at any time.</p>
             </div>
 
             <div>

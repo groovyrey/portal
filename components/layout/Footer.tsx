@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { GraduationCap } from 'lucide-react';
 import { APP_VERSION } from '@/lib/version';
 
 export default function Footer() {
@@ -28,18 +27,18 @@ export default function Footer() {
               <div className="relative h-8 w-8">
                 <Image 
                   src="/logo.png" 
-                  alt="LCC Hub Logo" 
+                  alt="LCCian Hub Logo" 
                   fill
                   className="object-contain"
                 />
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-lg tracking-tight text-foreground">LCC Hub</span>
-                <span className="px-1.5 py-0.5 rounded bg-secondary text-[9px] font-bold text-muted-foreground border border-border uppercase tracking-tight">Beta</span>
+                <span className="font-bold text-lg tracking-tight text-foreground">LCCian Hub</span>
+                <span className="px-1.5 py-0.5 rounded bg-secondary text-[9px] font-bold text-muted-foreground border border-border uppercase tracking-tight">Unofficial</span>
               </div>
             </Link>
             <p className="text-muted-foreground text-xs max-w-xs leading-relaxed font-medium">
-              A modern student interface designed for accessibility and real-time portal synchronization.
+              An unofficial, student-led academic workspace designed for LCCians to access school records with ease.
             </p>
           </div>
 
@@ -75,7 +74,7 @@ export default function Footer() {
 
         <div className="pt-8 border-t border-border text-center md:text-left">
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
-            &copy; {currentYear} LCC Hub • v{APP_VERSION}
+            &copy; {currentYear} LCCian Hub • v{APP_VERSION}
           </p>
         </div>
       </div>

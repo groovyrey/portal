@@ -180,4 +180,6 @@ export interface LoginResponse {
   data?: Student;
   error?: string;
   debugLog?: string;
+  requiresPasswordChange?: boolean;
+  portalUrl?: string;
 }

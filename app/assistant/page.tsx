@@ -265,6 +265,7 @@ const ChatInput = React.memo(({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 disabled={isLoading || isTranscribing}
+                maxLength={2000}
                 placeholder={
                   isRecording ? "Listening..." : 
                   isTranscribing ? "Transcribing speech..." : 
@@ -272,6 +273,13 @@ const ChatInput = React.memo(({
                 }
                 className="w-full bg-transparent px-3 py-3 text-sm font-medium transition-all outline-none disabled:opacity-60 text-foreground"
             />
+            {input.length > 0 && (
+              <div className="absolute right-12 top-1/2 -translate-y-1/2">
+                <span className={`text-[8px] font-bold uppercase tracking-widest ${input.length >= 1900 ? 'text-red-500' : 'text-muted-foreground/30'}`}>
+                  {input.length}/2000
+                </span>
+              </div>
+            )}
             <div className="pr-1.5">
                 <button 
                     type="submit"
@@ -863,7 +871,7 @@ export default function AssistantPage() {
 
               <h2 className="text-2xl font-bold text-foreground mb-3 tracking-tight">Welcome, {student?.parsedName?.firstName || 'LCCian'}!</h2>
               <p className="text-sm text-muted-foreground mb-8 leading-relaxed font-medium">
-                I&apos;m your <span className="text-primary font-bold italic">LCC Hub</span> Companion. I have direct access to your <span className="text-foreground font-bold">academic records</span> and <span className="text-foreground font-bold">financial status</span>. How can I assist you today?
+                I&apos;m your <span className="text-primary font-bold italic">LCCian Hub</span> Companion. I have direct access to your <span className="text-foreground font-bold">academic records</span> and <span className="text-foreground font-bold">financial status</span>. How can I assist you today?
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
@@ -1116,9 +1124,17 @@ export default function AssistantPage() {
               type="text"
               value={modalInput}
               onChange={(e) => setModalInput(e.target.value)}
+              maxLength={500}
               placeholder={modalPlaceholder}
               className="w-full bg-accent border border-border focus:border-primary/50 focus:bg-card rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all mb-4"
             />
+            {modalInput.length > 0 && (
+              <div className="flex justify-end mb-2 -mt-2">
+                <span className={`text-[8px] font-bold uppercase tracking-widest ${modalInput.length >= 450 ? 'text-red-500' : 'text-muted-foreground/30'}`}>
+                  {modalInput.length}/500
+                </span>
+              </div>
+            )}
             
             <div className="flex gap-3">
               <button

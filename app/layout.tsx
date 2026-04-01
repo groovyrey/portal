@@ -16,10 +16,10 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "LCC Hub",
-    template: "%s | LCC Hub"
+    default: "LCCian Hub",
+    template: "%s | LCCian Hub"
   },
-  description: "Secure Access to Schoolista Info",
+  description: "Unofficial Student Workspace for LCCians",
   icons: {
     icon: '/logo.png',
     shortcut: '/logo.png',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "LCC Hub",
+    title: "LCCian Hub",
   },
   formatDetection: {
     telephone: false,

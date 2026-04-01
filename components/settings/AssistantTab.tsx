@@ -101,7 +101,6 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
     <div className="space-y-6">
       {/* Header Card (Simplified) */}
       <div className="surface-cyan flex items-center gap-4 p-5 rounded-2xl border border-border/80 shadow-sm overflow-hidden relative group ring-1 ring-black/5 dark:ring-white/10">
-        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-cyan-500 via-sky-400 to-indigo-400 opacity-70" />
         <div className="absolute top-0 right-0 w-24 h-24 bg-accent rounded-full -mr-12 -mt-12 group-hover:bg-primary/10 transition duration-700 opacity-50"></div>
         <div className="w-12 h-12 rounded-xl bg-accent border border-border shrink-0 flex items-center justify-center relative z-10 shadow-sm">
           <Bot className="h-6 w-6 text-primary" />
@@ -190,7 +189,7 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
           <div className="flex items-center justify-between p-4 bg-accent/30 rounded-2xl border border-border/50">
             <div className="flex items-center gap-3">
               <div className={`h-9 w-9 rounded-lg flex items-center justify-center border transition-all ${
-                micPermission === 'granted' ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-gradient-to-br from-white to-slate-100 dark:from-card dark:to-slate-900 border-border text-muted-foreground'
+                micPermission === 'granted' ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-accent dark:bg-card border-border text-muted-foreground'
               }`}>
                 <Mic size={16} />
               </div>
@@ -229,7 +228,7 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
         </div>
       </div>
 
-      <div className="p-4 bg-gradient-to-r from-primary via-sky-500 to-indigo-500 rounded-xl text-primary-foreground flex items-center gap-4 shadow-lg shadow-primary/20">
+      <div className="p-4 bg-primary rounded-xl text-primary-foreground flex items-center gap-4 shadow-lg shadow-primary/20">
         <div className="p-2.5 bg-primary-foreground/10 rounded-lg">
           <Shield className="h-4 w-4 text-primary-foreground" />
         </div>
@@ -253,7 +252,7 @@ function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon:
     >
       <div className="flex items-center gap-3">
         <div className={`h-9 w-9 rounded-lg flex items-center justify-center border transition-all shadow-sm ${
-          enabled ? 'bg-primary border-primary text-primary-foreground' : 'bg-gradient-to-br from-white to-slate-100 dark:from-card dark:to-slate-900 border-border text-muted-foreground'
+          enabled ? 'bg-primary border-primary text-primary-foreground' : 'bg-accent dark:bg-card border-border text-muted-foreground'
         }`}>
           {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 16 }) : icon}
         </div>

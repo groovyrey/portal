@@ -33,6 +33,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'UserID and Password are required' }, { status: 400 });
     }
 
+    // --- INITIAL PASSWORD SECURITY CHECK ---
+    // If Student ID and Password are identical, the portal will force a change.
+    // We block this early to provide a better UX and prevent session issues.
+    if (userId.trim().toLowerCase() === password.trim().toLowerCase()) {
+      return NextResponse.json({
+        success: false,
+        requiresPasswordChange: true,
+        portalUrl: 'https://premium.schoolista.com/LCC/User/ChangePassword.aspx',
+        error: 'Security update required: You are still using your default portal password. Please update it on the official portal first.'
+      }, { status: 403 });
+    }
+
     // --- SESSION MANAGEMENT ---
     const { client, jar, isNew, isLocked, consecutiveFailures } = await getSessionClient(userId);
 
@@ -80,6 +92,16 @@ export async function POST(req: NextRequest) {
           'Origin': 'https://premium.schoolista.com'
         },
       });
+
+      const finalUrl = loginRes.request?.res?.responseUrl || "";
+      if (finalUrl.toLowerCase().includes('changepassword.aspx')) {
+        return NextResponse.json({
+          success: false,
+          requiresPasswordChange: true,
+          portalUrl: 'https://premium.schoolista.com/LCC/User/ChangePassword.aspx',
+          error: 'Security update required: You must change your default portal password on the official portal before continuing.'
+        }, { status: 403 });
+      }
 
       const $dashboard = cheerio.load(loginRes.data);
       const hasLoginButton = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;

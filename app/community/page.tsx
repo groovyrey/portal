@@ -27,14 +27,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
 import Modal from '@/components/ui/Modal';
 import Drawer from '@/components/layout/Drawer';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeHighlight from 'rehype-highlight';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
-import 'katex/dist/katex.min.css';
-import 'highlight.js/styles/github-dark.css';
 
 function CommunityContent() {
   const router = useRouter();
@@ -54,7 +46,6 @@ function CommunityContent() {
   const [allPosts, setAllPosts] = useState<CommunityPost[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [showGuidelines, setShowGuidelines] = useState(false);
-  const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
 
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
@@ -192,23 +183,22 @@ function CommunityContent() {
   const handleReport = async (postId: string) => {
     if (!student) return;
     
-    const toastId = toast.loading('Reporting post to AI...');
-    
+    const toastId = toast.loading('Reporting post to Aegis...');
+
     try {
       const res = await fetch('/api/community/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ postId }),
       });
-      
+
       const data = await res.json();
-      
+
       if (data.success) {
         if (data.decision === 'REJECTED') {
-          toast.success('Post removed: AI analysis confirmed community guideline violations.', { id: toastId });
-          queryClient.invalidateQueries({ queryKey: ['community-posts'] });
+          toast.success('Post removed: Aegis confirmed community guideline violations.', { id: toastId });          queryClient.invalidateQueries({ queryKey: ['community-posts'] });
         } else {
-          toast.success('Report processed: AI determined this post follows community guidelines.', { id: toastId });
+          toast.success('Report processed: Aegis determined this post follows community guidelines.', { id: toastId });
         }
       } else {
         toast.error(data.error || 'Failed to report post', { id: toastId });
@@ -254,14 +244,6 @@ function CommunityContent() {
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
           </div>
           <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setIsInfoDrawerOpen(true)}
-              className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight hover:text-primary transition-colors flex items-center gap-1.5"
-            >
-              <Info className="h-3.5 w-3.5" />
-              Formatting
-            </button>
-            <div className="w-[1px] h-3 bg-border" />
             <button onClick={() => setShowGuidelines(true)} className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight hover:text-primary transition-colors">
               Guidelines
             </button>
@@ -275,7 +257,7 @@ function CommunityContent() {
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1 group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="Search..." className="w-full pl-9 pr-9 py-2 surface-neutral border border-border/80 rounded-xl text-sm font-medium focus:outline-none focus:border-primary transition-all text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10" />
+              <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} maxLength={100} placeholder="Search..." className="w-full pl-9 pr-9 py-2 surface-neutral border border-border/80 rounded-xl text-sm font-medium focus:outline-none focus:border-primary transition-all text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10" />
               {searchInput && <button onClick={() => setSearchInput('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" /></button>}
             </div>
             <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider border transition-all ${showFilters || selectedType !== 'all' || sortBy !== 'newest' ? 'bg-primary text-primary-foreground border-primary' : 'surface-neutral text-muted-foreground border-border hover:border-muted-foreground shadow-sm'}`}><SlidersHorizontal className="h-3.5 w-3.5" />Filters</button>
@@ -344,155 +326,6 @@ function CommunityContent() {
       </div>
 
       <CommunityGuidelinesDrawer isOpen={showGuidelines} onClose={() => setShowGuidelines(false)} />
-
-      {/* Info Drawer */}
-      <Drawer
-        isOpen={isInfoDrawerOpen}
-        onClose={() => setIsInfoDrawerOpen(false)}
-        title="Post Formatting Guide"
-        side="right"
-      >
-        <div className="space-y-10 pb-10">
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-              Express yourself clearly using these formatting tools. All posts are rendered with GitHub Flavored Markdown and LaTeX support.
-            </p>
-            <div className="flex flex-wrap gap-2">
-               <span className="px-2 py-0.5 bg-primary/10 text-primary text-[8px] font-bold uppercase tracking-tight rounded border border-primary/20">Markdown</span>
-               <span className="px-2 py-0.5 bg-primary/10 text-primary text-[8px] font-bold uppercase tracking-tight rounded border border-primary/20">LaTeX</span>
-               <span className="px-2 py-0.5 bg-secondary text-secondary-foreground text-[8px] font-bold uppercase tracking-tight rounded border border-border">Syntax Highlighting</span>
-            </div>
-          </div>
-
-          <section className="space-y-4">
-            <h3 className="text-[10px] font-bold uppercase tracking-tight text-primary flex items-center gap-2">
-              <div className="h-1 w-1 rounded-full bg-primary" />
-              Typography & Lists
-            </h3>
-            <div className="bg-accent/40 rounded-xl border border-border/50 overflow-hidden text-left shadow-sm">
-              <div className="px-4 py-2 bg-accent/60 border-b border-border/50 flex justify-between items-center">
-                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Syntax</span>
-              </div>
-              <pre className="p-4 text-[10px] font-mono text-foreground whitespace-pre-wrap leading-relaxed bg-accent/20">
-{"# Heading 1\n## Heading 2\n\n**Bold** and *Italic*\n~~Strikethrough~~\n\n- Unordered list\n1. Ordered list\n- [ ] Task incomplete\n- [x] Task completed"}
-              </pre>
-              <div className="px-4 py-2 bg-accent/60 border-t border-border/50 border-b border-border/50">
-                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Output</span>
-              </div>
-              <div className="p-5 prose prose-sm dark:prose-invert max-w-none bg-card/30">
-                <ReactMarkdown 
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    h1: ({children}) => <h1 className="text-lg font-bold text-foreground mt-4 mb-2 pb-1 border-b border-border/50 uppercase tracking-tight">{children}</h1>,
-                    h2: ({children}) => <h2 className="text-base font-bold text-foreground mt-3 mb-2 tracking-tight">{children}</h2>,
-                    ul: ({...props}) => <ul className="list-disc list-outside ml-5 my-3 space-y-1" {...props} />,
-                    ol: ({...props}) => <ol className="list-decimal list-outside ml-5 my-3 space-y-1" {...props} />,
-                    p: ({children}) => <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>,
-                  }}
-                >
-{"# Heading 1\n## Heading 2\n\n**Bold** and *Italic*\n~~Strikethrough~~\n\n- Unordered list\n1. Ordered list\n- [ ] Task incomplete\n- [x] Task completed"}
-                </ReactMarkdown>
-              </div>
-            </div>
-          </section>
-
-          <section className="space-y-4">
-            <h3 className="text-[10px] font-bold uppercase tracking-tight text-primary flex items-center gap-2">
-              <div className="h-1 w-1 rounded-full bg-primary" />
-              Advanced Layout
-            </h3>
-            <div className="bg-accent/40 rounded-xl border border-border/50 overflow-hidden text-left shadow-sm">
-              <div className="px-4 py-2 bg-accent/60 border-b border-border/50">
-                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Syntax</span>
-              </div>
-              <pre className="p-4 text-[10px] font-mono text-foreground whitespace-pre-wrap leading-relaxed bg-accent/20">
-{"> Blockquote\n\n| Subject | Grade |\n| :--- | :---: |\n| Math | A+ |\n| Sci | A |"}
-              </pre>
-              <div className="px-4 py-2 bg-accent/60 border-t border-border/50 border-b border-border/50">
-                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Output</span>
-              </div>
-              <div className="p-5 prose prose-sm dark:prose-invert max-w-none bg-card/30">
-                <ReactMarkdown 
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    blockquote: ({...props}) => <blockquote className="border-l-4 border-primary/50 pl-4 py-1 my-3 text-muted-foreground italic bg-primary/5 rounded-r-lg" {...props} />,
-                    table: ({...props}) => <div className="overflow-x-auto my-4 rounded-xl border border-border/60 shadow-sm bg-card/50"><table className="w-full text-[10px] text-left" {...props} /></div>,
-                    thead: ({...props}) => <thead className="bg-accent/80 text-foreground font-bold uppercase tracking-tight text-[8px]" {...props} />,
-                    th: ({...props}) => <th className="px-3 py-2" {...props} />,
-                    td: ({...props}) => <td className="px-3 py-2 border-t border-border/40" {...props} />,
-                  }}
-                >
-{"> Blockquote\n\n| Subject | Grade |\n| :--- | :---: |\n| Math | A+ |\n| Sci | A |"}
-                </ReactMarkdown>
-              </div>
-            </div>
-          </section>
-
-          <section className="space-y-4">
-            <h3 className="text-[10px] font-bold uppercase tracking-tight text-primary flex items-center gap-2">
-              <div className="h-1 w-1 rounded-full bg-primary" />
-              Math & Equations
-            </h3>
-            <div className="bg-accent/40 rounded-xl border border-border/50 overflow-hidden text-left shadow-sm">
-              <div className="px-4 py-2 bg-accent/60 border-b border-border/50">
-                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Inline & Display LaTeX</span>
-              </div>
-              <pre className="p-4 text-[10px] font-mono text-foreground whitespace-pre-wrap leading-relaxed bg-accent/20">
-{"Pythagorean: $a^2 + b^2 = c^2$\n\n$$ E = mc^2 $$"}
-              </pre>
-              <div className="px-4 py-2 bg-accent/60 border-t border-border/50 border-b border-border/50">
-                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Output</span>
-              </div>
-              <div className="p-5 prose prose-sm dark:prose-invert max-w-none bg-card/30">
-                <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-{"Pythagorean: $a^2 + b^2 = c^2$\n\n$$ E = mc^2 $$"}
-                </ReactMarkdown>
-              </div>
-            </div>
-          </section>
-
-          <section className="space-y-4">
-            <h3 className="text-[10px] font-bold uppercase tracking-tight text-primary flex items-center gap-2">
-              <div className="h-1 w-1 rounded-full bg-primary" />
-              Code & Media
-            </h3>
-            <div className="bg-accent/40 rounded-xl border border-border/50 overflow-hidden text-left shadow-sm">
-              <div className="px-4 py-2 bg-accent/60 border-b border-border/50">
-                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Syntax</span>
-              </div>
-              <pre className="p-4 text-[10px] font-mono text-foreground whitespace-pre-wrap leading-relaxed bg-accent/20">
-{"Inline `code` snippet\\n\\n[Link Text](https://example.com)\\n\\n```python\\nprint(\\\"Hello Assistant\\\")\\n```"}
-              </pre>
-              <div className="px-4 py-2 bg-accent/60 border-t border-border/50 border-b border-border/50">
-                <span className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground">Output</span>
-              </div>
-              <div className="p-5 bg-card/30">
-                <ReactMarkdown 
-                  remarkPlugins={[remarkGfm]} 
-                  rehypePlugins={[rehypeHighlight, rehypeRaw]}
-                  components={{
-                    code: ({className, children, ...props}) => {
-                      const match = /language-(\w+)/.exec(className || '');
-                      return match ? (
-                        <div className="relative group my-2">
-                          <pre className="bg-foreground text-background rounded-lg p-3 overflow-x-auto text-[10px] border border-border">
-                            <code className={className} {...props}>{children}</code>
-                          </pre>
-                        </div>
-                      ) : (
-                        <code className="bg-primary/10 text-primary rounded px-1.5 py-0.5 font-mono text-[0.85em] font-bold border border-primary/20" {...props}>{children}</code>
-                      );
-                    },
-                    a: ({...props}) => <a className="text-primary font-bold hover:underline underline-offset-4" {...props} />
-                  }}
-                >
-{"Inline `code` snippet\\n\\n[Link Text](https://example.com)\\n\\n```python\\nprint(\\\"Hello Assistant\\\")\\n```"}
-                </ReactMarkdown>
-              </div>
-            </div>
-          </section>
-        </div>
-      </Drawer>
 
       {/* Delete Post Confirmation */}
       <Modal 

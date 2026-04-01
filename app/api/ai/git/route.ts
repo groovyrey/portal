@@ -35,14 +35,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    // 2. Initialize LangChain model for xAI
+    // 2. Initialize LangChain model for GitHub Models (Azure AI Inference)
     const model = new ChatOpenAI({
-      modelName: "grok-beta", // Or your preferred Grok model
-      apiKey: process.env.XAI_API_KEY || '',
+      modelName: "gpt-4o-mini", // Cost-effective and powerful for moderation
+      apiKey: process.env.GIT_MODEL_TOKEN || '',
       configuration: {
-        baseURL: "https://api.x.ai/v1",
+        baseURL: "https://models.inference.ai.azure.com",
       },
-      temperature: 0.1,
+      temperature: 0, // Deterministic for moderation
     });
 
     const structuredLlm = model.withStructuredOutput(moderationSchema);
@@ -87,9 +87,9 @@ POLL OPTIONS: ${poll.options.join(', ')}` : ''}
     try {
         const result = await chain.invoke({});
         return NextResponse.json(result);
-    } catch (xaiError: any) {
-        console.error('xAI fallback failed:', xaiError.message);
-        return NextResponse.json({ error: 'All AI services failed to review post.' }, { status: 500 });
+    } catch (gitModelError: any) {
+        console.error('GitHub Models review failed:', gitModelError.message);
+        return NextResponse.json({ error: 'GitHub Models failed to review post.' }, { status: 500 });
     }
 
   } catch (error: any) {

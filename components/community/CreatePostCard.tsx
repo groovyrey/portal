@@ -72,7 +72,6 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
   if (!student) {
     return (
       <div className="surface-violet relative overflow-hidden rounded-2xl p-8 border border-border/80 text-center space-y-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-violet-500 via-fuchsia-400 to-pink-400 opacity-70" />
         <div className="h-12 w-12 bg-accent rounded-full flex items-center justify-center mx-auto">
           <User className="h-6 w-6 text-muted-foreground" />
         </div>
@@ -91,7 +90,6 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
     <>
       <div className="space-y-4">
         <div className="surface-sky relative overflow-hidden rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10 focus-within:border-primary/30">
-          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-500 via-indigo-400 to-cyan-400 opacity-70" />
           <div className="flex border-b border-border">
             <button 
               type="button" 
@@ -116,9 +114,15 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
                   <textarea
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
+                    maxLength={2000}
                     placeholder="What's on your mind?"
                     className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium placeholder:text-muted-foreground/50 resize-none min-h-[80px] outline-none text-foreground"
                   />
+                  <div className="flex justify-end">
+                    <span className={`text-[9px] font-bold uppercase tracking-widest ${content.length >= 1900 ? 'text-red-500' : 'text-muted-foreground/40'}`}>
+                      {content.length}/2000
+                    </span>
+                  </div>
                 </div>
               ) : (
                 <div className="min-h-[80px] prose prose-slate dark:prose-invert prose-sm max-w-none">
@@ -155,7 +159,6 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
 
         {showPollEditor && activeTab === 'write' && (
           <div className="surface-amber relative overflow-hidden p-5 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-500 via-orange-400 to-rose-400 opacity-70" />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BarChart2 className="h-4 w-4 text-primary" />
@@ -174,6 +177,7 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
               <input 
                 value={pollQuestion} 
                 onChange={(e) => setPollQuestion(e.target.value)} 
+                maxLength={100}
                 placeholder="Ask a question..." 
                 className="w-full px-3 py-2.5 bg-accent/50 border border-border rounded-xl text-sm font-bold placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-all text-foreground" 
               />
@@ -184,6 +188,7 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
                     <input 
                       value={opt} 
                       onChange={(e) => { const n = [...pollOptions]; n[i] = e.target.value; setPollOptions(n); }} 
+                      maxLength={50}
                       placeholder={`Option ${i+1}`} 
                       className="flex-1 px-3 py-2 bg-accent/30 border border-border rounded-lg text-xs font-semibold focus:outline-none focus:border-primary transition-all placeholder:text-muted-foreground/50 text-foreground" 
                     />

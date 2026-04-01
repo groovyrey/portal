@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!reviewRes.ok) {
-      return NextResponse.json({ error: 'AI Moderation service unavailable' }, { status: 503 });
+      return NextResponse.json({ error: 'Aegis is currently unavailable' }, { status: 503 });
     }
 
     const result = await reviewRes.json();
@@ -81,6 +81,18 @@ export async function POST(req: NextRequest) {
         });
       } catch (notifyError) {
         console.error('Failed to notify author of post removal:', notifyError);
+      }
+
+      // Note: Notify the reporter of the action taken
+      try {
+        await createNotification({
+          userId: reporterUserId,
+          title: 'Report Successful',
+          message: `The post you reported was reviewed and removed by Aegis. Thank you for keeping our community safe!`,
+          type: 'success'
+        });
+      } catch (notifyError) {
+        console.error('Failed to notify reporter of post removal:', notifyError);
       }
 
       // Note: Notify all clients of post deletion

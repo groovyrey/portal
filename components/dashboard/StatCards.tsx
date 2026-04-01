@@ -44,7 +44,6 @@ export default function StatCards({ student }: { student: Student }) {
       {stats.map((stat, idx) => (
         <Link key={idx} href={stat.href} className="group">
           <article className={`relative flex h-full flex-col gap-2 overflow-hidden rounded-lg border border-border/80 p-4 transition-all duration-300 shadow-sm ring-1 ring-black/5 hover:shadow-md dark:ring-white/10 ${cardGradients[idx % cardGradients.length]}`}>
-            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-80 dark:via-white/10" />
             <div className="flex items-center justify-between">
               <div className="flex h-8 w-8 items-center justify-center rounded-md border border-border/70 bg-background/80 text-muted-foreground shadow-sm backdrop-blur">
                 <stat.icon className="h-4 w-4" />

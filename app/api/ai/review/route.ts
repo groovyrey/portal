@@ -27,27 +27,7 @@ export async function POST(req: NextRequest) {
       console.warn('Primary reviewer (HuggingFace) failed:', hfError.message);
     }
 
-    // 2. Try Fallback Reviewer (xAI / Grok)
-    try {
-      const response = await fetch(`${origin}/api/ai/fallback`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cookie': req.headers.get('cookie') || ''
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (response.ok) {
-        return NextResponse.json(await response.json());
-      }
-      
-      console.error('Fallback reviewer (xAI) also returned error.');
-    } catch (xaiError: any) {
-      console.error('Fallback reviewer (xAI) failed:', xaiError.message);
-    }
-
-    // Note: 3. Last Resort Fallback
+    // Note: 2. Last Resort Fallback (if primary reviewer fails)
     return NextResponse.json({
         decision: "APPROVED",
         topic: "General",

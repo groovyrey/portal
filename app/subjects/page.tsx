@@ -113,6 +113,7 @@ export default function SubjectsPage() {
               placeholder="Search subjects..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              maxLength={100}
               className="block w-full pl-9 pr-9 py-2 border border-border rounded-xl bg-card text-sm focus:outline-none focus:border-slate-400 transition-all font-medium"
             />
             {searchQuery && (

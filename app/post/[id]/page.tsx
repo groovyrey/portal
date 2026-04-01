@@ -753,15 +753,23 @@ export default function PostPage() {
           {/* Comment Input Part of flow */}
           <div className="pt-8">
             {student ? (
-              <div className="flex gap-3 items-center bg-accent/50 p-2 rounded-2xl border border-border focus-within:border-primary/50 focus-within:bg-card transition-all shadow-sm">
+              <div className="flex gap-3 items-center bg-accent/50 p-2 rounded-2xl border border-border focus-within:border-primary/50 focus-within:bg-card transition-all shadow-sm relative">
                 <input
                   type="text"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleComment()}
+                  maxLength={500}
                   placeholder="Write a comment..."
                   className="flex-1 bg-transparent border-none px-4 text-sm font-bold focus:outline-none py-2.5 placeholder:text-muted-foreground/50"
                 />
+                {newComment.length > 0 && (
+                  <div className="absolute right-14 top-1/2 -translate-y-1/2">
+                    <span className={`text-[8px] font-bold uppercase tracking-widest ${newComment.length >= 450 ? 'text-red-500' : 'text-muted-foreground/30'}`}>
+                      {newComment.length}/500
+                    </span>
+                  </div>
+                )}
                 <button
                   disabled={!newComment.trim() || commenting}
                   onClick={handleComment}

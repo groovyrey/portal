@@ -155,7 +155,6 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
       <div className={`grid grid-cols-2 ${totalUnits > 0 ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3`}>
         {/* GWA Card */}
         <div className="surface-sky p-4 rounded-2xl border border-border/80 flex flex-col justify-between shadow-sm relative group overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-500 via-cyan-400 to-blue-400 opacity-70" />
           <div className="absolute top-0 right-0 p-3 opacity-10 pointer-events-none">
             <Award className="w-12 h-12" />
           </div>
@@ -181,7 +180,6 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
         {/* Units Card */}
         {totalUnits > 0 && (
           <div className="surface-emerald p-4 rounded-2xl border border-border/80 flex flex-col justify-between shadow-sm relative overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 opacity-70" />
             <div className="absolute top-0 right-0 p-3 opacity-10 pointer-events-none">
               <BookOpen className="w-12 h-12" />
             </div>
@@ -193,7 +191,6 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
 
         {/* Best Grade */}
         <div className="surface-amber p-4 rounded-2xl border border-border/80 flex flex-col justify-between shadow-sm relative overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-500 via-orange-400 to-rose-400 opacity-70" />
            <div className="absolute top-0 right-0 p-3 opacity-10 pointer-events-none">
             <TrendingUp className="w-12 h-12" />
           </div>
@@ -204,7 +201,6 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
 
         {/* Lowest Grade */}
         <div className="surface-rose p-4 rounded-2xl border border-border/80 flex flex-col justify-between shadow-sm relative overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-rose-500 via-pink-400 to-fuchsia-400 opacity-70" />
            <div className="absolute top-0 right-0 p-3 opacity-10 pointer-events-none">
             <AlertCircle className="w-12 h-12" />
           </div>
@@ -217,7 +213,6 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Trend Chart */}
         <div className="surface-neutral relative overflow-hidden p-5 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-500 via-indigo-400 to-cyan-400 opacity-60" />
           <div className="flex items-center justify-between mb-6">
             <div>
               <h4 className="text-sm font-bold text-foreground">Performance Trend</h4>
@@ -278,7 +273,6 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
 
         {/* Distribution Chart */}
         <div className="surface-emerald relative overflow-hidden p-5 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 opacity-60" />
           <div className="flex items-center justify-between mb-6">
             <div>
               <h4 className="text-sm font-bold text-foreground">Grade Distribution</h4>

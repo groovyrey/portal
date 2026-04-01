@@ -22,7 +22,7 @@ export default function Home() {
   const searchParams = useSearchParams();
   
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'quest'>('overview');
-  const [loginError, setLoginError] = useState<string | undefined>(undefined);
+  const [loginResult, setLoginResult] = useState<LoginResponse | null>(null);
 
   // Sync tab with URL
   useEffect(() => {
@@ -52,6 +52,7 @@ export default function Home() {
       return response.json() as Promise<LoginResponse>;
     },
     onSuccess: (result) => {
+      setLoginResult(result);
       if (result.success && result.data) {
         localStorage.removeItem('student_pass'); 
         queryClient.setQueryData(['student-data'], result.data);
@@ -59,15 +60,13 @@ export default function Home() {
         window.dispatchEvent(new Event('local-storage-update'));
         const displayName = result.data.parsedName ? result.data.parsedName.firstName : result.data.name;
         toast.success(`Welcome, ${displayName}!`);
-        setLoginError(undefined);
       } else {
         const msg = result.error || 'Login failed. Please check your credentials.';
-        setLoginError(msg);
         toast.error(msg);
       }
     },
     onError: () => {
-      setLoginError('Network error. Please try again.');
+      setLoginResult({ success: false, error: 'Network error. Please try again.' });
       toast.error('Network error. Please try again.');
     }
   });
@@ -114,7 +113,13 @@ export default function Home() {
   if (!student) {
     return (
       <>
-        <LoginForm onLogin={handleLogin} loading={loginMutation.isPending} error={loginError} />
+        <LoginForm 
+          onLogin={handleLogin} 
+          loading={loginMutation.isPending} 
+          error={loginResult?.error} 
+          requiresPasswordChange={loginResult?.requiresPasswordChange}
+          portalUrl={loginResult?.portalUrl}
+        />
         <LoginProgressModal isOpen={loginMutation.isPending} />
       </>
     );
@@ -138,7 +143,7 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-base font-bold tracking-tight uppercase">Dashboard</h1>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">LCC Hub</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">LCCian Hub</p>
               </div>
             </div>
           </div>
