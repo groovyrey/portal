@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
           parsedName: parseStudentName(syncResult.studentInfo.name),
           id: userId, 
           schedule: syncResult.schedule,
-          offeredSubjects: syncResult.offeredSubjects,
+          offeredSubjects: [], // DISABLED
           availableReports: syncResult.reportLinks,
           settings: syncResult.settings,
           badges: syncResult.badges,

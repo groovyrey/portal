@@ -4,6 +4,8 @@ import { doc, setDoc, getDoc, serverTimestamp, writeBatch, updateDoc, arrayUnion
 import { initDatabase } from '@/lib/db-init';
 import { ScraperService, ScrapedStudentInfo, ScrapedScheduleItem, ScrapedFinancials, ScrapedSubject } from './scraper-service';
 
+import { query } from '@/lib/turso';
+
 export class SyncService {
   private userId: string;
 
@@ -13,11 +15,12 @@ export class SyncService {
 
   async syncStudentData(info: ScrapedStudentInfo, reports: any[]) {
     await initDatabase();
+    
+    // 1. Sync to Firebase
     const studentRef = doc(db, 'students', this.userId);
     const existingStudentDoc = await getDoc(studentRef);
     const isNewUser = !existingStudentDoc.exists();
     
-    // Explicitly set default settings for new users or if missing
     let settings = existingStudentDoc.exists() ? (existingStudentDoc.data().settings || null) : null;
     const badges = existingStudentDoc.exists() ? (existingStudentDoc.data().badges || []) : [];
     
@@ -44,6 +47,23 @@ export class SyncService {
       settings,
       updated_at: serverTimestamp()
     }, { merge: true });
+
+    // 2. Sync to Turso (Relational)
+    try {
+      await query(`
+        INSERT INTO students (id, name, course, email, year_level, semester, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(id) DO UPDATE SET
+          name = excluded.name,
+          course = excluded.course,
+          email = excluded.email,
+          year_level = excluded.year_level,
+          semester = excluded.semester,
+          updated_at = CURRENT_TIMESTAMP
+      `, [this.userId, info.name, info.course, info.email, info.yearLevel, info.semester]);
+    } catch (error) {
+      console.error('[SyncService] Turso Student Sync Error:', error);
+    }
 
     return { isNewUser, settings, badges };
   }
@@ -160,7 +180,7 @@ export class SyncService {
     console.log(`[SyncService] Starting full sync for ${this.userId}...`);
     
     // Parallel Fetch all data from portal
-    const { eaf, grades, accounts, subjects: offeredSubsRes } = await scraper.fetchAllData(periodCode, dashboardUrl, dashboard$);
+    const { eaf, grades, accounts } = await scraper.fetchAllData(periodCode, dashboardUrl, dashboard$);
 
     // Parse all data - using await for newly async methods
     const studentInfo = await scraper.parseStudentInfo(dashboard$, eaf.$, rawDashboardHtml, eaf.data);
@@ -174,7 +194,7 @@ export class SyncService {
     };
 
     const reportLinks = scraper.parseReportCardLinks(grades.$);
-    const offeredSubjects = await scraper.parseOfferedSubjects(offeredSubsRes.$, offeredSubsRes.data);
+    // const offeredSubjects = await scraper.parseOfferedSubjects(offeredSubsRes.$, offeredSubsRes.data); // DISABLED
 
     // Database Syncing
     const { isNewUser, settings, badges } = await this.syncStudentData(studentInfo, reportLinks);
@@ -182,7 +202,7 @@ export class SyncService {
     await Promise.all([
       this.syncFinancials(mergedFinancials),
       this.syncSchedule(schedule),
-      this.syncProspectusSubjects(offeredSubjects),
+      // this.syncProspectusSubjects(offeredSubjects), // DISABLED
       this.syncToRelationalDB(studentInfo)
     ]);
 
@@ -194,7 +214,7 @@ export class SyncService {
       schedule, 
       mergedFinancials, 
       reportLinks, 
-      offeredSubjects 
+      offeredSubjects: [] // RETURN EMPTY FOR NOW
     };
   }
 

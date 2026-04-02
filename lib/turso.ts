@@ -1,4 +1,8 @@
 import { createClient } from '@libsql/client/http';
+import * as dotenv from 'dotenv';
+
+// Load environment variables for local scripts
+dotenv.config({ path: '.env.local' });
 
 const url = process.env.TURSO_DATABASE_URL || '';
 const authToken = process.env.TURSO_AUTH_TOKEN || '';

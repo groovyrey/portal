@@ -27,7 +27,8 @@ import {
   Bell,
   LayoutGrid,
   ShieldCheck,
-  Monitor
+  Monitor,
+  Trophy
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ThemeToggle } from '../shared/ThemeToggle';
@@ -221,7 +222,6 @@ export default function Navbar() {
 
   const portalLinks: NavLeaf[] = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Subjects', href: '/subjects', icon: BookOpen },
     { name: 'Grades', href: '/grades', icon: GraduationCap },
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
     { name: 'EAF', href: '/eaf', icon: FileText },
@@ -229,6 +229,7 @@ export default function Navbar() {
 
   const workspaceLinks: NavLeaf[] = [
     { name: 'Study Mode', href: '/study-mode', icon: Monitor, desc: 'Focused Study' },
+    { name: 'Quests', href: '/quests', icon: Trophy, desc: 'Daily Challenges' },
   ];
 
   const socialLinks: NavLeaf[] = [

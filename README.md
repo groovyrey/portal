@@ -46,10 +46,9 @@
 </details>
 
 <details>
-<summary><strong>Schedule & Subjects</strong></summary>
+<summary><strong>Schedule</strong></summary>
 
 *   **Interactive Schedule:** Weekly calendar view with conflict detection and room/instructor details. Supports daily and weekly views via AI.
-*   **Subject Catalog:** Searchable list of enrolled subjects with unit values and prerequisites. Data is cached and refreshed periodically from the official prospectus.
 *   **EAF Access:** View and download your official Enrollment Assessment Form (EAF).
 </details>
 

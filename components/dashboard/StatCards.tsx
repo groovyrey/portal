@@ -19,12 +19,6 @@ export default function StatCards({ student }: { student: Student }) {
       href: '/'
     },
     {
-      label: 'Subjects',
-      value: student.schedule?.length || 0,
-      icon: Layers,
-      href: '/'
-    },
-    {
       label: 'Available Reports',
       value: student.availableReports?.length || 0,
       icon: GraduationCap,
@@ -35,12 +29,11 @@ export default function StatCards({ student }: { student: Student }) {
   const cardGradients = [
     'surface-sky',
     'surface-amber',
-    'surface-emerald',
     'surface-violet',
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
       {stats.map((stat, idx) => (
         <Link key={idx} href={stat.href} className="group">
           <article className={`relative flex h-full flex-col gap-2 overflow-hidden rounded-lg border border-border/80 p-4 transition-all duration-300 shadow-sm ring-1 ring-black/5 hover:shadow-md dark:ring-white/10 ${cardGradients[idx % cardGradients.length]}`}>

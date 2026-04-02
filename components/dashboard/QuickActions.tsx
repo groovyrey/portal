@@ -48,13 +48,6 @@ const actions = [
     color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
     card: 'bg-card'
   },
-  { 
-    label: 'Subjects Offered', 
-    icon: BookOpen, 
-    href: '/subjects', 
-    color: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
-    card: 'bg-card'
-  },
 ];
 
 const container = {

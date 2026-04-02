@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 
 interface ScheduleTableProps {
   schedule: ScheduleItem[];
-  offeredSubjects?: ProspectusSubject[];
 }
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -30,7 +29,7 @@ const SUBJECT_COLORS = [
   'bg-muted/40 text-foreground border-border',
 ];
 
-export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTableProps) {
+export default function ScheduleTable({ schedule }: ScheduleTableProps) {
   const router = useRouter();
   const [selectedItem, setSelectedItem] = useState<ScheduleItem | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -148,12 +147,6 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
     const parts = subject.split(' - ');
     if (parts.length > 1) {
       return parts.slice(1).join(' - ').trim();
-    }
-    
-    // Fallback: look it up in offeredSubjects
-    if (offeredSubjects) {
-      const sub = offeredSubjects.find(s => s.code === subject || s.code === parts[0].trim());
-      if (sub) return sub.description;
     }
     
     return subject;
@@ -410,16 +403,6 @@ export default function ScheduleTable({ schedule, offeredSubjects }: ScheduleTab
               </div>
 
               <div className="flex flex-col gap-2 pt-4">
-                <button 
-                  onClick={() => {
-                    const code = getSubjectCode(selectedItem.subject);
-                    router.push(`/subjects/${encodeURIComponent(code)}`);
-                  }}
-                  className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-background py-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/30"
-                >
-                  View Catalog
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </button>
                 <button 
                   onClick={() => setSelectedItem(null)}
                   className="w-full rounded-md border border-border bg-muted/20 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/30"

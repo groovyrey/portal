@@ -191,13 +191,9 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
           <p className="text-xs text-muted-foreground">Quick stats</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <p className="text-xs text-muted-foreground">Subjects</p>
-            <p className="text-xl font-semibold">{schedule.length}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">Units</p>
+        <div className="grid grid-cols-1 gap-3">
+          <div className="text-left">
+            <p className="text-xs text-muted-foreground">Total Units</p>
             <p className="text-xl font-semibold">{totalUnits}</p>
           </div>
         </div>

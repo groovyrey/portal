@@ -93,14 +93,14 @@ export class ScraperService {
    * Fetches all core student data in parallel once the session is confirmed.
    */
   async fetchAllData(periodCode: string, dashboardUrl: string, dashboard$: cheerio.CheerioAPI) {
-    const [eaf, grades, accounts, subjects] = await Promise.all([
+    const [eaf, grades, accounts] = await Promise.all([
       this.fetchEAF(periodCode),
       this.fetchGrades(periodCode, dashboardUrl),
       this.fetchAccounts(periodCode, dashboardUrl),
-      this.fetchSubjectList(periodCode, dashboardUrl, dashboard$)
+      // this.fetchSubjectList(periodCode, dashboardUrl, dashboard$) // DISABLED
     ]);
 
-    return { eaf, grades, accounts, subjects };
+    return { eaf, grades, accounts };
   }
 
   async fetchEAF(periodCode: string) {

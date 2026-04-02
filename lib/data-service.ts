@@ -147,9 +147,9 @@ const CACHE_TTL = 60 * 60 * 1000;
 export async function getStudentGrades(userId: string): Promise<SubjectGrade[]> {
   try {
     // 1. Fetch offered subjects for unit cross-referencing
-    const offeredSubjects = await getOfferedSubjects();
+    // const offeredSubjects = await getOfferedSubjects(); // DISABLED
     const unitsMap = new Map<string, string>();
-    offeredSubjects.forEach(s => unitsMap.set(s.code.toLowerCase(), s.units));
+    // offeredSubjects.forEach(s => unitsMap.set(s.code.toLowerCase(), s.units)); // DISABLED
 
     // 2. Fetch by Query (New Format)
     const q = query(collection(db, 'grades'), where('student_id', '==', userId));
@@ -244,11 +244,11 @@ export async function getFullStudentData(userId: string): Promise<AggregatedStud
   const profile = await getStudentProfile(userId);
   if (!profile) return null;
 
-  const [schedule, financials, grades, offeredSubjects] = await Promise.all([
+  const [schedule, financials, grades] = await Promise.all([
     getStudentSchedule(userId),
     getStudentFinancials(userId),
     getStudentGrades(userId),
-    getOfferedSubjects()
+    // getOfferedSubjects() // DISABLED
   ]);
 
   // Calculate Weighted GPA
@@ -257,10 +257,10 @@ export async function getFullStudentData(userId: string): Promise<AggregatedStud
 
   // Create a map for quick subject lookup to get units
   const subjectUnitsMap = new Map<string, number>();
-  offeredSubjects.forEach(s => {
+  /* offeredSubjects.forEach(s => {
     const units = parseFloat(s.units);
     if (!isNaN(units)) subjectUnitsMap.set(s.code.toLowerCase(), units);
-  });
+  }); */ // DISABLED
 
   grades.forEach(g => {
     const grade = parseFloat(g.grade);
@@ -279,7 +279,7 @@ export async function getFullStudentData(userId: string): Promise<AggregatedStud
     schedule,
     financials: financials || undefined,
     allGrades: grades,
-    offeredSubjects,
+    offeredSubjects: [], // RETURN EMPTY
     gpa
   };
 }
