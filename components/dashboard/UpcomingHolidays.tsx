@@ -11,9 +11,11 @@ interface Holiday {
 
 export default function UpcomingHolidays() {
   const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchHolidays() {
+      setLoading(true);
       try {
         const year = new Date().getFullYear();
         const response = await fetch(`/api/student/holidays?year=${year}`);
@@ -23,6 +25,8 @@ export default function UpcomingHolidays() {
         }
       } catch (e) {
         console.error('Failed to fetch holidays', e);
+      } finally {
+        setLoading(false);
       }
     }
     fetchHolidays();
@@ -36,8 +40,32 @@ export default function UpcomingHolidays() {
     return holidays
       .filter(h => new Date(h.date) >= now)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(0, 3);
+      .slice(0, 5);
   }, [holidays]);
+
+  if (loading) {
+    return (
+      <div className="surface-amber relative overflow-hidden rounded-lg border border-border p-4 shadow-sm">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background animate-pulse" />
+          <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-3 py-2 animate-pulse">
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 rounded-lg bg-background border border-border" />
+                <div className="space-y-2">
+                  <div className="h-3 w-24 bg-muted rounded" />
+                  <div className="h-2 w-16 bg-muted/60 rounded" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (upcomingHolidays.length === 0) return null;
 

@@ -173,30 +173,36 @@ export default function DailyGreeting({ student }: { student: Student }) {
         </div>
       )}
 
-      <div className="mt-4 flex items-start justify-between gap-3 border-t border-border pt-4">
-        <div className="flex items-start gap-2">
-          <Sparkles className="mt-0.5 h-3.5 w-3.5 text-primary" />
-          {loading ? (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              <span>Loading quote...</span>
-            </div>
-          ) : (
-            <div>
-              <p className="text-sm italic text-muted-foreground">{quote}</p>
-              {author && <p className="mt-1 text-xs text-muted-foreground">- {author}</p>}
-            </div>
-          )}
+      <div className="mt-4 flex flex-col gap-1 border-t border-border pt-4">
+        <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="h-3 w-3 text-primary" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Today's Quote</span>
         </div>
+        
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-2">
+            {loading ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>Loading quote...</span>
+              </div>
+            ) : (
+              <div>
+                <p className="text-sm italic text-muted-foreground leading-relaxed">"{quote}"</p>
+                {author && <p className="mt-2 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-tight">— {author}</p>}
+              </div>
+            )}
+          </div>
 
-        <button
-          onClick={() => fetchQuote(true)}
-          disabled={loading}
-          className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
-          title="Refresh Quote"
-        >
-          <RotateCcw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-        </button>
+          <button
+            onClick={() => fetchQuote(true)}
+            disabled={loading}
+            className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+            title="Refresh Quote"
+          >
+            <RotateCcw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </div>
     </section>
   );

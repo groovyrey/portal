@@ -64,7 +64,7 @@ export async function generateVisualization(
             { role: "system", content: systemPrompt },
             { role: "user", content: `DATA CONTEXT:\n${context || "No specific data provided."}\n\nREQUEST:\n${prompt}` }
           ],
-          temperature: 0.1,
+          temperature: 1.0,
           max_tokens: 4096,
         }),
       }

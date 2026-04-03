@@ -1,14 +1,15 @@
 'use client';
 
 import { ScheduleItem, ProspectusSubject } from '@/types';
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { X, MapPin, Clock, Hash, BookOpen, Info, Calendar, ArrowRight, Download, Camera } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { X, MapPin, Clock, Hash, BookOpen, Info, Calendar, ArrowRight, Download, Camera, List, LayoutGrid } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 interface ScheduleTableProps {
   schedule: ScheduleItem[];
+  holidays?: any[];
 }
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -29,9 +30,10 @@ const SUBJECT_COLORS = [
   'bg-muted/40 text-foreground border-border',
 ];
 
-export default function ScheduleTable({ schedule }: ScheduleTableProps) {
+export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTableProps) {
   const router = useRouter();
   const [selectedItem, setSelectedItem] = useState<ScheduleItem | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const tableRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -41,6 +43,35 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
       timeZone: 'Asia/Manila' 
     });
   }, []);
+
+  // Map holidays to days of the current week
+  const weekHolidays = useMemo(() => {
+    if (!holidays.length) return {};
+    
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    const dayOfWeek = now.getDay(); // 0 is Sunday
+    // Adjust to Monday as start of week
+    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const mapped: Record<string, any> = {};
+    
+    holidays.forEach(h => {
+      const hDate = new Date(h.date);
+      if (hDate >= startOfWeek && hDate <= endOfWeek) {
+        const dayName = hDate.toLocaleDateString('en-US', { weekday: 'long' });
+        mapped[dayName] = h;
+      }
+    });
+
+    return mapped;
+  }, [holidays]);
 
   const downloadImage = async () => {
     if (!tableRef.current) return;
@@ -74,8 +105,15 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
         height: actualHeight,
         windowWidth: actualWidth, 
         onclone: (clonedDoc: Document) => {
+          // Force Dark Mode on the cloned document
+          clonedDoc.documentElement.classList.add('dark');
+          clonedDoc.body.classList.add('dark');
+          
           const clonedArea = clonedDoc.getElementById('schedule-capture-area');
           if (clonedArea) {
+            clonedArea.classList.add('dark');
+            clonedArea.style.backgroundColor = '#020617'; // Force midnight navy
+            clonedArea.style.color = '#f8faff'; // Force foreground
             clonedArea.style.width = `${actualWidth}px`;
             clonedArea.style.height = 'auto';
             clonedArea.style.overflow = 'visible';
@@ -93,6 +131,100 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
               clonedTable.style.tableLayout = 'fixed';
             }
 
+            // Remove Holiday highlighting for image export
+            const holidayHeaders = clonedArea.querySelectorAll('th.bg-amber-500\\/10');
+            holidayHeaders.forEach(th => {
+              th.classList.remove('bg-amber-500/10');
+              const span = th.querySelector('span');
+              if (span) {
+                span.classList.remove('text-amber-600');
+                span.classList.add('text-muted-foreground');
+              }
+              // Remove the amber dot
+              const dot = th.querySelector('.bg-amber-500');
+              if (dot) dot.remove();
+            });
+
+            // Remove Current Day highlighting for image export
+            const currentDayHeaders = clonedArea.querySelectorAll('th.bg-primary\\/10');
+            currentDayHeaders.forEach(th => {
+              th.classList.remove('bg-primary/10');
+              const span = th.querySelector('span');
+              if (span) {
+                span.classList.remove('text-primary');
+                span.classList.add('text-muted-foreground');
+              }
+              // Remove the primary dot
+              const dot = th.querySelector('.bg-primary');
+              if (dot) dot.remove();
+            });
+
+            const currentDayCells = clonedArea.querySelectorAll('td.bg-primary\\/5');
+            currentDayCells.forEach(td => td.classList.remove('bg-primary/5'));
+
+            const holidayCells = clonedArea.querySelectorAll('td.bg-amber-500\\/5');
+            holidayCells.forEach(td => td.classList.remove('bg-amber-500/5'));
+
+            const holidayButtons = clonedArea.querySelectorAll('button.opacity-40.grayscale-\\[0\\.5\\]');
+            holidayButtons.forEach(btn => {
+              btn.classList.remove('opacity-40', 'grayscale-[0.5]');
+              // Remove the "Holiday" badge/overlay
+              const holidayOverlay = btn.querySelector('div.absolute.inset-0');
+              if (holidayOverlay && holidayOverlay.textContent?.includes('Holiday')) {
+                holidayOverlay.remove();
+              }
+              // List view holiday badge
+              const listViewBadge = btn.querySelector('span.bg-amber-500');
+              if (listViewBadge && listViewBadge.textContent?.includes('Suspended')) {
+                listViewBadge.remove();
+              }
+            });
+
+            // List view day headers (current and holiday)
+            const listDayHeaders = clonedArea.querySelectorAll('h3');
+            listDayHeaders.forEach(h3 => {
+              if (h3.classList.contains('text-primary') || h3.classList.contains('text-amber-600')) {
+                h3.classList.remove('text-primary', 'text-amber-600');
+                h3.classList.add('text-muted-foreground');
+                const container = h3.parentElement;
+                if (container) {
+                   const dots = container.querySelectorAll('.bg-primary, .bg-amber-500');
+                   dots.forEach(d => d.remove());
+                   
+                   // Remove holiday name badge in list view
+                   const sibling = container.nextElementSibling;
+                   if (sibling && (sibling.classList.contains('text-amber-600') || sibling.classList.contains('text-primary'))) sibling.remove();
+                   const badge = container.querySelector('span.text-amber-600, span.text-primary');
+                   if (badge) badge.remove();
+                }
+              }
+            });
+
+            // Fix elements to use dark theme colors explicitly for html2canvas
+            const elements = clonedArea.getElementsByTagName('*');
+            for (let i = 0; i < elements.length; i++) {
+              const el = elements[i] as HTMLElement;
+              
+              // Apply forced dark theme overrides for common classes
+              if (el.classList.contains('bg-card')) el.style.backgroundColor = '#050b1d';
+              if (el.classList.contains('bg-background')) el.style.backgroundColor = '#020617';
+              if (el.classList.contains('bg-muted/20')) el.style.backgroundColor = 'rgba(7, 13, 31, 0.2)';
+              if (el.classList.contains('text-foreground')) el.style.color = '#f8faff';
+              if (el.classList.contains('text-muted-foreground')) el.style.color = '#94a3b8';
+              if (el.classList.contains('border-border')) el.style.borderColor = '#141e33';
+              
+              const style = window.getComputedStyle(el);
+              if (style.backgroundColor.includes('okl')) {
+                 el.style.backgroundColor = '#0f172a';
+              }
+              if (style.color.includes('okl')) {
+                 el.style.color = '#f8fafc';
+              }
+              if (style.borderColor.includes('okl')) {
+                 el.style.borderColor = '#1e293b';
+              }
+            }
+
             // Still remove truncation to prevent text being cut off horizontally
             const subjectButtons = clonedArea.querySelectorAll('button');
             subjectButtons.forEach(btn => {
@@ -108,23 +240,6 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
                 span.classList.remove('truncate');
               });
             });
-          }
-
-          // Fix for modern CSS color functions not supported by html2canvas
-          const elements = clonedDoc.getElementsByTagName('*');
-          for (let i = 0; i < elements.length; i++) {
-            const el = elements[i] as HTMLElement;
-            const style = window.getComputedStyle(el);
-            
-            if (style.backgroundColor.includes('okl')) {
-               el.style.backgroundColor = '#0f172a';
-            }
-            if (style.color.includes('okl')) {
-               el.style.color = '#f8fafc';
-            }
-            if (style.borderColor.includes('okl')) {
-               el.style.borderColor = '#1e293b';
-            }
           }
         }
       });
@@ -167,6 +282,14 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
     }
     const index = Math.abs(hash) % SUBJECT_COLORS.length;
     return SUBJECT_COLORS[index];
+  };
+
+  const formatDuration = (decimalHours: number) => {
+    const hours = Math.floor(decimalHours);
+    const mins = Math.round((decimalHours - hours) * 60);
+    if (hours > 0 && mins > 0) return `${hours}h ${mins}m`;
+    if (hours > 0) return `${hours}h`;
+    return `${mins}m`;
   };
 
   const parseTimeRange = (timeStr: string) => {
@@ -243,15 +366,34 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
           </div>
         </div>
 
-        <button
-          onClick={downloadImage}
-          disabled={isExporting}
-          className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
-          title="Save as Image"
-        >
-          {isExporting ? <Camera className="h-3.5 w-3.5 animate-pulse" /> : <Download className="h-3.5 w-3.5" />}
-          <span className="hidden sm:inline">Save Image</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-muted/30 p-1 rounded-lg border border-border mr-2">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-background shadow-sm text-primary border border-border' : 'text-muted-foreground hover:text-foreground'}`}
+              title="Grid View"
+            >
+              <LayoutGrid size={14} />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-background shadow-sm text-primary border border-border' : 'text-muted-foreground hover:text-foreground'}`}
+              title="List View"
+            >
+              <List size={14} />
+            </button>
+          </div>
+
+          <button
+            onClick={downloadImage}
+            disabled={isExporting}
+            className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+            title="Save as Image"
+          >
+            {isExporting ? <Camera className="h-3.5 w-3.5 animate-pulse" /> : <Download className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">Save Image</span>
+          </button>
+        </div>
       </div>
 
       <div className="rounded-md border border-border bg-muted/20 p-3 flex items-start gap-3">
@@ -264,88 +406,203 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
       </div>
 
       <div id="schedule-capture-area" ref={tableRef} className="rounded-lg border border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto custom-scrollbar">
-        <table className="w-full border-collapse table-fixed min-w-[800px]">
-          <thead>
-            <tr className="bg-accent/50">
-              <th className="w-10 sm:w-14 py-2 border-b border-border"></th>
-              {DAYS.map(day => (
-                <th key={day} className={`py-2 px-1 border-b border-border text-center ${day === currentDay ? 'bg-primary/10' : ''}`}>
-                  <span className={`text-[10px] font-black ${day === currentDay ? 'text-primary' : 'text-muted-foreground'} uppercase tracking-widest`}>{day.substring(0, 3)}</span>
-                  {day === currentDay && <div className="mx-auto mt-0.5 h-1 w-1 rounded-full bg-primary" />}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {(() => {
-              const cellSpans: number[] = Array(DAYS.length).fill(0);
-              return HOURS.map((hourStr, hIdx) => {
-                const currentHour = 7 + hIdx;
+        {viewMode === 'grid' ? (
+          <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full border-collapse table-fixed min-w-[800px]">
+            <thead>
+              <tr className="bg-accent/50">
+                <th className="w-10 sm:w-14 py-2 border-b border-border"></th>
+                {DAYS.map(day => {
+                  const isHoliday = !!weekHolidays[day];
+                  const holidayInfo = weekHolidays[day];
+                  return (
+                    <th key={day} className={`py-2 px-1 border-b border-border text-center ${day === currentDay ? 'bg-primary/10' : ''} ${isHoliday ? 'bg-amber-500/10' : ''}`} title={holidayInfo ? holidayInfo.name : ''}>
+                      <span className={`text-[10px] font-black ${day === currentDay ? 'text-primary' : isHoliday ? 'text-amber-600' : 'text-muted-foreground'} uppercase tracking-widest`}>{day.substring(0, 3)}</span>
+                      {day === currentDay && <div className="mx-auto mt-0.5 h-1 w-1 rounded-full bg-primary" />}
+                      {isHoliday && ! (day === currentDay) && <div className="mx-auto mt-0.5 h-1 w-1 rounded-full bg-amber-500" />}
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {(() => {
+                const cellSpans: number[] = Array(DAYS.length).fill(0);
+                return HOURS.map((hourStr, hIdx) => {
+                  const currentHour = 7 + hIdx;
 
-                return (
-                  <tr key={hourStr} className="h-10">
-                    <td className="border-r border-b border-border text-center bg-accent/10">
-                      {hIdx % 2 === 0 && (
+                  return (
+                    <tr key={hourStr} className="h-10">
+                      <td className="border-r border-b border-border text-center bg-accent/10">
                         <span className="text-[9px] font-black text-muted-foreground/60 tabular-nums uppercase tracking-tighter">
                           {hourStr.split(':')[0]} {hourStr.split(' ')[1]}
                         </span>
-                      )}
-                    </td>
-                    
-                    {DAYS.map((day, dayIdx) => {
-                      if (cellSpans[dayIdx] > 0) {
-                        cellSpans[dayIdx]--;
-                        return null;
-                      }
+                      </td>                      
+                      {DAYS.map((day, dayIdx) => {
+                        if (cellSpans[dayIdx] > 0) {
+                          cellSpans[dayIdx]--;
+                          return null;
+                        }
 
-                      const classToRender = schedule.find(item => {
-                        const days = getDays(item.time);
-                        const range = parseTimeRange(item.time);
-                        return days?.includes(day) && Math.floor(range?.start || 0) === currentHour;
-                      });
+                        const isHoliday = !!weekHolidays[day];
+                        const classToRender = schedule.find(item => {
+                          const days = getDays(item.time);
+                          const range = parseTimeRange(item.time);
+                          return days?.includes(day) && Math.floor(range?.start || 0) === currentHour;
+                        });
 
-                      if (classToRender) {
-                        const range = parseTimeRange(classToRender.time);
-                        const duration = range ? Math.ceil(range.end) - Math.floor(range.start) : 1;
-                        if (duration > 1) cellSpans[dayIdx] = duration - 1;
+                        if (classToRender) {
+                          const range = parseTimeRange(classToRender.time);
+                          const duration = range ? Math.ceil(range.end) - Math.floor(range.start) : 1;
+                          if (duration > 1) cellSpans[dayIdx] = duration - 1;
+
+                          return (
+                            <td
+                              key={day}
+                              rowSpan={duration}
+                              className={`p-0.5 border-b border-l border-border align-top h-px ${day === currentDay ? 'bg-primary/5' : ''} ${isHoliday ? 'bg-amber-500/5' : ''}`}
+                            >
+                              <button
+                                onClick={() => setSelectedItem(classToRender)}
+                                className={`
+                                  w-full h-full rounded-lg p-1.5 flex flex-col items-center justify-center text-center
+                                  transition-all border ${isHoliday ? 'opacity-40 grayscale-[0.5]' : ''} ${getSubjectColor(classToRender.subject)}
+                                  active:opacity-80 overflow-hidden whitespace-normal relative
+                                `}
+                              >
+                                <span className="text-[10px] font-black leading-tight break-words w-full">
+                                  {getSubjectCode(classToRender.subject)}
+                                </span>
+                                {duration > 1 && (
+                                  <span className="text-[8px] font-bold opacity-60 mt-0.5 break-words w-full">
+                                    {classToRender.room || '?'}
+                                  </span>
+                                )}
+                                {isHoliday && (
+                                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                     <span className="text-[7px] font-black uppercase tracking-tighter bg-amber-500 text-white px-1 rounded rotate-[-15deg] shadow-sm">Holiday</span>
+                                  </div>
+                                )}
+                              </button>
+                            </td>
+                          );
+                        }
+
+                        return <td key={day} className={`border-b border-l border-border h-10 ${day === currentDay ? 'bg-primary/5' : ''} ${isHoliday ? 'bg-amber-500/5' : ''}`}></td>;
+                      })}
+                    </tr>
+                  );
+                });
+              })()}
+            </tbody>
+          </table>
+          </div>
+        ) : (
+          <div className="p-4 space-y-6 bg-card">
+            {DAYS.map(day => {
+              const dayClasses = groupedSchedule[day] || [];
+              const isHoliday = !!weekHolidays[day];
+              const holidayInfo = weekHolidays[day];
+              const isToday = day === currentDay;
+
+              if (dayClasses.length === 0 && !isHoliday) return null;
+
+              return (
+                <div key={day} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h3 className={`text-xs font-black uppercase tracking-widest ${isToday ? 'text-primary' : isHoliday ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                        {day}
+                      </h3>
+                      {isToday && <span className="h-1 w-1 rounded-full bg-primary" />}
+                      {isHoliday && <span className="h-1 w-1 rounded-full bg-amber-500" />}
+                    </div>
+                    {isHoliday && (
+                      <span className="text-[9px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                        {holidayInfo.name}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    {dayClasses.length > 0 ? (
+                      dayClasses.map((item, idx) => {
+                        const currentRange = parseTimeRange(item.time);
+                        let gapElement = null;
+
+                        if (idx > 0) {
+                          const prevRange = parseTimeRange(dayClasses[idx-1].time);
+                          if (prevRange && currentRange && currentRange.start > prevRange.end) {
+                            const gapDuration = currentRange.start - prevRange.end;
+                            if (gapDuration > 0.05) { // more than 3 mins
+                              gapElement = (
+                                <div key={`gap-${idx}`} className="flex items-center gap-4 py-1.5 px-4 ml-8 border-l-2 border-dashed border-border/50">
+                                  <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground/30 uppercase tracking-widest">
+                                    <div className="h-1 w-1 rounded-full bg-muted-foreground/20" />
+                                    <span>{formatDuration(gapDuration)} Lost time</span>
+                                  </div>
+                                </div>
+                              );
+                            }
+                          }
+                        }
 
                         return (
-                          <td
-                            key={day}
-                            rowSpan={duration}
-                            className={`p-0.5 border-b border-l border-border align-top h-px ${day === currentDay ? 'bg-primary/5' : ''}`}
-                          >
+                          <React.Fragment key={idx}>
+                            {gapElement}
                             <button
-                              onClick={() => setSelectedItem(classToRender)}
-                              className={`
-                                w-full h-full rounded-lg p-1.5 flex flex-col items-center justify-center text-center
-                                transition-all border ${getSubjectColor(classToRender.subject)}
-                                active:opacity-80 overflow-hidden whitespace-normal
-                              `}
+                              onClick={() => setSelectedItem(item)}
+                              className={`w-full flex items-center gap-4 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-all text-left group ${isHoliday ? 'opacity-50 grayscale-[0.3]' : ''}`}
                             >
-                              <span className="text-[10px] font-black leading-tight break-words w-full">
-                                {getSubjectCode(classToRender.subject)}
-                              </span>
-                              {duration > 1 && (
-                                <span className="text-[8px] font-bold opacity-60 mt-0.5 break-words w-full">
-                                  {classToRender.room || '?'}
+                              <div className={`flex flex-col items-center justify-center h-12 w-12 rounded-lg border shrink-0 ${getSubjectColor(item.subject)}`}>
+                                <Clock size={12} className="opacity-40 mb-1" />
+                                <span className="text-[9px] font-black uppercase leading-none">
+                                  {item.time.split(' - ')[0].split(' ')[1]}
                                 </span>
-                              )}
-                            </button>
-                          </td>
-                        );
-                      }
+                              </div>
 
-                      return <td key={day} className={`border-b border-l border-border h-10 ${day === currentDay ? 'bg-primary/5' : ''}`}></td>;
-                    })}
-                  </tr>
-                );
-              });
-            })()}
-          </tbody>
-        </table>
-        </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <span className="text-[10px] font-black text-primary uppercase tracking-tight truncate">
+                                    {getSubjectCode(item.subject)}
+                                  </span>
+                                  {isHoliday && (
+                                    <span className="text-[7px] font-black uppercase bg-amber-500 text-white px-1 rounded shadow-sm">Suspended</span>
+                                  )}
+                                </div>
+                                <h4 className="text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                                  {getSubjectName(item.subject)}
+                                </h4>
+                                <div className="flex items-center gap-3 mt-1.5">
+                                  <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground/60">
+                                    <Clock size={10} />
+                                    <span>{item.time.split(' - ')[0]} - {item.time.split(' - ')[1]}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground/60">
+                                    <MapPin size={10} />
+                                    <span>{item.room || 'TBA'}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="shrink-0 p-2 text-muted-foreground/20 group-hover:text-primary transition-colors">
+                                <ArrowRight size={14} />
+                              </div>
+                            </button>
+                          </React.Fragment>
+                        );
+                      })
+                    ) : (
+                      <div className="flex items-center justify-center p-6 border border-dashed border-border rounded-xl bg-muted/5">
+                        <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">No classes scheduled</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <Modal
