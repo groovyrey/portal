@@ -35,6 +35,13 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
   const tableRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
 
+  const currentDay = useMemo(() => {
+    return new Date().toLocaleDateString('en-US', { 
+      weekday: 'long',
+      timeZone: 'Asia/Manila' 
+    });
+  }, []);
+
   const downloadImage = async () => {
     if (!tableRef.current) return;
     setIsExporting(true);
@@ -263,8 +270,9 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
             <tr className="bg-accent/50">
               <th className="w-10 sm:w-14 py-2 border-b border-border"></th>
               {DAYS.map(day => (
-                <th key={day} className="py-2 px-1 border-b border-border text-center">
-                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{day.substring(0, 3)}</span>
+                <th key={day} className={`py-2 px-1 border-b border-border text-center ${day === currentDay ? 'bg-primary/10' : ''}`}>
+                  <span className={`text-[10px] font-black ${day === currentDay ? 'text-primary' : 'text-muted-foreground'} uppercase tracking-widest`}>{day.substring(0, 3)}</span>
+                  {day === currentDay && <div className="mx-auto mt-0.5 h-1 w-1 rounded-full bg-primary" />}
                 </th>
               ))}
             </tr>
@@ -306,7 +314,7 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
                           <td
                             key={day}
                             rowSpan={duration}
-                            className="p-0.5 border-b border-l border-border align-top h-px"
+                            className={`p-0.5 border-b border-l border-border align-top h-px ${day === currentDay ? 'bg-primary/5' : ''}`}
                           >
                             <button
                               onClick={() => setSelectedItem(classToRender)}
@@ -329,7 +337,7 @@ export default function ScheduleTable({ schedule }: ScheduleTableProps) {
                         );
                       }
 
-                      return <td key={day} className="border-b border-l border-border h-10"></td>;
+                      return <td key={day} className={`border-b border-l border-border h-10 ${day === currentDay ? 'bg-primary/5' : ''}`}></td>;
                     })}
                   </tr>
                 );
