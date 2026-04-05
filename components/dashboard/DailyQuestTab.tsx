@@ -9,6 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useStudent } from '@/lib/hooks';
+import QuestMarkdown from '@/components/shared/QuestMarkdown';
 
 interface TriviaQuestion {
   category: string;
@@ -34,6 +35,13 @@ const CATEGORIES = [
   { id: 'Sports', name: 'Sports', icon: Trophy },
   { id: 'Gaming', name: 'Gaming', icon: Gamepad2 },
   { id: 'Art', name: 'Art', icon: Palette },
+];
+
+const DIFFICULTY_CONFIG = [
+  { id: 'easy', name: 'Easy', multiplier: 1, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+  { id: 'medium', name: 'Medium', multiplier: 1.5, color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+  { id: 'hard', name: 'Hard', multiplier: 2, color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+  { id: 'extreme', name: 'Extreme', multiplier: 3, color: 'text-purple-600', bg: 'bg-purple-600/10', border: 'border-purple-600/20' },
 ];
 
 interface QuestStats {
@@ -66,6 +74,7 @@ export default function DailyQuestTab() {
   const [allQuests, setAllQuests] = useState<any[]>([]);
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [isReviewMode, setIsReviewMode] = useState(false);
+  const [selectedDifficulty, setSelectedDifficulty] = useState('medium');
 
   const { student } = useStudent();
 
@@ -78,11 +87,17 @@ export default function DailyQuestTab() {
   const allCategories = [...CATEGORIES, ...academicCategories];
 
   const getDifficulty = () => {
-    const level = currentStats?.level || 1;
-    if (level <= 3) return 'easy';
-    if (level <= 10) return 'medium';
-    return 'hard';
+    return selectedDifficulty;
   };
+
+  useEffect(() => {
+    if (currentStats?.level) {
+        if (currentStats.level <= 3) setSelectedDifficulty('easy');
+        else if (currentStats.level <= 10) setSelectedDifficulty('medium');
+        else if (currentStats.level <= 20) setSelectedDifficulty('hard');
+        else setSelectedDifficulty('extreme');
+    }
+  }, [currentStats?.level]);
 
   useEffect(() => {
     fetchDailyStatus();
@@ -450,11 +465,12 @@ export default function DailyQuestTab() {
     );
   }
 
-  if (isCompleted) {
+    if (isCompleted) {
+    const diffInfo = DIFFICULTY_CONFIG.find(d => d.id === selectedDifficulty) || DIFFICULTY_CONFIG[1];
     const stats = questStats || { 
         newLevel: currentStats?.level || 1, 
         newExp: currentStats?.exp || 0,
-        gainedExp: score * 20 
+        gainedExp: Math.floor(score * 20 * diffInfo.multiplier)
     };
 
     return (
@@ -476,8 +492,13 @@ export default function DailyQuestTab() {
             <div className="surface-neutral p-6 rounded-2xl text-center">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">EXP Gained</p>
                 <div className={`text-xl font-black uppercase ${statsUpdated && !questStats ? 'text-muted-foreground' : 'text-emerald-500'}`}>
-                    {statsUpdated && !questStats ? 'Daily Limit' : `+${questStats?.gainedExp || (score * 20)}`}
+                    {statsUpdated && !questStats ? 'Daily Limit' : `+${stats.gainedExp}`}
                 </div>
+                {selectedDifficulty !== 'medium' && (
+                  <div className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${diffInfo.color}`}>
+                    {diffInfo.name} ({diffInfo.multiplier}x)
+                  </div>
+                )}
                 {questStats?.isFeatured && <span className="text-[8px] font-black text-orange-500 uppercase">✨ 2x Featured Bonus</span>}
                 {questStats?.isCapped && <span className="text-[8px] font-black text-rose-500 uppercase">🛑 Daily Cap Applied</span>}
             </div>
@@ -556,6 +577,31 @@ export default function DailyQuestTab() {
                   </div>
                 </div>
             )}
+        </div>
+
+        {/* Difficulty Selector */}
+        <div className="px-2 space-y-3">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Challenge Difficulty</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {DIFFICULTY_CONFIG.map((diff) => (
+              <button
+                key={diff.id}
+                onClick={() => setSelectedDifficulty(diff.id)}
+                className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
+                  selectedDifficulty === diff.id
+                    ? `${diff.bg} ${diff.border} ring-1 ring-current`
+                    : 'border-border hover:border-muted-foreground/30'
+                }`}
+              >
+                <span className={`text-[10px] font-black uppercase tracking-widest ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground'}`}>
+                  {diff.name}
+                </span>
+                <span className={`text-[8px] font-bold uppercase tracking-widest mt-0.5 ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground/50'}`}>
+                  {diff.multiplier}x EXP
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {academicCategories.length > 0 && (
@@ -646,7 +692,7 @@ export default function DailyQuestTab() {
       </div>
 
       <div className="surface-neutral p-8 rounded-2xl border border-border/50 space-y-8">
-        <h3 className="text-xl sm:text-2xl font-bold text-center leading-tight">{currentQ.question}</h3>
+        <QuestMarkdown content={currentQ.question} className="text-xl sm:text-2xl font-bold text-center leading-tight flex justify-center" />
         
         {currentQ.type === 'open' ? (
           <div className="space-y-4">
@@ -688,7 +734,7 @@ export default function DailyQuestTab() {
                     : 'border-border hover:border-primary hover:bg-primary/5'
                 }`}
               >
-                {ans}
+                <QuestMarkdown content={ans} />
               </button>
             ))}
           </div>

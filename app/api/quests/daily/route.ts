@@ -24,6 +24,13 @@ const questQuestionsSchema = z.object({
   questions: z.array(triviaQuestionSchema).min(5).max(15) // Relaxed for robustness
 });
 
+const DIFFICULTY_PROMPTS: Record<string, string> = {
+  easy: "Focus on fundamental concepts, basic definitions, and simple terminology. Questions should be clear and unambiguous, suitable for beginners.",
+  medium: "Incorporate a mix of core principles and their practical applications. Include some detailed scenarios and standard academic problem-solving.",
+  hard: "Focus on advanced topics, niche details, and complex relationships. Require higher-order thinking, analysis, and deep subject matter expertise.",
+  extreme: "Create extremely challenging, high-level academic questions that require profound knowledge, complex multi-step reasoning, and critical evaluation of specialized case studies."
+};
+
 export async function GET(req: NextRequest) {
   try {
     const sessionCookie = req.cookies.get('session_token');
@@ -187,10 +194,16 @@ export async function POST(req: NextRequest) {
     });
 
     const structuredLlm = model.withStructuredOutput(questQuestionsSchema);
+    const selectedDifficulty = (requestedDifficulty || 'medium').toLowerCase();
+    const difficultyGuideline = DIFFICULTY_PROMPTS[selectedDifficulty] || "Mixed difficulty.";
+
     const systemPrompt = `
 You are the "LCC Quest Master". Your job is to generate 10 unique, challenging, and engaging trivia questions for a student.
 
 ${isAcademicQuest ? `CONTEXT: The student is currently enrolled in "${category}". Your questions MUST focus on core concepts, terminology, and practical applications related to this specific academic subject.` : `CATEGORY: ${category}`}
+
+TARGET DIFFICULTY: ${selectedDifficulty.toUpperCase()}
+DIFFICULTY GUIDELINE: ${difficultyGuideline}
 
 QUESTION TYPES:
 - Generate a mix of "Multiple Choice" (type: "multiple"), "True or False" (type: "boolean"), and "Open Ended" (type: "open").
@@ -201,21 +214,21 @@ QUESTION TYPES:
 STUDENT CONTEXT:
 - Level: ${studentLevel}
 - Category: ${category}
-- Requested Base Difficulty: ${requestedDifficulty || 'Mixed'}
 
 DIFFICULTY SCALING RULES:
-- Level 1-5: Focus on fundamental concepts. Clear, unambiguous questions. (Easy to Medium)
-- Level 6-12: Introduce more specific details, dates, and complex relationships. (Medium to Hard)
-- Level 13-20: High-level academic questions, niche facts, and advanced problem-solving. (Hard to Expert)
-- Level 21+: Extremely challenging, specialized knowledge, and complex scenarios.
+- EASY: Focus on fundamental concepts. Clear, unambiguous questions.
+- MEDIUM: Introduce more specific details, dates, and complex relationships. Standard academic challenges.
+- HARD: High-level academic questions, niche facts, and advanced problem-solving.
+- EXTREME: Expert-level specialization, complex case studies, and profound conceptual analysis.
 
 Rules:
 1. Provide exactly 10 questions.
-2. Ensure the questions are relevant to ${isAcademicQuest ? `the subject "${category}"` : `the category "${category}"`} and the student's level.
-3. **DO NOT** repeat questions.
-4. **NO MARKERS:** Do not include any special characters like ">", "*", or "->" in the fields.
-5. **BOOLEAN NORMALIZATION:** For boolean types, use EXACTLY "True" or "False".
-6. Ensure no fields are left blank.
+2. Ensure the questions are relevant to ${isAcademicQuest ? `the subject "${category}"` : `the category "${category}"`} and the requested difficulty level.
+3. **LATEX SUPPORT:** Use LaTeX for ALL mathematical formulas, equations, scientific notation, and chemical symbols. Use single '$' for inline (e.g., $E=mc^2$) and double '$$' for block equations.
+4. **DO NOT** repeat questions.
+5. **NO MARKERS:** Do not include any special characters like ">", "*", or "->" in the fields.
+6. **BOOLEAN NORMALIZATION:** For boolean types, use EXACTLY "True" or "False".
+7. Ensure no fields are left blank.
 `.trim();
 
     const prompt = ChatPromptTemplate.fromMessages([

@@ -15,6 +15,7 @@ const DIFFICULTY_MULTIPLIER: Record<string, number> = {
   easy: 1,
   medium: 1.5,
   hard: 2,
+  extreme: 3,
   default: 1.2
 };
 

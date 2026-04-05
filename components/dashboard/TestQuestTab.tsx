@@ -9,6 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useStudent } from '@/lib/hooks';
+import QuestMarkdown from '@/components/shared/QuestMarkdown';
 
 interface TriviaQuestion {
   category: string;
@@ -33,6 +34,13 @@ const CATEGORIES = [
   { id: 'Art', name: 'Art', icon: Palette },
 ];
 
+const DIFFICULTY_CONFIG = [
+  { id: 'easy', name: 'Easy', multiplier: 1, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+  { id: 'medium', name: 'Medium', multiplier: 1.5, color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+  { id: 'hard', name: 'Hard', multiplier: 2, color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+  { id: 'extreme', name: 'Extreme', multiplier: 3, color: 'text-purple-600', bg: 'bg-purple-600/10', border: 'border-purple-600/20' },
+];
+
 export default function TestQuestTab() {
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
@@ -47,8 +55,18 @@ export default function TestQuestTab() {
   const [isCurrentCorrect, setIsCurrentCorrect] = useState<boolean | null>(null);
   const [evaluationFeedback, setEvaluationFeedback] = useState<string | null>(null);
   const [currentStats, setCurrentStats] = useState<any>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState('medium');
 
   const { student } = useStudent();
+
+  useEffect(() => {
+    if (currentStats?.level) {
+        if (currentStats.level <= 3) setSelectedDifficulty('easy');
+        else if (currentStats.level <= 10) setSelectedDifficulty('medium');
+        else if (currentStats.level <= 20) setSelectedDifficulty('hard');
+        else setSelectedDifficulty('extreme');
+    }
+  }, [currentStats?.level]);
 
   useEffect(() => {
     fetchCurrentStats();
@@ -76,10 +94,7 @@ export default function TestQuestTab() {
   const allCategories = [...CATEGORIES, ...academicCategories];
 
   const getDifficulty = () => {
-    const level = currentStats?.level || 1;
-    if (level <= 3) return 'easy';
-    if (level <= 10) return 'medium';
-    return 'hard';
+    return selectedDifficulty;
   };
 
   const startQuest = async (category: string) => {
@@ -250,6 +265,9 @@ export default function TestQuestTab() {
   );
 
   if (isCompleted) {
+    const diffInfo = DIFFICULTY_CONFIG.find(d => d.id === selectedDifficulty) || DIFFICULTY_CONFIG[1];
+    const expectedExp = Math.floor(score * 20 * diffInfo.multiplier);
+
     return (
       <div className="text-center py-10 space-y-8 max-w-md mx-auto">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -261,9 +279,18 @@ export default function TestQuestTab() {
             <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest text-primary">No EXP earned in Test Mode</p>
         </div>
 
-        <div className="surface-neutral p-6 rounded-2xl border border-border/50">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Final Test Score</p>
-            <div className="text-4xl font-black text-primary">{score} / {TOTAL_QUESTIONS}</div>
+        <div className="grid grid-cols-2 gap-4">
+            <div className="surface-neutral p-6 rounded-2xl border border-border/50">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Final Test Score</p>
+                <div className="text-3xl font-black text-primary">{score} / {TOTAL_QUESTIONS}</div>
+            </div>
+            <div className="surface-neutral p-6 rounded-2xl border border-border/50">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Expected EXP</p>
+                <div className="text-2xl font-black text-emerald-500">+{expectedExp}</div>
+                <div className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${diffInfo.color}`}>
+                    {diffInfo.name} ({diffInfo.multiplier}x)
+                </div>
+            </div>
         </div>
 
         <div className="flex flex-col gap-3">
@@ -294,14 +321,41 @@ export default function TestQuestTab() {
                 <span className="text-[10px] font-black text-primary uppercase tracking-widest">Staff Preview</span>
                 {currentStats && (
                   <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase ${
-                    getDifficulty() === 'easy' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 
-                    getDifficulty() === 'medium' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600' : 
-                    'bg-rose-500/10 border-rose-500/20 text-rose-600'
+                    DIFFICULTY_CONFIG.find(d => d.id === selectedDifficulty)?.bg || 'bg-amber-500/10'
+                  } ${
+                    DIFFICULTY_CONFIG.find(d => d.id === selectedDifficulty)?.border || 'border-amber-500/20'
+                  } ${
+                    DIFFICULTY_CONFIG.find(d => d.id === selectedDifficulty)?.color || 'text-amber-600'
                   }`}>
-                    {getDifficulty()}
+                    {selectedDifficulty}
                   </span>
                 )}
             </div>
+        </div>
+
+        {/* Difficulty Selector */}
+        <div className="px-2 space-y-3">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Practice Difficulty</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {DIFFICULTY_CONFIG.map((diff) => (
+              <button
+                key={diff.id}
+                onClick={() => setSelectedDifficulty(diff.id)}
+                className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
+                  selectedDifficulty === diff.id
+                    ? `${diff.bg} ${diff.border} ring-1 ring-current`
+                    : 'border-border hover:border-muted-foreground/30'
+                }`}
+              >
+                <span className={`text-[10px] font-black uppercase tracking-widest ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground'}`}>
+                  {diff.name}
+                </span>
+                <span className={`text-[8px] font-bold uppercase tracking-widest mt-0.5 ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground/50'}`}>
+                   Multiplier: {diff.multiplier}x
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {academicCategories.length > 0 && (
@@ -358,7 +412,7 @@ export default function TestQuestTab() {
       </div>
 
       <div className="surface-neutral p-8 rounded-2xl border border-primary/20 bg-primary/5 space-y-8">
-        <h3 className="text-xl sm:text-2xl font-bold text-center leading-tight">{currentQ.question}</h3>
+        <QuestMarkdown content={currentQ.question} className="text-xl sm:text-2xl font-bold text-center leading-tight flex justify-center" />
         
         {currentQ.type === 'open' ? (
           <div className="space-y-4">
@@ -400,7 +454,7 @@ export default function TestQuestTab() {
                     : 'border-border hover:border-primary hover:bg-primary/5'
                 }`}
               >
-                {ans}
+                <QuestMarkdown content={ans} />
               </button>
             ))}
           </div>
