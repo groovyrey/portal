@@ -138,8 +138,8 @@ export default function DailyQuestTab() {
     if (existing) {
       const lastUpdate = new Date(existing.updated_at);
       const daysSinceLastRun = (new Date().getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
-      if (daysSinceLastRun < 7 && existing.is_completed) {
-        toast.error(`"${category}" is on cooldown for ${Math.ceil(7 - daysSinceLastRun)} more days.`);
+      if (daysSinceLastRun < 1 && existing.is_completed) {
+        toast.error(`"${category}" is on a 24-hour cooldown. Come back tomorrow!`);
         return;
       }
     }
@@ -238,12 +238,16 @@ export default function DailyQuestTab() {
         setIsEvaluating(false);
       }
     } else if (currentQuestion.type === 'boolean') {
-      isCorrect = answer.toLowerCase() === currentQuestion.correct_answer.toLowerCase();
-      feedback = isCorrect ? "Correct assessment!" : `Incorrect. The correct answer was: ${currentQuestion.correct_answer}`;
+      // Normalize both for comparison
+      const normalizedUser = answer.toLowerCase().trim();
+      const normalizedCorrect = (currentQuestion.correct_answer || "").toLowerCase().trim();
+      
+      isCorrect = normalizedUser === normalizedCorrect;
+      feedback = isCorrect ? "Correct assessment!" : `Incorrect. The correct answer was: ${currentQuestion.correct_answer || 'Unknown'}`;
       setEvaluationFeedback(feedback);
     } else {
-      isCorrect = answer === currentQuestion.correct_answer;
-      feedback = isCorrect ? "Correct answer selected!" : `Incorrect. The correct answer was: ${currentQuestion.correct_answer}`;
+      isCorrect = answer.trim() === (currentQuestion.correct_answer || "").trim();
+      feedback = isCorrect ? "Correct answer selected!" : `Incorrect. The correct answer was: ${currentQuestion.correct_answer || 'Unknown'}`;
       setEvaluationFeedback(feedback);
     }
 
@@ -365,8 +369,9 @@ export default function DailyQuestTab() {
     const lastUpdate = new Date(quest.updated_at);
     const daysSinceLastRun = (new Date().getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
     
-    if (daysSinceLastRun < 7) {
-      return { status: 'cooldown', daysLeft: Math.ceil(7 - daysSinceLastRun), isFeatured };
+    if (daysSinceLastRun < 1) {
+      const hoursLeft = Math.ceil(24 - (daysSinceLastRun * 24));
+      return { status: 'cooldown', hoursLeft, isFeatured };
     }
     
     return { status: 'available', isFeatured };
@@ -567,7 +572,7 @@ export default function DailyQuestTab() {
                     )}
                     <cat.icon className={`h-8 w-8 transition-colors ${isCooldown ? 'text-muted-foreground' : 'text-primary'}`} />
                     <span className="font-bold text-[10px] sm:text-xs uppercase tracking-widest text-center">{cat.name}</span>
-                    {isCooldown && <span className="text-[8px] font-black text-rose-500">Cooldown: {status.daysLeft}d</span>}
+                    {isCooldown && <span className="text-[8px] font-black text-rose-500">Next in {status.hoursLeft}h</span>}
                     {status.status === 'in-progress' && <span className="text-[8px] font-black text-amber-500 animate-pulse">In Progress</span>}
                   </button>
                 );
@@ -601,7 +606,7 @@ export default function DailyQuestTab() {
                   )}
                   <cat.icon className={`h-8 w-8 transition-colors ${isCooldown ? 'text-muted-foreground' : 'text-muted-foreground group-hover:text-primary'}`} />
                   <span className="font-bold text-[10px] sm:text-xs uppercase tracking-widest text-center">{cat.name}</span>
-                  {isCooldown && <span className="text-[8px] font-black text-rose-500">Cooldown: {status.daysLeft}d</span>}
+                  {isCooldown && <span className="text-[8px] font-black text-rose-500">Next in {status.hoursLeft}h</span>}
                   {status.status === 'in-progress' && <span className="text-[8px] font-black text-amber-500 animate-pulse">In Progress</span>}
                 </button>
               );

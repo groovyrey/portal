@@ -93,13 +93,13 @@ export async function POST(req: NextRequest) {
 
     const existingQuest = existingResult.rowCount > 0 ? existingResult.rows[0] : null;
     
-    // Cooldown logic: Once a week per category
+    // Cooldown logic: Once a day per category
     if (existingQuest && !force && !practice) {
       const lastUpdate = new Date(existingQuest.updated_at);
       const daysSinceLastRun = (new Date().getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
 
       // If quest exists, was updated recently, and is either active or completed
-      if (daysSinceLastRun < 7) {
+      if (daysSinceLastRun < 1) {
         // If incomplete, return the existing quest to continue
         if (!existingQuest.is_completed) {
           return NextResponse.json({
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
         
         // If completed and within cooldown, block regeneration
         return NextResponse.json({ 
-          error: `Category "${requestedCategory}" is on a weekly cooldown. Come back in ${Math.ceil(7 - daysSinceLastRun)} days!`,
+          error: `Category "${requestedCategory}" is on a 24-hour cooldown. Come back tomorrow!`,
           cooldown: true
         }, { status: 400 });
       }
@@ -172,8 +172,8 @@ ${isAcademicQuest ? `CONTEXT: The student is currently enrolled in "${category}"
 QUESTION TYPES:
 - Generate a mix of "Multiple Choice" (type: "multiple"), "True or False" (type: "boolean"), and "Open Ended" (type: "open").
 - For "Multiple Choice": provide 1 correct_answer and exactly 3 incorrect_answers.
-- For "True or False": provide 1 correct_answer (True/False) and exactly 1 incorrect_answer.
-- For "Open Ended": provide a brief "Evaluation Guideline" or "Key Concepts" in the correct_answer field. For this type, set incorrect_answers to an EMPTY ARRAY []. **CRITICAL: Open-ended questions MUST focus on problem-solving, critical thinking, or situational "What would you do?" scenarios. The student's answer will be evaluated by an AI based on logic and relevance, not just matching a single correct string.**
+- For "True or False": **CRITICAL: set \`correct_answer\` to exactly "True" or "False". Provide exactly 1 incorrect_answer (the opposite of the correct one).**
+- For "Open Ended": provide a brief "Evaluation Guideline" or "Key Concepts" in the correct_answer field. For this type, set incorrect_answers to an EMPTY ARRAY []. **CRITICAL: Open-ended questions MUST focus on problem-solving, critical thinking, or situational "What would you do?" scenarios.**
 
 STUDENT CONTEXT:
 - Level: ${studentLevel}
@@ -193,8 +193,9 @@ Rules:
 1. Provide exactly 10 questions.
 2. Ensure the questions are relevant to ${isAcademicQuest ? `the subject "${category}"` : `the category "${category}"`} and the student's level.
 3. **DO NOT** repeat any of the questions listed in the "RECENTLY ANSWERED QUESTIONS" section.
-4. **NO MARKERS:** Do not include any special characters like ">", "*", or "->" in the \`correct_answer\` or \`incorrect_answers\` fields to indicate the correct choice. The system handles this via the JSON structure.
-5. The tone should be academic yet engaging.
+4. **NO MARKERS:** Do not include any special characters like ">", "*", or "->" in the \`correct_answer\` or \`incorrect_answers\` fields.
+5. **BOLLAN NORMALIZATION:** For boolean types, use EXACTLY "True" or "False".
+6. Ensure no fields are left blank.
 `.trim();
 
     const prompt = ChatPromptTemplate.fromMessages([
@@ -202,10 +203,34 @@ Rules:
       HumanMessagePromptTemplate.fromTemplate("Generate 10 trivia questions (mix multiple, boolean, and open-ended)."),
     ]);
 
-    const result = await prompt.pipe(structuredLlm).invoke({});
+    let result;
+    try {
+      result = await prompt.pipe(structuredLlm).invoke({});
+    } catch (e) {
+      console.error("AI Generation attempt 1 failed:", e);
+      try {
+        // Retry with slightly higher temperature for variety/jitter
+        result = await prompt.pipe(structuredLlm).invoke({});
+      } catch (e2) {
+        console.error("AI Generation attempt 2 failed:", e2);
+        return NextResponse.json({ error: 'Failed to generate questions. Please try again later.' }, { status: 503 });
+      }
+    }
+
+    if (!result || !result.questions || result.questions.length === 0) {
+      return NextResponse.json({ error: 'Model returned no questions.' }, { status: 500 });
+    }
     
     // Ensure we provide exactly 10 questions to the UI for consistency, if possible.
-    const finalQuestions = result.questions.slice(0, 10);
+    const finalQuestions = result.questions.slice(0, 10).map(q => ({
+      ...q,
+      // Backend cleanup to ensure no weird artifacts
+      correct_answer: (q.correct_answer || "").toString().replace(/^[>*\-\s]+|["']/g, '').trim(),
+      incorrect_answers: (q.incorrect_answers || []).map(ans => 
+        (ans || "").toString().replace(/^[>*\-\s]+|["']/g, '').trim()
+      )
+    }));
+
     const questionsJson = JSON.stringify(finalQuestions);
 
     // 3. Save to Turso (Skip if practice mode)
