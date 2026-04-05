@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
       [userId]
     );
 
+    const today = getPHDate();
     const quests = result.rows.map(q => ({
       ...q,
       questions: typeof q.questions === 'string' ? JSON.parse(q.questions) : q.questions
@@ -52,9 +53,14 @@ export async function GET(req: NextRequest) {
     // Find the currently active (incomplete) quest if any
     const activeQuest = quests.find(q => !q.is_completed);
 
+    // Check if any quest was completed today
+    const completedTodayQuest = quests.find(q => q.is_completed && q.quest_date === today);
+
     return NextResponse.json({ 
       quests, 
       activeQuest,
+      completedToday: !!completedTodayQuest,
+      completedTodayQuest,
       is_new: !activeQuest 
     });
   } catch (error) {
@@ -84,6 +90,19 @@ export async function POST(req: NextRequest) {
       practice = false
     } = await req.json();
     const today = getPHDate();
+
+    // 0. Global Daily Limit Check
+    const anyCompletedToday = await query(
+      'SELECT * FROM daily_quests WHERE user_id = ? AND quest_date = ? AND is_completed = 1',
+      [userId, today]
+    );
+
+    if (anyCompletedToday.rowCount > 0 && !force && !practice) {
+      return NextResponse.json({ 
+        error: "You have already completed your daily quest challenge for today!",
+        globalCooldown: true
+      }, { status: 400 });
+    }
 
     // Determine the category early to avoid issues with null requestedCategory
     let category = requestedCategory || 'General Knowledge';

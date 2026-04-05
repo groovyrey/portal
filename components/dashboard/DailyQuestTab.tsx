@@ -120,6 +120,12 @@ export default function DailyQuestTab() {
         if (data.activeQuest.questions && data.activeQuest.questions[data.activeQuest.current_index]) {
           prepareQuestion(data.activeQuest.questions[data.activeQuest.current_index]);
         }
+      } else if (data.completedTodayQuest) {
+        setQuestions(data.completedTodayQuest.questions || []);
+        setScore(data.completedTodayQuest.score || 0);
+        setIsCompleted(true);
+        setCurrentCategory(data.completedTodayQuest.category);
+        setStatsUpdated(!!data.completedTodayQuest.stats_updated);
       } else {
         setIsCompleted(false);
         setQuestions([]);
@@ -513,10 +519,16 @@ export default function DailyQuestTab() {
                   setIsCompleted(false);
                   fetchDailyStatus();
                 }}
-                className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                disabled={isCompleted && !questions.length} // Fallback check
+                className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
             >
                 Back to Category Selection
             </button>
+            {(isCompleted && questions.length > 0) && (
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-2 animate-pulse">
+                You've reached your daily limit. See you tomorrow!
+              </p>
+            )}
         </div>
       </div>
     );

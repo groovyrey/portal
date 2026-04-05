@@ -29,9 +29,17 @@ function LeaderboardTab() {
     fetch(`/api/quests/leaderboard?type=${filter}`)
       .then(res => res.json())
       .then(data => {
-        if (mounted) setData(data);
+        if (mounted) {
+          if (Array.isArray(data)) {
+            setData(data);
+          } else {
+            console.error("Leaderboard Error:", data.error || "Invalid response");
+            setData([]);
+          }
+        }
       })
-      .catch(() => {
+      .catch((e) => {
+        console.error("Fetch Error:", e);
         if (mounted) setData([]);
       })
       .finally(() => {
@@ -147,8 +155,8 @@ function LeaderboardTab() {
 
                 <div className="flex items-center gap-3">
                    <div className="text-right">
-                      <p className="font-black text-base text-foreground tabular-nums leading-none">{student.exp.toLocaleString()}</p>
-                      <p className="text-[8px] font-black uppercase tracking-tighter text-primary mt-1">Level {student.level}</p>
+                      <p className="font-black text-base text-foreground tabular-nums leading-none">{(student.exp || 0).toLocaleString()}</p>
+                      <p className="text-[8px] font-black uppercase tracking-tighter text-primary mt-1">Level {student.level || 1}</p>
                    </div>
                    <ChevronRight className="h-3 w-3 text-muted-foreground/20" />
                 </div>

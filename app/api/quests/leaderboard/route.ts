@@ -18,10 +18,10 @@ export async function GET(req: NextRequest) {
           ss.level, 
           SUM(dq.score * 20) as exp, -- Weighted score as approximate EXP
           COUNT(dq.category) as quests_this_week
-        FROM daily_quests daily_quests
-        JOIN students s ON daily_quests.user_id = s.id
-        JOIN student_stats ss ON daily_quests.user_id = ss.user_id
-        WHERE daily_quests.updated_at >= date('now', '-7 days') AND daily_quests.stats_updated = 1
+        FROM daily_quests dq
+        JOIN students s ON dq.user_id = s.id
+        JOIN student_stats ss ON dq.user_id = ss.user_id
+        WHERE dq.updated_at >= date('now', '-7 days') AND dq.stats_updated = 1
         GROUP BY s.id
         ORDER BY exp DESC
         LIMIT 20
