@@ -197,13 +197,14 @@ export async function migrateDailyQuests() {
         current_index INTEGER DEFAULT 0,
         score INTEGER DEFAULT 0,
         is_completed INTEGER DEFAULT 0,
+        stats_updated INTEGER DEFAULT 0,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (user_id, quest_date)
+        PRIMARY KEY (user_id, category)
       );
     `);
 
     // Create index for fast lookups
-    await query(`CREATE INDEX IF NOT EXISTS idx_daily_quests_user_date ON daily_quests(user_id, quest_date);`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_daily_quests_user_cat ON daily_quests(user_id, category);`);
 
   } catch (error) {
     console.error("Migration Error (Daily Quests):", error);

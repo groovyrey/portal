@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Trophy, CheckCircle, XCircle, Loader2, BrainCircuit, Monitor, Calculator, 
-  FlaskConical, History, Map, Gamepad2, Palette, LayoutGrid, Zap
+  FlaskConical, History, Map, Gamepad2, Palette, LayoutGrid, Zap, GraduationCap,
+  ArrowRight, Sparkles, BookOpenCheck, RefreshCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -11,11 +12,14 @@ import { useStudent } from '@/lib/hooks';
 
 interface TriviaQuestion {
   category: string;
-  type: "multiple" | "boolean";
+  type: "multiple" | "boolean" | "open";
   difficulty: string;
   question: string;
   correct_answer: string;
   incorrect_answers: string[];
+  userAnswer?: string;
+  isCorrect?: boolean;
+  feedback?: string;
 }
 
 const TOTAL_QUESTIONS = 10;
@@ -38,6 +42,9 @@ interface QuestStats {
   newLevel: number;
   levelUp: boolean;
   totalQuests: number;
+  streak: number;
+  isFeatured: boolean;
+  isCapped: boolean;
 }
 
 export default function DailyQuestTab() {
@@ -48,11 +55,34 @@ export default function DailyQuestTab() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [shuffledAnswers, setShuffledAnswers] = useState<string[]>([]);
+  const [openAnswer, setOpenAnswer] = useState("");
+  const [isEvaluating, setIsEvaluating] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isCurrentCorrect, setIsCurrentCorrect] = useState<boolean | null>(null);
+  const [evaluationFeedback, setEvaluationFeedback] = useState<string | null>(null);
   const [questStats, setQuestStats] = useState<QuestStats | null>(null);
   const [currentStats, setCurrentStats] = useState<any>(null);
+  const [statsUpdated, setStatsUpdated] = useState(false);
+  const [allQuests, setAllQuests] = useState<any[]>([]);
+  const [currentCategory, setCurrentCategory] = useState<string | null>(null);
+  const [isReviewMode, setIsReviewMode] = useState(false);
 
   const { student } = useStudent();
+
+  const academicCategories = (student?.schedule || [])
+    .map(s => s.description)
+    .filter(desc => desc && desc.length > 5 && !desc.includes('BREAK') && !desc.includes('LUNCH'))
+    .filter((value, index, self) => self.indexOf(value) === index) // Unique
+    .map(name => ({ id: `acad-${name}`, name, icon: GraduationCap, isAcademic: true }));
+
+  const allCategories = [...CATEGORIES, ...academicCategories];
+
+  const getDifficulty = () => {
+    const level = currentStats?.level || 1;
+    if (level <= 3) return 'easy';
+    if (level <= 10) return 'medium';
+    return 'hard';
+  };
 
   useEffect(() => {
     fetchDailyStatus();
@@ -77,17 +107,23 @@ export default function DailyQuestTab() {
     try {
       const res = await fetch('/api/quests/daily');
       const data = await res.json();
-      if (!data.is_new) {
-        setQuestions(data.questions);
-        setCurrentIndex(data.current_index);
-        setScore(data.score);
-        setIsCompleted(!!data.is_completed);
+      setAllQuests(data.quests || []);
+      
+      if (data.activeQuest) {
+        setQuestions(data.activeQuest.questions);
+        setCurrentIndex(data.activeQuest.current_index);
+        setScore(data.activeQuest.score);
+        setIsCompleted(!!data.activeQuest.is_completed);
+        setStatsUpdated(!!data.activeQuest.stats_updated);
+        setCurrentCategory(data.activeQuest.category);
         
-        if (data.is_completed) {
-            fetchCurrentStats();
-        } else if (data.questions && data.questions[data.current_index]) {
-          prepareQuestion(data.questions[data.current_index]);
+        if (data.activeQuest.questions && data.activeQuest.questions[data.activeQuest.current_index]) {
+          prepareQuestion(data.activeQuest.questions[data.activeQuest.current_index]);
         }
+      } else {
+        setIsCompleted(false);
+        setQuestions([]);
+        setCurrentCategory(null);
       }
     } catch (e) {
       toast.error("Failed to load quest status");
@@ -96,37 +132,45 @@ export default function DailyQuestTab() {
     }
   };
 
-  const startQuest = async (category: string, difficulty: string = 'medium') => {
+  const startQuest = async (category: string) => {
+    // Check local cooldown state
+    const existing = allQuests.find(q => q.category === category);
+    if (existing) {
+      const lastUpdate = new Date(existing.updated_at);
+      const daysSinceLastRun = (new Date().getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
+      if (daysSinceLastRun < 7 && existing.is_completed) {
+        toast.error(`"${category}" is on cooldown for ${Math.ceil(7 - daysSinceLastRun)} more days.`);
+        return;
+      }
+    }
+
+    const difficulty = getDifficulty();
     setLoading(true);
     try {
-      // Free tier: only one generation allowed unless system is new
-      const forceNew = isCompleted;
-
-      let excludedQuestions = [];
-      try {
-        const localHistory = localStorage.getItem('quest_history_local');
-        excludedQuestions = localHistory ? JSON.parse(localHistory) : [];
-      } catch (e) {
-        console.error("Failed to load local history");
-      }
-
       const res = await fetch('/api/quests/daily', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           category, 
           difficulty,
-          excludedQuestions,
-          force: forceNew 
+          force: false 
         })
       });
       const data = await res.json();
+      
+      if (!res.ok) {
+        toast.error(data.error || "Failed to start quest");
+        return;
+      }
+
       if (data.questions) {
         setQuestions(data.questions);
-        setCurrentIndex(0);
-        setScore(0);
-        setIsCompleted(false);
-        prepareQuestion(data.questions[0]);
+        setCurrentIndex(data.current_index || 0);
+        setScore(data.score || 0);
+        setIsCompleted(!!data.is_completed);
+        setStatsUpdated(!!data.stats_updated);
+        setCurrentCategory(category);
+        prepareQuestion(data.questions[data.current_index || 0]);
       }
     } catch (e) {
       toast.error("Failed to start quest");
@@ -134,26 +178,94 @@ export default function DailyQuestTab() {
       setLoading(false);
     }
   };
-
   const prepareQuestion = (question: TriviaQuestion) => {
-    const all = [...question.incorrect_answers, question.correct_answer].sort(() => Math.random() - 0.5);
-    setShuffledAnswers(all);
+    // Note: AI cleanup - remove any accidentally generated markers like ">" or "*"
+    const cleanCorrect = question.correct_answer.replace(/^[>*\-\s]+|["']/g, '').trim();
+    const cleanIncorrect = (question.incorrect_answers || []).map(ans => 
+      ans.replace(/^[>*\-\s]+|["']/g, '').trim()
+    );
+    
+    question.correct_answer = cleanCorrect;
+    question.incorrect_answers = cleanIncorrect;
+
+    if (question.type === 'open') {
+      setShuffledAnswers([]);
+      setOpenAnswer("");
+    } else if (question.type === 'boolean') {
+      // Force True/False for boolean types if they are missing or mangled
+      setShuffledAnswers(['True', 'False']);
+      setOpenAnswer("");
+    } else {
+      const incorrect = question.incorrect_answers || [];
+      const all = [...incorrect, question.correct_answer].sort(() => Math.random() - 0.5);
+      setShuffledAnswers(all);
+    }
     setSelectedAnswer(null);
     setIsAnswered(false);
+    setIsCurrentCorrect(null);
+    setEvaluationFeedback(null);
   };
 
   const handleAnswer = async (answer: string) => {
-    if (isAnswered) return;
+    if (isAnswered || isEvaluating) return;
+    
+    const currentQuestion = questions[currentIndex];
+    let isCorrect = false;
+    let feedback = "";
+
+    if (currentQuestion.type === 'open') {
+      setIsEvaluating(true);
+      try {
+        const res = await fetch('/api/quests/evaluate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: currentQuestion.question,
+            userAnswer: answer,
+            correctAnswer: currentQuestion.correct_answer
+          })
+        });
+        const evalResult = await res.json();
+        isCorrect = evalResult.isCorrect;
+        feedback = evalResult.feedback || (isCorrect ? "Perfect logic!" : "Not quite right.");
+        setEvaluationFeedback(feedback);
+      } catch (e) {
+        // Fallback to simple string match if AI fails
+        isCorrect = answer.toLowerCase().trim() === currentQuestion.correct_answer.toLowerCase().trim();
+        feedback = isCorrect ? "Perfect match!" : `Expected: ${currentQuestion.correct_answer}`;
+        setEvaluationFeedback(feedback);
+      } finally {
+        setIsEvaluating(false);
+      }
+    } else if (currentQuestion.type === 'boolean') {
+      isCorrect = answer.toLowerCase() === currentQuestion.correct_answer.toLowerCase();
+      feedback = isCorrect ? "Correct assessment!" : `Incorrect. The correct answer was: ${currentQuestion.correct_answer}`;
+      setEvaluationFeedback(feedback);
+    } else {
+      isCorrect = answer === currentQuestion.correct_answer;
+      feedback = isCorrect ? "Correct answer selected!" : `Incorrect. The correct answer was: ${currentQuestion.correct_answer}`;
+      setEvaluationFeedback(feedback);
+    }
+
+    // Save user answer and result for review mode
+    const updatedQuestions = [...questions];
+    updatedQuestions[currentIndex] = {
+      ...currentQuestion,
+      userAnswer: answer,
+      isCorrect,
+      feedback
+    };
+    setQuestions(updatedQuestions);
+
+    setIsCurrentCorrect(isCorrect);
     setIsAnswered(true);
     setSelectedAnswer(answer);
     
-    const currentQuestion = questions[currentIndex];
-    const correct = answer === currentQuestion.correct_answer;
-    const newScore = correct ? score + 1 : score;
+    const newScore = isCorrect ? score + 1 : score;
     const nextIndex = currentIndex + 1;
     const completed = nextIndex >= TOTAL_QUESTIONS;
 
-    if (correct) {
+    if (isCorrect) {
       toast.success("Correct!");
       saveToLocalHistory(currentQuestion.question);
     } else {
@@ -169,24 +281,29 @@ export default function DailyQuestTab() {
         body: JSON.stringify({
           currentIndex: nextIndex,
           score: newScore,
-          isCompleted: completed
+          isCompleted: completed,
+          category: currentCategory,
+          questions: updatedQuestions // Save the user's answers too
         })
       });
     } catch (e) {
       console.error("Failed to save progress");
     }
+  };
 
-    setTimeout(() => {
-      if (completed) {
-        setIsCompleted(true);
-        updateOverallStats(newScore);
-      } else {
-        setCurrentIndex(nextIndex);
-        if (questions[nextIndex]) {
-          prepareQuestion(questions[nextIndex]);
-        }
+  const nextQuestion = () => {
+    const nextIndex = currentIndex + 1;
+    const completed = nextIndex >= TOTAL_QUESTIONS;
+
+    if (completed) {
+      setIsCompleted(true);
+      updateOverallStats(score);
+    } else {
+      setCurrentIndex(nextIndex);
+      if (questions[nextIndex]) {
+        prepareQuestion(questions[nextIndex]);
       }
-    }, 1500);
+    }
   };
 
   const saveToLocalHistory = (questionText: string) => {
@@ -204,15 +321,17 @@ export default function DailyQuestTab() {
   };
 
   const updateOverallStats = async (finalScore: number) => {
-    if (!student?.id) return;
+    if (!student?.id || !currentCategory) return;
+    const difficulty = getDifficulty();
     try {
       const res = await fetch('/api/quests/update-stats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           score: finalScore,
-          difficulty: 'medium',
-          studentId: student.id
+          difficulty,
+          studentId: student.id,
+          category: currentCategory
         })
       });
       if (res.ok) {
@@ -221,13 +340,104 @@ export default function DailyQuestTab() {
         if (data.levelUp) {
             toast.success(`LEVEL UP! You reached Level ${data.newLevel}!`, { icon: '🎊' });
         }
+        if (data.isFeatured) {
+            toast.success("FEATURED BONUS! 2x EXP granted!", { icon: '✨' });
+        }
+        if (data.isCapped) {
+            toast.info("Daily EXP Cap reached. Some EXP was reduced.", { icon: '🛑' });
+        }
+        // Refresh global stats after update
+        fetchCurrentStats();
       }
     } catch (e) {
       console.error("Stats update failed");
     }
   };
 
-  if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>;
+  const getCategoryStatus = (category: string) => {
+    const quest = allQuests.find(q => q.category === category);
+    const isFeatured = category === currentStats?.featuredCategory;
+    
+    if (!quest) return { status: 'available', isFeatured };
+    
+    if (!quest.is_completed) return { status: 'in-progress', isFeatured };
+    
+    const lastUpdate = new Date(quest.updated_at);
+    const daysSinceLastRun = (new Date().getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
+    
+    if (daysSinceLastRun < 7) {
+      return { status: 'cooldown', daysLeft: Math.ceil(7 - daysSinceLastRun), isFeatured };
+    }
+    
+    return { status: 'available', isFeatured };
+  };
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center p-20 space-y-4">
+      <Loader2 className="animate-spin h-10 w-10 text-primary" />
+      <div className="text-center">
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-primary animate-pulse">Our AI Agent is generating your questions...</p>
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Curating academic challenges based on your level</p>
+      </div>
+    </div>
+  );
+
+  if (isReviewMode) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-black uppercase tracking-tight">Quest Review</h2>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{currentCategory}</p>
+          </div>
+          <button 
+            onClick={() => setIsReviewMode(false)}
+            className="p-2 rounded-full hover:bg-muted transition-colors"
+          >
+            <XCircle className="h-6 w-6 text-muted-foreground" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {questions.map((q, i) => (
+            <div key={i} className={`p-6 rounded-2xl border ${q.isCorrect ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20'}`}>
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-muted/50">Q{i+1}</span>
+                {q.isCorrect ? (
+                  <CheckCircle className="h-5 w-5 text-emerald-500 shrink-0" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-rose-500 shrink-0" />
+                )}
+              </div>
+              <h4 className="font-bold mb-3 leading-tight">{q.question}</h4>
+              <div className="space-y-2">
+                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Your Answer:</div>
+                <div className={`text-sm font-bold ${q.isCorrect ? 'text-emerald-700' : 'text-rose-700'}`}>{q.userAnswer || 'No answer'}</div>
+                {!q.isCorrect && (
+                  <>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-2">Correct Answer/Guideline:</div>
+                    <div className="text-sm font-bold text-emerald-700">{q.correct_answer}</div>
+                  </>
+                )}
+                {q.feedback && (
+                  <div className="mt-3 p-3 rounded-xl bg-white/50 border border-current/10 italic text-[11px] font-medium leading-relaxed">
+                    "AI: {q.feedback}"
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button 
+            onClick={() => setIsReviewMode(false)}
+            className="w-full py-4 rounded-xl bg-foreground text-background font-black uppercase tracking-widest flex items-center justify-center gap-2"
+        >
+            Close Review
+        </button>
+      </div>
+    );
+  }
 
   if (isCompleted) {
     const stats = questStats || { 
@@ -238,7 +448,7 @@ export default function DailyQuestTab() {
 
     return (
       <div className="text-center py-10 space-y-8 max-w-md mx-auto">
-        <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring' }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <Trophy className="h-20 w-20 text-primary mx-auto" />
         </motion.div>
         
@@ -248,24 +458,28 @@ export default function DailyQuestTab() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-            <div className="surface-neutral p-6 rounded-2xl">
+            <div className="surface-neutral p-6 rounded-2xl text-center">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Final Score</p>
                 <div className="text-3xl font-black text-primary">{score} / {TOTAL_QUESTIONS}</div>
             </div>
-            <div className="surface-neutral p-6 rounded-2xl">
+            <div className="surface-neutral p-6 rounded-2xl text-center">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">EXP Gained</p>
-                <div className="text-3xl font-black text-emerald-500">+{questStats?.gainedExp || (score * 20)}</div>
+                <div className={`text-xl font-black uppercase ${statsUpdated && !questStats ? 'text-muted-foreground' : 'text-emerald-500'}`}>
+                    {statsUpdated && !questStats ? 'Daily Limit' : `+${questStats?.gainedExp || (score * 20)}`}
+                </div>
+                {questStats?.isFeatured && <span className="text-[8px] font-black text-orange-500 uppercase">✨ 2x Featured Bonus</span>}
+                {questStats?.isCapped && <span className="text-[8px] font-black text-rose-500 uppercase">🛑 Daily Cap Applied</span>}
             </div>
         </div>
 
         {stats && (
-            <div className="surface-neutral p-6 rounded-2xl border border-primary/20 bg-primary/5 relative overflow-hidden">
+            <div className="surface-neutral p-6 rounded-2xl border border-primary/20 bg-primary/5 relative overflow-hidden text-left">
                 <div className="absolute top-0 left-0 h-1 bg-primary/20 w-full">
                     <motion.div 
                         className="h-full bg-primary shadow-[0_0_10px_rgba(37,99,235,0.5)]" 
                         initial={{ width: 0 }}
-                        animate={{ width: `${(stats.newExp % 100)}%` }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
+                        animate={{ width: `${((stats.newExp - (Math.pow(stats.newLevel - 1, 2) * 100)) / ((Math.pow(stats.newLevel, 2) * 100) - (Math.pow(stats.newLevel - 1, 2) * 100))) * 100}%` }}
+                        transition={{ duration: 1.5, ease: "linear" }}
                     />
                 </div>
                 <div className="flex justify-between items-end">
@@ -274,14 +488,31 @@ export default function DailyQuestTab() {
                         <div className="text-2xl font-black italic">LVL {stats.newLevel}</div>
                     </div>
                     <div className="text-right">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Total Experience</p>
-                        <div className="text-lg font-bold">{(stats.newExp || 0).toLocaleString()} <span className="text-[10px] uppercase">EXP</span></div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Progress to LVL {stats.newLevel + 1}</p>
+                        <div className="text-lg font-bold">{(stats.newExp || 0).toLocaleString()} / {(Math.pow(stats.newLevel, 2) * 100).toLocaleString()} <span className="text-[10px] uppercase">EXP</span></div>
                     </div>
                 </div>
             </div>
         )}
 
-        <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">New quest available at 12:00 AM</p>
+        <div className="flex flex-col gap-3">
+            <button 
+                onClick={() => setIsReviewMode(true)}
+                className="w-full py-4 rounded-xl border border-primary/20 bg-primary/5 text-primary font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors"
+            >
+                <BookOpenCheck className="h-5 w-5" />
+                Review Your Answers
+            </button>
+            <button 
+                onClick={() => {
+                  setIsCompleted(false);
+                  fetchDailyStatus();
+                }}
+                className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            >
+                Back to Category Selection
+            </button>
+        </div>
       </div>
     );
   }
@@ -295,20 +526,87 @@ export default function DailyQuestTab() {
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Select your challenge</p>
             </div>
             {currentStats && (
-                <div className="text-right">
-                    <div className="text-xs font-black text-primary uppercase tracking-widest">Level {currentStats.level}</div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase">{currentStats.exp} EXP</div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                      <div className="text-xs font-black text-orange-500 uppercase tracking-widest flex items-center gap-1 justify-end">
+                        <Trophy className="h-3 w-3" />
+                        Streak: {currentStats.streak}
+                      </div>
+                      <div className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1 justify-end">
+                        <Zap className="h-3 w-3 fill-primary" />
+                        LVL {currentStats.level}
+                      </div>
+                  </div>
                 </div>
             )}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {CATEGORIES.map(cat => (
-            <button key={cat.id} onClick={() => startQuest(cat.name)} className="surface-neutral p-6 rounded-2xl border border-border/50 hover:border-primary/50 transition-all group flex flex-col items-center gap-3">
-              <cat.icon className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
-              <span className="font-bold text-xs uppercase tracking-widest">{cat.name}</span>
-            </button>
-          ))}
+        {academicCategories.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-2">Academic Subjects</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {academicCategories.map(cat => {
+                const status = getCategoryStatus(cat.name);
+                const isCooldown = status.status === 'cooldown';
+                return (
+                  <button 
+                    key={cat.id} 
+                    onClick={() => startQuest(cat.name)} 
+                    disabled={isCooldown}
+                    className={`surface-neutral p-6 rounded-2xl border transition-all group flex flex-col items-center gap-3 relative overflow-hidden ${
+                      isCooldown 
+                        ? 'opacity-50 grayscale border-border cursor-not-allowed' 
+                        : 'border-primary/20 bg-primary/5 hover:border-primary/50'
+                    }`}
+                  >
+                    {status.isFeatured && (
+                      <div className="absolute top-0 right-0 bg-orange-500 text-[8px] font-black text-white px-2 py-0.5 rounded-bl-lg uppercase tracking-widest flex items-center gap-1">
+                        <Sparkles className="h-2 w-2 fill-white" />
+                        Featured
+                      </div>
+                    )}
+                    <cat.icon className={`h-8 w-8 transition-colors ${isCooldown ? 'text-muted-foreground' : 'text-primary'}`} />
+                    <span className="font-bold text-[10px] sm:text-xs uppercase tracking-widest text-center">{cat.name}</span>
+                    {isCooldown && <span className="text-[8px] font-black text-rose-500">Cooldown: {status.daysLeft}d</span>}
+                    {status.status === 'in-progress' && <span className="text-[8px] font-black text-amber-500 animate-pulse">In Progress</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-2">General Categories</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {CATEGORIES.map(cat => {
+              const status = getCategoryStatus(cat.name);
+              const isCooldown = status.status === 'cooldown';
+              return (
+                <button 
+                  key={cat.id} 
+                  onClick={() => startQuest(cat.name)} 
+                  disabled={isCooldown}
+                  className={`surface-neutral p-6 rounded-2xl border transition-all group flex flex-col items-center gap-3 relative overflow-hidden ${
+                    isCooldown 
+                      ? 'opacity-50 grayscale border-border cursor-not-allowed' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  {status.isFeatured && (
+                    <div className="absolute top-0 right-0 bg-orange-500 text-[8px] font-black text-white px-2 py-0.5 rounded-bl-lg uppercase tracking-widest flex items-center gap-1">
+                      <Sparkles className="h-2 w-2 fill-white" />
+                      Featured
+                    </div>
+                  )}
+                  <cat.icon className={`h-8 w-8 transition-colors ${isCooldown ? 'text-muted-foreground' : 'text-muted-foreground group-hover:text-primary'}`} />
+                  <span className="font-bold text-[10px] sm:text-xs uppercase tracking-widest text-center">{cat.name}</span>
+                  {isCooldown && <span className="text-[8px] font-black text-rose-500">Cooldown: {status.daysLeft}d</span>}
+                  {status.status === 'in-progress' && <span className="text-[8px] font-black text-amber-500 animate-pulse">In Progress</span>}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     );
@@ -332,25 +630,88 @@ export default function DailyQuestTab() {
 
       <div className="surface-neutral p-8 rounded-2xl border border-border/50 space-y-8">
         <h3 className="text-xl sm:text-2xl font-bold text-center leading-tight">{currentQ.question}</h3>
-        <div className="grid gap-3">
-          {shuffledAnswers.map((ans, i) => (
-            <button
-              key={i}
-              onClick={() => handleAnswer(ans)}
-              disabled={isAnswered}
-              className={`p-5 rounded-xl border text-left font-bold transition-all ${
-                isAnswered 
-                  ? ans === currentQ.correct_answer 
-                    ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-600'
-                    : selectedAnswer === ans ? 'bg-rose-500/10 border-rose-500/50 text-rose-600' : 'opacity-40 grayscale border-border'
-                  : 'border-border hover:border-primary hover:bg-primary/5'
-              }`}
+        
+        {currentQ.type === 'open' ? (
+          <div className="space-y-4">
+            <input 
+              type="text"
+              value={openAnswer}
+              onChange={(e) => setOpenAnswer(e.target.value)}
+              disabled={isAnswered || isEvaluating}
+              placeholder="Type your answer here..."
+              className="w-full p-4 rounded-xl bg-background border border-border font-bold focus:border-primary outline-none transition-all"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && openAnswer.trim() && !isAnswered) {
+                  handleAnswer(openAnswer);
+                }
+              }}
+            />
+            {!isAnswered && (
+              <button
+                onClick={() => handleAnswer(openAnswer)}
+                disabled={isAnswered || isEvaluating || !openAnswer.trim()}
+                className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isEvaluating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Submit Answer'}
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {shuffledAnswers.map((ans, i) => (
+              <button
+                key={i}
+                onClick={() => handleAnswer(ans)}
+                disabled={isAnswered}
+                className={`p-5 rounded-xl border text-left font-bold transition-all ${
+                  isAnswered 
+                    ? ans === currentQ.correct_answer 
+                      ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-600'
+                      : selectedAnswer === ans ? 'bg-rose-500/10 border-rose-500/50 text-rose-600' : 'opacity-40 grayscale border-border'
+                    : 'border-border hover:border-primary hover:bg-primary/5'
+                }`}
+              >
+                {ans}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {isAnswered && (
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className={`p-5 rounded-xl border-2 flex flex-col gap-2 ${
+                    isCurrentCorrect
+                    ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700'
+                    : 'bg-rose-500/5 border-rose-500/20 text-rose-700'
+                }`}
             >
-              {ans}
-            </button>
-          ))}
-        </div>
+                <div className="flex items-center gap-2">
+                    {isCurrentCorrect ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                    <span className="text-xs font-black uppercase tracking-widest">
+                        {isCurrentCorrect ? 'Analysis: Accepted' : 'Analysis: Rejected'}
+                    </span>
+                </div>
+                <p className="text-sm font-medium leading-relaxed italic">
+                    "{evaluationFeedback || (isCurrentCorrect ? 'Correct!' : 'Incorrect.')}"
+                </p>
+            </motion.div>
+        )}
+
+        {isAnswered && !isEvaluating && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={nextQuestion}
+            className="w-full py-4 rounded-xl bg-foreground text-background font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-black/10"
+          >
+            {currentIndex + 1 >= TOTAL_QUESTIONS ? 'Finish Quest' : 'Continue'}
+            <ArrowRight className="h-5 w-5" />
+          </motion.button>
+        )}
       </div>
     </div>
   );
 }
+

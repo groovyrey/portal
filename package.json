@@ -1,7 +1,7 @@
 {
   "name": "lcc-hub",
   "version": "1.2.0-BETA",
-  "description": "LCC Hub is a comprehensive student portal for La Consolacion College students, featuring G-Space integration, AI-powered study assistance, and academic management tools.",
+  "description": "LCC Hub is a student-led research project and academic workspace for La Concepcion College, featuring AI-powered study assistance and modern data management.",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",

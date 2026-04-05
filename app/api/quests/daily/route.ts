@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/turso';
 import { decrypt } from '@/lib/auth';
+import { getStudentSchedule } from '@/lib/data-service';
 import { ChatOpenAI } from "@langchain/openai";
 import { 
   ChatPromptTemplate, 
@@ -8,18 +9,19 @@ import {
   HumanMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { z } from "zod";
+import { getPHDate } from '@/lib/utils';
 
 const triviaQuestionSchema = z.object({
   category: z.string(),
-  type: z.enum(["multiple", "boolean"]),
+  type: z.enum(["multiple", "boolean", "open"]),
   difficulty: z.string(),
   question: z.string(),
   correct_answer: z.string(),
-  incorrect_answers: z.array(z.string()).min(1).max(3),
+  incorrect_answers: z.array(z.string()), 
 });
 
 const questQuestionsSchema = z.object({
-  questions: z.array(triviaQuestionSchema).length(10)
+  questions: z.array(triviaQuestionSchema).min(5).max(15) // Relaxed for robustness
 });
 
 export async function GET(req: NextRequest) {
@@ -36,24 +38,25 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    
-    // 1. Check if quest exists for today
+    // 1. Fetch all quests for this user to check cooldowns
     const result = await query(
-      'SELECT * FROM daily_quests WHERE user_id = ? AND quest_date = ?',
-      [userId, today]
+      'SELECT * FROM daily_quests WHERE user_id = ?',
+      [userId]
     );
 
-    if (result.rowCount > 0) {
-      const quest = result.rows[0];
-      return NextResponse.json({
-        ...quest,
-        questions: typeof quest.questions === 'string' ? JSON.parse(quest.questions) : quest.questions,
-        is_new: false
-      });
-    }
+    const quests = result.rows.map(q => ({
+      ...q,
+      questions: typeof q.questions === 'string' ? JSON.parse(q.questions) : q.questions
+    }));
 
-    return NextResponse.json({ is_new: true });
+    // Find the currently active (incomplete) quest if any
+    const activeQuest = quests.find(q => !q.is_completed);
+
+    return NextResponse.json({ 
+      quests, 
+      activeQuest,
+      is_new: !activeQuest 
+    });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch quest' }, { status: 500 });
   }
@@ -73,35 +76,73 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
     
-    const { category, difficulty: requestedDifficulty, excludedQuestions: clientExcluded = [], force = false } = await req.json();
-    const today = new Date().toISOString().split('T')[0];
+    const { 
+      category: requestedCategory, 
+      difficulty: requestedDifficulty, 
+      excludedQuestions: clientExcluded = [], 
+      force = false,
+      practice = false
+    } = await req.json();
+    const today = getPHDate();
 
-    // 1. FREE TIER ENFORCEMENT: Check if a quest ALREADY exists for today
-    // We do not allow re-generation to save AI tokens, UNLESS 'force' is true.
+    // 1. Fetch current quest status for THIS CATEGORY
     const existingResult = await query(
-      'SELECT * FROM daily_quests WHERE user_id = ? AND quest_date = ?',
-      [userId, today]
+      'SELECT * FROM daily_quests WHERE user_id = ? AND category = ?',
+      [userId, requestedCategory]
     );
 
-    if (existingResult.rowCount > 0 && !force) {
-      const quest = existingResult.rows[0];
-      return NextResponse.json({
-        questions: typeof quest.questions === 'string' ? JSON.parse(quest.questions) : quest.questions,
-        current_index: quest.current_index,
-        score: quest.score,
-        is_completed: quest.is_completed,
-        message: "You already have a quest for today. Continuing..."
-      });
+    const existingQuest = existingResult.rowCount > 0 ? existingResult.rows[0] : null;
+    
+    // Cooldown logic: Once a week per category
+    if (existingQuest && !force && !practice) {
+      const lastUpdate = new Date(existingQuest.updated_at);
+      const daysSinceLastRun = (new Date().getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
+
+      // If quest exists, was updated recently, and is either active or completed
+      if (daysSinceLastRun < 7) {
+        // If incomplete, return the existing quest to continue
+        if (!existingQuest.is_completed) {
+          return NextResponse.json({
+            ...existingQuest,
+            questions: typeof existingQuest.questions === 'string' ? JSON.parse(existingQuest.questions) : existingQuest.questions,
+            message: `Continuing your ${requestedCategory} quest...`
+          });
+        }
+        
+        // If completed and within cooldown, block regeneration
+        return NextResponse.json({ 
+          error: `Category "${requestedCategory}" is on a weekly cooldown. Come back in ${Math.ceil(7 - daysSinceLastRun)} days!`,
+          cooldown: true
+        }, { status: 400 });
+      }
     }
 
-    // 2. Fetch Student Level & Recent Question History (as fallback)
-    const [statsResult, historyResult] = await Promise.all([
+    // 2. Fetch Student Level, Schedule (for Subject-Sync), & Recent Question History
+    const [statsResult, schedule, historyResult] = await Promise.all([
       query('SELECT level FROM student_stats WHERE user_id = ?', [userId]),
+      getStudentSchedule(userId),
       query('SELECT questions FROM daily_quests WHERE user_id = ? ORDER BY quest_date DESC LIMIT 3', [userId])
     ]);
 
     const studentLevel = statsResult.rowCount > 0 ? statsResult.rows[0].level : 1;
     
+    // Determine the category: use requested, or fallback to a subject from their schedule
+    let category = requestedCategory || 'General Knowledge';
+    let isAcademicQuest = false;
+
+    if (!requestedCategory && schedule.length > 0) {
+      // Filter out non-academic or generic entries and pick a random subject
+      const academicSubjects = schedule
+        .map(s => s.description)
+        .filter(desc => desc && desc.length > 5 && !desc.includes('BREAK') && !desc.includes('LUNCH'));
+      
+      if (academicSubjects.length > 0) {
+        // Pick a random subject for today
+        category = academicSubjects[Math.floor(Math.random() * academicSubjects.length)];
+        isAcademicQuest = true;
+      }
+    }
+
     // Combine client-side exclusion list with a small DB fallback
     const dbExcluded: string[] = historyResult.rows.flatMap(row => {
       try {
@@ -126,10 +167,13 @@ export async function POST(req: NextRequest) {
     const systemPrompt = `
 You are the "LCC Quest Master". Your job is to generate 10 unique, challenging, and engaging trivia questions for a student.
 
+${isAcademicQuest ? `CONTEXT: The student is currently enrolled in "${category}". Your questions MUST focus on core concepts, terminology, and practical applications related to this specific academic subject.` : `CATEGORY: ${category}`}
+
 QUESTION TYPES:
-- Generate a mix of "Multiple Choice" (4 options total) and "True or False" (2 options total).
-- For "Multiple Choice": type is "multiple", provide 1 correct_answer and exactly 3 incorrect_answers.
-- For "True or False": type is "boolean", provide 1 correct_answer (True or False) and exactly 1 incorrect_answer (the opposite).
+- Generate a mix of "Multiple Choice" (type: "multiple"), "True or False" (type: "boolean"), and "Open Ended" (type: "open").
+- For "Multiple Choice": provide 1 correct_answer and exactly 3 incorrect_answers.
+- For "True or False": provide 1 correct_answer (True/False) and exactly 1 incorrect_answer.
+- For "Open Ended": provide a brief "Evaluation Guideline" or "Key Concepts" in the correct_answer field. For this type, set incorrect_answers to an EMPTY ARRAY []. **CRITICAL: Open-ended questions MUST focus on problem-solving, critical thinking, or situational "What would you do?" scenarios. The student's answer will be evaluated by an AI based on logic and relevance, not just matching a single correct string.**
 
 STUDENT CONTEXT:
 - Level: ${studentLevel}
@@ -147,38 +191,47 @@ ${finalExclusionList.length > 0 ? finalExclusionList.map(q => `- ${q}`).join('\n
 
 Rules:
 1. Provide exactly 10 questions.
-2. Ensure the questions are relevant to the category and the student's level.
+2. Ensure the questions are relevant to ${isAcademicQuest ? `the subject "${category}"` : `the category "${category}"`} and the student's level.
 3. **DO NOT** repeat any of the questions listed in the "RECENTLY ANSWERED QUESTIONS" section.
-4. The tone should be academic yet engaging.
+4. **NO MARKERS:** Do not include any special characters like ">", "*", or "->" in the \`correct_answer\` or \`incorrect_answers\` fields to indicate the correct choice. The system handles this via the JSON structure.
+5. The tone should be academic yet engaging.
 `.trim();
 
     const prompt = ChatPromptTemplate.fromMessages([
       SystemMessagePromptTemplate.fromTemplate(systemPrompt),
-      HumanMessagePromptTemplate.fromTemplate("Generate 10 trivia questions."),
+      HumanMessagePromptTemplate.fromTemplate("Generate 10 trivia questions (mix multiple, boolean, and open-ended)."),
     ]);
 
     const result = await prompt.pipe(structuredLlm).invoke({});
-    const questionsJson = JSON.stringify(result.questions);
+    
+    // Ensure we provide exactly 10 questions to the UI for consistency, if possible.
+    const finalQuestions = result.questions.slice(0, 10);
+    const questionsJson = JSON.stringify(finalQuestions);
 
-    // 3. Save to Turso
-    await query(
-      `INSERT INTO daily_quests (user_id, quest_date, category, questions, current_index, score, is_completed, stats_updated)
-       VALUES (?, ?, ?, ?, 0, 0, 0, 0)
-       ON CONFLICT(user_id, quest_date) DO UPDATE SET
-       category = excluded.category,
-       questions = excluded.questions,
-       current_index = 0,
-       score = 0,
-       is_completed = 0,
-       stats_updated = 0`,
-      [userId, today, category, questionsJson]
-    );
+    // 3. Save to Turso (Skip if practice mode)
+    if (!practice) {
+      await query(
+        `INSERT INTO daily_quests (user_id, quest_date, category, questions, current_index, score, is_completed, stats_updated, updated_at)
+         VALUES (?, ?, ?, ?, 0, 0, 0, 0, CURRENT_TIMESTAMP)
+         ON CONFLICT(user_id, category) DO UPDATE SET
+         quest_date = excluded.quest_date,
+         questions = excluded.questions,
+         current_index = 0,
+         score = 0,
+         is_completed = 0,
+         stats_updated = 0,
+         updated_at = CURRENT_TIMESTAMP`,
+        [userId, today, category, questionsJson]
+      );
+    }
 
     return NextResponse.json({
-      questions: result.questions,
+      category,
+      questions: finalQuestions,
       current_index: 0,
       score: 0,
-      is_completed: 0
+      is_completed: 0,
+      stats_updated: 0
     });
   } catch (error) {
     console.error('Quest Generation Error:', error);
@@ -200,15 +253,25 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
     
-    const { currentIndex, score, isCompleted } = await req.json();
-    const today = new Date().toISOString().split('T')[0];
+    const { currentIndex, score, isCompleted, category, questions } = await req.json();
 
-    await query(
-      `UPDATE daily_quests 
-       SET current_index = ?, score = ?, is_completed = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE user_id = ? AND quest_date = ?`,
-      [currentIndex, score, isCompleted ? 1 : 0, userId, today]
-    );
+    if (!category) return NextResponse.json({ error: 'Category required' }, { status: 400 });
+
+    if (questions) {
+      await query(
+        `UPDATE daily_quests 
+         SET current_index = ?, score = ?, is_completed = ?, questions = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE user_id = ? AND category = ?`,
+        [currentIndex, score, isCompleted ? 1 : 0, JSON.stringify(questions), userId, category]
+      );
+    } else {
+      await query(
+        `UPDATE daily_quests 
+         SET current_index = ?, score = ?, is_completed = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE user_id = ? AND category = ?`,
+        [currentIndex, score, isCompleted ? 1 : 0, userId, category]
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

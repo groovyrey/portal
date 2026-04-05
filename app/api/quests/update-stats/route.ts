@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/turso';
 import { decrypt } from '@/lib/auth';
-import { adminDb as db } from '@/lib/firebase-admin'; // Use Admin SDK for server-side Firestore
 import { SyncService } from '@/lib/sync-service';
+import { getPHDate } from '@/lib/utils';
+import { getFeaturedCategory } from '@/lib/constants';
 
 export const maxDuration = 300;
 
 const EXP_PER_SCORE = 20;
+const DAILY_EXP_CAP = 500;
+const FEATURED_BONUS_MULTIPLIER = 2.0;
+
 const DIFFICULTY_MULTIPLIER: Record<string, number> = {
   easy: 1,
   medium: 1.5,
@@ -20,7 +24,9 @@ function calculateLevel(exp: number) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { score, difficulty, studentId, expGranted } = await req.json();
+    const { score, difficulty, studentId, category } = await req.json();
+
+    if (!category) return NextResponse.json({ error: 'Category required' }, { status: 400 });
     
     // Authenticate
     const sessionCookie = req.cookies.get('session_token');
@@ -28,11 +34,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    let sessionUserId: string;
     try {
       const decrypted = decrypt(sessionCookie.value);
       const sessionData = JSON.parse(decrypted);
-      sessionUserId = sessionData.userId;
+      const sessionUserId = sessionData.userId;
       
       if (sessionUserId !== studentId) {
          return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -42,80 +47,105 @@ export async function POST(req: NextRequest) {
     }
 
     const syncer = new SyncService(studentId);
-    const today = new Date().toISOString().split('T')[0];
+    const today = getPHDate();
 
     // 1. Check if this quest's stats were already processed
     const questResult = await query(`
-      SELECT is_completed, stats_updated FROM daily_quests 
-      WHERE user_id = ? AND quest_date = ?
-    `, [studentId, today]);
+      SELECT quest_date, is_completed, stats_updated, score as stored_score FROM daily_quests 
+      WHERE user_id = ? AND category = ?
+    `, [studentId, category]);
 
     if (questResult.rowCount === 0) {
-      return NextResponse.json({ error: 'Quest record not found for today' }, { status: 404 });
+      return NextResponse.json({ error: 'Quest record not found for this category' }, { status: 404 });
     }
 
     const dailyQuest = questResult.rows[0];
+
     if (!dailyQuest.is_completed) {
       return NextResponse.json({ error: 'Quest must be completed before updating stats' }, { status: 400 });
     }
 
     if (dailyQuest.stats_updated) {
       return NextResponse.json({ 
-        error: 'Stats already updated for today\'s quest',
+        error: 'Stats already updated for this category quest',
         alreadyUpdated: true 
       }, { status: 400 });
     }
 
-    // 2. Ensure student info exists in Turso
-    let studentResult = await query(`SELECT id FROM students WHERE id = ?`, [studentId]);
-    if (studentResult.rowCount === 0) {
-      const studentDoc = await db.collection('students').doc(studentId).get();
-      if (studentDoc.exists) {
-        const studentData = studentDoc.data();
-        await query(`
-          INSERT INTO students (id, name, course, email, year_level, semester, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        `, [studentId, studentData?.name || 'Unknown', studentData?.course || '', studentData?.email || '', studentData?.year_level || '', studentData?.semester || '']);
-      }
-    }
+    // 2. Calculate Base Gained EXP
+    const isFeatured = category === getFeaturedCategory();
+    const multiplier = DIFFICULTY_MULTIPLIER[difficulty?.toLowerCase()] || DIFFICULTY_MULTIPLIER.default;
+    let gainedExp = Math.floor(score * EXP_PER_SCORE * multiplier * (isFeatured ? FEATURED_BONUS_MULTIPLIER : 1.0));
 
-    // 3. Calculate EXP
-    let gainedExp = expGranted;
-    if (gainedExp === undefined || gainedExp === null) {
-      const multiplier = DIFFICULTY_MULTIPLIER[difficulty?.toLowerCase()] || DIFFICULTY_MULTIPLIER.default;
-      gainedExp = Math.floor(score * EXP_PER_SCORE * multiplier);
-    }
+    // 3. Apply Global Daily EXP Cap
+    const todayStatsResult = await query(`
+      SELECT score, category, difficulty FROM daily_quests 
+      WHERE user_id = ? AND quest_date = ? AND stats_updated = 1
+    `, [studentId, today]);
 
-    // 4. Update Stats
-    await query(`
-      INSERT INTO student_stats (user_id, level, exp, total_quests, total_score, last_quest_at, updated_at)
-      VALUES (?, 1, 0, 0, 0, NULL, CURRENT_TIMESTAMP)
-      ON CONFLICT(user_id) DO NOTHING;
+    let totalExpToday = 0;
+    const statsRows = todayStatsResult.rows as any[];
+    statsRows.forEach((row: any) => {
+      const m = DIFFICULTY_MULTIPLIER[row.difficulty?.toLowerCase()] || DIFFICULTY_MULTIPLIER.default;
+      const feat = row.category === getFeaturedCategory();
+      totalExpToday += Math.floor(row.score * EXP_PER_SCORE * m * (feat ? FEATURED_BONUS_MULTIPLIER : 1.0));
+    });
+
+    const remainingCap = Math.max(0, DAILY_EXP_CAP - totalExpToday);
+    const finalGainedExp = Math.min(gainedExp, remainingCap);
+
+    // 4. Update Stats & Streak
+    const statsResult = await query(`
+      SELECT exp, level, total_quests, streak, last_quest_date FROM student_stats WHERE user_id = ?
     `, [studentId]);
 
-    const statsResult = await query(`SELECT exp, level, total_quests FROM student_stats WHERE user_id = ?`, [studentId]);
-    const currentStats = statsResult.rows[0];
-    const newExp = (currentStats.exp || 0) + gainedExp;
+    let currentStats = statsResult.rowCount > 0 ? statsResult.rows[0] : { exp: 0, level: 1, total_quests: 0, streak: 0, last_quest_date: null };
+    
+    // Streak Logic
+    let newStreak = currentStats.streak || 0;
+    const lastDate = currentStats.last_quest_date;
+    
+    if (lastDate) {
+      const last = new Date(lastDate);
+      const now = new Date(today);
+      const diffTime = Math.abs(now.getTime() - last.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) {
+        newStreak += 1;
+      } else if (diffDays > 1) {
+        newStreak = 1;
+      }
+    } else {
+      newStreak = 1;
+    }
+
+    const newExp = (currentStats.exp || 0) + finalGainedExp;
     const newLevel = calculateLevel(newExp);
     const levelUp = newLevel > (currentStats.level || 1);
 
     await query(`
-      UPDATE student_stats 
-      SET 
+      INSERT INTO student_stats (user_id, level, exp, total_quests, total_score, last_quest_at, last_quest_date, streak, updated_at)
+      VALUES (?, ?, ?, 1, ?, CURRENT_TIMESTAMP, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(user_id) DO UPDATE SET 
         exp = exp + ?,
         level = ?,
         total_quests = total_quests + 1,
         total_score = total_score + ?,
         last_quest_at = CURRENT_TIMESTAMP,
+        last_quest_date = ?,
+        streak = ?,
         updated_at = CURRENT_TIMESTAMP
-      WHERE user_id = ?
-    `, [gainedExp, newLevel, score, studentId]);
+    `, [
+      studentId, newLevel, newExp, score, today, newStreak,
+      finalGainedExp, newLevel, score, today, newStreak
+    ]);
 
     await query(`
       UPDATE daily_quests 
-      SET stats_updated = 1 
-      WHERE user_id = ? AND quest_date = ?
-    `, [studentId, today]);
+      SET stats_updated = 1, difficulty = ?
+      WHERE user_id = ? AND category = ?
+    `, [difficulty || 'medium', studentId, category]);
 
     // 5. Badges
     const grantedBadges = [];
@@ -125,15 +155,22 @@ export async function POST(req: NextRequest) {
     if (newLevel >= 100) {
       if (await syncer.grantBadge('centurion')) grantedBadges.push('centurion');
     }
+    if (newStreak >= 7) {
+      if (await syncer.grantBadge('consistent_quester')) grantedBadges.push('consistent_quester');
+    }
 
     return NextResponse.json({
       success: true,
-      gainedExp,
+      gainedExp: finalGainedExp,
+      originalGainedExp: gainedExp,
+      isCapped: finalGainedExp < gainedExp,
       newExp,
       newLevel,
       levelUp,
+      streak: newStreak,
       totalQuests: (currentStats.total_quests || 0) + 1,
-      grantedBadges
+      grantedBadges,
+      isFeatured
     });
 
   } catch (error) {
