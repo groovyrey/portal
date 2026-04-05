@@ -85,10 +85,14 @@ export async function POST(req: NextRequest) {
     } = await req.json();
     const today = getPHDate();
 
+    // Determine the category early to avoid issues with null requestedCategory
+    let category = requestedCategory || 'General Knowledge';
+    let isAcademicQuest = !!requestedCategory && requestedCategory.length > 3 && !['General', 'Computers', 'Math', 'Science', 'History', 'Geography', 'Sports', 'Gaming', 'Art'].includes(requestedCategory);
+
     // 1. Fetch current quest status for THIS CATEGORY
     const existingResult = await query(
       'SELECT * FROM daily_quests WHERE user_id = ? AND category = ?',
-      [userId, requestedCategory]
+      [userId, category]
     );
 
     const existingQuest = existingResult.rowCount > 0 ? existingResult.rows[0] : null;
@@ -105,13 +109,13 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({
             ...existingQuest,
             questions: typeof existingQuest.questions === 'string' ? JSON.parse(existingQuest.questions) : existingQuest.questions,
-            message: `Continuing your ${requestedCategory} quest...`
+            message: `Continuing your ${category} quest...`
           });
         }
         
         // If completed and within cooldown, block regeneration
         return NextResponse.json({ 
-          error: `Category "${requestedCategory}" is on a 24-hour cooldown. Come back tomorrow!`,
+          error: `Category "${category}" is on a 24-hour cooldown. Come back tomorrow!`,
           cooldown: true
         }, { status: 400 });
       }
@@ -120,21 +124,18 @@ export async function POST(req: NextRequest) {
     // 2. Fetch Student Level, Schedule (for Subject-Sync), & Recent Question History
     const [statsResult, schedule, historyResult] = await Promise.all([
       query('SELECT level FROM student_stats WHERE user_id = ?', [userId]),
-      getStudentSchedule(userId),
+      getStudentSchedule(userId).catch(() => []),
       query('SELECT questions FROM daily_quests WHERE user_id = ? ORDER BY quest_date DESC LIMIT 3', [userId])
     ]);
 
     const studentLevel = statsResult.rowCount > 0 ? statsResult.rows[0].level : 1;
     
     // Determine the category: use requested, or fallback to a subject from their schedule
-    let category = requestedCategory || 'General Knowledge';
-    let isAcademicQuest = false;
-
-    if (!requestedCategory && schedule.length > 0) {
+    if (!requestedCategory && schedule && schedule.length > 0) {
       // Filter out non-academic or generic entries and pick a random subject
       const academicSubjects = schedule
-        .map(s => s.description)
-        .filter(desc => desc && desc.length > 5 && !desc.includes('BREAK') && !desc.includes('LUNCH'));
+        .map((s: any) => s.description)
+        .filter((desc: string) => desc && desc.length > 5 && !desc.includes('BREAK') && !desc.includes('LUNCH'));
       
       if (academicSubjects.length > 0) {
         // Pick a random subject for today
@@ -142,6 +143,8 @@ export async function POST(req: NextRequest) {
         isAcademicQuest = true;
       }
     }
+
+    console.log(`Generating quest for ${userId}: Category=${category}, Level=${studentLevel}, Difficulty=${requestedDifficulty}`);
 
     // Combine client-side exclusion list with a small DB fallback
     const dbExcluded: string[] = historyResult.rows.flatMap(row => {
@@ -161,6 +164,7 @@ export async function POST(req: NextRequest) {
       apiKey: process.env.GIT_MODEL_TOKEN || '',
       configuration: { baseURL: "https://models.inference.ai.azure.com" },
       temperature: 0.8,
+      maxRetries: 2,
     });
 
     const structuredLlm = model.withStructuredOutput(questQuestionsSchema);
@@ -186,15 +190,12 @@ DIFFICULTY SCALING RULES:
 - Level 13-20: High-level academic questions, niche facts, and advanced problem-solving. (Hard to Expert)
 - Level 21+: Extremely challenging, specialized knowledge, and complex scenarios.
 
-CRITICAL: RECENTLY ANSWERED QUESTIONS (DO NOT REPEAT THESE):
-${finalExclusionList.length > 0 ? finalExclusionList.map(q => `- ${q}`).join('\n') : 'None'}
-
 Rules:
 1. Provide exactly 10 questions.
 2. Ensure the questions are relevant to ${isAcademicQuest ? `the subject "${category}"` : `the category "${category}"`} and the student's level.
-3. **DO NOT** repeat any of the questions listed in the "RECENTLY ANSWERED QUESTIONS" section.
-4. **NO MARKERS:** Do not include any special characters like ">", "*", or "->" in the \`correct_answer\` or \`incorrect_answers\` fields.
-5. **BOLLAN NORMALIZATION:** For boolean types, use EXACTLY "True" or "False".
+3. **DO NOT** repeat questions.
+4. **NO MARKERS:** Do not include any special characters like ">", "*", or "->" in the fields.
+5. **BOOLEAN NORMALIZATION:** For boolean types, use EXACTLY "True" or "False".
 6. Ensure no fields are left blank.
 `.trim();
 
@@ -209,11 +210,19 @@ Rules:
     } catch (e) {
       console.error("AI Generation attempt 1 failed:", e);
       try {
-        // Retry with slightly higher temperature for variety/jitter
-        result = await prompt.pipe(structuredLlm).invoke({});
+        // Fallback: Retry with a slightly simpler prompt and no structured output if it fails again
+        const fallbackRes = await model.invoke(systemPrompt + "\n\nReturn ONLY a JSON object matching the schema: { \"questions\": [ { \"category\": \"...\", \"type\": \"multiple|boolean|open\", \"difficulty\": \"...\", \"question\": \"...\", \"correct_answer\": \"...\", \"incorrect_answers\": [...] } ] }");
+        const content = typeof fallbackRes.content === 'string' ? fallbackRes.content : JSON.stringify(fallbackRes.content);
+        // Extract JSON if model wrapped it in markdown
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          result = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error("Could not parse JSON from fallback");
+        }
       } catch (e2) {
         console.error("AI Generation attempt 2 failed:", e2);
-        return NextResponse.json({ error: 'Failed to generate questions. Please try again later.' }, { status: 503 });
+        return NextResponse.json({ error: 'The Quest Master is tired. Please try again in a few minutes.' }, { status: 503 });
       }
     }
 
@@ -222,11 +231,11 @@ Rules:
     }
     
     // Ensure we provide exactly 10 questions to the UI for consistency, if possible.
-    const finalQuestions = result.questions.slice(0, 10).map(q => ({
+    const finalQuestions = result.questions.slice(0, 10).map((q: any) => ({
       ...q,
       // Backend cleanup to ensure no weird artifacts
       correct_answer: (q.correct_answer || "").toString().replace(/^[>*\-\s]+|["']/g, '').trim(),
-      incorrect_answers: (q.incorrect_answers || []).map(ans => 
+      incorrect_answers: (q.incorrect_answers || []).map((ans: any) => 
         (ans || "").toString().replace(/^[>*\-\s]+|["']/g, '').trim()
       )
     }));
