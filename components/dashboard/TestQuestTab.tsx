@@ -58,6 +58,7 @@ export default function TestQuestTab() {
   const [selectedDifficulty, setSelectedDifficulty] = useState('medium');
 
   const { student } = useStudent();
+  const totalQuestions = questions.length || 10;
 
   useEffect(() => {
     if (currentStats?.level) {
@@ -204,7 +205,7 @@ export default function TestQuestTab() {
     
     const newScore = isCorrect ? score + 1 : score;
     const nextIndex = currentIndex + 1;
-    const completed = nextIndex >= TOTAL_QUESTIONS;
+    const completed = nextIndex >= totalQuestions;
 
     if (isCorrect) {
       toast.success("Correct!");
@@ -221,7 +222,7 @@ export default function TestQuestTab() {
 
   const nextQuestion = () => {
     const nextIndex = currentIndex + 1;
-    const completed = nextIndex >= TOTAL_QUESTIONS;
+    const completed = nextIndex >= totalQuestions;
 
     if (completed) {
       setIsCompleted(true);
@@ -255,12 +256,8 @@ export default function TestQuestTab() {
   };
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center p-20 space-y-4">
+    <div className="flex flex-col items-center justify-center p-20">
       <Loader2 className="animate-spin h-10 w-10 text-primary" />
-      <div className="text-center">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-primary animate-pulse">Our AI Agent is generating your questions...</p>
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Building practice session in Sandbox</p>
-      </div>
     </div>
   );
 
@@ -282,7 +279,7 @@ export default function TestQuestTab() {
         <div className="grid grid-cols-2 gap-4">
             <div className="surface-neutral p-6 rounded-2xl border border-border/50">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Final Test Score</p>
-                <div className="text-3xl font-black text-primary">{score} / {TOTAL_QUESTIONS}</div>
+                <div className="text-3xl font-black text-primary">{score} / {totalQuestions}</div>
             </div>
             <div className="surface-neutral p-6 rounded-2xl border border-border/50">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Expected EXP</p>
@@ -397,18 +394,26 @@ export default function TestQuestTab() {
 
   const currentQ = questions[currentIndex];
 
+  if (!currentQ) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center px-2">
         <div className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-amber-500" />
-          <span className="text-sm font-black uppercase tracking-widest">Test Run {currentIndex + 1}/10</span>
+          <span className="text-sm font-black uppercase tracking-widest">Test Run {currentIndex + 1}/{totalQuestions}</span>
         </div>
         <div className="text-xs font-bold text-muted-foreground uppercase">Practice Score: {score}</div>
       </div>
 
       <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-        <motion.div className="h-full bg-primary" animate={{ width: `${(currentIndex / TOTAL_QUESTIONS) * 100}%` }} />
+        <motion.div className="h-full bg-primary" animate={{ width: `${(currentIndex / totalQuestions) * 100}%` }} />
       </div>
 
       <div className="surface-neutral p-8 rounded-2xl border border-primary/20 bg-primary/5 space-y-8">
@@ -489,7 +494,7 @@ export default function TestQuestTab() {
             onClick={nextQuestion}
             className="w-full py-4 rounded-xl bg-foreground text-background font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-black/10"
           >
-            {currentIndex + 1 >= TOTAL_QUESTIONS ? 'Finish Practice' : 'Continue'}
+            {currentIndex + 1 >= totalQuestions ? 'Finish Practice' : 'Continue'}
             <ArrowRight className="h-5 w-5" />
           </motion.button>
         )}
