@@ -38,6 +38,7 @@ INSTRUCTIONS:
 3. If the question is situational or subjective, accept any answer that provides a reasonable, justified explanation.
 4. If the answer is "I don't know" or completely irrelevant, mark it as incorrect.
 5. Provide a short, encouraging feedback.
+6. **LATEX SUPPORT (CRITICAL):** Use LaTeX for ANY mathematical formulas, scientific notation, or equations mentioned in the feedback. Wrap inline math in single '$' and block equations in double '$$'.
 `.trim();
 
     const result = await structuredLlm.invoke(systemPrompt);

@@ -194,6 +194,7 @@ export async function migrateDailyQuests() {
         quest_date TEXT NOT NULL,
         category TEXT NOT NULL,
         questions TEXT NOT NULL, -- JSON string of questions
+        difficulty TEXT DEFAULT 'medium',
         current_index INTEGER DEFAULT 0,
         score INTEGER DEFAULT 0,
         is_completed INTEGER DEFAULT 0,
@@ -203,7 +204,21 @@ export async function migrateDailyQuests() {
       );
     `);
 
-    // Create index for fast lookups
+    // Ensure difficulty column exists for older tables
+    try {
+      await query(`ALTER TABLE daily_quests ADD COLUMN difficulty TEXT DEFAULT 'medium';`);
+    } catch (e) {
+      // Column might already exist
+    }
+
+    // Ensure unique constraint for (user_id, category) exists
+    try {
+      await query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_quests_user_cat_unique ON daily_quests(user_id, category);`);
+    } catch (e) {
+      // Index might already exist
+    }
+
+    // Create index for fast lookups (non-unique version if needed, but the unique one covers it)
     await query(`CREATE INDEX IF NOT EXISTS idx_daily_quests_user_cat ON daily_quests(user_id, category);`);
 
   } catch (error) {

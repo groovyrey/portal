@@ -447,7 +447,7 @@ export default function DailyQuestTab() {
                 )}
                 {q.feedback && (
                   <div className="mt-3 p-3 rounded-xl bg-white/50 border border-current/10 italic text-[11px] font-medium leading-relaxed">
-                    "AI: {q.feedback}"
+                    "AI: <QuestMarkdown content={q.feedback} className="inline" />"
                   </div>
                 )}
               </div>
@@ -756,9 +756,9 @@ export default function DailyQuestTab() {
                         {isCurrentCorrect ? 'Analysis: Accepted' : 'Analysis: Rejected'}
                     </span>
                 </div>
-                <p className="text-sm font-medium leading-relaxed italic">
-                    "{evaluationFeedback || (isCurrentCorrect ? 'Correct!' : 'Incorrect.')}"
-                </p>
+                <div className="text-sm font-medium leading-relaxed italic">
+                    "<QuestMarkdown content={evaluationFeedback || (isCurrentCorrect ? 'Correct!' : 'Incorrect.')} className="inline" />"
+                </div>
             </motion.div>
         )}
 

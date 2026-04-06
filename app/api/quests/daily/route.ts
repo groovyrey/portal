@@ -224,11 +224,16 @@ DIFFICULTY SCALING RULES:
 Rules:
 1. Provide exactly 10 questions.
 2. Ensure the questions are relevant to ${isAcademicQuest ? `the subject "${category}"` : `the category "${category}"`} and the requested difficulty level.
-3. **LATEX SUPPORT:** Use LaTeX for ALL mathematical formulas, equations, scientific notation, and chemical symbols. Use single '$' for inline (e.g., $E=mc^2$) and double '$$' for block equations.
+3. **LATEX SUPPORT (CRITICAL):** Use LaTeX for ALL mathematical formulas, equations, scientific notation, and chemical symbols. 
+   - Use single '$' for inline math (e.g., $E=mc^2$). 
+   - Use double '$$' for block equations on their own lines.
+   - **MANDATORY:** Ensure all variables (x, y, z), fractions (\frac{a}{b}), exponents (x^2), and special constants (\pi, \phi, \infty) are wrapped in LaTeX.
+   - For chemical formulas, use \ce{} if supported, or standard LaTeX (e.g., $H_2O$, $CO_2$).
 4. **DO NOT** repeat questions.
 5. **NO MARKERS:** Do not include any special characters like ">", "*", or "->" in the fields.
 6. **BOOLEAN NORMALIZATION:** For boolean types, use EXACTLY "True" or "False".
 7. Ensure no fields are left blank.
+8. **CONTENT:** Ensure questions are factually accurate and follow the target difficulty.
 `.trim();
 
     const prompt = ChatPromptTemplate.fromMessages([
@@ -277,17 +282,18 @@ Rules:
     // 3. Save to Turso (Skip if practice mode)
     if (!practice) {
       await query(
-        `INSERT INTO daily_quests (user_id, quest_date, category, questions, current_index, score, is_completed, stats_updated, updated_at)
-         VALUES (?, ?, ?, ?, 0, 0, 0, 0, CURRENT_TIMESTAMP)
+        `INSERT INTO daily_quests (user_id, quest_date, category, questions, difficulty, current_index, score, is_completed, stats_updated, updated_at)
+         VALUES (?, ?, ?, ?, ?, 0, 0, 0, 0, CURRENT_TIMESTAMP)
          ON CONFLICT(user_id, category) DO UPDATE SET
          quest_date = excluded.quest_date,
          questions = excluded.questions,
+         difficulty = excluded.difficulty,
          current_index = 0,
          score = 0,
          is_completed = 0,
          stats_updated = 0,
          updated_at = CURRENT_TIMESTAMP`,
-        [userId, today, category, questionsJson]
+        [userId, today, category, questionsJson, selectedDifficulty]
       );
     }
 
@@ -341,6 +347,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Quest Update Error:', error);
     return NextResponse.json({ error: 'Failed to update progress' }, { status: 500 });
   }
 }
