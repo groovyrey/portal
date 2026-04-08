@@ -166,7 +166,7 @@ export default function PostCard({
   return (
     <div 
       onClick={() => onOpen(post)}
-      className="surface-neutral relative overflow-hidden rounded-xl p-4 border border-border/70 hover:border-primary/30 transition-all cursor-pointer group shadow-sm hover:shadow-md duration-300 ring-1 ring-black/5 dark:ring-white/10"
+      className="surface-neutral relative rounded-xl p-4 border border-border/70 hover:border-primary/30 transition-all cursor-pointer group shadow-sm hover:shadow-md duration-300 ring-1 ring-black/5 dark:ring-white/10"
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2.5">
