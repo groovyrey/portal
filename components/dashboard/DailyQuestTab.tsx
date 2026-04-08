@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useStudent } from '@/lib/hooks';
 import QuestMarkdown from '@/components/shared/QuestMarkdown';
+import { getPHDate } from '@/lib/utils';
 
 interface TriviaQuestion {
   category: string;
@@ -160,10 +161,10 @@ export default function DailyQuestTab() {
     // Check local cooldown state
     const existing = allQuests.find(q => q.category === category);
     if (existing) {
-      const lastUpdate = new Date(existing.updated_at);
-      const daysSinceLastRun = (new Date().getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
-      if (daysSinceLastRun < 1 && existing.is_completed) {
-        toast.error(`"${category}" is on a 24-hour cooldown. Come back tomorrow!`);
+      const today = getPHDate();
+      const isSameDay = existing.quest_date === today;
+      if (isSameDay && existing.is_completed) {
+        toast.error(`"${category}" has already been completed today. Come back tomorrow!`);
         return;
       }
     }
@@ -385,20 +386,17 @@ export default function DailyQuestTab() {
   const getCategoryStatus = (category: string) => {
     const quest = allQuests.find(q => q.category === category);
     const isFeatured = category === currentStats?.featuredCategory;
+    const today = getPHDate();
     
     if (!quest) return { status: 'available', isFeatured };
     
+    const isSameDay = quest.quest_date === today;
+
+    if (!isSameDay) return { status: 'available', isFeatured };
+    
     if (!quest.is_completed) return { status: 'in-progress', isFeatured };
     
-    const lastUpdate = new Date(quest.updated_at);
-    const daysSinceLastRun = (new Date().getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
-    
-    if (daysSinceLastRun < 1) {
-      const hoursLeft = Math.ceil(24 - (daysSinceLastRun * 24));
-      return { status: 'cooldown', hoursLeft, isFeatured };
-    }
-    
-    return { status: 'available', isFeatured };
+    return { status: 'cooldown', hoursLeft: 'Midnight', isFeatured };
   };
 
   if (loading) return (
@@ -425,7 +423,7 @@ export default function DailyQuestTab() {
 
         <div className="space-y-4">
           {questions.map((q, i) => (
-            <div key={i} className={`p-6 rounded-2xl border ${q.isCorrect ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20'}`}>
+            <div key={i} className={`p-6 rounded-xl border ${q.isCorrect ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20'}`}>
               <div className="flex items-start justify-between gap-4 mb-4">
                 <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-muted/50">Q{i+1}</span>
                 {q.isCorrect ? (
@@ -484,11 +482,11 @@ export default function DailyQuestTab() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-            <div className="surface-neutral p-6 rounded-2xl text-center">
+            <div className="surface-neutral p-6 rounded-xl text-center">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Final Score</p>
                 <div className="text-3xl font-black text-primary">{score} / {totalQuestions}</div>
             </div>
-            <div className="surface-neutral p-6 rounded-2xl text-center">
+            <div className="surface-neutral p-6 rounded-xl text-center">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">EXP Gained</p>
                 <div className={`text-xl font-black uppercase ${statsUpdated && !questStats ? 'text-muted-foreground' : 'text-emerald-500'}`}>
                     {statsUpdated && !questStats ? 'Daily Limit' : `+${stats.gainedExp}`}
@@ -504,7 +502,7 @@ export default function DailyQuestTab() {
         </div>
 
         {stats && (
-            <div className="surface-neutral p-6 rounded-2xl border border-primary/20 bg-primary/5 relative overflow-hidden text-left">
+            <div className="surface-neutral p-6 rounded-xl border border-primary/20 bg-primary/5 relative overflow-hidden text-left">
                 <div className="absolute top-0 left-0 h-1 bg-primary/20 w-full">
                     <motion.div 
                         className="h-full bg-primary shadow-[0_0_10px_rgba(37,99,235,0.5)]" 
@@ -615,7 +613,7 @@ export default function DailyQuestTab() {
                     key={cat.id} 
                     onClick={() => startQuest(cat.name)} 
                     disabled={isCooldown}
-                    className={`surface-neutral p-6 rounded-2xl border transition-all group flex flex-col items-center gap-3 relative overflow-hidden ${
+                    className={`surface-neutral p-6 rounded-xl border transition-all group flex flex-col items-center gap-3 relative overflow-hidden ${
                       isCooldown 
                         ? 'opacity-50 grayscale border-border cursor-not-allowed' 
                         : 'border-primary/20 bg-primary/5 hover:border-primary/50'
@@ -629,7 +627,7 @@ export default function DailyQuestTab() {
                     )}
                     <cat.icon className={`h-8 w-8 transition-colors ${isCooldown ? 'text-muted-foreground' : 'text-primary'}`} />
                     <span className="font-bold text-[10px] sm:text-xs uppercase tracking-widest text-center">{cat.name}</span>
-                    {isCooldown && <span className="text-[8px] font-black text-rose-500">Next in {status.hoursLeft}h</span>}
+                    {isCooldown && <span className="text-[8px] font-black text-rose-500">Reset at Midnight</span>}
                     {status.status === 'in-progress' && <span className="text-[8px] font-black text-amber-500 animate-pulse">In Progress</span>}
                   </button>
                 );
@@ -649,7 +647,7 @@ export default function DailyQuestTab() {
                   key={cat.id} 
                   onClick={() => startQuest(cat.name)} 
                   disabled={isCooldown}
-                  className={`surface-neutral p-6 rounded-2xl border transition-all group flex flex-col items-center gap-3 relative overflow-hidden ${
+                  className={`surface-neutral p-6 rounded-xl border transition-all group flex flex-col items-center gap-3 relative overflow-hidden ${
                     isCooldown 
                       ? 'opacity-50 grayscale border-border cursor-not-allowed' 
                       : 'border-border hover:border-primary/50'
@@ -663,7 +661,7 @@ export default function DailyQuestTab() {
                   )}
                   <cat.icon className={`h-8 w-8 transition-colors ${isCooldown ? 'text-muted-foreground' : 'text-muted-foreground group-hover:text-primary'}`} />
                   <span className="font-bold text-[10px] sm:text-xs uppercase tracking-widest text-center">{cat.name}</span>
-                  {isCooldown && <span className="text-[8px] font-black text-rose-500">Next in {status.hoursLeft}h</span>}
+                  {isCooldown && <span className="text-[8px] font-black text-rose-500">Reset at Midnight</span>}
                   {status.status === 'in-progress' && <span className="text-[8px] font-black text-amber-500 animate-pulse">In Progress</span>}
                 </button>
               );
@@ -698,7 +696,7 @@ export default function DailyQuestTab() {
         <motion.div className="h-full bg-primary" animate={{ width: `${(currentIndex / totalQuestions) * 100}%` }} />
       </div>
 
-      <div className="surface-neutral p-8 rounded-2xl border border-border/50 space-y-8">
+      <div className="surface-neutral p-8 rounded-xl border border-border/50 space-y-8">
         <QuestMarkdown content={currentQ.question} className="text-xl sm:text-2xl font-bold text-center leading-tight flex justify-center" />
         
         {currentQ.type === 'open' ? (

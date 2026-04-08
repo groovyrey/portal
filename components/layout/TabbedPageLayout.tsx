@@ -82,7 +82,6 @@ export default function TabbedPageLayout({
           )}
         </aside>
 
-        {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0">
           <header className="lg:hidden h-16 border-b border-border flex items-center justify-between px-4 bg-background sticky top-16 z-30">
             <div className="flex items-center gap-2">

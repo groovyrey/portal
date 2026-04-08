@@ -7,13 +7,15 @@ import {
   Sparkles,
   ChevronRight,
   Loader2,
-  Zap
+  Zap,
+  Info
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import DailyQuestTab from '@/components/dashboard/DailyQuestTab';
 import TestQuestTab from '@/components/dashboard/TestQuestTab';
 import TabbedPageLayout from '@/components/layout/TabbedPageLayout';
+import QuestInfoDrawer from '@/components/community/QuestInfoDrawer';
 import { useStudent } from '@/lib/hooks';
 
 type TabType = 'daily' | 'test' | 'leaderboard';
@@ -77,7 +79,7 @@ function LeaderboardTab() {
               </button>
             </div>
           </div>
-          <div className="surface-neutral p-12 rounded-2xl border border-border/50 flex flex-col items-center justify-center text-center gap-4 min-h-[300px]">
+          <div className="surface-neutral p-12 rounded-xl border border-border/50 flex flex-col items-center justify-center text-center gap-4 min-h-[300px]">
             <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center">
               <Trophy className="h-8 w-8 text-muted-foreground/30" />
             </div>
@@ -185,6 +187,7 @@ export default function QuestsPage() {
   
   const [activeTab, setActiveTab] = useState<TabType>('daily');
   const [currentStats, setCurrentStats] = useState<any>(null);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   const fetchCurrentStats = useCallback(async () => {
     if (!student?.id) return;
@@ -219,14 +222,23 @@ export default function QuestsPage() {
   };
 
   return (
-    <TabbedPageLayout
-      title="Quest Center"
-      icon={Trophy}
-      subtitle="Knowledge Challenge"
-      tabs={TABS}
-      activeTab={activeTab}
-      onTabChange={handleTabChange}
-      sidebarFooter={
+    <>
+      <TabbedPageLayout
+        title="Quest Center"
+        icon={Trophy}
+        subtitle="Knowledge Challenge"
+        tabs={TABS}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        headerRight={
+          <button 
+            onClick={() => setIsInfoOpen(true)}
+            className="p-2 rounded-xl bg-muted/50 text-muted-foreground hover:text-primary transition-colors flex items-center justify-center"
+          >
+            <Sparkles size={18} className="fill-current" />
+          </button>
+        }
+        sidebarFooter={
         <div className="space-y-4">
           <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 space-y-4">
             <div className="flex items-center justify-between">
@@ -274,9 +286,17 @@ export default function QuestsPage() {
             </p>
           </div>
 
-          <div className="space-y-3">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Quick Rules</h3>
-            <ul className="space-y-2">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Quick Rules</h3>
+            <button 
+              onClick={() => setIsInfoOpen(true)}
+              className="p-1 rounded bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
+              title="View Full Guide"
+            >
+              <Info size={12} />
+            </button>
+          </div>
+          <ul className="space-y-2">
               {[
                 'One EXP-earning quest per day.',
                 '10 challenging questions per run.',
@@ -289,7 +309,6 @@ export default function QuestsPage() {
                 </li>
               ))}
             </ul>
-          </div>
 
           <div className="bg-primary/5 p-3 rounded-xl border border-primary/10 space-y-2">
             <div className="flex items-center gap-2">
@@ -304,13 +323,13 @@ export default function QuestsPage() {
       }
     >
       {activeTab === 'daily' && (
-        <div className="surface-neutral p-6 sm:p-8 rounded-2xl border border-border/50">
+        <div className="surface-neutral p-6 sm:p-8 rounded-xl border border-border/50">
           <DailyQuestTab />
         </div>
       )}
 
       {activeTab === 'test' && (
-        <div className="surface-neutral p-6 sm:p-8 rounded-2xl border border-border/50">
+        <div className="surface-neutral p-6 sm:p-8 rounded-xl border border-border/50">
           <TestQuestTab />
         </div>
       )}
@@ -319,6 +338,14 @@ export default function QuestsPage() {
         <LeaderboardTab />
       )}
     </TabbedPageLayout>
+
+    <QuestInfoDrawer 
+      isOpen={isInfoOpen}
+      onClose={() => setIsInfoOpen(false)}
+      currentStats={currentStats}
+      isStaff={!!isStaff}
+    />
+    </>
   );
 }
 

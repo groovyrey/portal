@@ -5,7 +5,7 @@ import { z } from "zod";
 const evaluationSchema = z.object({
   score: z.number().min(0).max(100).describe("How accurate the answer is from 0 to 100"),
   isCorrect: z.boolean().describe("Whether the answer is acceptable (true) or not (false)"),
-  feedback: z.string().describe("Brief feedback (max 10 words) explaining why")
+  feedback: z.string().describe("A concise, informative explanation (max 50 words) that reinforces the concept and explains why the answer was correct or how it can be improved.")
 });
 
 export async function POST(req: NextRequest) {
@@ -20,25 +20,26 @@ export async function POST(req: NextRequest) {
       modelName: "gpt-4o-mini",
       apiKey: process.env.GIT_MODEL_TOKEN || '',
       configuration: { baseURL: "https://models.inference.ai.azure.com" },
-      temperature: 0, // Deterministic
+      temperature: 0.3, // Slightly higher for more natural feedback
     });
 
     const structuredLlm = model.withStructuredOutput(evaluationSchema);
 
     const systemPrompt = `
-You are an expert academic evaluator. Your task is to determine if a student's answer to a given question is logical, relevant, and demonstrates critical thinking.
+You are an expert academic evaluator and tutor. Your task is to evaluate a student's answer and provide an informative, educational response that helps them learn.
 
 Question: "${question}"
 Evaluation Guidelines/Key Concepts: "${correctAnswer}"
 Student's Answer: "${userAnswer}"
 
 INSTRUCTIONS:
-1. Be lenient with grammar and spelling.
-2. Focus on the core logic and relevance.
-3. If the question is situational or subjective, accept any answer that provides a reasonable, justified explanation.
-4. If the answer is "I don't know" or completely irrelevant, mark it as incorrect.
-5. Provide a short, encouraging feedback.
-6. **LATEX SUPPORT (CRITICAL):** Use LaTeX for ANY mathematical formulas, scientific notation, or equations mentioned in the feedback. Wrap inline math in single '$' and block equations in double '$$'.
+1. **Evaluation:** Determine if the core logic is correct. Be lenient with grammar but strict on conceptual accuracy.
+2. **Informative Feedback:** Provide a concise explanation (max 50 words). 
+   - If correct: Briefly explain *why* it's correct and perhaps add a small related fact to reinforce the learning.
+   - If incorrect: Identify the misconception and provide the correct reasoning or context.
+3. **Tone:** Professional, encouraging, and academic.
+4. **LATEX SUPPORT (CRITICAL):** Use LaTeX for ALL mathematical formulas, chemical symbols, or scientific notation in your feedback. Wrap inline math in single '$' (e.g., $H_2O$, $x^2$).
+5. **No Filler:** Get straight to the point of the explanation.
 `.trim();
 
     const result = await structuredLlm.invoke(systemPrompt);

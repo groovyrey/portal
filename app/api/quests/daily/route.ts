@@ -57,8 +57,8 @@ export async function GET(req: NextRequest) {
       questions: typeof q.questions === 'string' ? JSON.parse(q.questions) : q.questions
     }));
 
-    // Find the currently active (incomplete) quest if any
-    const activeQuest = quests.find(q => !q.is_completed);
+    // Find the currently active (incomplete) quest if any (MUST be from today)
+    const activeQuest = quests.find(q => !q.is_completed && q.quest_date === today);
 
     // Check if any quest was completed today
     const completedTodayQuest = quests.find(q => q.is_completed && q.quest_date === today);
@@ -125,11 +125,11 @@ export async function POST(req: NextRequest) {
     
     // Cooldown logic: Once a day per category
     if (existingQuest && !force && !practice) {
-      const lastUpdate = new Date(existingQuest.updated_at);
-      const daysSinceLastRun = (new Date().getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
+      const lastUpdateDate = existingQuest.quest_date;
+      const isSameDay = lastUpdateDate === today;
 
-      // If quest exists, was updated recently, and is either active or completed
-      if (daysSinceLastRun < 1) {
+      // If quest exists and was updated TODAY, and is either active or completed
+      if (isSameDay) {
         // If incomplete, return the existing quest to continue
         if (!existingQuest.is_completed) {
           return NextResponse.json({
@@ -139,9 +139,9 @@ export async function POST(req: NextRequest) {
           });
         }
         
-        // If completed and within cooldown, block regeneration
+        // If completed today, block regeneration
         return NextResponse.json({ 
-          error: `Category "${category}" is on a 24-hour cooldown. Come back tomorrow!`,
+          error: `Category "${category}" has already been completed today. Come back tomorrow!`,
           cooldown: true
         }, { status: 400 });
       }
