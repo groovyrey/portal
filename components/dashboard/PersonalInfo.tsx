@@ -27,9 +27,6 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
   const { onlineMembers } = useRealtime();
   const showAcademic = !isPublic || (student.settings?.showAcademicInfo ?? true);
 
-  const memberStatus = onlineMembers.get(student.id);
-  const isStudying = memberStatus?.isStudying;
-  
   // Use DiceBear lorelei avatar based on student ID (clean and modern)
   const avatarUrl = `https://api.dicebear.com/7.x/lorelei/svg?seed=${student.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`;
 
@@ -68,31 +65,10 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
               className="object-cover"
               unoptimized
             />
-            {isStudying && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="absolute inset-0 bg-primary/20 backdrop-blur-[1px] flex items-center justify-center"
-              >
-                <BrainCircuit className="h-6 w-6 text-primary animate-pulse" />
-              </motion.div>
-            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
               <h3 className="text-base font-black text-foreground uppercase tracking-tight truncate">Academic Profile</h3>
-              <AnimatePresence>
-                {isStudying && (
-                  <motion.span 
-                    initial={{ opacity: 0, x: -5 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 5 }}
-                    className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-[8px] font-black text-primary uppercase tracking-widest animate-pulse border border-primary/20"
-                  >
-                    Studying
-                  </motion.span>
-                )}
-              </AnimatePresence>
             </div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">{student.course}</p>
           </div>

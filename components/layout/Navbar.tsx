@@ -227,10 +227,7 @@ export default function Navbar() {
     { name: 'EAF', href: '/eaf', icon: FileText },
   ];
 
-  const workspaceLinks: NavLeaf[] = [
-    { name: 'Study Mode', href: '/study-mode', icon: Monitor, desc: 'Focused Study' },
-    { name: 'Quests', href: '/quests', icon: Trophy, desc: 'Daily Challenges' },
-  ];
+  const workspaceLinks: NavLeaf[] = [];
 
   const socialLinks: NavLeaf[] = [
     { name: 'Profile', href: studentId ? `/student/${studentId}` : '/student', icon: UserIcon },
@@ -247,7 +244,7 @@ export default function Navbar() {
 
   const authLinks: NavItem[] = [
     { name: 'Portal', icon: LayoutDashboard, children: portalLinks },
-    { name: 'Workspace', icon: Monitor, children: workspaceLinks },
+    ...(workspaceLinks.length > 0 ? [{ name: 'Workspace', icon: Monitor, children: workspaceLinks }] : []),
     { name: 'Social', icon: Users, children: socialLinks },
     ...staffAdminGroup,
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
@@ -259,7 +256,7 @@ export default function Navbar() {
   // For desktop view: show a few primary links and the rest in "More"
   const desktopPrimary: NavGroup[] = isLoggedIn ? [
     { name: 'Portal', icon: LayoutDashboard, children: portalLinks },
-    { name: 'Workspace', icon: DatabaseZap, children: workspaceLinks },
+    ...(workspaceLinks.length > 0 ? [{ name: 'Workspace', icon: DatabaseZap, children: workspaceLinks }] : []),
     { name: 'Social', icon: Users, children: socialLinks },
     ...staffAdminGroup,
   ] : [];

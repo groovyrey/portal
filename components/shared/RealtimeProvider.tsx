@@ -8,7 +8,6 @@ import { usePathname } from 'next/navigation';
 
 interface MemberStatus {
   isOnline: boolean;
-  isStudying: boolean;
 }
 
 const RealtimeContext = createContext<{ 
@@ -81,7 +80,6 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
     const studentChannel = studentId ? ably.channels.get(`student-${studentId}`) : null;
 
     // Presence Logic
-    const isStudying = pathname === '/study-mode';
     
     const updatePresenceData = async () => {
       try {
@@ -91,8 +89,7 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
         members.forEach(m => {
           if (m.clientId && m.clientId !== 'anonymous') {
             memberMap.set(m.clientId, {
-              isOnline: true,
-              isStudying: m.data?.isStudying || false
+              isOnline: true
             });
           }
         });
@@ -104,12 +101,12 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
     };
 
     const enterPresence = () => {
-      communityChannel.presence.enter({ isStudying });
+      communityChannel.presence.enter();
     };
 
-    // Update presence data when we are in study mode or not
+    // Update presence data
     if (ably.connection.state === 'connected') {
-      communityChannel.presence.update({ isStudying });
+      communityChannel.presence.update();
     }
 
     ably.connection.on('connected', enterPresence);

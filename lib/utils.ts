@@ -113,20 +113,3 @@ export function deobfuscateId(obfuscated: string): string {
     return obfuscated;
   }
 }
-
-/**
- * Returns the current date in YYYY-MM-DD format specifically for the Asia/Manila timezone.
- * Used for consistent daily quest resets at 12:00 AM PHT.
- */
-export function getPHDate(): string {
-  const date = new Date();
-  const options: Intl.DateTimeFormatOptions = {
-    timeZone: 'Asia/Manila',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  };
-  
-  const formatter = new Intl.DateTimeFormat('en-CA', options);
-  return formatter.format(date); // en-CA returns YYYY-MM-DD
-}

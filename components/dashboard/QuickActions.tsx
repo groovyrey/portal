@@ -21,13 +21,6 @@ const actions = [
     card: 'bg-card'
   },
   { 
-    label: 'Study Mode', 
-    icon: BrainCircuit, 
-    href: '/study-mode', 
-    color: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
-    card: 'bg-card'
-  },
-  { 
     label: 'Class Schedule', 
     icon: Calendar, 
     href: '/', 

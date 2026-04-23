@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { migrateDailyQuests, migrateStudentStats } from '@/lib/db-migrate';
+import { migrateCommunity, migrateNotifications, migrateActivityLogs } from '@/lib/db-migrate';
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,8 +9,9 @@ export async function GET(req: NextRequest) {
       // return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await migrateStudentStats();
-    await migrateDailyQuests();
+    await migrateCommunity();
+    await migrateNotifications();
+    await migrateActivityLogs();
 
     return NextResponse.json({ message: 'Migrations completed successfully' });
   } catch (error) {

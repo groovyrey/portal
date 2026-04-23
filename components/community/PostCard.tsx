@@ -91,7 +91,6 @@ export default function PostCard({
   const [showMenu, setShowMenu] = useState(false);
   
   const memberStatus = onlineMembers.get(post.userId);
-  const isStudying = memberStatus?.isStudying;
 
   const menuRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
@@ -184,9 +183,6 @@ export default function PostCard({
             {isProfileView ? (
                <div className="flex items-center gap-1.5 mb-1">
                  <h4 className="text-sm font-bold text-foreground leading-none">{post.userName}</h4>
-                 {isStudying && (
-                    <BrainCircuit className="h-3 w-3 text-primary animate-pulse" />
-                 )}
                </div>
             ) : (
               <Link 
@@ -196,9 +192,6 @@ export default function PostCard({
               >
                   <div className="flex items-center gap-1.5 mb-1">
                     <h4 className="text-sm font-bold text-foreground leading-none group-hover/link:text-primary transition-colors">{post.userName}</h4>
-                    {isStudying && (
-                      <BrainCircuit className="h-3 w-3 text-primary animate-pulse" />
-                    )}
                   </div>
               </Link>
             )}

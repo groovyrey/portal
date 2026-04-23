@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   BarChart3,
   Activity,
+  Mail,
 } from 'lucide-react';
 import { useStudentQuery } from '@/lib/hooks';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
@@ -19,23 +20,24 @@ import ManageTab from '@/components/admin/ManageTab';
 import KnowledgeTab from '@/components/admin/KnowledgeTab';
 import StatsTab from '@/components/admin/StatsTab';
 import MonitoringTab from '@/components/admin/MonitoringTab';
+import EmailTab from '@/components/admin/EmailTab';
 
 export default function AdminPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<'manage' | 'knowledge' | 'stats' | 'monitoring'>('manage');
+  const [activeTab, setActiveTab] = useState<'manage' | 'knowledge' | 'stats' | 'monitoring' | 'email'>('manage');
   const { data: currentUser, isLoading: isUserLoading } = useStudentQuery();
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['manage', 'knowledge', 'stats', 'monitoring'].includes(tab)) {
-      setActiveTab(tab as 'manage' | 'knowledge' | 'stats' | 'monitoring');
+    if (tab && ['manage', 'knowledge', 'stats', 'monitoring', 'email'].includes(tab)) {
+      setActiveTab(tab as 'manage' | 'knowledge' | 'stats' | 'monitoring' | 'email');
     }
   }, [searchParams]);
 
-  const handleTabChange = (tabId: 'manage' | 'knowledge' | 'stats' | 'monitoring') => {
+  const handleTabChange = (tabId: 'manage' | 'knowledge' | 'stats' | 'monitoring' | 'email') => {
     setActiveTab(tabId);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tabId);
@@ -78,6 +80,7 @@ export default function AdminPage() {
 
   const tabs = [
     { id: 'manage', name: 'Manage Users', icon: Users, desc: 'Badges & Registry' },
+    { id: 'email', name: 'Email center', icon: Mail, desc: 'Mass Messaging' },
     { id: 'stats', name: 'Statistics', icon: BarChart3, desc: 'Growth & Metrics' },
     { id: 'monitoring', name: 'Monitoring', icon: Activity, desc: 'System Health' },
     { id: 'knowledge', name: 'Knowledge', icon: BookOpen, desc: 'AI Knowledge Base' },
@@ -99,6 +102,7 @@ export default function AdminPage() {
       }
     >
       {activeTab === 'manage' && <ManageTab />}
+      {activeTab === 'email' && <EmailTab />}
       {activeTab === 'stats' && <StatsTab />}
       {activeTab === 'monitoring' && <MonitoringTab />}
       {activeTab === 'knowledge' && <KnowledgeTab />}
