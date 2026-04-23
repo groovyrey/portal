@@ -34,7 +34,6 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-lg tracking-tight text-foreground">LCCian Hub</span>
-                <span className="px-1.5 py-0.5 rounded bg-secondary text-[9px] font-bold text-muted-foreground border border-border uppercase tracking-tight">Unofficial</span>
               </div>
             </Link>
             <p className="text-muted-foreground text-xs max-w-xs leading-relaxed font-medium">

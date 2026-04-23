@@ -116,13 +116,6 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
         <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Interaction Style</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <SettingsToggle 
-            icon={<GraduationCap />} 
-            title="Tutor Mode" 
-            description="Guide me through problems"
-            enabled={assistantSettings.tutorMode}
-            onToggle={() => handleToggle('tutorMode')}
-          />
-          <SettingsToggle 
             icon={<Zap />} 
             title="Show Thinking" 
             description="Visible reasoning process"

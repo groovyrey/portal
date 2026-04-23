@@ -216,7 +216,6 @@ export default function Navbar() {
 
   const publicLinks: NavLeaf[] = [
     { name: 'About', href: '/about', icon: Info },
-    { name: 'Team', href: '/team', icon: Users },
     { name: 'Disclaimer', href: '/disclaimer', icon: ShieldAlert },
   ];
 
@@ -249,7 +248,6 @@ export default function Navbar() {
     ...staffAdminGroup,
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
     { name: 'Settings', href: '/settings', icon: Settings },
-    { name: 'Team', href: '/team', icon: Users },
     { name: 'About', href: '/about', icon: Info },
   ];
 
@@ -264,7 +262,6 @@ export default function Navbar() {
   const desktopMore: NavLeaf[] = isLoggedIn ? [
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
     { name: 'Settings', href: '/settings', icon: Settings },
-    { name: 'Team', href: '/team', icon: Users },
     { name: 'About', href: '/about', icon: Info },
   ] : [];
 
@@ -290,7 +287,6 @@ export default function Navbar() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-lg tracking-tight text-foreground">LCCian Hub</span>
-                  <span className="px-1.5 py-0.5 rounded bg-secondary text-[9px] font-bold text-muted-foreground border border-border uppercase tracking-wider">Beta</span>
                 </div>
               </Link>
             </div>

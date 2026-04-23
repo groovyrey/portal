@@ -37,9 +37,6 @@ export default function LoginForm({ onLogin, loading, error, requiresPasswordCha
                 priority
               />
             </div>
-            <div className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[9px] font-black uppercase tracking-widest">
-              Unofficial
-            </div>
           </div>
           <h1 className="text-xl font-bold text-foreground">LCCian Hub</h1>
           <p className="text-xs text-muted-foreground mt-0.5 font-medium italic">Student-Made Academic Workspace</p>

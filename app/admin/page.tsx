@@ -5,7 +5,6 @@ import {
   ShieldAlert,
   Loader2,
   Users,
-  BookOpen,
   ShieldCheck,
   BarChart3,
   Activity,
@@ -17,7 +16,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import TabbedPageLayout from '@/components/layout/TabbedPageLayout';
 
 import ManageTab from '@/components/admin/ManageTab';
-import KnowledgeTab from '@/components/admin/KnowledgeTab';
 import StatsTab from '@/components/admin/StatsTab';
 import MonitoringTab from '@/components/admin/MonitoringTab';
 import EmailTab from '@/components/admin/EmailTab';
@@ -27,17 +25,17 @@ export default function AdminPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<'manage' | 'knowledge' | 'stats' | 'monitoring' | 'email'>('manage');
+  const [activeTab, setActiveTab] = useState<'manage' | 'stats' | 'monitoring' | 'email'>('manage');
   const { data: currentUser, isLoading: isUserLoading } = useStudentQuery();
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['manage', 'knowledge', 'stats', 'monitoring', 'email'].includes(tab)) {
-      setActiveTab(tab as 'manage' | 'knowledge' | 'stats' | 'monitoring' | 'email');
+    if (tab && ['manage', 'stats', 'monitoring', 'email'].includes(tab)) {
+      setActiveTab(tab as 'manage' | 'stats' | 'monitoring' | 'email');
     }
   }, [searchParams]);
 
-  const handleTabChange = (tabId: 'manage' | 'knowledge' | 'stats' | 'monitoring' | 'email') => {
+  const handleTabChange = (tabId: 'manage' | 'stats' | 'monitoring' | 'email') => {
     setActiveTab(tabId);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tabId);
@@ -77,7 +75,6 @@ export default function AdminPage() {
     { id: 'email', name: 'Email center', icon: Mail, desc: 'Mass Messaging' },
     { id: 'stats', name: 'Statistics', icon: BarChart3, desc: 'Growth & Metrics' },
     { id: 'monitoring', name: 'Monitoring', icon: Activity, desc: 'System Health' },
-    { id: 'knowledge', name: 'Knowledge', icon: BookOpen, desc: 'AI Knowledge Base' },
   ] as const;
 
   return (
@@ -99,7 +96,6 @@ export default function AdminPage() {
       {activeTab === 'email' && <EmailTab />}
       {activeTab === 'stats' && <StatsTab />}
       {activeTab === 'monitoring' && <MonitoringTab />}
-      {activeTab === 'knowledge' && <KnowledgeTab />}
     </TabbedPageLayout>
   );
 }

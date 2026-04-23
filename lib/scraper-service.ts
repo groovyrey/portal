@@ -128,7 +128,7 @@ export class ScraperService {
       const href = dashboard$(el).attr('href');
       const text = dashboard$(el).text().trim();
       if (href && (href.toLowerCase().includes('subjectlist') || text.toLowerCase().includes('subject list'))) {
-        let correctedHref = href.replace('/Gate/', '/Student/');
+        const correctedHref = href.replace('/Gate/', '/Student/');
         subjectListUrl = new URL(correctedHref, dashboardUrl).toString();
         return false;
       }
@@ -545,7 +545,7 @@ export class ScraperService {
   }
 
   async parseReportCard($rc: cheerio.CheerioAPI, rawHtml?: string): Promise<any[]> {
-    let subjects: any[] = [];
+    const subjects: any[] = [];
     $rc('table').each((tIdx, table) => {
       const rows = $rc(table).find('tr');
       rows.each((rIdx, row) => {

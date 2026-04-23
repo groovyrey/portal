@@ -344,15 +344,13 @@ export async function POST(req: NextRequest) {
       })
     ];
 
-    const tutorModeProtocol = assistantSettings.tutorMode !== false // Note: Default to true if undefined
-      ? `1. **Tutor Mode (Strict):**
+    const tutorModeProtocol = `1. **Tutor Mode (Strict):**
    - **Educational Approach:** Explain clearly using core concepts, intuitive ideas, and relatable analogies. Your goal is deep understanding, not just task completion. Break down complex topics into simple, logical steps that a student can easily follow.
    - **Intent Detection:** Carefully distinguish between a student **ASKING** for a result (e.g., "What is 15+5?") and a student **ATTEMPTING** an answer (e.g., "Is it 20?").
    - **Handling Questions:** If a student is asking a question, DO NOT provide the answer. Provide a hint, a conceptual explanation, or a simplified version of the problem to guide them.
    - **Handling Attempts:** Only if the student provides a specific numerical guess should you verify it.
    - **Verification:** Calculate the result (mentally for simple math, tool for complex). If they are WRONG, point out the conceptual mistake and give a guiding hint. If CORRECT, confirm and explain the underlying reasoning.
-   - **Strict Rule:** NEVER reveal the final numerical answer or solution to an inquiry. Stop at the step before the final calculation.`
-      : `1. **Direct Answer Mode:** Provide direct, accurate, and immediate answers to all student questions. Do NOT use hints; give the solution and explain the steps. **CRITICAL: When using tools, present the result as your own findings. NEVER congratulate the student or say "That's great!" for a result provided by a tool, as the student hasn't answered yet.**`;
+   - **Strict Rule:** NEVER reveal the final numerical answer or solution to an inquiry. Stop at the step before the final calculation.`;
 
     const contextProtocol = assistantSettings.contextAwareness === false
       ? `\n**IMPORTANT: Academic Context (Grades/Schedule/Finance) is DISABLED by the student.** You CANNOT access their specific grades, schedules, or balances. If they ask about these, politely explain that "Academic Context" must be enabled in Assistant Settings.`
@@ -459,11 +457,6 @@ STUDENT DATA:
     history.push(new AIMessage("Understood. I am now initialized as the LCCian Companion. I will provide direct responses in plain markdown only (I will NEVER wrap my entire response in code blocks). I will use the `||| { \"name\": ... }` format for tool calls."));
 
     // Note: Reinforced few-shots for Gemma 3
-    history.push(new HumanMessage("What is my balance?"));
-    history.push(new AIMessage("||| { \"name\": \"get_financials\" }"));
-    history.push(new HumanMessage("[SYSTEM_DATA_RETRIEVED] Financials: { \"balance\": 5400, \"status\": \"Paid\" }"));
-    history.push(new AIMessage(`Hello ${firstName}! Your current balance is **₱5,400.00**. Your account status is currently **Paid**. Is there anything else you'd like to help with?`));
-
     // Note: Load messages into history and STRIP code blocks to prevent pattern mimicry
     const messagesToLoad = assistantSettings.saveHistory ? messages : [messages[messages.length - 1]];
 
@@ -549,7 +542,7 @@ STUDENT DATA:
             }
           }
 
-          let collectedToolCalls = aggregatedChunk?.tool_calls || [];
+          const collectedToolCalls = aggregatedChunk?.tool_calls || [];
 
           const collectedContent = aggregatedChunk?.content || "";
 

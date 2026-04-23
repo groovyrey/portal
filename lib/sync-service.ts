@@ -104,7 +104,7 @@ export class SyncService {
   async syncGrades(reportName: string, subjects: any[], reportSlug?: string) {
     if (!subjects || subjects.length === 0) return;
 
-    let slug = reportSlug || reportName.replace(/[^a-zA-Z0-9]/g, '_');
+    const slug = reportSlug || reportName.replace(/[^a-zA-Z0-9]/g, '_');
     const reportId = `${this.userId}_${slug}`;
     const gradeRef = doc(db, 'grades', reportId);
     

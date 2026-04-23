@@ -667,7 +667,7 @@ export default function AssistantPage() {
 
       const textDecoder = new TextDecoder();
       let buffer = "";
-      let activeAssistantMessageId = assistantMessageId;
+      const activeAssistantMessageId = assistantMessageId;
 
       while (true) {
         const { done, value } = await reader.read();

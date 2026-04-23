@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     default: "LCCian Hub",
     template: "%s | LCCian Hub"
   },
-  description: "Unofficial Student Workspace for LCCians",
+  description: "Student Workspace for LCCians",
   icons: {
     icon: '/logo.png',
     shortcut: '/logo.png',

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, 
   Clock, 
@@ -11,300 +11,279 @@ import {
   Zap,
   Trash2,
   HeartPulse,
-  History
+  History,
+  Activity,
+  ShieldCheck,
+  Globe,
+  Database,
+  Timer
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 
+import { useRealtime } from '@/components/shared/RealtimeProvider';
+import { APP_VERSION } from '@/lib/version';
+
 export default function MonitoringTab() {
-  const { data: statusData, isLoading, refetch, isRefetching } = useQuery({
+  const { onlineMembers } = useRealtime();
+  const [latency, setLatency] = useState<number | null>(null);
+
+  const { data: statusData, isLoading: isStatusLoading, refetch: refetchStatus, isRefetching: isStatusRefetching } = useQuery({
     queryKey: ['cron-status'],
     queryFn: async () => {
+      const start = performance.now();
       const res = await fetch('/api/cron/status');
+      const end = performance.now();
+      setLatency(Math.round(end - start));
       if (!res.ok) throw new Error('Failed to fetch status');
       return res.json();
     }
   });
+
+  const { data: adminLogsData, isLoading: isLogsLoading, refetch: refetchLogs } = useQuery({
+    queryKey: ['admin-logs'],
+    queryFn: async () => {
+      const res = await fetch('/api/admin/logs');
+      if (!res.ok) throw new Error('Failed to fetch logs');
+      return res.json();
+    }
+  });
+
+  const isLoading = isStatusLoading || isLogsLoading;
+  const isRefetching = isStatusRefetching;
+
+  const handleRefresh = () => {
+    refetchStatus();
+    refetchLogs();
+  };
 
   const jobs = [
     {
       id: 'daily',
       name: 'Daily Dispatch',
       icon: <Zap className="h-4 w-4 text-amber-500" />,
-      desc: 'Consolidated daily tasks: Schedule reminders, payment alerts, and user notifications.',
       data: statusData?.jobs?.daily
     },
     {
       id: 'maintenance',
-      name: 'System Maintenance',
+      name: 'Maintenance',
       icon: <Server className="h-4 w-4 text-blue-500" />,
-      desc: 'Database cleanup, log rotation, and infrastructure health monitoring.',
       data: statusData?.jobs?.maintenance
     }
   ];
 
+  const services = [
+    { name: 'Database', provider: 'Firestore', status: statusData ? 'Operational' : 'Unknown', icon: <Database size={12} /> },
+    { name: 'Realtime', provider: 'Ably', status: onlineMembers ? 'Connected' : 'Disconnected', icon: <Globe size={12} /> },
+    { name: 'Security', provider: 'AES-256', status: 'Active', icon: <ShieldCheck size={12} /> },
+  ];
+
+  // Combine and sort logs
+  const combinedActivity = [
+    ...(statusData?.history || []).map((run: any) => ({
+      type: 'cron',
+      id: run.id,
+      time: run.lastRun,
+      label: run.jobId.split('-')[0],
+      detail: run.tasks?.join(', ') || 'No tasks listed',
+      status: 'SUCCESS'
+    })),
+    ...(adminLogsData?.logs || []).map((log: any) => ({
+      type: 'admin',
+      id: log.id,
+      time: log.timestamp?.seconds ? log.timestamp.seconds * 1000 : log.timestamp,
+      label: 'ADMIN',
+      detail: `${log.adminName}: ${log.action} ${log.targetName || ''}`,
+      status: 'LOGGED'
+    }))
+  ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 12);
+
   return (
     <div className="space-y-6 pb-10">
-      {/* Header Actions */}
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-emerald-500" />
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Infrastructure Pulse: Optimal</span>
+        <div className="flex items-center gap-3">
+          <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest px-1">System Health</h2>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[9px] font-black text-emerald-600 uppercase tracking-tighter">
+              {onlineMembers.size} Active {onlineMembers.size === 1 ? 'User' : 'Users'}
+            </span>
+          </div>
         </div>
         <button 
-          onClick={() => refetch()} 
+          onClick={handleRefresh} 
           disabled={isLoading || isRefetching}
-          className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 uppercase tracking-wider"
+          className="p-2 hover:bg-accent rounded-lg transition-colors disabled:opacity-50"
+          title="Refresh Status"
         >
-          <RefreshCw size={12} className={isLoading || isRefetching ? 'animate-spin' : ''} />
-          {isLoading || isRefetching ? 'Syncing...' : 'Force Refresh'}
+          <RefreshCw size={14} className={isLoading || isRefetching ? 'animate-spin' : 'text-muted-foreground'} />
         </button>
       </div>
 
-      {/* Task Registry Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[
-          {
-            id: 'daily',
-            title: 'Daily Pipeline',
-            time: '06:00 AM Manila',
-            icon: Zap,
-            color: 'amber',
-            tasks: ['Schedule Reminders', 'Payment Alerts'],
-            events: [
-              { day: 'Mon', label: 'Weekly Summary' },
-              { day: 'Wed', label: 'Mid-Week Check' },
-              { day: 'Fri', label: 'Weekend Preview' }
-            ]
-          },
-          {
-            id: 'maintenance',
-            title: 'Maintenance Pipeline',
-            time: '08:00 AM Manila',
-            icon: Server,
-            color: 'blue',
-            tasks: ['Health Check'],
-            events: [
-              { day: 'Sun', label: 'DB Deep Clean' },
-              { day: 'Wed', label: 'Log Rotation' }
-            ]
-          }
-        ].map((pipeline) => (
-          <div key={pipeline.id} className="bg-card border border-border rounded-lg p-5">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-md bg-muted text-muted-foreground">
-                <pipeline.icon size={16} />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold">{pipeline.title}</h3>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{pipeline.time}</p>
-              </div>
-            </div>
+      {/* Info Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-card border border-border rounded-xl p-3 space-y-1">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Activity size={12} />
+            <span className="text-[10px] font-bold uppercase tracking-tight">Version</span>
+          </div>
+          <p className="text-sm font-black font-mono">{APP_VERSION}</p>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-3 space-y-1">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Timer size={12} />
+            <span className="text-[10px] font-bold uppercase tracking-tight">API Latency</span>
+          </div>
+          <p className="text-sm font-black font-mono">{latency ? `${latency}ms` : '--'}</p>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-3 space-y-1">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Server size={12} />
+            <span className="text-[10px] font-bold uppercase tracking-tight">Environment</span>
+          </div>
+          <p className="text-sm font-black font-mono uppercase">{process.env.NODE_ENV === 'production' ? 'Prod' : 'Dev'}</p>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-3 space-y-1">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <HeartPulse size={12} className={latency && latency > 1000 ? "text-amber-500" : "text-emerald-500"} />
+            <span className="text-[10px] font-bold uppercase tracking-tight">Status</span>
+          </div>
+          <p className={`text-sm font-black uppercase ${
+            !statusData ? 'text-red-500' : (latency && latency > 1000 ? 'text-amber-500' : 'text-emerald-500')
+          }`}>
+            {!statusData ? 'Degraded' : (latency && latency > 1000 ? 'Lagging' : 'Optimal')}
+          </p>
+        </div>
+      </div>
 
-            <div className="space-y-5">
-              <div>
-                <span className="text-[11px] text-muted-foreground mb-2 block">Persistent Base</span>
-                <div className="flex flex-wrap gap-2">
-                  {pipeline.tasks.map(task => (
-                    <span key={task} className="px-2.5 py-1 bg-muted/50 rounded text-[11px] font-medium border border-border/50">{task}</span>
-                  ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Services & Jobs */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="space-y-3">
+            <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest px-1">Infrastructure</h3>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between p-2.5 bg-card border border-border rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-muted rounded-md text-muted-foreground">
+                    <Database size={12} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-foreground leading-none">Database</p>
+                    <p className="text-[9px] text-muted-foreground">Firestore</p>
+                  </div>
+                </div>
+                <div className={`text-[9px] font-black uppercase ${statusData ? 'text-emerald-500' : 'text-red-500'}`}>
+                  {statusData ? 'Operational' : 'Error'}
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-border">
-                <span className="text-[11px] text-muted-foreground mb-2 block">Scheduled Events</span>
-                <div className="space-y-2">
-                  {pipeline.events.map(event => (
-                    <div key={event.day} className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-foreground">{event.day}</span>
-                      <span className="text-[10px] px-2 py-0.5 bg-primary/10 text-primary rounded font-bold uppercase tracking-wider">
-                        {event.label}
-                      </span>
-                    </div>
-                  ))}
+              <div className="flex items-center justify-between p-2.5 bg-card border border-border rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-muted rounded-md text-muted-foreground">
+                    <Globe size={12} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-foreground leading-none">Realtime</p>
+                    <p className="text-[9px] text-muted-foreground">Ably</p>
+                  </div>
+                </div>
+                <div className={`text-[9px] font-black uppercase text-emerald-500`}>
+                  Connected
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 bg-card border border-border rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-muted rounded-md text-muted-foreground">
+                    <ShieldCheck size={12} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-foreground leading-none">Security</p>
+                    <p className="text-[9px] text-muted-foreground">AES-256</p>
+                  </div>
+                </div>
+                <div className="text-[9px] font-black uppercase text-emerald-500">
+                  Active
                 </div>
               </div>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Active Pipelines */}
-      <div className="space-y-3">
-        <h2 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 flex items-center gap-2">
-            <Zap size={13} className="text-muted-foreground" />
-            Active Pipelines
-        </h2>
-
-        <div className="grid grid-cols-1 gap-3">
-          {isLoading ? (
-            [1, 2].map(i => (
-              <div key={i} className="bg-card border border-border p-6 rounded-lg animate-pulse flex justify-between items-center">
-                <div className="space-y-2">
-                  <div className="h-4 w-40 bg-muted rounded" />
-                  <div className="h-2 w-64 bg-muted/60 rounded" />
-                </div>
-                <div className="h-8 w-24 bg-muted/40 rounded-lg" />
-              </div>
-            ))
-          ) : (
-            jobs.map((job) => (
-              <div key={job.id} className="bg-card border border-border rounded-lg overflow-hidden transition-colors hover:border-border/80">
-                <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0 border border-border/50">
+          <div className="space-y-3">
+            <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest px-1">Automated Jobs</h3>
+            <div className="space-y-2">
+              {jobs.map((job) => (
+                <div key={job.id} className="p-3 bg-card border border-border rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
                       {job.icon}
+                      <div>
+                        <p className="text-[10px] font-bold">{job.name}</p>
+                        <p className="text-[9px] text-muted-foreground">
+                          {job.data?.lastRun 
+                            ? new Date(job.data.lastRun).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            : 'Pending'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-sm">
-                          {job.name}
-                        </h3>
-                        {job.data?.status === 'success' && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded text-[10px] font-bold uppercase tracking-wider">
-                            Active
-                          </div>
-                        )}
+                    <div className={`w-1.5 h-1.5 rounded-full ${job.data?.status === 'success' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
+                  </div>
+                  
+                  {job.id === 'daily' && job.data?.results && (
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/50">
+                      <div className="bg-muted/30 p-1.5 rounded-md text-center">
+                        <p className="text-[8px] text-muted-foreground uppercase font-black tracking-tighter">Class Emails</p>
+                        <p className="text-xs font-black">{job.data.results.schedule?.emailed || 0}</p>
                       </div>
-                      <p className="text-muted-foreground text-xs mt-0.5">{job.desc}</p>
+                      <div className="bg-muted/30 p-1.5 rounded-md text-center">
+                        <p className="text-[8px] text-muted-foreground uppercase font-black tracking-tighter">Payment Emails</p>
+                        <p className="text-xs font-black">{job.data.results.payments?.emailed || 0}</p>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="shrink-0">
-                    {job.data?.status === 'success' ? (
-                      <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-lg text-[11px] font-bold uppercase tracking-wider">
-                        <CheckCircle2 size={12} /> Cycle Complete
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-600 rounded-lg text-[11px] font-bold uppercase tracking-wider">
-                        <Clock size={12} /> Initializing
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
-
-                {job.data?.status === 'success' && (
-                  <div className="bg-muted/10 border-t border-border px-5 py-5">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-5">
-                        <div>
-                            <span className="block text-muted-foreground text-[10px] font-semibold uppercase tracking-wider mb-1">Execution Time</span>
-                            <span className="font-semibold text-sm">
-                                {new Date(job.data.lastRun).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
-                            </span>
-                        </div>
-                        <div className="col-span-1 md:col-span-3">
-                            <span className="block text-muted-foreground text-[10px] font-semibold uppercase tracking-wider mb-2">Internal Sequence</span>
-                            <div className="flex flex-wrap gap-2">
-                                {job.data.tasks?.map((t: string) => (
-                                    <span key={t} className="px-2 py-0.5 bg-background border border-border rounded text-[11px] font-medium text-muted-foreground lowercase">
-                                        {t}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {job.id === 'daily' && (
-                            <>
-                                <div className="flex items-center justify-between p-3 bg-background border border-border rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <Bell size={14} className="text-muted-foreground" />
-                                        <span className="text-[11px] font-medium text-muted-foreground">Schedule Alerts</span>
-                                    </div>
-                                    <span className="text-[11px] font-semibold">{job.data.results?.schedule?.notified || 0} Sent</span>
-                                </div>
-                                <div className="flex items-center justify-between p-3 bg-background border border-border rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <CreditCard size={14} className="text-muted-foreground" />
-                                        <span className="text-[11px] font-medium text-muted-foreground">Payments</span>
-                                    </div>
-                                    <span className="text-[11px] font-semibold">{job.data.results?.payments?.notified || 0} Sent</span>
-                                </div>
-                            </>
-                        )}
-                        {job.id === 'maintenance' && (
-                            <>
-                                <div className="flex items-center justify-between p-3 bg-background border border-border rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <Trash2 size={14} className="text-muted-foreground" />
-                                        <span className="text-[11px] font-medium text-muted-foreground">Data Purge</span>
-                                    </div>
-                                    <span className="text-[11px] font-semibold">{job.data.results?.cleanup?.deletedNotifications || 0} Objects</span>
-                                </div>
-                                <div className="flex items-center justify-between p-3 bg-background border border-border rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <HeartPulse size={14} className="text-muted-foreground" />
-                                        <span className="text-[11px] font-medium text-muted-foreground">Health</span>
-                                    </div>
-                                    <span className="text-[11px] font-semibold text-emerald-600 capitalize">{job.data.results?.health?.database || 'Stable'}</span>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Execution Registry */}
-      <div className="space-y-3">
-        <h2 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider ml-1 flex items-center gap-2">
-            <History size={13} className="text-muted-foreground" />
-            Execution Registry
-        </h2>
-
-        <div className="bg-[#0a0a0a] border border-border rounded-lg overflow-hidden shadow-sm">
-            <div className="bg-[#111] border-b border-white/5 px-4 py-2 flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-red-500/50" />
-                    <div className="w-2 h-2 rounded-full bg-amber-500/50" />
-                    <div className="w-2 h-2 rounded-full bg-emerald-500/50" />
-                    <span className="ml-3 text-[10px] font-mono text-muted-foreground uppercase tracking-widest">system_logs.sh</span>
-                </div>
+        {/* Right Column: Combined Activity */}
+        <div className="lg:col-span-2 space-y-3">
+          <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest px-1">Unified Activity Stream</h3>
+          <div className="bg-muted/30 border border-border rounded-xl overflow-hidden font-mono">
+            <div className="p-4 overflow-x-auto min-h-[300px]">
+              {isLoading ? (
+                  <div className="space-y-3 opacity-20">
+                      {[...Array(8)].map((_, i) => <div key={i} className="h-2 w-full bg-foreground rounded" />)}
+                  </div>
+              ) : combinedActivity.length > 0 ? (
+                  <div className="space-y-2">
+                      {combinedActivity.map((event) => (
+                          <div key={event.id} className="flex gap-4 text-[10px] whitespace-nowrap group hover:bg-foreground/5 p-1 rounded transition-colors">
+                              <span className="text-muted-foreground/50 w-8">
+                                  {new Date(event.time).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              <span className={`font-bold uppercase w-12 ${event.type === 'admin' ? 'text-blue-500' : 'text-amber-500'}`}>
+                                  {event.label}
+                              </span>
+                              <span className={`w-14 font-bold ${event.status === 'SUCCESS' ? 'text-emerald-500/80' : 'text-primary/60'}`}>
+                                  {event.status}
+                              </span>
+                              <span className="text-muted-foreground/60 truncate max-w-md group-hover:text-foreground transition-colors">
+                                  {event.detail}
+                              </span>
+                          </div>
+                      ))}
+                  </div>
+              ) : (
+                  <div className="h-full flex flex-col items-center justify-center py-10 opacity-50">
+                    <History size={24} className="mb-2" />
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold">No activity recorded</p>
+                  </div>
+              )}
             </div>
-
-            <div className="p-4 md:p-5 font-mono overflow-x-auto max-h-[400px]">
-                {isLoading ? (
-                    <div className="space-y-3 opacity-30">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="flex gap-4 animate-pulse">
-                                <div className="w-20 h-2 bg-white/10 rounded" />
-                                <div className="w-full h-2 bg-white/5 rounded" />
-                            </div>
-                        ))}
-                    </div>
-                ) : statusData?.history?.length > 0 ? (
-                    <div className="space-y-1.5 min-w-[600px]">
-                        {statusData.history.map((run: any) => (
-                            <div key={run.id} className="flex items-start gap-4 text-[11px] px-2 py-1 rounded hover:bg-white/5 transition-colors">
-                                <span className="text-white/30 shrink-0 w-20 select-none">
-                                    [{new Date(run.lastRun).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]
-                                </span>
-                                <span className={`shrink-0 w-24 font-bold uppercase ${run.jobId.includes('daily') ? 'text-amber-500/70' : 'text-blue-500/70'}`}>
-                                    {run.jobId.replace('-consolidated', '')}
-                                </span>
-                                <div className="flex flex-wrap gap-x-3 gap-y-1 flex-1">
-                                    <span className="text-white/20">run:</span>
-                                    {run.tasks?.map((t: string) => (
-                                        <span key={t} className="text-blue-400/60">
-                                            {t}.js
-                                        </span>
-                                    ))}
-                                </div>
-                                <span className="text-emerald-500/60 font-bold text-[10px]">SUCCESS</span>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="py-10 text-center">
-                        <p className="text-white/20 text-xs font-mono uppercase tracking-widest">-- empty logs --</p>
-                    </div>
-                )}
-            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -24,7 +24,7 @@ export default function PageHeader() {
     if (path === '/docs') return 'Documentation';
     if (path === '/school') return 'School Information';
     if (path === '/admin') return 'Admin Panel';
-    if (path === '/admin/git-test') return 'Moderation Lab';
+    if (path === '/admin/test') return 'Moderation Lab';
     if (path.startsWith('/post/')) return 'Post Details';
     return '';
   };

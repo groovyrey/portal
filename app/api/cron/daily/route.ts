@@ -62,7 +62,7 @@ async function runScheduleReminders(phTime: Date, baseUrl: string) {
         await createNotification({ userId, title: "Today's Schedule 📚", message, type: 'info', link: '/grades' });
         count++;
 
-        let recipientEmail = studentData.email || (userId.includes('@') ? userId : null);
+        const recipientEmail = studentData.email || (userId.includes('@') ? userId : null);
         if (recipientEmail && studentData.settings?.notifications !== false) {
           try {
             const firstName = parseStudentName(studentData.name).firstName || studentData.name;
