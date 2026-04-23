@@ -42,16 +42,6 @@ export default function GradeReportPage() {
   return (
     <div className="min-h-screen bg-background font-sans text-foreground pb-12">
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in space-y-6">
-        <div className="flex items-center justify-between gap-3">
-          <Link
-            href="/grades"
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border/80 surface-neutral text-sm font-medium text-muted-foreground hover:text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Back to Reports
-          </Link>
-        </div>
-
         <div className="surface-violet rounded-2xl border border-border/80 p-5 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">

@@ -67,12 +67,6 @@ export default function AdminPage() {
               You do not have permission to view this page.
             </p>
           </div>
-          <button
-            onClick={() => router.push('/')}
-            className="w-full bg-foreground text-background font-bold py-3 rounded-lg text-xs uppercase tracking-tight hover:opacity-90 transition-all active:scale-95"
-          >
-            Return Home
-          </button>
         </div>
       </div>
     );

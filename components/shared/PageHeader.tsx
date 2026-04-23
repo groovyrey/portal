@@ -13,16 +13,19 @@ export default function PageHeader() {
     if (path === '/assistant') return 'Assistant AI';
     if (path === '/g-space') return 'G-Space Sync';
     if (path === '/grades') return 'Academic Registry';
+    if (path === '/grades/report') return 'Grade Record';
     if (path === '/subjects') return 'Class Schedule';
     if (path === '/accounts') return 'Financial Ledger';
     if (path === '/community') return 'Student Feed';
-    if (path.startsWith('/profile')) return 'Student Profile';
+    if (path.startsWith('/student/')) return 'Student Profile';
     if (path === '/eaf') return 'Assessment Form';
     if (path === '/about') return 'About Hub';
     if (path === '/disclaimer') return 'Legal Notice';
     if (path === '/docs') return 'Documentation';
     if (path === '/school') return 'School Information';
-    if (path.startsWith('/post')) return 'Post Details';
+    if (path === '/admin') return 'Admin Panel';
+    if (path === '/admin/git-test') return 'Moderation Lab';
+    if (path.startsWith('/post/')) return 'Post Details';
     return '';
   };
 

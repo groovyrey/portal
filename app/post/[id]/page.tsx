@@ -358,14 +358,7 @@ export default function PostPage() {
             <Trash2 className="h-8 w-8" />
           </div>
           <h2 className="text-xl font-bold text-foreground mb-2">Post Not Found</h2>
-          <p className="text-sm text-muted-foreground mb-6">This post may have been deleted or the link is invalid.</p>
-          <Link 
-            href="/community" 
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-sm font-bold tracking-tight rounded-xl hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Community
-          </Link>
+          <p className="text-sm text-muted-foreground">This post may have been deleted or the link is invalid.</p>
         </div>
       </div>
     );

@@ -231,7 +231,6 @@ function ProfileContent() {
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-8 text-center">
       <IdCard className="h-12 w-12 text-slate-200 mb-4" />
       <h2 className="text-xl font-bold text-foreground">Profile Not Found</h2>
-      <Link href="/" className="mt-4 text-blue-600 dark:text-blue-400 font-semibold">Return Home</Link>
     </div>
   );
 
@@ -353,12 +352,6 @@ function ProfileContent() {
                 isProfileView={true}
               />
             ))}
-            <Link
-              href="/community"
-              className="block text-center py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-blue-600 dark:text-blue-400 transition-colors"
-            >
-              Back to Community Feed
-            </Link>
           </div>
         )}
       </div>
