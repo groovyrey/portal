@@ -44,7 +44,6 @@ import 'highlight.js/styles/github-dark.css';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import Modal from '@/components/ui/Modal';
-import { Avatar, AvatarGroup, Tooltip } from '@mui/material';
 import { useStudent } from '@/lib/hooks';
 import AssistantTab from '@/components/settings/AssistantTab';
 import { Settings } from 'lucide-react';
@@ -928,31 +927,21 @@ export default function AssistantPage() {
                           {m.tools && m.tools.length > 0 && (
                             <div className="flex flex-col items-end gap-1">
                               <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1">Tools Engaged</span>
-                              <AvatarGroup 
-                                max={6}
-                                sx={{
-                                  '& .MuiAvatar-root': { 
-                                    width: 20, 
-                                    height: 20, 
-                                    fontSize: 10,
-                                    border: '2px solid var(--card)',
-                                    bgcolor: 'color-mix(in srgb, var(--primary), transparent 90%)',
-                                    color: 'var(--primary)',
-                                    boxShadow: '0 2px 4px -1px rgb(0 0 0 / 0.1)'
-                                  },
-                                }}
-                              >
+                              <div className="flex -space-x-1.5">
                                 {m.tools.map((tool, i) => {
                                   const ToolIcon = getToolIcon(tool);
                                   return (
-                                    <Tooltip key={i} title={tool.replace(/_/g, ' ')} arrow>
-                                      <Avatar>
+                                    <div key={i} className="relative group z-0 hover:z-10">
+                                      <div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center border-2 border-card shadow-sm transition-transform hover:scale-110">
                                         <ToolIcon className="h-2.5 w-2.5" />
-                                      </Avatar>
-                                    </Tooltip>
+                                      </div>
+                                      <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-popover text-popover-foreground text-[10px] rounded border border-border shadow-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                                        {tool.replace(/_/g, ' ')}
+                                      </div>
+                                    </div>
                                   );
                                 })}
-                              </AvatarGroup>
+                              </div>
                             </div>
                           )}
                           {m.content && !isLoading && (

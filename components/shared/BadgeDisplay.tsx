@@ -3,7 +3,6 @@
 import React from 'react';
 import { BADGES } from '@/lib/badges';
 import { ShieldCheck, Award, Star, Shield, CheckCircle2, MessageSquare, Beaker } from 'lucide-react';
-import { Avatar, AvatarGroup, Tooltip } from '@mui/material';
 
 const ICON_MAP: Record<string, any> = {
   ShieldCheck,
@@ -31,10 +30,10 @@ export default function BadgeDisplay({ badgeIds, size = 'md', showName = false, 
 
   if (userBadges.length === 0) return null;
 
-  const sizePx = {
-    sm: 24,
-    md: 32,
-    lg: 40,
+  const sizeClasses = {
+    sm: 'w-6 h-6 text-[9px]',
+    md: 'w-8 h-8 text-[12px]',
+    lg: 'w-10 h-10 text-[14px]',
   };
 
   const iconSizeClasses = {
@@ -49,52 +48,55 @@ export default function BadgeDisplay({ badgeIds, size = 'md', showName = false, 
     lg: 'text-xs',
   };
 
+  const MAX_DISPLAY = 4;
+  const displayBadges = userBadges.slice(0, MAX_DISPLAY);
+  const remainingCount = userBadges.length - MAX_DISPLAY;
+
   return (
     <div 
       className={`flex items-center gap-2 ${onClick ? 'cursor-pointer active:scale-95 transition-transform' : ''}`}
       onClick={onClick}
     >
-      <AvatarGroup 
-        max={4}
-        sx={{
-          '& .MuiAvatar-root': { 
-            width: sizePx[size], 
-            height: sizePx[size], 
-            fontSize: sizePx[size] / 2.5,
-            border: '2px solid var(--card)',
-            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
-          },
-        }}
-      >
-        {userBadges.map((badge) => {
+      <div className="flex -space-x-2">
+        {displayBadges.map((badge) => {
           const Icon = ICON_MAP[badge.icon || 'Award'] || Award;
           
-          // Use CSS variables defined in theme for consistency
-          let bgColor = 'var(--muted)';
-          let iconColor = 'var(--muted-foreground)';
+          let bgColor = 'bg-muted';
+          let textColor = 'text-muted-foreground';
 
           if (badge.color === 'blue') {
-            bgColor = 'color-mix(in srgb, var(--accent-blue), transparent 90%)';
-            iconColor = 'var(--accent-blue)';
+            bgColor = 'bg-blue-500/10';
+            textColor = 'text-blue-500';
           } else if (badge.color === 'amber') {
-            bgColor = 'color-mix(in srgb, #f59e0b, transparent 90%)';
-            iconColor = '#f59e0b';
+            bgColor = 'bg-amber-500/10';
+            textColor = 'text-amber-500';
           }
 
           return (
-            <Tooltip key={badge.id} title={badge.description || badge.name} arrow>
-              <Avatar 
-                sx={{ 
-                  bgcolor: bgColor,
-                  color: iconColor,
-                }}
+            <div 
+              key={badge.id}
+              className={`relative group z-0 hover:z-10`}
+            >
+              <div 
+                className={`${sizeClasses[size]} rounded-full flex items-center justify-center border-2 border-background shadow-sm overflow-hidden ${bgColor} ${textColor} transition-transform hover:scale-110`}
               >
                 <Icon className={iconSizeClasses[size]} />
-              </Avatar>
-            </Tooltip>
+              </div>
+              
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-popover text-popover-foreground text-[10px] rounded border border-border shadow-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                {badge.description || badge.name}
+              </div>
+            </div>
           );
         })}
-      </AvatarGroup>
+        
+        {remainingCount > 0 && (
+          <div className={`${sizeClasses[size]} rounded-full flex items-center justify-center border-2 border-background bg-muted text-muted-foreground font-bold shadow-sm z-0`}>
+            +{remainingCount}
+          </div>
+        )}
+      </div>
       
       {showName && userBadges.length === 1 && (
         <span className={`font-black uppercase tracking-[0.1em] ${badgeIds.includes('staff') ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground/80 dark:text-muted-foreground'} ${nameClasses[size]}`}>

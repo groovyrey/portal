@@ -2,7 +2,7 @@ import * as cheerio from 'cheerio';
 import { db } from '@/lib/db';
 import { doc, setDoc, getDoc, serverTimestamp, writeBatch, updateDoc, arrayUnion } from 'firebase/firestore';
 import { initDatabase } from '@/lib/db-init';
-import { ScraperService, ScrapedStudentInfo, ScrapedScheduleItem, ScrapedFinancials, ScrapedSubject } from './scraper-service';
+import { ScraperService, ScrapedStudentInfo, ScrapedScheduleItem, ScrapedFinancials } from './scraper-service';
 
 import { query } from '@/lib/turso';
 
@@ -146,36 +146,6 @@ export class SyncService {
     }
   }
 
-  async syncProspectusSubjects(subjects: ScrapedSubject[]) {
-    if (!subjects || subjects.length === 0) return;
-
-    // Check if we need to sync prospectus (once per 7 days)
-    const lastSyncRef = doc(db, 'system_config', 'prospectus_sync_last_at');
-    const lastSyncDoc = await getDoc(lastSyncRef);
-    const lastSyncAt = lastSyncDoc.exists() ? (lastSyncDoc.data().at?.toDate?.() || new Date(0)) : new Date(0);
-    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-
-    if (Date.now() - lastSyncAt.getTime() < sevenDaysMs) {
-      console.log('[SyncService] Skipping prospectus sync: Last sync was less than 7 days ago.');
-      return;
-    }
-
-    const batch = writeBatch(db);
-    const subjectsToProcess = subjects.slice(0, 450); 
-    for (const sub of subjectsToProcess) {
-      const subRef = doc(db, 'prospectus_subjects', sub.code);
-      batch.set(subRef, {
-        description: sub.description,
-        units: sub.units,
-        pre_req: sub.preReq,
-        updated_at: serverTimestamp()
-      }, { merge: true });
-    }
-    
-    await batch.commit();
-    await setDoc(lastSyncRef, { at: serverTimestamp() });
-  }
-
   async performFullSync(scraper: ScraperService, dashboard$: cheerio.CheerioAPI, periodCode: string, dashboardUrl: string, rawDashboardHtml?: string) {
     console.log(`[SyncService] Starting full sync for ${this.userId}...`);
     
@@ -194,7 +164,6 @@ export class SyncService {
     };
 
     const reportLinks = scraper.parseReportCardLinks(grades.$);
-    // const offeredSubjects = await scraper.parseOfferedSubjects(offeredSubsRes.$, offeredSubsRes.data); // DISABLED
 
     // Database Syncing
     const { isNewUser, settings, badges } = await this.syncStudentData(studentInfo, reportLinks);
@@ -202,7 +171,6 @@ export class SyncService {
     await Promise.all([
       this.syncFinancials(mergedFinancials),
       this.syncSchedule(schedule),
-      // this.syncProspectusSubjects(offeredSubjects), // DISABLED
       this.syncToRelationalDB(studentInfo)
     ]);
 
@@ -213,8 +181,7 @@ export class SyncService {
       studentInfo, 
       schedule, 
       mergedFinancials, 
-      reportLinks, 
-      offeredSubjects: [] // RETURN EMPTY FOR NOW
+      reportLinks
     };
   }
 

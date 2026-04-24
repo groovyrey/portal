@@ -48,13 +48,6 @@ export interface ScrapedFinancials {
   adjustments?: any[];
 }
 
-export interface ScrapedSubject {
-  code: string;
-  description: string;
-  units: string;
-  preReq: string;
-}
-
 export class ScraperService {
   private client: AxiosInstance;
   private userId: string;
@@ -97,7 +90,6 @@ export class ScraperService {
       this.fetchEAF(periodCode),
       this.fetchGrades(periodCode, dashboardUrl),
       this.fetchAccounts(periodCode, dashboardUrl),
-      // this.fetchSubjectList(periodCode, dashboardUrl, dashboard$) // DISABLED
     ]);
 
     return { eaf, grades, accounts };
@@ -118,23 +110,6 @@ export class ScraperService {
   async fetchAccounts(periodCode: string, dashboardUrl: string) {
     const accountsUrl = `${PORTAL_BASE}/Student/Main.aspx?_sid=${this.userId}&_pc=${periodCode}&_dm=Account&_nm=`;
     const res = await this.client.get(accountsUrl, { headers: { 'Referer': dashboardUrl } });
-    return { $: cheerio.load(res.data), data: res.data };
-  }
-
-  async fetchSubjectList(periodCode: string, dashboardUrl: string, dashboard$: cheerio.CheerioAPI) {
-    let subjectListUrl = `${PORTAL_BASE}/Student/Main.aspx?_sid=${this.userId}&_pc=${periodCode}&_dm=SubjectList&_am=&_amval=&_amval2=&_nm=`;
-    
-    dashboard$('a').each((_, el) => {
-      const href = dashboard$(el).attr('href');
-      const text = dashboard$(el).text().trim();
-      if (href && (href.toLowerCase().includes('subjectlist') || text.toLowerCase().includes('subject list'))) {
-        const correctedHref = href.replace('/Gate/', '/Student/');
-        subjectListUrl = new URL(correctedHref, dashboardUrl).toString();
-        return false;
-      }
-    });
-
-    const res = await this.client.get(subjectListUrl, { headers: { 'Referer': dashboardUrl } });
     return { $: cheerio.load(res.data), data: res.data };
   }
 
@@ -511,37 +486,6 @@ export class ScraperService {
       }
     });
     return availableReports;
-  }
-
-  async parseOfferedSubjects($subList: cheerio.CheerioAPI, rawHtml?: string): Promise<ScrapedSubject[]> {
-    const offeredSubjects: ScrapedSubject[] = [];
-    const table9 = $subList('table').eq(9);
-    if (table9.length > 0) {
-      const rows = table9.find('tr');
-      rows.each((_, row) => {
-        const cells = $subList(row).find('td');
-        if (cells.length >= 8) {
-          const code = $subList(cells[0]).text().trim();
-          const desc = $subList(cells[1]).text().trim();
-          const units = $subList(cells[3]).text().trim() || $subList(cells[2]).text().trim(); 
-          const preReq = cells.length >= 6 ? $subList(cells[5]).text().trim() : "";
-          if (code && desc && !code.toLowerCase().includes('subject')) {
-            offeredSubjects.push({ code, description: desc, units, preReq });
-          }
-        }
-      });
-    }
-
-    // FAILSAFE: If no subjects found but HTML exists
-    if (offeredSubjects.length === 0 && rawHtml) {
-        const aiData = await aiExtract(rawHtml, 'offered_subjects');
-        if (Array.isArray(aiData) && aiData.length > 0) {
-            console.log(`[Scraper] AI Repair: Successfully recovered offered subjects.`);
-            return aiData;
-        }
-    }
-
-    return offeredSubjects;
   }
 
   async parseReportCard($rc: cheerio.CheerioAPI, rawHtml?: string): Promise<any[]> {

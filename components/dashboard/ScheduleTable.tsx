@@ -20,14 +20,14 @@ const HOURS = [
 ];
 
 const SUBJECT_COLORS = [
-  'bg-muted/40 text-foreground border-border',
-  'bg-muted/40 text-foreground border-border',
-  'bg-muted/40 text-foreground border-border',
-  'bg-muted/40 text-foreground border-border',
-  'bg-muted/40 text-foreground border-border',
-  'bg-muted/40 text-foreground border-border',
-  'bg-muted/40 text-foreground border-border',
-  'bg-muted/40 text-foreground border-border',
+  'bg-muted/40 text-foreground',
+  'bg-muted/40 text-foreground',
+  'bg-muted/40 text-foreground',
+  'bg-muted/40 text-foreground',
+  'bg-muted/40 text-foreground',
+  'bg-muted/40 text-foreground',
+  'bg-muted/40 text-foreground',
+  'bg-muted/40 text-foreground',
 ];
 
 export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTableProps) {
@@ -96,7 +96,7 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
 
       // 2. Capture with the natural calculated width
       const canvas = await (window as any).html2canvas(tableRef.current, {
-        backgroundColor: '#020617',
+        backgroundColor: '#000000',
         scale: 2,
         logging: false,
         useCORS: true,
@@ -112,8 +112,8 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
           const clonedArea = clonedDoc.getElementById('schedule-capture-area');
           if (clonedArea) {
             clonedArea.classList.add('dark');
-            clonedArea.style.backgroundColor = '#020617'; // Force midnight navy
-            clonedArea.style.color = '#f8faff'; // Force foreground
+            clonedArea.style.backgroundColor = '#000000'; // Force black
+            clonedArea.style.color = '#f5f5f5'; // Force foreground
             clonedArea.style.width = `${actualWidth}px`;
             clonedArea.style.height = 'auto';
             clonedArea.style.overflow = 'visible';
@@ -206,22 +206,22 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
               const el = elements[i] as HTMLElement;
               
               // Apply forced dark theme overrides for common classes
-              if (el.classList.contains('bg-card')) el.style.backgroundColor = '#050b1d';
-              if (el.classList.contains('bg-background')) el.style.backgroundColor = '#020617';
-              if (el.classList.contains('bg-muted/20')) el.style.backgroundColor = 'rgba(7, 13, 31, 0.2)';
-              if (el.classList.contains('text-foreground')) el.style.color = '#f8faff';
-              if (el.classList.contains('text-muted-foreground')) el.style.color = '#94a3b8';
-              if (el.classList.contains('border-border')) el.style.borderColor = '#141e33';
+              if (el.classList.contains('bg-card')) el.style.backgroundColor = '#0a0a0a';
+              if (el.classList.contains('bg-background')) el.style.backgroundColor = '#000000';
+              if (el.classList.contains('bg-muted/20')) el.style.backgroundColor = 'rgba(10, 10, 10, 0.2)';
+              if (el.classList.contains('text-foreground')) el.style.color = '#f5f5f5';
+              if (el.classList.contains('text-muted-foreground')) el.style.color = '#a3a3a3';
+              if (el.classList.contains('border-border')) el.style.borderColor = '#262626';
               
               const style = window.getComputedStyle(el);
               if (style.backgroundColor.includes('okl')) {
-                 el.style.backgroundColor = '#0f172a';
+                 el.style.backgroundColor = '#171717';
               }
               if (style.color.includes('okl')) {
-                 el.style.color = '#f8fafc';
+                 el.style.color = '#f5f5f5';
               }
               if (style.borderColor.includes('okl')) {
-                 el.style.borderColor = '#1e293b';
+                 el.style.borderColor = '#262626';
               }
             }
 
@@ -466,7 +466,7 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
                                 onClick={() => setSelectedItem(classToRender)}
                                 className={`
                                   w-full h-full rounded-lg p-1.5 flex flex-col items-center justify-center text-center
-                                  transition-all border ${isHoliday ? 'opacity-40 grayscale-[0.5]' : ''} ${getSubjectColor(classToRender.subject)}
+                                  transition-all ${isHoliday ? 'opacity-40 grayscale-[0.5]' : ''} ${getSubjectColor(classToRender.subject)}
                                   active:opacity-80 overflow-hidden whitespace-normal relative
                                 `}
                               >
@@ -554,7 +554,7 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
                               onClick={() => setSelectedItem(item)}
                               className={`w-full flex items-center gap-4 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-all text-left group ${isHoliday ? 'opacity-50 grayscale-[0.3]' : ''}`}
                             >
-                              <div className={`flex flex-col items-center justify-center h-12 w-12 rounded-lg border shrink-0 ${getSubjectColor(item.subject)}`}>
+                              <div className={`flex flex-col items-center justify-center h-12 w-12 rounded-lg shrink-0 ${getSubjectColor(item.subject)}`}>
                                 <Clock size={12} className="opacity-40 mb-1" />
                                 <span className="text-[9px] font-black uppercase leading-none">
                                   {item.time.split(' - ')[0].split(' ')[1]}

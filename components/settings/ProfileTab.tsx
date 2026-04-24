@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { 
   User, 
   Mail, 
@@ -9,19 +9,10 @@ import {
   GraduationCap, 
   Calendar, 
   Shield,
-  Save
+  Save,
+  ChevronDown
 } from 'lucide-react';
 import { Student } from '@/types';
-import { 
-  FormControl, 
-  InputLabel, 
-  Select, 
-  MenuItem, 
-  SelectChangeEvent,
-  ThemeProvider,
-  createTheme
-} from '@mui/material';
-import { useTheme } from '@/components/shared/ThemeProvider';
 
 interface ProfileTabProps {
   student: Student;
@@ -31,81 +22,9 @@ interface ProfileTabProps {
 export default function ProfileTab({ student, updateSettings }: ProfileTabProps) {
   const [selectedCampus, setSelectedCampus] = useState(student.settings?.campus || '');
   const [isSaving, setIsSaving] = useState(false);
-  const { resolvedTheme } = useTheme();
-  const currentTheme = (resolvedTheme || 'light') as 'light' | 'dark';
 
-  const muiTheme = useMemo(() => createTheme({
-    palette: {
-      mode: currentTheme,
-      primary: {
-        main: '#3b82f6', // blue-500
-      },
-      background: {
-        paper: currentTheme === 'dark' ? '#1e293b' : '#ffffff', // slate-800 or white
-      },
-      text: {
-        primary: currentTheme === 'dark' ? '#f8fafc' : '#0f172a',
-        secondary: currentTheme === 'dark' ? '#94a3b8' : '#64748b',
-      }
-    },
-    typography: {
-      fontFamily: 'inherit',
-    },
-    components: {
-      MuiPaper: {
-        styleOverrides: {
-          root: {
-            backgroundImage: 'none',
-            borderRadius: '12px',
-            border: currentTheme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
-          }
-        }
-      },
-      MuiOutlinedInput: {
-        styleOverrides: {
-          root: {
-            borderRadius: '12px',
-            '& .MuiOutlinedInput-notchedOutline': {
-              borderColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-            },
-            '&:hover .MuiOutlinedInput-notchedOutline': {
-              borderColor: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
-            },
-            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: '#3b82f6',
-            },
-          }
-        }
-      },
-      MuiInputLabel: {
-        styleOverrides: {
-          root: {
-            fontSize: '0.875rem',
-            fontWeight: 500,
-          }
-        }
-      },
-      MuiSelect: {
-        styleOverrides: {
-          select: {
-            fontSize: '0.875rem',
-            fontWeight: 500,
-          }
-        }
-      },
-      MuiMenuItem: {
-        styleOverrides: {
-          root: {
-            fontSize: '0.875rem',
-            fontWeight: 500,
-          }
-        }
-      }
-    }
-  }), [currentTheme]);
-
-  const handleCampusChange = (event: SelectChangeEvent) => {
-    setSelectedCampus(event.target.value as string);
+  const handleCampusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCampus(event.target.value);
   };
 
   const handleSave = async () => {
@@ -132,7 +51,7 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
           <div className="flex-1 min-w-0">
               <h3 className="font-bold text-xl text-foreground leading-tight break-words">{student.name}</h3>
               <div className="flex items-center gap-2 mt-2">
-                <span className="px-2 py-0.5 bg-blue-500/10 text-[10px] font-bold text-blue-600 dark:text-blue-400 rounded border border-blue-500/20 uppercase tracking-wider">ID</span>
+                <span className="px-2 py-0.5 bg-primary/10 text-[10px] font-bold text-primary rounded border border-primary/20 uppercase tracking-wider">ID</span>
                 <p className="text-xs text-muted-foreground font-mono font-bold tracking-tight">{student.id}</p>
               </div>
           </div>
@@ -168,22 +87,27 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
           <div className="pt-6 border-t border-border">
               <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Campus Location</h4>
               <div className="space-y-4">
-                <ThemeProvider theme={muiTheme}>
-                  <FormControl fullWidth variant="outlined" size="medium">
-                    <InputLabel id="campus-select-label">Select Campus</InputLabel>
-                    <Select
-                      labelId="campus-select-label"
+                <div className="relative">
+                  <label htmlFor="campus-select" className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                    Select Campus
+                  </label>
+                  <div className="relative">
+                    <select
                       id="campus-select"
                       value={selectedCampus}
-                      label="Select Campus"
                       onChange={handleCampusChange}
+                      className="w-full h-12 pl-4 pr-10 bg-background border border-border rounded-xl text-sm font-bold appearance-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     >
-                      <MenuItem value="Muzon Campus">Muzon Campus</MenuItem>
-                      <MenuItem value="Francisco Homes Campus">Francisco Homes Campus</MenuItem>
-                      <MenuItem value="Main Campus (CBAS)">Main Campus (CBAS)</MenuItem>
-                    </Select>
-                  </FormControl>
-                </ThemeProvider>
+                      <option value="" disabled>Select Campus</option>
+                      <option value="Muzon Campus">Muzon Campus</option>
+                      <option value="Francisco Homes Campus">Francisco Homes Campus</option>
+                      <option value="Main Campus (CBAS)">Main Campus (CBAS)</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
+                      <ChevronDown size={18} />
+                    </div>
+                  </div>
+                </div>
 
                 <button
                   onClick={handleSave}
