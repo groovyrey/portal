@@ -237,7 +237,7 @@ export class ScraperService {
 
     // FAILSAFE: If basic extraction fails, try AI fallback
     if (!studentName && (rawDashboardHtml || rawEafHtml)) {
-        const aiData = await aiExtract((rawDashboardHtml || "") + (rawEafHtml || ""), 'student_info');
+        const aiData = await aiExtract((rawDashboardHtml || "") + (rawEafHtml || ""), 'student_info', this.userId);
         if (aiData && aiData.name) {
             console.log(`[Scraper] AI Repair: Successfully recovered student info.`);
             return {
@@ -320,7 +320,7 @@ export class ScraperService {
 
     // FAILSAFE: If no schedule items found but HTML exists
     if (schedule.length === 0 && rawHtml) {
-        const aiData = await aiExtract(rawHtml, 'schedule');
+        const aiData = await aiExtract(rawHtml, 'schedule', this.userId);
         if (Array.isArray(aiData) && aiData.length > 0) {
             console.log(`[Scraper] AI Repair: Successfully recovered schedule.`);
             return aiData;
@@ -368,7 +368,7 @@ export class ScraperService {
 
     // FAILSAFE: If balance extraction failed, try AI
     if ((totalBalance === "---" || totalBalance === "₱") && rawHtml) {
-        const aiData = await aiExtract(rawHtml, 'financials');
+        const aiData = await aiExtract(rawHtml, 'financials', this.userId);
         if (aiData && aiData.balance) {
             console.log(`[Scraper] AI Repair: Successfully recovered financials.`);
             return aiData;
@@ -637,7 +637,7 @@ export class ScraperService {
 
     // FAILSAFE: If no subjects found but HTML exists
     if (subjects.length === 0 && rawHtml) {
-        const aiData = await aiExtract(rawHtml, 'grades');
+        const aiData = await aiExtract(rawHtml, 'grades', this.userId);
         if (Array.isArray(aiData) && aiData.length > 0) {
             console.log(`[Scraper] AI Repair: Successfully recovered grades.`);
             return aiData;

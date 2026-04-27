@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { migrateCommunity, migrateNotifications, migrateActivityLogs } from '@/lib/db-migrate';
+import { 
+  migrateCommunity, 
+  migrateNotifications, 
+  migrateActivityLogs,
+  migrateStudentStats,
+  migrateDailyQuests,
+  migrateIncidentReports
+} from '@/lib/db-migrate';
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,6 +19,9 @@ export async function GET(req: NextRequest) {
     await migrateCommunity();
     await migrateNotifications();
     await migrateActivityLogs();
+    await migrateStudentStats();
+    await migrateDailyQuests();
+    await migrateIncidentReports();
 
     return NextResponse.json({ message: 'Migrations completed successfully' });
   } catch (error) {

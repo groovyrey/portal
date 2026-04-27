@@ -163,16 +163,16 @@ export async function GET(req: NextRequest) {
       results: results.data
     });
 
-    // Reminder: Cleanup: Keep only last 20 records total for this jobId
+    // Reminder: Cleanup: Keep only last 15 records total for this jobId
     const q = query(
       collection(db, 'cron_runs'), 
       where('jobId', '==', 'daily-consolidated'),
       orderBy('lastRun', 'desc')
     );
     const snap = await getDocs(q);
-    if (snap.size > 20) {
+    if (snap.size > 15) {
       const batch = writeBatch(db);
-      snap.docs.slice(20).forEach(d => batch.delete(d.ref));
+      snap.docs.slice(15).forEach(d => batch.delete(d.ref));
       await batch.commit();
     }
 

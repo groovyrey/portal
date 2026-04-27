@@ -8,7 +8,8 @@ import {
   MessageSquare, 
   BookOpen,
   LayoutGrid,
-  BrainCircuit
+  BrainCircuit,
+  Trophy
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -18,6 +19,20 @@ const actions = [
     icon: GraduationCap, 
     href: '/grades', 
     color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    card: 'bg-card'
+  },
+  { 
+    label: 'Study Mode',
+    icon: BrainCircuit,
+    href: '/study-mode',
+    color: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+    card: 'bg-card'
+  },
+  {
+    label: 'Quest Center',
+    icon: Trophy,
+    href: '/quests',
+    color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
     card: 'bg-card'
   },
   { 

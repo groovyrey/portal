@@ -32,7 +32,7 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
     jar, 
     withCredentials: true,
     headers: DEFAULT_HEADERS,
-    timeout: 15000 // 15s timeout to prevent hanging
+    timeout: 20000 // 20s timeout to prevent hanging
   }));
 
   try {
@@ -71,7 +71,7 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
             jar: newJar, 
             withCredentials: true,
             headers: DEFAULT_HEADERS,
-            timeout: 10000
+            timeout: 20000
           }));
 
           const testRes = await hydratedClient.get(`${PORTAL_BASE}/Student/Main.aspx?_sid=${userId}`);

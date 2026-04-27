@@ -1,4 +1,5 @@
 import { query } from './turso';
+import { initDatabase } from './db-init';
 
 export interface ActivityLog {
   id: string;
@@ -19,7 +20,10 @@ export async function logActivity(
   link?: string
 ) {
   try {
+    await initDatabase();
+    
     let finalDetails = details;
+// ... (rest of the file)
     
     // If details is an object, stringify it
     if (details && typeof details === 'object') {
@@ -55,6 +59,8 @@ export async function logActivity(
  */
 export async function getUserActivityLogs(userId: string, limit: number = 20): Promise<ActivityLog[]> {
   try {
+    await initDatabase();
+    
     const res = await query(`
       SELECT * FROM activity_logs 
       WHERE user_id = $1 

@@ -32,11 +32,26 @@ export const BADGES: Record<string, Badge> = {
     icon: 'Award',
     color: 'amber',
     permissions: [],
-  },
-};
+    },
+    quest_master: {
+    id: 'quest_master',
+    name: 'Quest Master',
+    description: 'Achieved a perfect score in a daily quest',
+    icon: 'Trophy',
+    color: 'emerald',
+    permissions: [],
+    },
+    centurion: {
+    id: 'centurion',
+    name: 'Centurion',
+    description: 'Reached Level 100',
+    icon: 'Zap',
+    color: 'indigo',
+    permissions: [],
+    },
+    };
 
-export const BADGE_LIST = [BADGES.staff, BADGES.beta_tester, BADGES.community_active, BADGES.perfect_grade];
-
+    export const BADGE_LIST = [BADGES.staff, BADGES.beta_tester, BADGES.community_active, BADGES.perfect_grade, BADGES.quest_master, BADGES.centurion];
 /**
  * Checks if a user has a specific permission based on their badges
  * @param userBadges Array of badge IDs the user has

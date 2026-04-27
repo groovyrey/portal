@@ -33,6 +33,7 @@ function ProfileContent() {
 
   const memberStatus = profileId ? onlineMembers.get(profileId) : null;
   const isOnline = !!memberStatus;
+  const isStudying = !!memberStatus?.isStudying;
 
   const [student, setStudent] = useState<Student | null>(() => {
     if (currentUserData && profileId === currentUserData.id) {
@@ -274,6 +275,12 @@ function ProfileContent() {
                     <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-slate-300 dark:bg-slate-700'}`} />
                     {isOnline ? 'Online' : 'Offline'}
                   </div>
+                  {isStudying && (
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary animate-pulse">
+                      <BrainCircuit className="h-3 w-3" />
+                      Studying
+                    </div>
+                  )}
                 </div>
               </div>
 

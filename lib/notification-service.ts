@@ -1,5 +1,6 @@
 import { query } from './turso';
 import { publishUpdate } from './realtime';
+import { initDatabase } from './db-init';
 
 export interface CreateNotificationParams {
   userId: string;
@@ -23,11 +24,14 @@ export async function createNotification({
   skipRealtime = false
 }: CreateNotificationParams & { skipRealtime?: boolean }) {
   try {
+    await initDatabase();
+    
     const res = await query(`
       INSERT INTO notifications (user_id, title, message, type, link)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id, created_at
     `, [userId, title, message, type, link]);
+// ... (rest of the file)
 
     // Enforce notification limit for the specific user
     await query(`
@@ -76,6 +80,8 @@ export async function notifyAllStudents({
   link
 }: Omit<CreateNotificationParams, 'userId'> & { excludeUserId: string }) {
   try {
+    await initDatabase();
+    
     // Bulk insert into notifications for all students except the sender
     await query(`
       INSERT INTO notifications (user_id, title, message, type, link)

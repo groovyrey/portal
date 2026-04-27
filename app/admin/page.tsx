@@ -9,6 +9,7 @@ import {
   BarChart3,
   Activity,
   Mail,
+  AlertTriangle
 } from 'lucide-react';
 import { useStudentQuery } from '@/lib/hooks';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
@@ -19,23 +20,24 @@ import ManageTab from '@/components/admin/ManageTab';
 import StatsTab from '@/components/admin/StatsTab';
 import MonitoringTab from '@/components/admin/MonitoringTab';
 import EmailTab from '@/components/admin/EmailTab';
+import IncidentsTab from '@/components/admin/IncidentsTab';
 
 export default function AdminPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<'manage' | 'stats' | 'monitoring' | 'email'>('manage');
+  const [activeTab, setActiveTab] = useState<'manage' | 'stats' | 'monitoring' | 'email' | 'incidents'>('manage');
   const { data: currentUser, isLoading: isUserLoading } = useStudentQuery();
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['manage', 'stats', 'monitoring', 'email'].includes(tab)) {
-      setActiveTab(tab as 'manage' | 'stats' | 'monitoring' | 'email');
+    if (tab && ['manage', 'stats', 'monitoring', 'email', 'incidents'].includes(tab)) {
+      setActiveTab(tab as 'manage' | 'stats' | 'monitoring' | 'email' | 'incidents');
     }
   }, [searchParams]);
 
-  const handleTabChange = (tabId: 'manage' | 'stats' | 'monitoring' | 'email') => {
+  const handleTabChange = (tabId: 'manage' | 'stats' | 'monitoring' | 'email' | 'incidents') => {
     setActiveTab(tabId);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tabId);
@@ -72,6 +74,7 @@ export default function AdminPage() {
 
   const tabs = [
     { id: 'manage', name: 'Manage Users', icon: Users, desc: 'Badges & Registry' },
+    { id: 'incidents', name: 'Incident Reports', icon: AlertTriangle, desc: 'System Failures' },
     { id: 'email', name: 'Email center', icon: Mail, desc: 'Mass Messaging' },
     { id: 'stats', name: 'Statistics', icon: BarChart3, desc: 'Growth & Metrics' },
     { id: 'monitoring', name: 'Monitoring', icon: Activity, desc: 'System Health' },
@@ -93,6 +96,7 @@ export default function AdminPage() {
       }
     >
       {activeTab === 'manage' && <ManageTab />}
+      {activeTab === 'incidents' && <IncidentsTab />}
       {activeTab === 'email' && <EmailTab />}
       {activeTab === 'stats' && <StatsTab />}
       {activeTab === 'monitoring' && <MonitoringTab />}
