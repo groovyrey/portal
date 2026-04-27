@@ -97,10 +97,11 @@ export async function GET(req: NextRequest) {
       const postData = {
         id: post.id.toString(),
         userId: post.user_id,
-        userName: post.user_name,
+        userName: post.is_anonymous ? 'Anonymous Student' : post.user_name,
         content: post.content,
         topic: post.topic,
         imageUrl: post.image_url,
+        isAnonymous: !!post.is_anonymous,
         isUnreviewed: post.is_unreviewed,
         createdAt: post.created_at.toISOString(),
         likes: parseJsonArray(post.likes),
@@ -196,10 +197,11 @@ export async function GET(req: NextRequest) {
     const posts = pageRows.map((post) => ({
       id: post.id.toString(),
       userId: post.user_id,
-      userName: post.user_name,
+      userName: post.is_anonymous ? 'Anonymous Student' : post.user_name,
       content: post.content,
       topic: post.topic,
       imageUrl: post.image_url,
+      isAnonymous: !!post.is_anonymous,
       isUnreviewed: post.is_unreviewed,
       createdAt: post.created_at.toISOString(),
       likes: parseJsonArray(post.likes),
@@ -222,7 +224,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const client = await getClient();
   try {
-    const { content, poll, isUnreviewed, topic, imageUrl } = await req.json();
+    const { content, poll, isUnreviewed, topic, imageUrl, isAnonymous } = await req.json();
     if (!content && !poll && !imageUrl) return NextResponse.json({ error: 'Content, Poll, or Image required' }, { status: 400 });
 
     const userId = parseSessionUserId(req);
@@ -239,8 +241,8 @@ export async function POST(req: NextRequest) {
     `, [userId, canonicalUserName]);
 
     const postRes = await client.query(`
-      INSERT INTO community_posts (user_id, user_name, content, topic, image_url, is_unreviewed, poll_question)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO community_posts (user_id, user_name, content, topic, image_url, is_anonymous, is_unreviewed, poll_question)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING id
     `, [
       userId,
@@ -248,6 +250,7 @@ export async function POST(req: NextRequest) {
       content || '',
       topic || 'General',
       imageUrl || null,
+      isAnonymous ? 1 : 0,
       isUnreviewed || false,
       poll?.question || null
     ]);
@@ -293,7 +296,7 @@ export async function POST(req: NextRequest) {
       console.error('[BadgeSystem] Error checking for community_active badge:', badgeError);
     }
 
-    const senderName = canonicalUserName || 'A fellow student';
+    const senderName = isAnonymous ? 'Anonymous Student' : (canonicalUserName || 'A fellow student');
     notifyAllStudents({
       excludeUserId: userId,
       title: 'New Community Post',
@@ -305,7 +308,7 @@ export async function POST(req: NextRequest) {
     await publishUpdate('community', {
       type: 'POST_CREATED',
       postId,
-      userName: canonicalUserName
+      userName: senderName
     });
 
     return NextResponse.json({ success: true, id: postId.toString() });

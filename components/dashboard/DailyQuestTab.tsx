@@ -411,7 +411,7 @@ export default function DailyQuestTab() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-black uppercase tracking-tight">Quest Review</h2>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{currentCategory}</p>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{currentCategory}</p>
           </div>
           <button 
             onClick={() => setIsReviewMode(false)}
@@ -423,9 +423,9 @@ export default function DailyQuestTab() {
 
         <div className="space-y-4">
           {questions.map((q, i) => (
-            <div key={i} className={`p-6 rounded-xl border ${q.isCorrect ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20'}`}>
+            <div key={i} className={`p-4 rounded-lg border ${q.isCorrect ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20'}`}>
               <div className="flex items-start justify-between gap-4 mb-4">
-                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-muted/50">Q{i+1}</span>
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded bg-muted/50">Q{i+1}</span>
                 {q.isCorrect ? (
                   <CheckCircle className="h-5 w-5 text-emerald-500 shrink-0" />
                 ) : (
@@ -434,16 +434,16 @@ export default function DailyQuestTab() {
               </div>
               <h4 className="font-bold mb-3 leading-tight">{q.question}</h4>
               <div className="space-y-2">
-                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Your Answer:</div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Your Answer:</div>
                 <div className={`text-sm font-bold ${q.isCorrect ? 'text-emerald-700' : 'text-rose-700'}`}>{q.userAnswer || 'No answer'}</div>
                 {!q.isCorrect && (
                   <>
-                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-2">Correct Answer/Guideline:</div>
+                    <div className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mt-2">Correct Answer/Guideline:</div>
                     <div className="text-sm font-bold text-emerald-700">{q.correct_answer}</div>
                   </>
                 )}
                 {q.feedback && (
-                  <div className="mt-3 p-3 rounded-xl bg-white/50 border border-current/10 italic text-[11px] font-medium leading-relaxed">
+                  <div className="mt-3 p-3 rounded-lg bg-white/50 border border-current/10 italic text-[11px] font-medium leading-relaxed">
                     "AI: <QuestMarkdown content={q.feedback} className="inline" />"
                   </div>
                 )}
@@ -454,7 +454,7 @@ export default function DailyQuestTab() {
 
         <button 
             onClick={() => setIsReviewMode(false)}
-            className="w-full py-4 rounded-xl bg-foreground text-background font-black uppercase tracking-widest flex items-center justify-center gap-2"
+            className="w-full py-4 rounded-lg bg-foreground text-background font-black uppercase tracking-wider flex items-center justify-center gap-2"
         >
             Close Review
         </button>
@@ -473,26 +473,26 @@ export default function DailyQuestTab() {
     return (
       <div className="text-center py-10 space-y-8 max-w-md mx-auto">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Trophy className="h-20 w-20 text-primary mx-auto" />
+            <Trophy className="h-16 w-16 text-primary mx-auto" />
         </motion.div>
         
         <div className="space-y-2">
-            <h2 className="text-3xl font-black italic uppercase tracking-tighter">Quest Completed!</h2>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Masterfully Conquered</p>
+            <h2 className="text-2xl font-black uppercase tracking-tight">Quest Completed!</h2>
+            <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Masterfully Conquered</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-            <div className="surface-neutral p-6 rounded-xl text-center">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Final Score</p>
-                <div className="text-3xl font-black text-primary">{score} / {totalQuestions}</div>
+            <div className="bg-muted/30 p-4 rounded-lg text-center border border-border/50">
+                <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">Final Score</p>
+                <div className="text-2xl font-black text-primary">{score} / {totalQuestions}</div>
             </div>
-            <div className="surface-neutral p-6 rounded-xl text-center">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">EXP Gained</p>
+            <div className="bg-muted/30 p-4 rounded-lg text-center border border-border/50">
+                <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">EXP Gained</p>
                 <div className={`text-xl font-black uppercase ${statsUpdated && !questStats ? 'text-muted-foreground' : 'text-emerald-500'}`}>
                     {statsUpdated && !questStats ? 'Daily Limit' : `+${stats.gainedExp}`}
                 </div>
                 {selectedDifficulty !== 'medium' && (
-                  <div className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${diffInfo.color}`}>
+                  <div className={`text-[8px] font-black uppercase tracking-wider mt-0.5 ${diffInfo.color}`}>
                     {diffInfo.name} ({diffInfo.multiplier}x)
                   </div>
                 )}
@@ -502,10 +502,10 @@ export default function DailyQuestTab() {
         </div>
 
         {stats && (
-            <div className="surface-neutral p-6 rounded-xl border border-primary/20 bg-primary/5 relative overflow-hidden text-left">
+            <div className="bg-primary/5 p-4 rounded-lg border border-primary/10 relative overflow-hidden text-left">
                 <div className="absolute top-0 left-0 h-1 bg-primary/20 w-full">
                     <motion.div 
-                        className="h-full bg-primary shadow-[0_0_10px_rgba(37,99,235,0.5)]" 
+                        className="h-full bg-primary" 
                         initial={{ width: 0 }}
                         animate={{ width: `${((stats.newExp - (Math.pow(stats.newLevel - 1, 2) * 100)) / ((Math.pow(stats.newLevel, 2) * 100) - (Math.pow(stats.newLevel - 1, 2) * 100))) * 100}%` }}
                         transition={{ duration: 1.5, ease: "linear" }}
@@ -513,12 +513,12 @@ export default function DailyQuestTab() {
                 </div>
                 <div className="flex justify-between items-end">
                     <div className="text-left">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-primary">Current Level</p>
-                        <div className="text-2xl font-black italic">LVL {stats.newLevel}</div>
+                        <p className="text-[10px] font-black uppercase tracking-wider text-primary">Current Level</p>
+                        <div className="text-xl font-black">LVL {stats.newLevel}</div>
                     </div>
                     <div className="text-right">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Progress to LVL {stats.newLevel + 1}</p>
-                        <div className="text-lg font-bold">{(stats.newExp || 0).toLocaleString()} / {(Math.pow(stats.newLevel, 2) * 100).toLocaleString()} <span className="text-[10px] uppercase">EXP</span></div>
+                        <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Progress to LVL {stats.newLevel + 1}</p>
+                        <div className="text-base font-bold">{(stats.newExp || 0).toLocaleString()} / {(Math.pow(stats.newLevel, 2) * 100).toLocaleString()} <span className="text-[10px] uppercase">EXP</span></div>
                     </div>
                 </div>
             </div>
@@ -527,7 +527,7 @@ export default function DailyQuestTab() {
         <div className="flex flex-col gap-3">
             <button 
                 onClick={() => setIsReviewMode(true)}
-                className="w-full py-4 rounded-xl border border-primary/20 bg-primary/5 text-primary font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors"
+                className="w-full py-4 rounded-lg border border-primary/20 bg-primary/5 text-primary font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-primary/10 transition-colors"
             >
                 <BookOpenCheck className="h-5 w-5" />
                 Review Your Answers
@@ -538,13 +538,13 @@ export default function DailyQuestTab() {
                   fetchDailyStatus();
                 }}
                 disabled={isCompleted && !questions.length} // Fallback check
-                className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="w-full py-4 rounded-lg bg-primary text-primary-foreground font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-                Back to Category Selection
+                Back to Categories
             </button>
             {(isCompleted && questions.length > 0) && (
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-2 animate-pulse">
-                You've reached your daily limit. See you tomorrow!
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mt-2">
+                Daily limit reached. See you tomorrow!
               </p>
             )}
         </div>
@@ -558,16 +558,16 @@ export default function DailyQuestTab() {
         <div className="flex items-center justify-between px-2">
             <div>
                 <h2 className="text-xl font-black uppercase tracking-tight">Daily Quest</h2>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Select your challenge</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select your challenge</p>
             </div>
             {currentStats && (
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                      <div className="text-xs font-black text-orange-500 uppercase tracking-widest flex items-center gap-1 justify-end">
+                      <div className="text-xs font-black text-orange-500 uppercase tracking-wider flex items-center gap-1 justify-end">
                         <Trophy className="h-3 w-3" />
                         Streak: {currentStats.streak}
                       </div>
-                      <div className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1 justify-end">
+                      <div className="text-[10px] font-black text-primary uppercase tracking-wider flex items-center gap-1 justify-end">
                         <Zap className="h-3 w-3 fill-primary" />
                         LVL {currentStats.level}
                       </div>
@@ -578,22 +578,22 @@ export default function DailyQuestTab() {
 
         {/* Difficulty Selector */}
         <div className="px-2 space-y-3">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Challenge Difficulty</h3>
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Challenge Difficulty</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {DIFFICULTY_CONFIG.map((diff) => (
               <button
                 key={diff.id}
                 onClick={() => setSelectedDifficulty(diff.id)}
-                className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
+                className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${
                   selectedDifficulty === diff.id
-                    ? `${diff.bg} ${diff.border} ring-1 ring-current`
+                    ? `${diff.bg} ${diff.border}`
                     : 'border-border hover:border-muted-foreground/30'
                 }`}
               >
-                <span className={`text-[10px] font-black uppercase tracking-widest ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-wider ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground'}`}>
                   {diff.name}
                 </span>
-                <span className={`text-[8px] font-bold uppercase tracking-widest mt-0.5 ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground/50'}`}>
+                <span className={`text-[8px] font-bold uppercase tracking-wider mt-0.5 ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground/50'}`}>
                   {diff.multiplier}x EXP
                 </span>
               </button>
@@ -603,7 +603,7 @@ export default function DailyQuestTab() {
 
         {academicCategories.length > 0 && (
           <div className="space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-2">Academic Subjects</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Academic Subjects</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {academicCategories.map(cat => {
                 const status = getCategoryStatus(cat.name);
@@ -613,22 +613,21 @@ export default function DailyQuestTab() {
                     key={cat.id} 
                     onClick={() => startQuest(cat.name)} 
                     disabled={isCooldown}
-                    className={`surface-neutral p-6 rounded-xl border transition-all group flex flex-col items-center gap-3 relative overflow-hidden ${
+                    className={`bg-muted/10 p-6 rounded-lg border transition-all group flex flex-col items-center gap-3 relative overflow-hidden ${
                       isCooldown 
                         ? 'opacity-50 grayscale border-border cursor-not-allowed' 
                         : 'border-primary/20 bg-primary/5 hover:border-primary/50'
                     }`}
                   >
                     {status.isFeatured && (
-                      <div className="absolute top-0 right-0 bg-orange-500 text-[8px] font-black text-white px-2 py-0.5 rounded-bl-lg uppercase tracking-widest flex items-center gap-1">
-                        <Sparkles className="h-2 w-2 fill-white" />
+                      <div className="absolute top-0 right-0 bg-orange-500 text-[8px] font-black text-white px-2 py-0.5 rounded-bl-lg uppercase tracking-wider flex items-center gap-1">
                         Featured
                       </div>
                     )}
                     <cat.icon className={`h-8 w-8 transition-colors ${isCooldown ? 'text-muted-foreground' : 'text-primary'}`} />
-                    <span className="font-bold text-[10px] sm:text-xs uppercase tracking-widest text-center">{cat.name}</span>
+                    <span className="font-bold text-[10px] sm:text-xs uppercase tracking-wider text-center">{cat.name}</span>
                     {isCooldown && <span className="text-[8px] font-black text-rose-500">Reset at Midnight</span>}
-                    {status.status === 'in-progress' && <span className="text-[8px] font-black text-amber-500 animate-pulse">In Progress</span>}
+                    {status.status === 'in-progress' && <span className="text-[8px] font-black text-amber-500">In Progress</span>}
                   </button>
                 );
               })}
@@ -637,7 +636,7 @@ export default function DailyQuestTab() {
         )}
 
         <div className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-2">General Categories</h3>
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">General Categories</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {CATEGORIES.map(cat => {
               const status = getCategoryStatus(cat.name);
@@ -647,22 +646,21 @@ export default function DailyQuestTab() {
                   key={cat.id} 
                   onClick={() => startQuest(cat.name)} 
                   disabled={isCooldown}
-                  className={`surface-neutral p-6 rounded-xl border transition-all group flex flex-col items-center gap-3 relative overflow-hidden ${
+                  className={`bg-muted/10 p-6 rounded-lg border transition-all group flex flex-col items-center gap-3 relative overflow-hidden ${
                     isCooldown 
                       ? 'opacity-50 grayscale border-border cursor-not-allowed' 
                       : 'border-border hover:border-primary/50'
                   }`}
                 >
                   {status.isFeatured && (
-                    <div className="absolute top-0 right-0 bg-orange-500 text-[8px] font-black text-white px-2 py-0.5 rounded-bl-lg uppercase tracking-widest flex items-center gap-1">
-                      <Sparkles className="h-2 w-2 fill-white" />
+                    <div className="absolute top-0 right-0 bg-orange-500 text-[8px] font-black text-white px-2 py-0.5 rounded-bl-lg uppercase tracking-wider flex items-center gap-1">
                       Featured
                     </div>
                   )}
                   <cat.icon className={`h-8 w-8 transition-colors ${isCooldown ? 'text-muted-foreground' : 'text-muted-foreground group-hover:text-primary'}`} />
-                  <span className="font-bold text-[10px] sm:text-xs uppercase tracking-widest text-center">{cat.name}</span>
+                  <span className="font-bold text-[10px] sm:text-xs uppercase tracking-wider text-center">{cat.name}</span>
                   {isCooldown && <span className="text-[8px] font-black text-rose-500">Reset at Midnight</span>}
-                  {status.status === 'in-progress' && <span className="text-[8px] font-black text-amber-500 animate-pulse">In Progress</span>}
+                  {status.status === 'in-progress' && <span className="text-[8px] font-black text-amber-500">In Progress</span>}
                 </button>
               );
             })}
@@ -687,7 +685,7 @@ export default function DailyQuestTab() {
       <div className="flex justify-between items-center px-2">
         <div className="flex items-center gap-2">
           <BrainCircuit className="h-5 w-5 text-primary" />
-          <span className="text-sm font-black uppercase tracking-widest">Question {currentIndex + 1}/{totalQuestions}</span>
+          <span className="text-sm font-black uppercase tracking-wider">Question {currentIndex + 1}/{totalQuestions}</span>
         </div>
         <div className="text-xs font-bold text-muted-foreground uppercase">Score: {score}</div>
       </div>
@@ -696,7 +694,7 @@ export default function DailyQuestTab() {
         <motion.div className="h-full bg-primary" animate={{ width: `${(currentIndex / totalQuestions) * 100}%` }} />
       </div>
 
-      <div className="surface-neutral p-8 rounded-xl border border-border/50 space-y-8">
+      <div className="bg-card p-6 sm:p-8 rounded-lg border border-border/50 space-y-8">
         <QuestMarkdown content={currentQ.question} className="text-xl sm:text-2xl font-bold text-center leading-tight flex justify-center" />
         
         {currentQ.type === 'open' ? (
@@ -707,7 +705,7 @@ export default function DailyQuestTab() {
               onChange={(e) => setOpenAnswer(e.target.value)}
               disabled={isAnswered || isEvaluating}
               placeholder="Type your answer here..."
-              className="w-full p-4 rounded-xl bg-background border border-border font-bold focus:border-primary outline-none transition-all"
+              className="w-full p-4 rounded-lg bg-background border border-border font-bold focus:border-primary outline-none transition-all"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && openAnswer.trim() && !isAnswered) {
                   handleAnswer(openAnswer);
@@ -718,7 +716,7 @@ export default function DailyQuestTab() {
               <button
                 onClick={() => handleAnswer(openAnswer)}
                 disabled={isAnswered || isEvaluating || !openAnswer.trim()}
-                className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-lg bg-primary text-primary-foreground font-black uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isEvaluating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Submit Answer'}
               </button>
@@ -731,7 +729,7 @@ export default function DailyQuestTab() {
                 key={i}
                 onClick={() => handleAnswer(ans)}
                 disabled={isAnswered}
-                className={`p-5 rounded-xl border text-left font-bold transition-all ${
+                className={`p-4 rounded-lg border text-left font-bold transition-all ${
                   isAnswered 
                     ? ans === currentQ.correct_answer 
                       ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-600'
@@ -746,10 +744,8 @@ export default function DailyQuestTab() {
         )}
 
         {isAnswered && (
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className={`p-5 rounded-xl border-2 flex flex-col gap-2 ${
+            <div 
+                className={`p-4 rounded-lg border flex flex-col gap-2 ${
                     isCurrentCorrect
                     ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700'
                     : 'bg-rose-500/5 border-rose-500/20 text-rose-700'
@@ -757,26 +753,24 @@ export default function DailyQuestTab() {
             >
                 <div className="flex items-center gap-2">
                     {isCurrentCorrect ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                    <span className="text-xs font-black uppercase tracking-widest">
-                        {isCurrentCorrect ? 'Analysis: Accepted' : 'Analysis: Rejected'}
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                        {isCurrentCorrect ? 'Accepted' : 'Rejected'}
                     </span>
                 </div>
-                <div className="text-sm font-medium leading-relaxed italic">
+                <div className="text-sm font-medium leading-relaxed">
                     "<QuestMarkdown content={evaluationFeedback || (isCurrentCorrect ? 'Correct!' : 'Incorrect.')} className="inline" />"
                 </div>
-            </motion.div>
+            </div>
         )}
 
         {isAnswered && !isEvaluating && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          <button
             onClick={nextQuestion}
-            className="w-full py-4 rounded-xl bg-foreground text-background font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-black/10"
+            className="w-full py-4 rounded-lg bg-foreground text-background font-black uppercase tracking-wider flex items-center justify-center gap-2"
           >
             {currentIndex + 1 >= totalQuestions ? 'Finish Quest' : 'Continue'}
             <ArrowRight className="h-5 w-5" />
-          </motion.button>
+          </button>
         )}
       </div>
     </div>

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import LottieAnimation from '@/components/ui/LottieAnimation';
 import Skeleton from '@/components/ui/Skeleton';
 import { useStudent } from '@/lib/hooks';
+import { GraduationCap, ArrowLeft, RefreshCcw, Loader2 } from 'lucide-react';
 
 type ExtendedGrade = SubjectGrade & { semester: string };
 
@@ -34,18 +35,17 @@ export default function GradesPage() {
   const calculateStats = async () => {
     if (!student || !student.availableReports || isCalculating) return;
     setIsCalculating(true);
-    const statsToast = toast.loading('Gathering academic data across semesters...');
+    const statsToast = toast.loading('Aggregating academic data...');
     let gathered: ExtendedGrade[] = [];
 
     try {
-      // Fetch each semester in parallel - Session cookie handles auth
       const promises = student.availableReports.map(report => 
         fetch('/api/student/grades', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             href: report.href,
-            reportName: report.text // Pass the report name
+            reportName: report.text 
           }),
         }).then(res => res.json())
       );
@@ -64,12 +64,11 @@ export default function GradesPage() {
       });
 
       if (gathered.length === 0) {
-        toast.error('No grades found in your reports.', { id: statsToast });
+        toast.error('No records found.', { id: statsToast });
         setIsCalculating(false);
         return;
       }
 
-      // De-duplicate gathered grades
       const seen = new Set();
       let unique = gathered.filter(g => {
         const key = `${g.code}-${g.description}-${g.semester}`.toLowerCase();
@@ -78,17 +77,12 @@ export default function GradesPage() {
         return true;
       });
 
-      // Enrich with units from Prospectus (offeredSubjects) if missing or mismatched
       if (student?.offeredSubjects && student.offeredSubjects.length > 0) {
         unique = unique.map(g => {
           const u = parseFloat(g.units || '0');
-          // If code looks like a section (contains semester/year info or matches common patterns)
           const looksLikeSection = /^[A-Z]{2,}\d[A-Z]$/i.test(g.code) || g.code.includes('-');
-
-          // Populate section field if empty and code looks like one
           const currentSection = g.section || (looksLikeSection ? g.code : '');
 
-          // Find in prospectus by description or code
           const match = student.offeredSubjects?.find(s => 
             s.description.trim().toLowerCase() === g.description.trim().toLowerCase() ||
             s.code.trim().toLowerCase() === g.code.trim().toLowerCase()
@@ -108,9 +102,9 @@ export default function GradesPage() {
 
       setAllGrades(unique);
       localStorage.setItem('all_grades_cache', JSON.stringify(unique));
-      toast.success('Scholastic stats calculated!', { id: statsToast });
+      toast.success('Analytics updated!', { id: statsToast });
     } catch (err) {
-      console.error('Failed to gather grades for stats', err);
+      console.error('Failed to aggregate grades', err);
       toast.error('Failed to aggregate data.', { id: statsToast });
     } finally {
       setIsCalculating(false);
@@ -119,21 +113,22 @@ export default function GradesPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
-        <div className="max-w-5xl mx-auto space-y-6">
-          <div className="flex justify-end">
-            <Skeleton className="h-9 w-40 rounded-lg" />
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-5xl mx-auto space-y-8">
+          <div className="flex justify-between items-center">
+            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-10 w-10 circular" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Skeleton className="h-24 w-full rounded-xl" />
-            <Skeleton className="h-24 w-full rounded-xl" />
-            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-28 w-full rounded-xl" />
+            <Skeleton className="h-28 w-full rounded-xl" />
+            <Skeleton className="h-28 w-full rounded-xl" />
           </div>
           <div className="space-y-4">
             {[1, 2].map((i) => (
-              <div key={i} className="bg-card rounded-xl border border-border p-5 space-y-4">
-                <Skeleton className="h-5 w-40" />
-                <Skeleton className="h-16 w-full" />
+              <div key={i} className="surface-neutral rounded-xl border border-border/50 p-6 space-y-4">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-24 w-full" />
               </div>
             ))}
           </div>
@@ -144,56 +139,78 @@ export default function GradesPage() {
 
   if (!student || !student.availableReports) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
         <LottieAnimation 
           animationPath="/animations/error-404.json"
-          className="w-48 h-48 mb-4"
+          className="w-56 h-56 mb-4"
         />
-        <h2 className="text-xl font-bold text-foreground mb-2">No reports available</h2>
-        <p className="text-muted-foreground mb-6 text-sm font-medium">Please log in or refresh your data from the dashboard first.</p>
-        <Link href="/" className="px-6 py-2.5 bg-primary text-primary-foreground font-bold rounded-lg transition-colors text-sm">
-          Return to Dashboard
+        <h2 className="text-2xl font-black text-foreground mb-2 uppercase tracking-tight">Access Restricted</h2>
+        <p className="text-muted-foreground mb-8 max-w-sm font-bold uppercase text-[10px] tracking-widest leading-relaxed">
+          Sync your portal data from the main dashboard to view scholastic records.
+        </p>
+        <Link href="/" className="px-8 py-3 bg-primary text-primary-foreground font-black rounded-lg shadow-xl hover:opacity-90 transition-all text-xs uppercase tracking-widest active:opacity-70 flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Dashboard
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground pb-12">
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
-        <div className="flex justify-end mb-6">
+    <div className="min-h-screen bg-background font-sans text-foreground pb-20">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-3">
+             <div className="bg-primary p-2.5 rounded-lg text-primary-foreground">
+               <GraduationCap className="h-6 w-6" />
+             </div>
+             <div>
+               <h1 className="text-2xl font-black text-foreground uppercase tracking-tight leading-none">Scholastic Records</h1>
+               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1.5">Official Registry Overview</p>
+             </div>
+          </div>
           <button 
             onClick={calculateStats}
             disabled={isCalculating}
-            className={`px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-tight transition-all flex items-center gap-2 active:scale-95 ${
+            className={`px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2.5 active:scale-95 shadow-lg ${
               isCalculating 
                 ? 'bg-muted text-muted-foreground cursor-not-allowed' 
-                : 'bg-foreground text-background hover:opacity-90 shadow-sm'
+                : 'bg-foreground text-background hover:opacity-90'
             }`}
           >
             {isCalculating ? (
               <>
-                <div className="animate-spin h-3 w-3 border-2 border-background/30 border-t-background rounded-full"></div>
-                Calculating...
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Syncing...
               </>
             ) : (
               <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
-                </svg>
-                Calculate Overall Stats
+                <RefreshCcw className="h-3 w-3" />
+                Run Analytics
               </>
             )}
           </button>
         </div>
 
-        <GradesList reports={student.availableReports} />
+        <div className="space-y-10">
+          {allGrades.length > 0 && (
+             <section>
+                <div className="flex items-center gap-2 mb-4 px-1">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Global Analytics</h2>
+                </div>
+                <GradeStats allGrades={allGrades} />
+             </section>
+          )}
 
-        {allGrades.length > 0 && (
-          <div className="mt-8">
-            <GradeStats allGrades={allGrades} />
-          </div>
-        )}
+          <section>
+            <div className="flex items-center gap-2 mb-4 px-1">
+              <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+              <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Semester Breakdown</h2>
+            </div>
+            <GradesList reports={student.availableReports} />
+          </section>
+        </div>
       </main>
     </div>
   );

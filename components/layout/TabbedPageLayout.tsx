@@ -48,7 +48,7 @@ export default function TabbedPageLayout({
               </div>
               <div>
                 <h1 className="text-base font-bold tracking-tight uppercase">{title}</h1>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{subtitle || 'LCCian Hub'}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{subtitle || 'LCCian Hub'}</p>
               </div>
             </div>
           </div>
@@ -58,13 +58,13 @@ export default function TabbedPageLayout({
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all group ${
                   activeTab === tab.id 
-                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/10' 
+                    ? 'bg-primary text-primary-foreground' 
                     : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                 }`}
               >
-                <tab.icon className={`h-5 w-5 transition-transform group-hover:scale-110 ${activeTab === tab.id ? 'text-primary-foreground' : 'text-primary'}`} />
+                <tab.icon className={`h-5 w-5 transition-transform group-hover:scale-105 ${activeTab === tab.id ? 'text-primary-foreground' : 'text-primary'}`} />
                 <div className="text-left">
                   <p className="text-xs font-bold leading-none">{tab.name}</p>
                   {tab.desc && (

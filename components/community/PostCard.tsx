@@ -1,34 +1,22 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeHighlight from 'rehype-highlight';
-import rehypeKatex from 'rehype-katex';
-import 'highlight.js/styles/github-dark.css';
-import 'katex/dist/katex.min.css';
 import { 
   Heart, 
   MessageSquare, 
-  ExternalLink, 
-  BarChart2, 
-  Eye, 
-  Flag, 
   MoreVertical, 
   Trash2, 
   Link as LinkIcon, 
   Share2, 
   User,
-  Copy,
-  Check,
-  BrainCircuit
+  Flag
 } from 'lucide-react';
 import { CommunityPost, Student } from '@/types';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
+import CommunityMarkdown from './CommunityMarkdown';
 
 interface PostCardProps {
   post: CommunityPost;
@@ -41,27 +29,6 @@ interface PostCardProps {
   onDelete?: (postId: string) => void;
   isProfileView?: boolean;
 }
-
-const CopyButton = ({ content }: { content: string }) => {
-  const [copied, setCopied] = React.useState(false);
-
-  const handleCopy = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <button
-      onClick={handleCopy}
-      className="p-1.5 rounded-lg bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-all border border-border/50 shadow-sm active:scale-90"
-      title="Copy to clipboard"
-    >
-      {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
-    </button>
-  );
-};
 
 const getTopicStyle = (topic: string) => {
   switch (topic) {
@@ -90,10 +57,11 @@ export default function PostCard({
   const isAuthor = student?.id === post.userId;
   const [showMenu, setShowMenu] = useState(false);
   
-  const memberStatus = onlineMembers.get(post.userId);
-
   const menuRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const isTruncated = post.content.length > 280;
+  const displayContent = isTruncated ? post.content.substring(0, 280) + '...' : post.content;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -171,7 +139,10 @@ export default function PostCard({
         <div className="flex items-center gap-2.5">
           <div className="relative h-9 w-9 rounded-lg overflow-hidden bg-muted flex items-center justify-center border border-border/40">
             <Image 
-              src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${post.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`}
+              src={post.isAnonymous 
+                ? `https://api.dicebear.com/7.x/identicon/svg?seed=anonymous&backgroundColor=b6e3f4`
+                : `https://api.dicebear.com/7.x/lorelei/svg?seed=${post.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`
+              }
               alt={post.userName}
               width={36}
               height={36}
@@ -180,7 +151,7 @@ export default function PostCard({
             />
           </div>
           <div className="min-w-0">
-            {isProfileView ? (
+            {isProfileView || post.isAnonymous ? (
                <div className="flex items-center gap-1.5 mb-1">
                  <h4 className="text-sm font-bold text-foreground leading-none">{post.userName}</h4>
                </div>
@@ -225,14 +196,16 @@ export default function PostCard({
           
           {showMenu && (
             <div className="absolute right-0 mt-1 w-44 surface-neutral border border-border rounded-xl shadow-xl z-10 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-              <Link 
-                href={`/student/${post.userId}`}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-[10px] font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors uppercase tracking-wider"
-              >
-                <User className="h-3.5 w-3.5" />
-                View Profile
-              </Link>
+              {!post.isAnonymous && (
+                <Link 
+                  href={`/student/${post.userId}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-[10px] font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors uppercase tracking-wider"
+                >
+                  <User className="h-3.5 w-3.5" />
+                  View Profile
+                </Link>
+              )}
               
               <button
                 onClick={handleCopyLink}
@@ -284,71 +257,16 @@ export default function PostCard({
         </div>
       </div>
       
-      <div className="prose prose-slate dark:prose-invert max-w-none prose-sm font-normal text-muted-foreground/90 leading-relaxed mb-4 px-0.5">
-        <ReactMarkdown 
-          remarkPlugins={[remarkGfm, remarkMath]}
-          rehypePlugins={[rehypeHighlight, rehypeKatex]}
-          components={{
-            a: ({ ...props }) => (
-              <a 
-                {...props} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="text-primary font-bold underline hover:opacity-80 transition-opacity"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {props.children}
-              </a>
-            ),
-            blockquote: ({ ...props }) => (
-              <blockquote 
-                className="border-l-4 border-primary/50 pl-4 py-1 my-4 text-muted-foreground italic bg-primary/5 rounded-r-lg" 
-                {...props} 
-              />
-            ),
-            ul: ({ ...props }) => (
-              <ul className="list-disc list-outside ml-5 my-4 space-y-2" {...props} />
-            ),
-            ol: ({ ...props }) => (
-              <ol className="list-decimal list-outside ml-5 my-4 space-y-2" {...props} />
-            ),
-            li: ({ ...props }) => (
-              <li className="mb-1" {...props} />
-            ),
-            h1: ({children}) => <h1 className="text-lg font-black text-foreground mt-6 mb-3 pb-2 border-b border-border/50 uppercase tracking-tight">{children}</h1>,
-            h2: ({children}) => <h2 className="text-base font-bold text-foreground mt-5 mb-2.5 tracking-tight">{children}</h2>,
-            h3: ({children}) => <h3 className="text-sm font-bold text-foreground mt-4 mb-2">{children}</h3>,
-            p: ({children}) => <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>,
-            table: ({...props}) => <div className="overflow-x-auto my-6 rounded-xl border border-border/60 shadow-sm bg-card/50"><table className="w-full text-xs text-left" {...props} /></div>,
-            thead: ({...props}) => <thead className="bg-accent/80 text-foreground font-black uppercase tracking-widest text-[9px]" {...props} />,
-            th: ({...props}) => <th className="px-3 py-2" {...props} />,
-            td: ({...props}) => <td className="px-3 py-2 border-t border-border/40" {...props} />,
-            code: ({ className, children, ...props }) => {
-              const match = /language-(\w+)/.exec(className || '');
-              return match ? (
-                <div className="relative group my-4" onClick={(e) => e.stopPropagation()}>
-                  <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-                    <div className="px-2 py-1 bg-accent rounded text-[8px] font-black uppercase tracking-widest text-muted-foreground border border-border">
-                      {match[1]}
-                    </div>
-                    <CopyButton content={String(children).replace(/\n$/, '')} />
-                  </div>
-                  <pre className="bg-muted text-foreground rounded-xl p-4 overflow-x-auto text-xs scroll-smooth custom-scrollbar border border-border shadow-lg">
-                    <code className={className} {...props}>
-                      {children}
-                    </code>
-                  </pre>
-                </div>
-              ) : (
-                <code className="bg-primary/10 text-primary rounded px-1.5 py-0.5 font-mono text-[0.9em] font-bold border border-primary/20" {...props}>
-                  {children}
-                </code>
-              );
-            },
-          }}
-        >
-          {post.content}
-        </ReactMarkdown>
+      <div className="mb-4 px-0.5">
+        <CommunityMarkdown 
+          content={displayContent}
+          className="prose prose-slate dark:prose-invert max-w-none prose-sm font-normal text-muted-foreground/90 leading-relaxed inline"
+        />
+        {isTruncated && (
+          <span className="text-xs font-bold text-blue-500 hover:underline transition-all ml-1">
+            Read more
+          </span>
+        )}
       </div>
 
       {post.poll && (

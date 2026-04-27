@@ -63,23 +63,23 @@ function LeaderboardTab() {
      return (
         <div className="space-y-4">
           <div className="flex items-center justify-between px-2">
-            <h3 className="text-xl font-black italic uppercase tracking-tighter">Hall of Fame</h3>
-            <div className="flex bg-muted p-1 rounded-xl gap-1">
+            <h3 className="text-xl font-black uppercase tracking-tight">Hall of Fame</h3>
+            <div className="flex bg-muted p-1 rounded-lg gap-1">
               <button 
                 onClick={() => setFilter('all-time')}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${filter === 'all-time' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground'}`}
+                className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${filter === 'all-time' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground'}`}
               >
                 All-Time
               </button>
               <button 
                 onClick={() => setFilter('weekly')}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${filter === 'weekly' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground'}`}
+                className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${filter === 'weekly' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground'}`}
               >
                 Weekly
               </button>
             </div>
           </div>
-          <div className="surface-neutral p-12 rounded-xl border border-border/50 flex flex-col items-center justify-center text-center gap-4 min-h-[300px]">
+          <div className="surface-neutral p-12 rounded-lg border border-border/50 flex flex-col items-center justify-center text-center gap-4 min-h-[300px]">
             <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center">
               <Trophy className="h-8 w-8 text-muted-foreground/30" />
             </div>
@@ -95,17 +95,17 @@ function LeaderboardTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between px-2">
-        <h3 className="text-xl font-black italic uppercase tracking-tighter">Hall of Fame</h3>
-        <div className="flex bg-muted p-1 rounded-xl gap-1">
+        <h3 className="text-xl font-black uppercase tracking-tight">Hall of Fame</h3>
+        <div className="flex bg-muted p-1 rounded-lg gap-1">
           <button 
             onClick={() => setFilter('all-time')}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${filter === 'all-time' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground'}`}
+            className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${filter === 'all-time' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground'}`}
           >
             All-Time
           </button>
           <button 
             onClick={() => setFilter('weekly')}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${filter === 'weekly' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground'}`}
+            className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${filter === 'weekly' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground'}`}
           >
             Weekly
           </button>
@@ -113,7 +113,7 @@ function LeaderboardTab() {
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
+        <div className="flex items-center justify-between px-4 text-[10px] font-black uppercase tracking-wider text-muted-foreground/50">
           <span>Rank & Student</span>
           <span>{filter === 'weekly' ? 'Weekly' : 'Total'} EXP</span>
         </div>
@@ -133,13 +133,13 @@ function LeaderboardTab() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.03 }}
                 className={`
-                  relative flex items-center justify-between p-3 rounded-xl border transition-all
+                  relative flex items-center justify-between p-3 rounded-lg border transition-all
                   ${isTop3 ? 'bg-card border-primary/20' : 'bg-muted/10 border-border/40'}
                 `}
               >
                 <div className="flex items-center gap-3">
                   <div className={`
-                    flex h-8 w-8 items-center justify-center rounded-lg font-black text-xs border
+                    flex h-8 w-8 items-center justify-center rounded-md font-black text-xs border
                     ${isTop3 ? rankColors[index] : 'bg-muted/50 text-muted-foreground/50 border-border/50'}
                   `}>
                     {index + 1}
@@ -158,7 +158,7 @@ function LeaderboardTab() {
                 <div className="flex items-center gap-3">
                    <div className="text-right">
                       <p className="font-black text-base text-foreground tabular-nums leading-none">{(student.exp || 0).toLocaleString()}</p>
-                      <p className="text-[8px] font-black uppercase tracking-tighter text-primary mt-1">Level {student.level || 1}</p>
+                      <p className="text-[8px] font-black uppercase tracking-tight text-primary mt-1">Level {student.level || 1}</p>
                    </div>
                    <ChevronRight className="h-3 w-3 text-muted-foreground/20" />
                 </div>
@@ -240,9 +240,9 @@ export default function QuestsPage() {
         }
         sidebarFooter={
         <div className="space-y-4">
-          <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 space-y-4">
+          <div className="bg-primary/5 p-4 rounded-lg border border-primary/10 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+              <h3 className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-2">
                 <Zap size={12} className="fill-primary" />
                 Daily EXP Cap
               </h3>
@@ -260,21 +260,21 @@ export default function QuestsPage() {
             </p>
           </div>
 
-          <div className="bg-orange-500/5 p-4 rounded-xl border border-orange-500/10 space-y-2">
+          <div className="bg-orange-500/5 p-4 rounded-lg border border-orange-500/10 space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-orange-500 flex items-center gap-2">
+              <h3 className="text-[10px] font-black uppercase tracking-wider text-orange-500 flex items-center gap-2">
                 <Trophy size={12} className="fill-orange-500" />
                 Daily Streak
               </h3>
-              <span className="text-xl font-black italic text-orange-500">{currentStats?.streak || 0}</span>
+              <span className="text-xl font-black text-orange-500">{currentStats?.streak || 0}</span>
             </div>
             <p className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">
               Quested {currentStats?.streak || 0} days in a row! Keep it up!
             </p>
           </div>
 
-          <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 space-y-3">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+          <div className="bg-primary/5 p-4 rounded-lg border border-primary/10 space-y-3">
+            <h3 className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-2">
               <Sparkles size={12} />
               What is Quest Center?
             </h3>
@@ -287,7 +287,7 @@ export default function QuestsPage() {
           </div>
 
           <div className="flex items-center justify-between px-1">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Quick Rules</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Quick Rules</h3>
             <button 
               onClick={() => setIsInfoOpen(true)}
               className="p-1 rounded bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
@@ -310,10 +310,10 @@ export default function QuestsPage() {
               ))}
             </ul>
 
-          <div className="bg-primary/5 p-3 rounded-xl border border-primary/10 space-y-2">
+          <div className="bg-primary/5 p-3 rounded-lg border border-primary/10 space-y-2">
             <div className="flex items-center gap-2">
               <Trophy className="h-3 w-3 text-primary" />
-              <h3 className="text-[9px] font-black uppercase tracking-widest text-primary">Achievements</h3>
+              <h3 className="text-[9px] font-black uppercase tracking-wider text-primary">Achievements</h3>
             </div>
             <p className="text-[9px] font-bold text-foreground leading-tight">
               Perfect runs earn the &ldquo;Quest Master&rdquo; badge. Reach Level 100 for the &ldquo;Centurion&rdquo; title!
@@ -323,13 +323,13 @@ export default function QuestsPage() {
       }
     >
       {activeTab === 'daily' && (
-        <div className="surface-neutral p-6 sm:p-8 rounded-xl border border-border/50">
+        <div className="surface-neutral p-6 sm:p-8 rounded-lg border border-border/50">
           <DailyQuestTab />
         </div>
       )}
 
       {activeTab === 'test' && (
-        <div className="surface-neutral p-6 sm:p-8 rounded-xl border border-border/50">
+        <div className="surface-neutral p-6 sm:p-8 rounded-lg border border-border/50">
           <TestQuestTab />
         </div>
       )}

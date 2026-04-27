@@ -4,14 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeRaw from 'rehype-raw';
-import rehypeHighlight from 'rehype-highlight';
-import rehypeKatex from 'rehype-katex';
-import 'highlight.js/styles/github-dark.css';
-import 'katex/dist/katex.min.css';
 import { 
   Loader2, 
   Send, 
@@ -30,9 +22,7 @@ import {
   ArrowLeft,
   Link as LinkIcon,
   Share2,
-  User,
-  Copy,
-  Check
+  User
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -40,27 +30,7 @@ import Skeleton from '@/components/ui/Skeleton';
 import Modal from '@/components/ui/Modal';
 import { CommunityPost, Student, CommunityComment } from '@/types';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
-
-const CopyButton = ({ content }: { content: string }) => {
-  const [copied, setCopied] = React.useState(false);
-
-  const handleCopy = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <button
-      onClick={handleCopy}
-      className="p-1.5 rounded-lg bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-all border border-border/50 shadow-sm active:scale-90"
-      title="Copy to clipboard"
-    >
-      {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
-    </button>
-  );
-};
+import CommunityMarkdown from '@/components/community/CommunityMarkdown';
 
 const getTopicStyle = (topic: string) => {
   switch (topic) {
@@ -367,6 +337,16 @@ export default function PostPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-8">
+        <div className="flex items-center justify-between">
+          <button 
+            onClick={() => router.push('/community')}
+            className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors group"
+          >
+            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+            Back to Community
+          </button>
+        </div>
+
         {loadingPost ? (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -384,7 +364,10 @@ export default function PostPage() {
               <div className="flex items-center gap-2.5">
                 <div className="relative h-10 w-10 rounded-lg overflow-hidden bg-muted flex items-center justify-center border border-border/40 shadow-sm">
                   <Image 
-                    src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${post.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`}
+                    src={post.isAnonymous 
+                      ? `https://api.dicebear.com/7.x/identicon/svg?seed=anonymous&backgroundColor=b6e3f4`
+                      : `https://api.dicebear.com/7.x/lorelei/svg?seed=${post.userId || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`
+                    }
                     alt={post.userName}
                     width={40}
                     height={40}
@@ -393,9 +376,13 @@ export default function PostPage() {
                   />
                 </div>
                 <div>
-                  <Link href={`/student/${post.userId}`} className="block group">
-                    <h2 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{post.userName}</h2>
-                  </Link>
+                  {post.isAnonymous ? (
+                    <h2 className="text-sm font-bold text-foreground">{post.userName}</h2>
+                  ) : (
+                    <Link href={`/student/${post.userId}`} className="block group">
+                      <h2 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{post.userName}</h2>
+                    </Link>
+                  )}
                   <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
                     <p className="text-[10px] font-medium text-muted-foreground/60">
                       {new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -422,13 +409,15 @@ export default function PostPage() {
                 </button>
                 {activeMenu === post.id && (
                   <div className="absolute right-0 mt-2 w-48 bg-card rounded-2xl shadow-xl border border-border py-1.5 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                    <Link 
-                      href={`/student/${post.userId}`}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors uppercase tracking-wider"
-                    >
-                      <User className="h-4 w-4" />
-                      View Profile
-                    </Link>
+                    {!post.isAnonymous && (
+                      <Link 
+                        href={`/student/${post.userId}`}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors uppercase tracking-wider"
+                      >
+                        <User className="h-4 w-4" />
+                        View Profile
+                      </Link>
+                    )}
 
                     <button 
                       onClick={handleCopyLink}
@@ -478,71 +467,10 @@ export default function PostPage() {
               </div>
             </div>
 
-            <div className="prose prose-slate dark:prose-invert max-w-none prose-sm font-normal text-muted-foreground/90 leading-relaxed px-0.5">
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
-                components={{
-                  a: ({ ...props }) => (
-                    <a 
-                      {...props} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-primary font-bold underline hover:opacity-80 transition-opacity"
-                    >
-                      {props.children}
-                    </a>
-                  ),
-                  blockquote: ({ ...props }) => (
-                    <blockquote 
-                      className="border-l-4 border-primary/50 pl-4 py-1 my-4 text-muted-foreground italic bg-primary/5 rounded-r-lg" 
-                      {...props} 
-                    />
-                  ),
-                  ul: ({ ...props }) => (
-                    <ul className="list-disc list-outside ml-5 my-4 space-y-2" {...props} />
-                  ),
-                  ol: ({ ...props }) => (
-                    <ol className="list-decimal list-outside ml-5 my-4 space-y-2" {...props} />
-                  ),
-                  li: ({ ...props }) => (
-                    <li className="mb-1" {...props} />
-                  ),
-                  h1: ({children}) => <h1 className="text-xl font-bold text-foreground mt-8 mb-4 pb-2 border-b border-border/50 tracking-tight">{children}</h1>,
-                  h2: ({children}) => <h2 className="text-lg font-bold text-foreground mt-6 mb-3 tracking-tight">{children}</h2>,
-                  h3: ({children}) => <h3 className="text-base font-bold text-foreground mt-5 mb-2.5">{children}</h3>,
-                  p: ({children}) => <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>,
-                  table: ({...props}) => <div className="overflow-x-auto my-6 rounded-xl border border-border/60 shadow-sm bg-card/50"><table className="w-full text-sm text-left" {...props} /></div>,
-                  thead: ({...props}) => <thead className="bg-accent/80 text-foreground font-bold uppercase tracking-tight text-[10px]" {...props} />,
-                  th: ({...props}) => <th className="px-4 py-3" {...props} />,
-                  td: ({...props}) => <td className="px-4 py-3 border-t border-border/40" {...props} />,
-                  code: ({ className, children, ...props }) => {
-                    const match = /language-(\w+)/.exec(className || '');
-                    return match ? (
-                      <div className="relative group my-6">
-                        <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-                          <div className="px-2 py-1 bg-accent rounded text-[8px] font-bold uppercase tracking-tight text-muted-foreground border border-border">
-                            {match[1]}
-                          </div>
-                          <CopyButton content={String(children).replace(/\n$/, '')} />
-                        </div>
-                        <pre className="bg-muted text-foreground rounded-xl p-5 overflow-x-auto text-sm scroll-smooth custom-scrollbar border border-border shadow-xl">
-                          <code className={className} {...props}>
-                            {children}
-                          </code>
-                        </pre>
-                      </div>
-                    ) : (
-                      <code className="bg-primary/10 text-primary rounded px-1.5 py-0.5 font-mono text-[0.9em] font-bold border border-primary/20" {...props}>
-                        {children}
-                      </code>
-                    );
-                  },
-                }}
-              >
-                {post.content}
-              </ReactMarkdown>
-            </div>
+            <CommunityMarkdown 
+              content={post.content}
+              className="prose prose-slate dark:prose-invert max-w-none prose-sm font-normal text-muted-foreground/90 leading-relaxed px-0.5"
+            />
 
             {post.poll && (
               <div className="p-4 bg-muted/40 rounded-2xl border border-border/40 space-y-3.5">
@@ -743,41 +671,46 @@ export default function PostPage() {
             )}
           </div>
 
-          {/* Comment Input Part of flow */}
-          <div className="pt-8">
-            {student ? (
-              <div className="flex gap-3 items-center bg-accent/50 p-2 rounded-2xl border border-border focus-within:border-primary/50 focus-within:bg-card transition-all shadow-sm relative">
-                <input
-                  type="text"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleComment()}
-                  maxLength={500}
-                  placeholder="Write a comment..."
-                  className="flex-1 bg-transparent border-none px-4 text-sm font-bold focus:outline-none py-2.5 placeholder:text-muted-foreground/50"
-                />
-                {newComment.length > 0 && (
-                  <div className="absolute right-14 top-1/2 -translate-y-1/2">
-                    <span className={`text-[8px] font-bold uppercase tracking-widest ${newComment.length >= 450 ? 'text-red-500' : 'text-muted-foreground/30'}`}>
-                      {newComment.length}/500
-                    </span>
-                  </div>
-                )}
-                <button
-                  disabled={!newComment.trim() || commenting}
-                  onClick={handleComment}
-                  className="bg-foreground text-background hover:opacity-90 disabled:opacity-20 p-2.5 rounded-xl transition-all active:scale-95 flex items-center justify-center shrink-0"
-                >
-                  {commenting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between bg-accent/50 px-5 py-4 rounded-2xl border border-border">
-                <p className="text-sm font-bold text-muted-foreground">Log in to join the discussion</p>
-                <Link href="/" className="text-sm font-bold text-primary hover:underline">Sign In</Link>
-              </div>
-            )}
+          {/* Comment Input Floating */}
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background/95 to-transparent z-40">
+            <div className="max-w-2xl mx-auto">
+              {student ? (
+                <div className="flex gap-3 items-center bg-card p-2 rounded-2xl border border-border focus-within:border-primary/50 transition-all shadow-2xl relative">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleComment()}
+                    maxLength={500}
+                    placeholder="Write a comment..."
+                    className="flex-1 bg-transparent border-none px-4 text-sm font-bold focus:outline-none py-2.5 placeholder:text-muted-foreground/50"
+                  />
+                  {newComment.length > 0 && (
+                    <div className="absolute right-14 top-1/2 -translate-y-1/2">
+                      <span className={`text-[8px] font-bold uppercase tracking-widest ${newComment.length >= 450 ? 'text-red-500' : 'text-muted-foreground/30'}`}>
+                        {newComment.length}/500
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    disabled={!newComment.trim() || commenting}
+                    onClick={handleComment}
+                    className="bg-foreground text-background hover:opacity-90 disabled:opacity-20 p-2.5 rounded-xl transition-all active:scale-95 flex items-center justify-center shrink-0"
+                  >
+                    {commenting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between bg-card px-5 py-4 rounded-2xl border border-border shadow-xl">
+                  <p className="text-sm font-bold text-muted-foreground">Log in to join the discussion</p>
+                  <Link href="/" className="text-sm font-bold text-primary hover:underline">Sign In</Link>
+                </div>
+              )}
+            </div>
           </div>
+          
+          {/* Spacer for floating input */}
+          <div className="h-32" />
         </div>
       </div>
 
@@ -803,7 +736,10 @@ export default function PostPage() {
               >
                 <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary/50 border border-border group-hover:bg-card transition-all flex items-center justify-center shadow-sm">
                   <Image 
-                    src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${user.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`}
+                    src={post?.isAnonymous 
+                        ? `https://api.dicebear.com/7.x/identicon/svg?seed=anonymous&backgroundColor=b6e3f4`
+                        : `https://api.dicebear.com/7.x/lorelei/svg?seed=${user.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`
+                    }
                     alt={user.name}
                     width={40}
                     height={40}

@@ -24,6 +24,7 @@ export async function migrateCommunity() {
         content TEXT,
         topic TEXT DEFAULT 'General',
         image_url TEXT,
+        is_anonymous INTEGER DEFAULT 0,
         is_unreviewed INTEGER DEFAULT 0,
         poll_question TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -33,6 +34,13 @@ export async function migrateCommunity() {
     // Ensure image_url exists for older tables
     try {
       await query(`ALTER TABLE community_posts ADD COLUMN image_url TEXT;`);
+    } catch (e) {
+      // Column might already exist
+    }
+
+    // Ensure is_anonymous exists for older tables
+    try {
+      await query(`ALTER TABLE community_posts ADD COLUMN is_anonymous INTEGER DEFAULT 0;`);
     } catch (e) {
       // Column might already exist
     }

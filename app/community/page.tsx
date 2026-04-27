@@ -16,17 +16,17 @@ import {
   SlidersHorizontal, 
   ChevronDown, 
   Flag,
-  Info
+  Info,
+  Plus
 } from 'lucide-react';
 import { CommunityPost, Student } from '@/types';
 import CommunityGuidelinesDrawer from '@/components/community/CommunityGuidelinesDrawer';
 import Skeleton from '@/components/ui/Skeleton';
 import PostCard from '@/components/community/PostCard';
-import CreatePostCard from '@/components/community/CreatePostCard';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
 import Modal from '@/components/ui/Modal';
-import Drawer from '@/components/layout/Drawer';
+import Link from 'next/link';
 
 function CommunityContent() {
   const router = useRouter();
@@ -35,7 +35,6 @@ function CommunityContent() {
   const queryClient = useQueryClient();
   const { setActivePostId } = useRealtime();
 
-  // Read from URL Search Params
   const selectedTopic = searchParams.get('topic') || 'All';
   const searchQuery = searchParams.get('search') || '';
   const selectedType = searchParams.get('type') || 'all';
@@ -77,8 +76,8 @@ function CommunityContent() {
   ];
   const sortOptions = [
     { id: 'newest', label: 'Newest' },
-    { id: 'popular', label: 'Most Liked' },
-    { id: 'commented', label: 'Most Commented' }
+    { id: 'popular', label: 'Popular' },
+    { id: 'commented', label: 'Active' }
   ];
 
   useEffect(() => {
@@ -160,7 +159,7 @@ function CommunityContent() {
       queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
     } catch (err) {
-      toast.error('Failed to update reaction');
+      toast.error('Reaction failed');
     }
   };
 
@@ -176,41 +175,38 @@ function CommunityContent() {
       queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
     } catch (err) {
-      toast.error('Failed to cast vote');
+      toast.error('Vote failed');
     }
   };
 
   const handleReport = async (postId: string) => {
     if (!student) return;
-    
-    const toastId = toast.loading('Reporting post to Aegis...');
-
+    const toastId = toast.loading('Reviewing post protocol...');
     try {
       const res = await fetch('/api/community/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ postId }),
       });
-
       const data = await res.json();
-
       if (data.success) {
         if (data.decision === 'REJECTED') {
-          toast.success('Post removed: Aegis confirmed community guideline violations.', { id: toastId });          queryClient.invalidateQueries({ queryKey: ['community-posts'] });
+          toast.success('Guideline violation confirmed. Post purged.', { id: toastId });
+          queryClient.invalidateQueries({ queryKey: ['community-posts'] });
         } else {
-          toast.success('Report processed: Aegis determined this post follows community guidelines.', { id: toastId });
+          toast.success('Aegis: Content matches community safety protocols.', { id: toastId });
         }
       } else {
-        toast.error(data.error || 'Failed to report post', { id: toastId });
+        toast.error(data.error || 'Review failed', { id: toastId });
       }
     } catch (err) {
-      toast.error('Network error while reporting', { id: toastId });
+      toast.error('Network protocol error', { id: toastId });
     }
   };
 
   const handleDeletePost = async () => {
     if (!postToDelete) return;
-    const deleteToast = toast.loading('Deleting post...');
+    const deleteToast = toast.loading('Purging record...');
     try {
       const res = await fetch('/api/community', {
         method: 'DELETE',
@@ -219,67 +215,59 @@ function CommunityContent() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Post deleted', { id: deleteToast });
+        toast.success('Post purged', { id: deleteToast });
         queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       } else {
-        toast.error(data.error || 'Failed to delete post', { id: deleteToast });
+        toast.error(data.error || 'Purge failed', { id: deleteToast });
       }
     } catch (e) {
-      toast.error('Failed to delete post', { id: deleteToast });
+      toast.error('Network failure', { id: deleteToast });
     } finally {
       setPostToDelete(null);
     }
   };
 
   const openPostModal = (post: CommunityPost) => {
-    router.replace(`/post/${post.id}`);
+    router.push(`/post/${post.id}`);
   };
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="max-w-2xl mx-auto p-4 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-foreground tracking-tight">Community</h1>
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-          </div>
-          <div className="flex items-center gap-4">
-            <button onClick={() => setShowGuidelines(true)} className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight hover:text-primary transition-colors">
-              Guidelines
-            </button>
-          </div>
+        <div className="flex items-center justify-end mb-2">
+          <button onClick={() => setShowGuidelines(true)} className="p-2 rounded-lg bg-muted/50 text-muted-foreground hover:text-primary transition-colors border border-border/50">
+            <Info size={16} />
+          </button>
         </div>
-
-        <CreatePostCard student={student} />
 
         {/* Search & Main Filters */}
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1 group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} maxLength={100} placeholder="Search..." className="w-full pl-9 pr-9 py-2 surface-neutral border border-border/80 rounded-xl text-sm font-medium focus:outline-none focus:border-primary transition-all text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10" />
-              {searchInput && <button onClick={() => setSearchInput('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" /></button>}
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
+              <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} maxLength={100} placeholder="Search the community..." className="w-full pl-10 pr-10 py-3 surface-neutral border border-border/50 rounded-lg text-[13px] font-black uppercase tracking-tight focus:outline-none focus:border-primary/50 transition-all text-foreground shadow-sm ring-1 ring-black/5" />
+              {searchInput && <button onClick={() => setSearchInput('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
             </div>
-            <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider border transition-all ${showFilters || selectedType !== 'all' || sortBy !== 'newest' ? 'bg-primary text-primary-foreground border-primary' : 'surface-neutral text-muted-foreground border-border hover:border-muted-foreground shadow-sm'}`}><SlidersHorizontal className="h-3.5 w-3.5" />Filters</button>
+            <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-5 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all ${showFilters || selectedType !== 'all' || sortBy !== 'newest' ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' : 'surface-neutral text-muted-foreground border-border/50 hover:border-muted-foreground shadow-sm'}`}><SlidersHorizontal className="h-3.5 w-3.5" />Refine Feed</button>
           </div>
 
           {showFilters && (
-            <div className="surface-violet rounded-xl border border-border/80 p-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10 space-y-4 animate-in slide-in-from-top-2 duration-200">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground px-1">Sort</label>
-                  <div className="flex flex-wrap gap-1.5">{sortOptions.map(opt => <button key={opt.id} onClick={() => updateSearchParams({ sort: opt.id })} className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${sortBy === opt.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-accent text-muted-foreground border-border hover:border-muted-foreground'}`}>{opt.label}</button>)}</div>
+            <div className="surface-neutral rounded-lg border border-border/50 p-5 shadow-sm ring-1 ring-black/5 space-y-5 animate-in slide-in-from-top-2 duration-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-1">Order By</label>
+                  <div className="flex flex-wrap gap-2">{sortOptions.map(opt => <button key={opt.id} onClick={() => updateSearchParams({ sort: opt.id })} className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest border transition-all ${sortBy === opt.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border/50 hover:border-muted-foreground'}`}>{opt.label}</button>)}</div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground px-1">Type</label>
-                  <div className="flex flex-wrap gap-1.5">{postTypes.map(type => <button key={type.id} onClick={() => updateSearchParams({ type: type.id })} className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${selectedType === type.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-accent text-muted-foreground border-border hover:border-muted-foreground'}`}>{type.label}</button>)}</div>
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-1">Type</label>
+                  <div className="flex flex-wrap gap-2">{postTypes.map(type => <button key={type.id} onClick={() => updateSearchParams({ type: type.id })} className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest border transition-all ${selectedType === type.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border/50 hover:border-muted-foreground'}`}>{type.label}</button>)}</div>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-            {topics.map(topic => <button key={topic} onClick={() => updateSearchParams({ topic })} className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider whitespace-nowrap border transition-all ${selectedTopic === topic ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-muted-foreground border-border hover:border-muted-foreground'}`}>{topic}</button>)}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {topics.map(topic => <button key={topic} onClick={() => updateSearchParams({ topic })} className={`px-4 py-2 rounded-md text-[9px] font-black uppercase tracking-widest whitespace-nowrap border transition-all ${selectedTopic === topic ? 'bg-primary text-primary-foreground border-primary shadow-sm' : 'bg-muted/30 text-muted-foreground border-border/50 hover:border-muted-foreground'}`}>{topic}</button>)}
           </div>
         </div>
 
@@ -288,20 +276,20 @@ function CommunityContent() {
           {loading ? (
             <div className="space-y-4">
               {[1, 2].map(i => (
-                <div key={i} className="surface-neutral rounded-xl p-5 border border-border/80 space-y-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-                  <div className="flex items-center gap-3"><Skeleton className="h-8 w-8 rounded-full" /><div className="space-y-1.5 flex-1"><Skeleton className="h-3.5 w-24" /><Skeleton className="h-2.5 w-16" /></div></div>
-                  <div className="space-y-2"><Skeleton className="h-3.5 w-full" /><Skeleton className="h-3.5 w-2/3" /></div>
+                <div key={i} className="surface-neutral rounded-xl p-6 border border-border/50 space-y-4 shadow-sm ring-1 ring-black/5">
+                  <div className="flex items-center gap-3"><Skeleton className="h-10 w-10 rounded-lg" /><div className="space-y-2 flex-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div></div>
+                  <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-2/3" /></div>
                 </div>
               ))}
             </div>
           ) : isError ? (
-            <div className="surface-rose text-center py-16 rounded-2xl border border-red-500/20 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-              <p className="text-xs font-bold text-red-500 uppercase tracking-wider mb-4">Failed to load posts</p>
-              <button onClick={() => refetch()} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-[10px] font-bold uppercase tracking-wider hover:opacity-90 transition-colors">Retry</button>
+            <div className="surface-neutral text-center py-20 rounded-xl border border-red-500/20 shadow-sm ring-1 ring-black/5">
+              <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-6">Connection Interrupted</p>
+              <button onClick={() => refetch()} className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-colors shadow-lg shadow-primary/10">Retry Connection</button>
             </div>
           ) : posts.length === 0 ? (
-            <div className="surface-sky text-center py-16 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">No posts found</p>
+            <div className="surface-neutral text-center py-20 rounded-xl border border-border/50 shadow-sm ring-1 ring-black/5">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">No posts found in this category</p>
             </div>
           ) : (
             <>
@@ -318,7 +306,7 @@ function CommunityContent() {
                 />
               ))}
               {hasMore && (
-                <button onClick={handleLoadMore} className="w-full py-3 surface-neutral border border-border/80 rounded-xl text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-all active:scale-95 shadow-sm ring-1 ring-black/5 dark:ring-white/10">Load More</button>
+                <button onClick={handleLoadMore} className="w-full py-4 surface-neutral border border-border/50 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all active:scale-[0.99] shadow-sm ring-1 ring-black/5">Load More Posts</button>
               )}
             </>
           )}
@@ -327,28 +315,35 @@ function CommunityContent() {
 
       <CommunityGuidelinesDrawer isOpen={showGuidelines} onClose={() => setShowGuidelines(false)} />
 
-      {/* Delete Post Confirmation */}
+      {/* Floating Create Button */}
+      <Link 
+        href="/community/create"
+        className="fixed bottom-24 right-6 h-14 w-14 bg-foreground text-background rounded-xl shadow-2xl shadow-primary/20 flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-40 md:hidden border border-white/10"
+      >
+        <Plus className="h-7 w-7" />
+      </Link>
+
       <Modal 
         isOpen={!!postToDelete} 
         onClose={() => setPostToDelete(null)}
         maxWidth="max-w-xs"
-        className="p-8 text-center"
+        className="p-10 text-center"
       >
-        <div className="h-16 w-16 bg-destructive/10 text-destructive rounded-3xl flex items-center justify-center mx-auto mb-6">
+        <div className="h-16 w-16 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-red-500/10">
             <Trash2 className="h-8 w-8" />
         </div>
-        <h3 className="text-lg font-bold text-foreground mb-2">Delete Post?</h3>
-        <p className="text-xs text-muted-foreground font-bold leading-relaxed mb-8">This action cannot be undone. Are you sure you want to remove this post?</p>
+        <h3 className="text-xl font-black text-foreground mb-3 uppercase tracking-tight">Delete Post?</h3>
+        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest leading-relaxed mb-10">This post will be permanently removed from the LCCians community database.</p>
         <div className="flex flex-col gap-3">
             <button 
                 onClick={handleDeletePost}
-                className="w-full py-3.5 bg-destructive hover:bg-destructive/90 text-destructive-foreground text-xs font-bold uppercase tracking-tight rounded-2xl transition-all shadow-lg shadow-destructive/10 active:scale-95"
+                className="w-full py-4 bg-red-500 hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-red-500/20 active:scale-95"
             >
-                Delete Post
+                Confirm Delete
             </button>
             <button 
                 onClick={() => setPostToDelete(null)}
-                className="w-full py-3.5 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-bold uppercase tracking-tight rounded-2xl transition-all active:scale-95"
+                className="w-full py-4 bg-muted text-muted-foreground text-[10px] font-black uppercase tracking-widest rounded-lg transition-all active:scale-95"
             >
                 Cancel
             </button>
@@ -363,20 +358,20 @@ export default function CommunityPage() {
     <Suspense fallback={
       <div className="min-h-screen bg-background p-4">
         <div className="max-w-2xl mx-auto space-y-6">
-          <div className="flex items-center justify-between mb-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-20" />
+          <div className="flex items-center justify-between mb-4">
+            <Skeleton className="h-10 w-48 rounded-lg" />
+            <Skeleton className="h-8 w-8 rounded-lg" />
           </div>
-          <div className="bg-card rounded-3xl p-6 border border-border">
+          <div className="surface-neutral rounded-xl p-6 border border-border/50">
             <div className="flex gap-4">
-              <Skeleton className="h-10 w-10 rounded-2xl" />
-              <Skeleton className="h-20 flex-1" />
+              <Skeleton className="h-10 w-10 rounded-lg" />
+              <Skeleton className="h-12 flex-1 rounded-lg" />
             </div>
           </div>
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-card rounded-2xl p-6 border border-border space-y-4">
-                <div className="flex items-center gap-3"><Skeleton className="h-9 w-9 rounded-lg" /><div className="space-y-2 flex-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div></div>
+              <div key={i} className="surface-neutral rounded-xl p-6 border border-border/50 space-y-4">
+                <div className="flex items-center gap-3"><Skeleton className="h-10 w-10 rounded-lg" /><div className="space-y-2 flex-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div></div>
                 <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-2/3" /></div>
               </div>
             ))}

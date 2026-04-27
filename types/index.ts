@@ -82,6 +82,7 @@ export interface CommunityPost {
   content: string;
   topic?: string;
   imageUrl?: string;
+  isAnonymous?: boolean;
   isUnreviewed?: boolean;
   createdAt: any;
   likes?: string[];

@@ -82,9 +82,9 @@
   --input: #e5e5e5;
   --ring: #a3a3a3;
   --radius: 0.75rem;
-  --accent-blue: #000000;
-  --accent-blue-dark: #404040;
-  --accent-blue-light: #737373;
+  --accent-blue: #3b82f6;
+  --accent-blue-dark: #2563eb;
+  --accent-blue-light: #60a5fa;
   --brand-dark: #171717;
   --surface-gradient: linear-gradient(180deg, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0) 100%);
 }
@@ -109,9 +109,9 @@
   --border: #262626;
   --input: #262626;
   --ring: #404040;
-  --accent-blue: #ffffff;
-  --accent-blue-dark: #a3a3a3;
-  --accent-blue-light: #d4d4d4;
+  --accent-blue: #60a5fa;
+  --accent-blue-dark: #3b82f6;
+  --accent-blue-light: #93c5fd;
   --brand-dark: #000000;
   --surface-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
 }
@@ -160,11 +160,11 @@ body {
 }
 
 .katex .mn {
-  color: #171717 !important; /* Neutral dark for math numbers */
+  color: inherit !important;
 }
 
 .dark .katex .mn {
-  color: #d4d4d4 !important;
+  color: inherit !important;
 }
 
 /* List Numbers (Ordered Lists) */
@@ -204,7 +204,7 @@ body {
   font-size: 1.05em !important;
   font-weight: 600;
   padding: 0 2px;
-  color: var(--primary);
+  color: #f59e0b; /* Amber 500 */
 }
 
 .prose .katex {

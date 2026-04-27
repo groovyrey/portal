@@ -176,7 +176,7 @@ export default function DailyGreeting({ student }: { student: Student }) {
       <div className="mt-4 flex flex-col gap-1 border-t border-border pt-4">
         <div className="flex items-center gap-2 mb-2">
             <Sparkles className="h-3 w-3 text-primary" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Today's Quote</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">Today's Quote</span>
         </div>
         
         <div className="flex items-start justify-between gap-3">
@@ -188,7 +188,7 @@ export default function DailyGreeting({ student }: { student: Student }) {
               </div>
             ) : (
               <div>
-                <p className="text-sm italic text-muted-foreground leading-relaxed">"{quote}"</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">"{quote}"</p>
                 {author && <p className="mt-2 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-tight">— {author}</p>}
               </div>
             )}

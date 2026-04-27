@@ -3,6 +3,11 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeHighlight from 'rehype-highlight';
+import rehypeKatex from 'rehype-katex';
+import 'highlight.js/styles/github-dark.css';
+import 'katex/dist/katex.min.css';
 import { toast } from 'sonner';
 import { 
   Send, 
@@ -10,22 +15,32 @@ import {
   Loader2, 
   X, 
   Plus, 
-  BarChart2 
+  BarChart2,
+  Ghost,
+  Hash
 } from 'lucide-react';
 import { Student } from '@/types';
 import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import CommunityMarkdown from './CommunityMarkdown';
 
 interface CreatePostCardProps {
   student: Student | null;
+  onSuccess?: () => void;
 }
 
-export default function CreatePostCard({ student }: CreatePostCardProps) {
+const topics = ['General', 'Academics', 'Campus Life', 'Career', 'Well-being'];
+
+export default function CreatePostCard({ student, onSuccess }: CreatePostCardProps) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [content, setContent] = useState('');
+  const [topic, setTopic] = useState('General');
   const [showPollEditor, setShowPollEditor] = useState(false);
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState(['', '']);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [posting, setPosting] = useState(false);
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
 
@@ -40,8 +55,9 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           content, 
-          userName: student?.name || 'Anonymous',
-          topic: 'General',
+          userName: isAnonymous ? 'Anonymous Student' : (student?.name || 'Anonymous'),
+          topic: topic,
+          isAnonymous,
           isUnreviewed: false,
           poll: showPollEditor && pollQuestion.trim() ? {
             question: pollQuestion,
@@ -55,10 +71,12 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
         setContent('');
         setPollQuestion('');
         setPollOptions(['', '']);
+        setIsAnonymous(false);
         setShowPollEditor(false);
         setActiveTab('write');
         queryClient.invalidateQueries({ queryKey: ['community-posts'] });
         toast.success('Post shared successfully!');
+        if (onSuccess) onSuccess();
       } else {
         toast.error(data.error || 'Failed to post');
       }
@@ -75,9 +93,9 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
         <div className="h-12 w-12 bg-accent rounded-full flex items-center justify-center mx-auto">
           <User className="h-6 w-6 text-muted-foreground" />
         </div>
-        <h2 className="text-lg font-bold text-foreground">Ready to join?</h2>
+        <h2 className="text-lg font-bold text-foreground">Join the LCCians Community</h2>
         <p className="text-xs text-muted-foreground font-medium mb-4">
-          Share posts, vote on polls, and join discussions.
+          Engage with fellow LCCians, share updates, and participate in community polls.
         </p>
         <Link href="/" className="inline-flex items-center gap-2 bg-primary hover:opacity-90 text-primary-foreground px-6 py-2.5 rounded-xl text-xs font-bold transition-all">
           Sign In
@@ -108,6 +126,20 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
           </div>
           
           <form onSubmit={handlePost} className="relative z-10 p-5 space-y-4">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+              {topics.map(t => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTopic(t)}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all shrink-0 ${topic === t ? 'bg-primary text-primary-foreground border-primary' : 'bg-accent text-muted-foreground border-border hover:border-muted-foreground'}`}
+                >
+                  <Hash className="h-3 w-3" />
+                  {t}
+                </button>
+              ))}
+            </div>
+
             <div>
               {activeTab === 'write' ? (
                 <div className="space-y-3">
@@ -115,8 +147,8 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     maxLength={2000}
-                    placeholder="What's on your mind?"
-                    className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium placeholder:text-muted-foreground/50 resize-none min-h-[80px] outline-none text-foreground"
+                    placeholder="What's on your mind, LCCian? (Markdown supported)"
+                    className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium placeholder:text-muted-foreground/50 resize-none min-h-[120px] outline-none text-foreground"
                   />
                   <div className="flex justify-end">
                     <span className={`text-[9px] font-bold uppercase tracking-widest ${content.length >= 1900 ? 'text-red-500' : 'text-muted-foreground/40'}`}>
@@ -125,17 +157,20 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
                   </div>
                 </div>
               ) : (
-                <div className="min-h-[80px] prose prose-slate dark:prose-invert prose-sm max-w-none">
+                <div className="min-h-[120px] px-0.5">
                   {content.trim() ? (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                    <CommunityMarkdown 
+                      content={content}
+                      className="prose prose-slate dark:prose-invert prose-sm max-w-none"
+                    />
                   ) : (
-                    <p className="text-muted-foreground/50 italic">Preview will appear here...</p>
+                    <p className="text-muted-foreground/50 italic text-sm font-medium">Preview will appear here...</p>
                   )}
                 </div>
               )}
             </div>
             <div className="flex items-center justify-between pt-4 border-t border-border">
-              <div className="flex gap-1">
+              <div className="flex gap-2">
                 <button 
                   type="button" 
                   onClick={() => setShowPollEditor(!showPollEditor)} 
@@ -143,6 +178,16 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
                   title="Add Poll"
                 >
                   <BarChart2 className="h-4 w-4" />
+                </button>
+                
+                <button 
+                  type="button" 
+                  onClick={() => setIsAnonymous(!isAnonymous)} 
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all border ${isAnonymous ? 'bg-foreground text-background border-foreground' : 'text-muted-foreground border-border hover:bg-accent'}`} 
+                  title="Post Anonymously"
+                >
+                  <Ghost className="h-4 w-4" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">Anonymous</span>
                 </button>
               </div>
               <button 
@@ -174,24 +219,32 @@ export default function CreatePostCard({ student }: CreatePostCardProps) {
             </div>
             
             <div className="space-y-3">
-              <input 
-                value={pollQuestion} 
-                onChange={(e) => setPollQuestion(e.target.value)} 
-                maxLength={100}
-                placeholder="Ask a question..." 
-                className="w-full px-3 py-2.5 bg-accent/50 border border-border rounded-xl text-sm font-bold placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-all text-foreground" 
-              />
+              <div className="relative">
+                <input 
+                  value={pollQuestion} 
+                  onChange={(e) => setPollQuestion(e.target.value)} 
+                  maxLength={100}
+                  placeholder="Ask a question..." 
+                  className="w-full px-3 py-2.5 bg-accent/50 border border-border rounded-xl text-sm font-bold placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-all text-foreground pr-12" 
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[8px] font-bold text-muted-foreground/40 uppercase">
+                  {pollQuestion.length}/100
+                </span>
+              </div>
 
               <div className="space-y-2">
                 {pollOptions.map((opt, i) => (
-                  <div key={i} className="flex items-center gap-2">
+                  <div key={i} className="relative flex items-center gap-2">
                     <input 
                       value={opt} 
                       onChange={(e) => { const n = [...pollOptions]; n[i] = e.target.value; setPollOptions(n); }} 
-                      maxLength={50}
+                      maxLength={30}
                       placeholder={`Option ${i+1}`} 
-                      className="flex-1 px-3 py-2 bg-accent/30 border border-border rounded-lg text-xs font-semibold focus:outline-none focus:border-primary transition-all placeholder:text-muted-foreground/50 text-foreground" 
+                      className="flex-1 px-3 py-2 bg-accent/30 border border-border rounded-lg text-xs font-semibold focus:outline-none focus:border-primary transition-all placeholder:text-muted-foreground/50 text-foreground pr-10" 
                     />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[7px] font-bold text-muted-foreground/30 uppercase">
+                      {opt.length}/30
+                    </span>
                   </div>
                 ))}
                 {pollOptions.length < 5 && (

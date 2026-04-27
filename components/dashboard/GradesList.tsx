@@ -10,15 +10,15 @@ export default function GradesList({ reports }: GradesListProps) {
   if (!reports) return null;
 
   return (
-    <div className="space-y-6">
-      <div className="surface-violet relative overflow-hidden rounded-2xl border border-border/80 p-6 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
-            <BookOpenCheck className="h-4 w-4" />
+    <div className="space-y-4">
+      <div className="surface-neutral relative overflow-hidden rounded-xl border border-border/50 p-6 shadow-sm ring-1 ring-black/5">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="h-10 w-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center border border-primary/20">
+            <BookOpenCheck className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-foreground leading-none">Scholastic Registry</h3>
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Academic Records</p>
+            <h3 className="text-xl font-black text-foreground uppercase tracking-tight leading-none">Scholastic Registry</h3>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1.5">Academic Archives</p>
           </div>
         </div>
 
@@ -33,13 +33,13 @@ export default function GradesList({ reports }: GradesListProps) {
                   title: report.text,
                 },
               }}
-              className="group flex items-center justify-between p-4 rounded-xl text-[13px] font-bold transition-all border outline-none bg-accent text-muted-foreground hover:bg-accent/80 border-border hover:border-muted-foreground/30"
+              className="group flex items-center justify-between p-4 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all border border-border/50 bg-muted/5 text-muted-foreground hover:bg-muted/10 hover:text-foreground hover:border-primary/30"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="break-words text-left">{report.text.replace('Grades of ', '')}</span>
+                <FileText className="h-4 w-4 shrink-0 text-primary/40 group-hover:text-primary transition-colors" />
+                <span className="truncate">{report.text.replace('Grades of ', '')}</span>
               </div>
-              <ChevronRight className="h-4 w-4 shrink-0 opacity-30 group-hover:opacity-100" />
+              <ChevronRight className="h-3 w-3 shrink-0 opacity-20 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
             </Link>
           ))}
         </div>

@@ -63,6 +63,7 @@ export default function SettingsPage() {
       setLoading(false);
     }
   }, [student]);
+
   const updateSettings = async (newSettings: Student['settings']) => {
     if (!student) return;
 
@@ -81,11 +82,11 @@ export default function SettingsPage() {
       });
 
       if (!res.ok) throw new Error('Failed to update settings');
-      toast.success('Settings updated');
+      toast.success('Preferences Updated');
     } catch {
       localStorage.setItem('student_data', JSON.stringify(previousStudent));
       window.dispatchEvent(new Event('local-storage-update'));
-      toast.error('Failed to save settings');
+      toast.error('Failed to sync settings');
     }
   };
 
@@ -98,7 +99,7 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ['student-data'] });
       
       window.dispatchEvent(new Event('local-storage-update'));
-      toast.success('Logged out successfully');
+      toast.success('Session Terminated');
       router.push('/');
     } catch (e) {
       console.error('Logout failed', e);
@@ -107,63 +108,65 @@ export default function SettingsPage() {
 
   if (loading || !student) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Configuring Environment...</p>
       </div>
     );
   }
 
   const tabs = [
-    { id: 'profile', name: 'Profile', icon: User, desc: 'Personal Information' },
-    { id: 'security', name: 'Security', icon: Lock, desc: 'Password & Auth' },
-    { id: 'notifications', name: 'Alerts', icon: Bell, desc: 'Push Preferences' },
-    { id: 'privacy', name: 'Privacy', icon: Eye, desc: 'Visibility & Data' },
-    { id: 'activity', name: 'Activity', icon: History, desc: 'Action History' },
-    { id: 'support', name: 'Support', icon: LifeBuoy, desc: 'Feedback & Help' },
+    { id: 'profile', name: 'Profile', icon: User, desc: 'Identity' },
+    { id: 'security', name: 'Security', icon: Lock, desc: 'Authentication' },
+    { id: 'notifications', name: 'Alerts', icon: Bell, desc: 'Signals' },
+    { id: 'privacy', name: 'Privacy', icon: Eye, desc: 'Visibility' },
+    { id: 'activity', name: 'History', icon: History, desc: 'Logs' },
+    { id: 'support', name: 'Support', icon: LifeBuoy, desc: 'Assistance' },
   ] as const;
 
   return (
     <TabbedPageLayout
-      title="Settings"
+      title="Terminal"
       icon={Settings}
-      subtitle="Preferences"
+      subtitle="Settings & Preferences"
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={handleTabChange}
       headerRight={
         <button 
           onClick={handleLogout} 
-          className="flex items-center gap-2 px-3 py-1.5 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
         >
           <LogOut className="h-4 w-4" />
-          <span className="text-[10px] font-bold uppercase tracking-tight">Sign Out</span>
+          <span className="text-[10px] font-black uppercase tracking-widest">Sign Out</span>
         </button>
       }
       sidebarFooter={
-        <div className="space-y-2">
+        <div className="space-y-4">
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center justify-between p-3 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 rounded-xl transition-all text-red-600 font-bold group"
+            className="w-full flex items-center justify-between p-4 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 rounded-lg transition-all text-red-600 font-black group"
           >
             <div className="flex items-center gap-3">
               <LogOut size={16} />
-              <span className="text-xs">Sign Out</span>
+              <span className="text-[10px] uppercase tracking-widest">Terminate Session</span>
             </div>
-            <ChevronRight className="h-3 w-3 opacity-30 group-hover:opacity-100 transition-opacity" />
+            <ChevronRight className="h-3.5 w-3.5 opacity-30 group-hover:opacity-100 transition-opacity" />
           </button>
-          <div className="px-3 pt-2">
-            <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-tight text-center">Version {APP_VERSION}</p>
+          <div className="px-1 text-center">
+            <p className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest">Control Center v{APP_VERSION}</p>
           </div>
         </div>
       }
     >
-      {activeTab === 'profile' && <ProfileTab student={student} updateSettings={updateSettings} />}
-      {activeTab === 'security' && <SecurityTab />}
-      {activeTab === 'notifications' && <NotificationsTab student={student} updateSettings={updateSettings} />}
-      {activeTab === 'privacy' && <PrivacyTab student={student} updateSettings={updateSettings} />}
-      {activeTab === 'activity' && <ActivityTab />}
-      {activeTab === 'support' && <SupportTab />}
+      <div className="surface-neutral rounded-xl border border-border/50 p-6 md:p-8 shadow-sm ring-1 ring-black/5 min-h-[500px]">
+        {activeTab === 'profile' && <ProfileTab student={student} updateSettings={updateSettings} />}
+        {activeTab === 'security' && <SecurityTab />}
+        {activeTab === 'notifications' && <NotificationsTab student={student} updateSettings={updateSettings} />}
+        {activeTab === 'privacy' && <PrivacyTab student={student} updateSettings={updateSettings} />}
+        {activeTab === 'activity' && <ActivityTab />}
+        {activeTab === 'support' && <SupportTab />}
+      </div>
     </TabbedPageLayout>
   );
 }
-

@@ -12,17 +12,17 @@ const GUIDELINES = [
   {
     icon: <GraduationCap className="h-5 w-5 text-blue-500" />,
     title: "Be Professional",
-    description: "The LCC Portal is an academic space. Use professional language and avoid excessive slang, all-caps, or offensive content."
+    description: "The LCCians Community is a space for all students. Use respectful language and avoid offensive content or excessive slang."
   },
   {
     icon: <HeartHandshake className="h-5 w-5 text-rose-500" />,
     title: "Support Your Peers",
-    description: "Encourage others. Sharing study tips, notes, or supportive comments creates a better learning environment for everyone."
+    description: "Encourage others. Sharing study tips, notes, or supportive comments creates a better environment for everyone."
   },
   {
     icon: <AlertTriangle className="h-5 w-5 text-amber-500" />,
     title: "No Bullying or Shaming",
-    description: "Zero tolerance for harassment. Never mock someone for their grades, course, or questions. Aegis will block toxic content."
+    description: "Zero tolerance for harassment. Never mock someone for their questions or course. Toxic content will be removed."
   },
   {
     icon: <ShieldCheck className="h-5 w-5 text-green-500" />,
@@ -32,7 +32,7 @@ const GUIDELINES = [
   {
     icon: <MessageSquare className="h-5 w-5 text-indigo-500" />,
     title: "Stay Relevant",
-    description: "Categorize your posts correctly using topics. Avoid spamming the feed with repetitive or non-academic content."
+    description: "Categorize your posts correctly using topics. Avoid spamming the community with repetitive or irrelevant content."
   }
 ];
 
@@ -51,7 +51,7 @@ export default function CommunityGuidelinesDrawer({ isOpen, onClose }: Community
             <h3 className="font-bold text-sm">Why have guidelines?</h3>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed font-medium">
-            To ensure the LCC Community remains a safe and productive space for all students, every post is reviewed by Aegis using these standards.
+            To ensure the LCCians Community remains a safe and productive space for all students, every post is reviewed for compliance with these standards.
           </p>
         </div>
 

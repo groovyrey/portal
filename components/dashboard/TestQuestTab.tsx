@@ -268,23 +268,23 @@ export default function TestQuestTab() {
     return (
       <div className="text-center py-10 space-y-8 max-w-md mx-auto">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <BrainCircuit className="h-20 w-20 text-primary mx-auto" />
+            <BrainCircuit className="h-16 w-16 text-primary mx-auto" />
         </motion.div>
         
         <div className="space-y-2">
-            <h2 className="text-3xl font-black italic uppercase tracking-tighter">Practice Over!</h2>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest text-primary">No EXP earned in Test Mode</p>
+            <h2 className="text-2xl font-black uppercase tracking-tight">Practice Over!</h2>
+            <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider text-primary">No EXP earned in Test Mode</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-            <div className="surface-neutral p-6 rounded-2xl border border-border/50">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Final Test Score</p>
-                <div className="text-3xl font-black text-primary">{score} / {totalQuestions}</div>
+            <div className="bg-muted/30 p-4 rounded-lg border border-border/50 text-center">
+                <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">Final Test Score</p>
+                <div className="text-2xl font-black text-primary">{score} / {totalQuestions}</div>
             </div>
-            <div className="surface-neutral p-6 rounded-2xl border border-border/50">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Expected EXP</p>
-                <div className="text-2xl font-black text-emerald-500">+{expectedExp}</div>
-                <div className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${diffInfo.color}`}>
+            <div className="bg-muted/30 p-4 rounded-lg border border-border/50 text-center">
+                <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">Expected EXP</p>
+                <div className="text-xl font-black text-emerald-500">+{expectedExp}</div>
+                <div className={`text-[8px] font-black uppercase tracking-wider mt-0.5 ${diffInfo.color}`}>
                     {diffInfo.name} ({diffInfo.multiplier}x)
                 </div>
             </div>
@@ -293,12 +293,12 @@ export default function TestQuestTab() {
         <div className="flex flex-col gap-3">
             <button 
                 onClick={resetTest}
-                className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                className="w-full py-4 rounded-lg bg-primary text-primary-foreground font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
             >
                 <RefreshCcw className="h-5 w-5" />
                 Retake Another Test
             </button>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 Test mode results are not saved to your profile.
             </p>
         </div>
@@ -312,10 +312,10 @@ export default function TestQuestTab() {
         <div className="flex items-center justify-between px-2">
             <div>
                 <h2 className="text-xl font-black uppercase tracking-tight text-primary">Test Mode</h2>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Sandbox for testing new features</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Sandbox for testing new features</p>
             </div>
-            <div className="bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 flex items-center gap-2">
-                <span className="text-[10px] font-black text-primary uppercase tracking-widest">Staff Preview</span>
+            <div className="bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20 flex items-center gap-2">
+                <span className="text-[10px] font-black text-primary uppercase tracking-wider">Staff Preview</span>
                 {currentStats && (
                   <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase ${
                     DIFFICULTY_CONFIG.find(d => d.id === selectedDifficulty)?.bg || 'bg-amber-500/10'
@@ -332,22 +332,22 @@ export default function TestQuestTab() {
 
         {/* Difficulty Selector */}
         <div className="px-2 space-y-3">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Practice Difficulty</h3>
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Practice Difficulty</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {DIFFICULTY_CONFIG.map((diff) => (
               <button
                 key={diff.id}
                 onClick={() => setSelectedDifficulty(diff.id)}
-                className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
+                className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${
                   selectedDifficulty === diff.id
-                    ? `${diff.bg} ${diff.border} ring-1 ring-current`
+                    ? `${diff.bg} ${diff.border}`
                     : 'border-border hover:border-muted-foreground/30'
                 }`}
               >
-                <span className={`text-[10px] font-black uppercase tracking-widest ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-wider ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground'}`}>
                   {diff.name}
                 </span>
-                <span className={`text-[8px] font-bold uppercase tracking-widest mt-0.5 ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground/50'}`}>
+                <span className={`text-[8px] font-bold uppercase tracking-wider mt-0.5 ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground/50'}`}>
                    Multiplier: {diff.multiplier}x
                 </span>
               </button>
@@ -357,16 +357,16 @@ export default function TestQuestTab() {
 
         {academicCategories.length > 0 && (
           <div className="space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-2">Academic Subjects</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Academic Subjects</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {academicCategories.map(cat => (
                 <button 
                   key={cat.id} 
                   onClick={() => startQuest(cat.name)} 
-                  className="surface-neutral p-6 rounded-2xl border border-primary/20 bg-primary/5 hover:border-primary/50 transition-all group flex flex-col items-center gap-3"
+                  className="bg-muted/10 p-6 rounded-lg border border-primary/20 bg-primary/5 hover:border-primary/50 transition-all group flex flex-col items-center gap-3"
                 >
                   <cat.icon className="h-8 w-8 transition-colors text-primary" />
-                  <span className="font-bold text-[10px] sm:text-xs uppercase tracking-widest text-center">{cat.name}</span>
+                  <span className="font-bold text-[10px] sm:text-xs uppercase tracking-wider text-center">{cat.name}</span>
                 </button>
               ))}
             </div>
@@ -374,16 +374,16 @@ export default function TestQuestTab() {
         )}
 
         <div className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-2">General Categories</h3>
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">General Categories</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {CATEGORIES.map(cat => (
               <button 
                 key={cat.id} 
                 onClick={() => startQuest(cat.name)} 
-                className="surface-neutral p-6 rounded-2xl border border-border/50 hover:border-primary/50 transition-all group flex flex-col items-center gap-3"
+                className="bg-muted/10 p-6 rounded-lg border border-border/50 hover:border-primary/50 transition-all group flex flex-col items-center gap-3"
               >
                 <cat.icon className="h-8 w-8 transition-colors text-muted-foreground group-hover:text-primary" />
-                <span className="font-bold text-[10px] sm:text-xs uppercase tracking-widest text-center">{cat.name}</span>
+                <span className="font-bold text-[10px] sm:text-xs uppercase tracking-wider text-center">{cat.name}</span>
               </button>
             ))}
           </div>
@@ -407,7 +407,7 @@ export default function TestQuestTab() {
       <div className="flex justify-between items-center px-2">
         <div className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-amber-500" />
-          <span className="text-sm font-black uppercase tracking-widest">Test Run {currentIndex + 1}/{totalQuestions}</span>
+          <span className="text-sm font-black uppercase tracking-wider">Test Run {currentIndex + 1}/{totalQuestions}</span>
         </div>
         <div className="text-xs font-bold text-muted-foreground uppercase">Practice Score: {score}</div>
       </div>
@@ -416,7 +416,7 @@ export default function TestQuestTab() {
         <motion.div className="h-full bg-primary" animate={{ width: `${(currentIndex / totalQuestions) * 100}%` }} />
       </div>
 
-      <div className="surface-neutral p-8 rounded-2xl border border-primary/20 bg-primary/5 space-y-8">
+      <div className="bg-card p-6 sm:p-8 rounded-lg border border-primary/20 bg-primary/5 space-y-8">
         <QuestMarkdown content={currentQ.question} className="text-xl sm:text-2xl font-bold text-center leading-tight flex justify-center" />
         
         {currentQ.type === 'open' ? (
@@ -427,7 +427,7 @@ export default function TestQuestTab() {
               onChange={(e) => setOpenAnswer(e.target.value)}
               disabled={isAnswered || isEvaluating}
               placeholder="Type your answer here..."
-              className="w-full p-4 rounded-xl bg-background border border-border font-bold focus:border-primary outline-none transition-all"
+              className="w-full p-4 rounded-lg bg-background border border-border font-bold focus:border-primary outline-none transition-all"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && openAnswer.trim() && !isAnswered) {
                   handleAnswer(openAnswer);
@@ -438,7 +438,7 @@ export default function TestQuestTab() {
               <button
                 onClick={() => handleAnswer(openAnswer)}
                 disabled={isAnswered || isEvaluating || !openAnswer.trim()}
-                className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-lg bg-primary text-primary-foreground font-black uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isEvaluating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Submit Answer'}
               </button>
@@ -451,7 +451,7 @@ export default function TestQuestTab() {
                 key={i}
                 onClick={() => handleAnswer(ans)}
                 disabled={isAnswered}
-                className={`p-5 rounded-xl border text-left font-bold transition-all ${
+                className={`p-4 rounded-lg border text-left font-bold transition-all ${
                   isAnswered 
                     ? ans === currentQ.correct_answer 
                       ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-600'
@@ -466,10 +466,8 @@ export default function TestQuestTab() {
         )}
 
         {isAnswered && (
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className={`p-5 rounded-xl border-2 flex flex-col gap-2 ${
+            <div 
+                className={`p-4 rounded-lg border flex flex-col gap-2 ${
                     isCurrentCorrect
                     ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700'
                     : 'bg-rose-500/5 border-rose-500/20 text-rose-700'
@@ -477,31 +475,29 @@ export default function TestQuestTab() {
             >
                 <div className="flex items-center gap-2">
                     {isCurrentCorrect ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                    <span className="text-xs font-black uppercase tracking-widest">
-                        {isCurrentCorrect ? 'Analysis: Accepted' : 'Analysis: Rejected'}
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                        {isCurrentCorrect ? 'Accepted' : 'Rejected'}
                     </span>
                 </div>
-                <p className="text-sm font-medium leading-relaxed italic">
-                    "{evaluationFeedback || (isCurrentCorrect ? 'Correct!' : 'Incorrect.')}"
-                </p>
-            </motion.div>
+                <div className="text-sm font-medium leading-relaxed">
+                    "<QuestMarkdown content={evaluationFeedback || (isCurrentCorrect ? 'Correct!' : 'Incorrect.')} className="inline" />"
+                </div>
+            </div>
         )}
 
         {isAnswered && !isEvaluating && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          <button
             onClick={nextQuestion}
-            className="w-full py-4 rounded-xl bg-foreground text-background font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-black/10"
+            className="w-full py-4 rounded-lg bg-foreground text-background font-black uppercase tracking-wider flex items-center justify-center gap-2"
           >
             {currentIndex + 1 >= totalQuestions ? 'Finish Practice' : 'Continue'}
             <ArrowRight className="h-5 w-5" />
-          </motion.button>
+          </button>
         )}
       </div>
       
       <div className="text-center">
-        <button onClick={resetTest} className="text-[10px] font-black text-muted-foreground hover:text-rose-500 uppercase tracking-[0.2em] transition-colors">
+        <button onClick={resetTest} className="text-[10px] font-black text-muted-foreground hover:text-rose-500 uppercase tracking-widest transition-colors">
             Exit Test Mode
         </button>
       </div>

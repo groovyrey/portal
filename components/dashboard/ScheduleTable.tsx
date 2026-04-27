@@ -348,7 +348,7 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
 
   if (!schedule || schedule.length === 0) {
     return (
-      <div className="bg-card rounded-xl p-10 text-center border border-border">
+      <div className="bg-card rounded-lg p-10 text-center border border-border">
         <h3 className="text-foreground font-bold mb-1">No Schedule</h3>
       </div>
     );
@@ -367,7 +367,7 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-muted/30 p-1 rounded-lg border border-border mr-2">
+          <div className="flex items-center bg-muted/30 p-1 rounded-md border border-border mr-2">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-background shadow-sm text-primary border border-border' : 'text-muted-foreground hover:text-foreground'}`}
@@ -417,7 +417,7 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
                   const holidayInfo = weekHolidays[day];
                   return (
                     <th key={day} className={`py-2 px-1 border-b border-border text-center ${day === currentDay ? 'bg-primary/10' : ''} ${isHoliday ? 'bg-amber-500/10' : ''}`} title={holidayInfo ? holidayInfo.name : ''}>
-                      <span className={`text-[10px] font-black ${day === currentDay ? 'text-primary' : isHoliday ? 'text-amber-600' : 'text-muted-foreground'} uppercase tracking-widest`}>{day.substring(0, 3)}</span>
+                      <span className={`text-[10px] font-black ${day === currentDay ? 'text-primary' : isHoliday ? 'text-amber-600' : 'text-muted-foreground'} uppercase tracking-wider`}>{day.substring(0, 3)}</span>
                       {day === currentDay && <div className="mx-auto mt-0.5 h-1 w-1 rounded-full bg-primary" />}
                       {isHoliday && ! (day === currentDay) && <div className="mx-auto mt-0.5 h-1 w-1 rounded-full bg-amber-500" />}
                     </th>
@@ -511,7 +511,7 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
                 <div key={day} className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <h3 className={`text-xs font-black uppercase tracking-widest ${isToday ? 'text-primary' : isHoliday ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                      <h3 className={`text-xs font-black uppercase tracking-wider ${isToday ? 'text-primary' : isHoliday ? 'text-amber-600' : 'text-muted-foreground'}`}>
                         {day}
                       </h3>
                       {isToday && <span className="h-1 w-1 rounded-full bg-primary" />}
@@ -537,7 +537,7 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
                             if (gapDuration > 0.05) { // more than 3 mins
                               gapElement = (
                                 <div key={`gap-${idx}`} className="flex items-center gap-4 py-1.5 px-4 ml-8 border-l-2 border-dashed border-border/50">
-                                  <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground/30 uppercase tracking-widest">
+                                  <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground/30 uppercase tracking-wider">
                                     <div className="h-1 w-1 rounded-full bg-muted-foreground/20" />
                                     <span>{formatDuration(gapDuration)} Lost time</span>
                                   </div>
@@ -552,7 +552,7 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
                             {gapElement}
                             <button
                               onClick={() => setSelectedItem(item)}
-                              className={`w-full flex items-center gap-4 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-all text-left group ${isHoliday ? 'opacity-50 grayscale-[0.3]' : ''}`}
+                              className={`w-full flex items-center gap-4 p-3 rounded-lg border border-border bg-muted/20 hover:bg-muted/30 transition-all text-left group ${isHoliday ? 'opacity-50 grayscale-[0.3]' : ''}`}
                             >
                               <div className={`flex flex-col items-center justify-center h-12 w-12 rounded-lg shrink-0 ${getSubjectColor(item.subject)}`}>
                                 <Clock size={12} className="opacity-40 mb-1" />
