@@ -191,7 +191,7 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
 
           console.log(`[Proxy] Routing new login attempt through tunnel for ${userId}`);
           return { client: proxyClient as any, jar, isNew: true, userId, isProxy: true };
-      } catch (e) {
+      } catch (e: any) {
           console.warn(`[Proxy] Server unavailable for new session, using local:`, e.message);
       }
   }
