@@ -87,28 +87,44 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
           
           // Try to use the Proxy Server if available
           if (RENDER_PROXY_URL && PROXY_SECRET) {
-              const synced = await syncWithRemoteProxy(userId, newJar);
-              if (synced) {
-                  // Create a client that routes through the proxy
-                  const proxyClient = axios.create({
-                      baseURL: `${RENDER_PROXY_URL}/proxy/${userId}`,
-                      headers: { 'x-proxy-secret': PROXY_SECRET },
-                      timeout: 25000
-                  });
+              try {
+                  const synced = await syncWithRemoteProxy(userId, newJar);
+                  if (synced) {
+                      const proxyClient = axios.create({
+                          baseURL: `${RENDER_PROXY_URL}/proxy/${userId}`,
+                          headers: { 'x-proxy-secret': PROXY_SECRET },
+                          timeout: 30000
+                      });
 
-                  // We need to wrap it to handle the "path" query param automatically
-                  // but for now, let's just use it as is and the scraper will need to adjust
-                  // Or we can use an interceptor:
-                  proxyClient.interceptors.request.use((config) => {
-                      if (config.url && config.url.startsWith(PORTAL_BASE)) {
-                          const path = config.url.replace(PORTAL_BASE, '');
-                          config.url = '';
-                          config.params = { ...config.params, path };
-                      }
-                      return config;
-                  });
+                      proxyClient.interceptors.request.use((config) => {
+                          if (config.url && config.url.startsWith(PORTAL_BASE)) {
+                              const urlObj = new URL(config.url);
+                              
+                              // Merge existing config.params into the search params of the URL
+                              if (config.params) {
+                                  Object.entries(config.params).forEach(([key, value]) => {
+                                      urlObj.searchParams.append(key, String(value));
+                                  });
+                                  config.params = {}; // Clear them so they aren't appended again
+                              }
 
-                  return { client: proxyClient as any, jar: newJar, isNew: false, userId, isProxy: true };
+                              const path = urlObj.pathname + urlObj.search;
+                              // Strip /LCC prefix if present because proxy adds it back
+                              const portalPath = path.startsWith('/LCC') ? path.replace('/LCC', '') : path;
+                              
+                              config.url = '';
+                              config.params = { path: portalPath };
+                          }
+                          return config;
+                      });
+
+                      // Verify the proxy actually works before committing to it
+                      await proxyClient.get(`${PORTAL_BASE}/Student/Main.aspx?_sid=${userId}`, { timeout: 10000 });
+                      
+                      return { client: proxyClient as any, jar: newJar, isNew: false, userId, isProxy: true };
+                  }
+              } catch (proxyError: any) {
+                  console.warn(`[Proxy] Failed to use proxy for ${userId}, falling back to local:`, proxyError.message);
               }
           }
 
