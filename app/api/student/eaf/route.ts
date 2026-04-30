@@ -19,8 +19,34 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
         }
 
-        const { client } = await getSessionClient(userId);
+        const { client, jar, consecutiveFailures } = await getSessionClient(userId);
         const scraper = new ScraperService(client, userId);
+
+        const dashboardRes = await scraper.fetchDashboard();
+        let $dashboard = dashboardRes.$;
+        
+        const hasLoginButton = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
+        if (hasLoginButton) {
+            const sessionCookie = req.cookies.get('session_token');
+            if (sessionCookie?.value) {
+                const decrypted = decrypt(sessionCookie.value);
+                const { password } = JSON.parse(decrypted);
+                
+                if (password && (consecutiveFailures || 0) < 3) {
+                    console.log(`[EAF] Session expired, re-logging in for ${userId}...`);
+                    const loginRes = await scraper.forceLogin(password);
+                    const stillHasLogin = loginRes.$('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
+                    const { saveSession } = await import('@/lib/session-proxy');
+                    await saveSession(userId, jar, !stillHasLogin);
+                    
+                    if (stillHasLogin) {
+                        return NextResponse.json({ error: 'Portal session expired and auto-login failed.' }, { status: 401 });
+                    }
+                } else {
+                    return NextResponse.json({ error: 'Session expired. Please log in again.' }, { status: 401 });
+                }
+            }
+        }
 
         const { periodCode } = await scraper.fetchDashboard();
         const eafRes = await scraper.fetchEAF(periodCode);

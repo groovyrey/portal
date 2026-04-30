@@ -34,6 +34,45 @@ export async function POST(req: NextRequest) {
 
     await initDatabase();
 
+    // --- OPTIMIZATION: CACHE-FIRST CHECK ---
+    // Generate the same slug used by SyncService to check for existing records
+    let reportName = body.reportName || 'Unknown Report';
+    let reportSlug = undefined;
+    if (reportName === 'Unknown Report' && href.includes('_nm=')) {
+        const match = href.match(/_nm=([^&]+)/);
+        if (match) reportName = decodeURIComponent(match[1].replace(/\+/g, ' '));
+    }
+
+    if (reportName === 'Unknown Report') {
+        const hash = href.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
+        reportSlug = `unknown_${Math.abs(hash)}`;
+    }
+    
+    const slug = reportSlug || reportName.replace(/[^a-zA-Z0-9]/g, '_');
+    const reportId = `${userId}_${slug}`;
+    
+    try {
+        const cachedDoc = await doc(db, 'grades', reportId);
+        const snap = await import('firebase/firestore').then(m => m.getDoc(cachedDoc));
+        
+        if (snap.exists()) {
+            const data = snap.data();
+            const lastUpdate = data.updated_at?.toDate ? data.updated_at.toDate() : new Date(0);
+            const isFresh = (Date.now() - lastUpdate.getTime()) < 1000 * 60 * 60 * 24; // 24 hours fresh
+
+            if (isFresh && data.items && data.items.length > 0) {
+                console.log(`[Grades] Serving cached report for ${userId}: ${reportName}`);
+                return NextResponse.json({ 
+                    success: true, 
+                    subjects: data.items,
+                    is_cached: true
+                });
+            }
+        }
+    } catch (e) {
+        console.warn('[Grades] Cache lookup failed:', e);
+    }
+
     const { client, jar, isNew, isLocked, consecutiveFailures } = await getSessionClient(userId);
     
     if (isLocked) {

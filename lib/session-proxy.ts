@@ -66,9 +66,13 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
     if (sessionSnap.exists()) {
       const data = sessionSnap.data();
       
+      const lastUpdate = data.updated_at?.toDate ? data.updated_at.toDate() : new Date(0);
       const lastAttempt = data.last_attempt_at?.toDate ? data.last_attempt_at.toDate() : new Date(0);
       const consecutiveFailures = data.consecutive_failures || 0;
       
+      // OPTIMIZATION: Trust the session if it was verified in the last 10 minutes
+      const isRecentlyVerified = (Date.now() - lastUpdate.getTime()) < 10 * 60 * 1000;
+
       const cooldownMs = Math.min(consecutiveFailures * 2 * 60 * 1000, 30 * 60 * 1000); 
       if (consecutiveFailures >= 3 && (Date.now() - lastAttempt.getTime()) < cooldownMs) {
           return { client, jar, isNew: false, userId, isLocked: true, consecutiveFailures };
@@ -84,6 +88,16 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
           const decrypted = decrypt(data.encryptedJar);
           const jarData = JSON.parse(decrypted);
           const newJar = CookieJar.fromJSON(jarData);
+          
+          if (isRecentlyVerified) {
+              const hydratedClient = wrapper(axios.create({ 
+                jar: newJar, 
+                withCredentials: true,
+                headers: DEFAULT_HEADERS,
+                timeout: 10000
+              }));
+              return { client: hydratedClient, jar: newJar, isNew: false, userId };
+          }
           
           // Try to use the Proxy Server if available
           if (RENDER_PROXY_URL && PROXY_SECRET) {
@@ -136,7 +150,7 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
             jar: newJar, 
             withCredentials: true,
             headers: DEFAULT_HEADERS,
-            timeout: 12000 // Slightly shorter timeout for local
+            timeout: 18000 // Increased from 12000 to handle slow portal rehydration
           }));
 
           const testRes = await hydratedClient.get(`${PORTAL_BASE}/Student/Main.aspx?_sid=${userId}`);
