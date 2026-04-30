@@ -51,14 +51,6 @@ async function syncWithRemoteProxy(userId: string, jar: CookieJar) {
 }
 
 export async function getSessionClient(userId: string): Promise<SessionResult> {
-  const jar = new CookieJar();
-  const client = wrapper(axios.create({ 
-    jar, 
-    withCredentials: true,
-    headers: DEFAULT_HEADERS,
-    timeout: 20000 
-  }));
-
   try {
     const sessionRef = doc(db, 'portal_sessions', userId);
     const sessionSnap = await getDoc(sessionRef);
