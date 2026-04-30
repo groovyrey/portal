@@ -13,10 +13,12 @@ import {
   X,
   Plus,
   Trash2,
-  Info
+  Info,
+  Award
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BADGE_LIST } from '@/lib/badges';
 
 interface Student {
   id: string;
@@ -35,8 +37,9 @@ interface SendResults {
 export default function EmailTab() {
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
-  const [targetType, setTargetType] = useState<'all' | 'specific'>('specific');
+  const [targetType, setTargetType] = useState<'all' | 'specific' | 'badges'>('specific');
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
+  const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Student[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -85,6 +88,14 @@ export default function EmailTab() {
     setSelectedStudents(selectedStudents.filter(s => s.id !== id));
   };
 
+  const toggleBadge = (badgeId: string) => {
+    setSelectedBadges(prev => 
+      prev.includes(badgeId) 
+        ? prev.filter(id => id !== badgeId) 
+        : [...prev, badgeId]
+    );
+  };
+
   const handleSendEmails = async () => {
     if (!subject.trim() || !body.trim()) {
       toast.error('Please provide both subject and body.');
@@ -96,16 +107,31 @@ export default function EmailTab() {
       return;
     }
 
+    if (targetType === 'badges' && selectedBadges.length === 0) {
+      toast.error('Please select at least one badge.');
+      return;
+    }
+
     setIsSending(true);
     setResults(null);
-    const toastId = toast.loading(targetType === 'all' ? 'Broadcasting to all students...' : `Sending to ${selectedStudents.length} recipients...`);
+    const toastId = toast.loading(
+      targetType === 'all' 
+        ? 'Broadcasting to all students...' 
+        : targetType === 'badges'
+        ? `Broadcasting to students with ${selectedBadges.length} selected badges...`
+        : `Sending to ${selectedStudents.length} recipients...`
+    );
 
     try {
       const res = await fetch('/api/admin/email/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          targets: targetType === 'all' ? 'all' : selectedStudents.map(s => s.id),
+          targets: targetType === 'all' 
+            ? 'all' 
+            : targetType === 'badges'
+            ? { badges: selectedBadges }
+            : selectedStudents.map(s => s.id),
           subject,
           body
         }),
@@ -120,6 +146,7 @@ export default function EmailTab() {
           setSubject('');
           setBody('');
           setSelectedStudents([]);
+          setSelectedBadges([]);
         }
       } else {
         toast.error(data.error || 'Failed to send emails', { id: toastId });
@@ -144,16 +171,22 @@ export default function EmailTab() {
           </p>
         </div>
 
-        <div className="flex bg-muted p-1 rounded-xl gap-1 self-start">
+        <div className="flex bg-muted p-1 rounded-xl gap-1 self-start flex-wrap">
           <button
             onClick={() => setTargetType('specific')}
-            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${targetType === 'specific' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${targetType === 'specific' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            Specific Students
+            Specific
+          </button>
+          <button
+            onClick={() => setTargetType('badges')}
+            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${targetType === 'badges' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            By Badge
           </button>
           <button
             onClick={() => setTargetType('all')}
-            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${targetType === 'all' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${targetType === 'all' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
           >
             All Students
           </button>
@@ -163,7 +196,7 @@ export default function EmailTab() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Recipient Selection */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="surface-neutral p-5 rounded-2xl border border-border/50 h-full flex flex-col">
+          <div className="surface-neutral p-5 rounded-2xl border border-border/50 h-full flex flex-col min-h-[400px]">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-4 flex items-center gap-2">
               <Users className="h-3 w-3" />
               Recipients
@@ -178,6 +211,45 @@ export default function EmailTab() {
                   <p className="text-sm font-bold text-foreground">Global Broadcast</p>
                   <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Email will be sent to all registered students</p>
                 </div>
+              </div>
+            ) : targetType === 'badges' ? (
+              <div className="flex-1 flex flex-col space-y-3">
+                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Select Targeting Badges</p>
+                 <div className="grid grid-cols-1 gap-2 overflow-y-auto custom-scrollbar pr-1">
+                    {BADGE_LIST.map((badge) => (
+                      <button
+                        key={badge.id}
+                        onClick={() => toggleBadge(badge.id)}
+                        className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                          selectedBadges.includes(badge.id) 
+                            ? 'bg-primary/10 border-primary text-primary shadow-sm' 
+                            : 'bg-background border-border text-muted-foreground hover:border-primary/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                           <div className={`p-1.5 rounded-lg ${selectedBadges.includes(badge.id) ? 'bg-primary/20' : 'bg-muted'}`}>
+                              <Award className="h-3.5 w-3.5" />
+                           </div>
+                           <div className="text-left">
+                              <p className="text-[11px] font-bold uppercase tracking-tight">{badge.name}</p>
+                              <p className="text-[8px] font-medium opacity-60 uppercase">{badge.description}</p>
+                           </div>
+                        </div>
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                          selectedBadges.includes(badge.id) ? 'bg-primary border-primary' : 'border-border'
+                        }`}>
+                           {selectedBadges.includes(badge.id) && <Plus className="h-2.5 w-2.5 text-white rotate-45" />}
+                        </div>
+                      </button>
+                    ))}
+                 </div>
+                 {selectedBadges.length > 0 && (
+                   <div className="mt-auto pt-4 border-t border-border/50">
+                      <p className="text-[9px] font-black text-primary uppercase tracking-widest">
+                        Targeting {selectedBadges.length} Badge Groups
+                      </p>
+                   </div>
+                 )}
               </div>
             ) : (
               <div className="flex-1 flex flex-col space-y-4">
@@ -312,7 +384,7 @@ export default function EmailTab() {
 
               <button
                 onClick={handleSendEmails}
-                disabled={isSending || !subject.trim() || !body.trim() || (targetType === 'specific' && selectedStudents.length === 0)}
+                disabled={isSending || !subject.trim() || !body.trim() || (targetType === 'specific' && selectedStudents.length === 0) || (targetType === 'badges' && selectedBadges.length === 0)}
                 className="w-full py-4 bg-primary text-primary-foreground rounded-xl font-black uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
               >
                 {isSending ? (

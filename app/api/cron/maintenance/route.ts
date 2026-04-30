@@ -1,11 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { collection, getDocs, doc, setDoc, query, where, orderBy, limit, deleteDoc, writeBatch, addDoc, getDoc } from 'firebase/firestore';
+import { logAdminAction } from '@/lib/admin-logs';
 
 /**
  * Maintenance Consolidated Cron Job
  * Handles system health checks, database cleanup, and optimizations.
  */
+
+async function runDataAudit() {
+  const studentsSnap = await getDocs(collection(db, 'students'));
+  const incompleteStudents: string[] = [];
+  
+  studentsSnap.forEach(doc => {
+    const data = doc.data();
+    const missingFields: string[] = [];
+    
+    if (!data.name) missingFields.push('name');
+    if (!data.course) missingFields.push('course');
+    if (!data.email) missingFields.push('email');
+    if (!data.yearLevel) missingFields.push('yearLevel');
+    if (!data.section) missingFields.push('section');
+    if (!data.schedule || data.schedule.length === 0) missingFields.push('schedule');
+    if (!data.financials) missingFields.push('financials');
+
+    if (missingFields.length > 0) {
+      incompleteStudents.push(`${data.name || 'Unknown'} (${doc.id}): ${missingFields.join(', ')}`);
+    }
+  });
+
+  if (incompleteStudents.length > 0) {
+    await logAdminAction({
+      adminId: 'system-cron',
+      adminName: 'Maintenance Task',
+      targetId: 'all-students',
+      targetName: 'Data Integrity Audit',
+      action: 'AUDIT_FOUND_INCOMPLETE',
+      details: `Found ${incompleteStudents.length} students with missing fields: ${incompleteStudents.slice(0, 10).join('; ')}${incompleteStudents.length > 10 ? '...' : ''}`
+    });
+  }
+
+  return { 
+    totalAudited: studentsSnap.size, 
+    incompleteCount: incompleteStudents.length,
+    incompleteList: incompleteStudents.slice(0, 50) // Return some for cron results
+  };
+}
 
 async function runDatabaseCleanup() {
   // Example: Clean up old notifications (older than 30 days)
@@ -23,7 +63,18 @@ async function runDatabaseCleanup() {
     deleted++;
   });
   
-  if (deleted > 0) await batch.commit();
+  if (deleted > 0) {
+    await batch.commit();
+    await logAdminAction({
+      adminId: 'system-cron',
+      adminName: 'Maintenance Task',
+      targetId: 'notifications',
+      targetName: 'Notification Retention',
+      action: 'DB_CLEANUP_SUCCESS',
+      details: `Permanently deleted ${deleted} notifications older than 30 days.`
+    });
+  }
+  
   return { deletedNotifications: deleted };
 }
 
@@ -50,7 +101,7 @@ export async function GET(req: NextRequest) {
     const dayIndex = phTime.getDay();
     
     // --- Weekly Maintenance Map ---
-    const dailyTasks = ['healthCheck'];
+    const dailyTasks = ['healthCheck', 'dataAudit'];
     const weeklyMaintenanceMap: Record<number, string[]> = {
       0: ['dbCleanup'], // Sunday: Deep clean
       3: ['logRotation'], // Wednesday: Optimization
@@ -61,6 +112,17 @@ export async function GET(req: NextRequest) {
 
     if (activeTasks.includes('healthCheck')) {
       results.data.health = await runSystemHealthCheck();
+      await logAdminAction({
+        adminId: 'system-cron',
+        adminName: 'Maintenance Task',
+        targetId: 'system-health',
+        targetName: 'Health Check',
+        action: 'CRON_HEALTH_REPORT',
+        details: `System check complete. Database: ${results.data.health.database}, Logs: ${results.data.health.logs}.`
+      });
+    }
+    if (activeTasks.includes('dataAudit')) {
+      results.data.audit = await runDataAudit();
     }
     if (activeTasks.includes('dbCleanup')) {
       results.data.cleanup = await runDatabaseCleanup();

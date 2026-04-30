@@ -6,6 +6,9 @@ import { doc, getDoc, setDoc, serverTimestamp, runTransaction } from 'firebase/f
 import { encrypt, decrypt } from './auth';
 import { PORTAL_BASE } from './constants';
 
+const RENDER_PROXY_URL = process.env.RENDER_PROXY_URL;
+const PROXY_SECRET = process.env.PROXY_SECRET;
+
 /**
  * Ghost Session Proxy
  * Maintains a persistent, encrypted session for the school portal.
@@ -19,6 +22,7 @@ export interface SessionResult {
   userId: string;
   isLocked?: boolean;
   consecutiveFailures?: number;
+  isProxy?: boolean;
 }
 
 const DEFAULT_HEADERS = {
@@ -26,13 +30,33 @@ const DEFAULT_HEADERS = {
   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
 };
 
+/**
+ * Syncs the session with the Render proxy server if configured.
+ */
+async function syncWithRemoteProxy(userId: string, jar: CookieJar) {
+    if (!RENDER_PROXY_URL || !PROXY_SECRET) return false;
+
+    try {
+        await axios.post(`${RENDER_PROXY_URL}/session/${userId}`, {
+            jarData: jar.toJSON()
+        }, {
+            headers: { 'x-proxy-secret': PROXY_SECRET },
+            timeout: 5000
+        });
+        return true;
+    } catch (e: any) {
+        console.warn(`[ProxySync] Failed to sync session for ${userId}:`, e.message);
+        return false;
+    }
+}
+
 export async function getSessionClient(userId: string): Promise<SessionResult> {
   const jar = new CookieJar();
   const client = wrapper(axios.create({ 
     jar, 
     withCredentials: true,
     headers: DEFAULT_HEADERS,
-    timeout: 20000 // 20s timeout to prevent hanging
+    timeout: 20000 
   }));
 
   try {
@@ -42,22 +66,16 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
     if (sessionSnap.exists()) {
       const data = sessionSnap.data();
       
-      // Check for account lockout/cooldown
       const lastAttempt = data.last_attempt_at?.toDate ? data.last_attempt_at.toDate() : new Date(0);
       const consecutiveFailures = data.consecutive_failures || 0;
       
-      // If we had many failures, wait longer (Exponential backoff-ish)
-      const cooldownMs = Math.min(consecutiveFailures * 2 * 60 * 1000, 30 * 60 * 1000); // Max 30 mins
+      const cooldownMs = Math.min(consecutiveFailures * 2 * 60 * 1000, 30 * 60 * 1000); 
       if (consecutiveFailures >= 3 && (Date.now() - lastAttempt.getTime()) < cooldownMs) {
-          console.warn(`Session for ${userId} is in cooldown due to ${consecutiveFailures} failures.`);
           return { client, jar, isNew: false, userId, isLocked: true, consecutiveFailures };
       }
 
-      // Check for active refresh lock (prevent parallel logins)
       const lockUntil = data.refresh_lock_until?.toDate ? data.refresh_lock_until.toDate() : new Date(0);
       if (Date.now() < lockUntil.getTime()) {
-          console.log(`Session for ${userId} is currently being refreshed by another process.`);
-          // If locked, we still return the client but mark it as locked so the caller can decide to wait or skip
           return { client, jar, isNew: false, userId, isLocked: true };
       }
 
@@ -65,8 +83,35 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
         try {
           const decrypted = decrypt(data.encryptedJar);
           const jarData = JSON.parse(decrypted);
-          
           const newJar = CookieJar.fromJSON(jarData);
+          
+          // Try to use the Proxy Server if available
+          if (RENDER_PROXY_URL && PROXY_SECRET) {
+              const synced = await syncWithRemoteProxy(userId, newJar);
+              if (synced) {
+                  // Create a client that routes through the proxy
+                  const proxyClient = axios.create({
+                      baseURL: `${RENDER_PROXY_URL}/proxy/${userId}`,
+                      headers: { 'x-proxy-secret': PROXY_SECRET },
+                      timeout: 25000
+                  });
+
+                  // We need to wrap it to handle the "path" query param automatically
+                  // but for now, let's just use it as is and the scraper will need to adjust
+                  // Or we can use an interceptor:
+                  proxyClient.interceptors.request.use((config) => {
+                      if (config.url && config.url.startsWith(PORTAL_BASE)) {
+                          const path = config.url.replace(PORTAL_BASE, '');
+                          config.url = '';
+                          config.params = { ...config.params, path };
+                      }
+                      return config;
+                  });
+
+                  return { client: proxyClient as any, jar: newJar, isNew: false, userId, isProxy: true };
+              }
+          }
+
           const hydratedClient = wrapper(axios.create({ 
             jar: newJar, 
             withCredentials: true,
@@ -77,7 +122,6 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
           const testRes = await hydratedClient.get(`${PORTAL_BASE}/Student/Main.aspx?_sid=${userId}`);
           
           if (!testRes.data.includes('obtnLogin') && !testRes.data.includes('otbUserID')) {
-            // Success! Reset failure count if it was high
             if (consecutiveFailures > 0) {
                 await setDoc(sessionRef, { consecutive_failures: 0 }, { merge: true });
             }
@@ -100,13 +144,12 @@ export async function saveSession(userId: string, jar: CookieJar, isSuccess: boo
     const sessionRef = doc(db, 'portal_sessions', userId);
     
     if (!isSuccess) {
-        // Increment failure count
         const snap = await getDoc(sessionRef);
         const currentFailures = snap.exists() ? (snap.data().consecutive_failures || 0) : 0;
         await setDoc(sessionRef, {
             consecutive_failures: currentFailures + 1,
             last_attempt_at: serverTimestamp(),
-            refresh_lock_until: new Date(0) // Release lock
+            refresh_lock_until: new Date(0)
         }, { merge: true });
         return;
     }
@@ -119,12 +162,16 @@ export async function saveSession(userId: string, jar: CookieJar, isSuccess: boo
       updated_at: serverTimestamp(),
       last_attempt_at: serverTimestamp(),
       consecutive_failures: 0,
-      refresh_lock_until: new Date(0) // Release lock
+      refresh_lock_until: new Date(0)
     }, { merge: true });
+
+    // Also update the remote proxy
+    await syncWithRemoteProxy(userId, jar);
   } catch (error) {
     console.error('Failed to save portal session:', error);
   }
 }
+
 
 /**
  * Acquires a lock to prevent multiple simultaneous login attempts.

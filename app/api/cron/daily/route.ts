@@ -5,6 +5,7 @@ import { getStudentSchedule } from '@/lib/data-service';
 import { createNotification } from '@/lib/notification-service';
 import { sendEmail, getScheduleEmailTemplate, getPaymentReminderEmailTemplate } from '@/lib/email-service';
 import { parseStudentName } from '@/lib/utils';
+import { logAdminAction } from '@/lib/admin-logs';
 
 /**
  * Daily Consolidated Cron Job
@@ -148,9 +149,25 @@ export async function GET(req: NextRequest) {
 
     if (activeTasks.includes('scheduleReminders')) {
       results.data.schedule = await runScheduleReminders(phTime, baseUrl);
+      await logAdminAction({
+        adminId: 'system-cron',
+        adminName: 'Daily Task',
+        targetId: 'notifications',
+        targetName: 'Schedule Reminders',
+        action: 'CRON_SCHEDULE_DISPATCHED',
+        details: `Dispatched ${results.data.schedule.notified} push notifications and ${results.data.schedule.emailed} emails for today's classes.`
+      });
     }
     if (activeTasks.includes('paymentReminders')) {
       results.data.payments = await runPaymentReminders(phTime, baseUrl);
+      await logAdminAction({
+        adminId: 'system-cron',
+        adminName: 'Daily Task',
+        targetId: 'notifications',
+        targetName: 'Payment Reminders',
+        action: 'CRON_PAYMENTS_DISPATCHED',
+        details: `Dispatched ${results.data.payments.notified} push notifications and ${results.data.payments.emailed} emails for upcoming payment deadlines.`
+      });
     }
 
     // Note: Log the consolidated run with unique ID for history

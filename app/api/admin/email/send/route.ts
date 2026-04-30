@@ -39,6 +39,19 @@ export async function POST(req: NextRequest) {
       recipients = allStudents
         .filter(s => s.email && s.email.includes('@'))
         .map(s => ({ email: s.email!, name: s.name }));
+    } else if (targets && typeof targets === 'object' && !Array.isArray(targets)) {
+      // targeting by criteria (e.g. badges)
+      if (targets.badges && Array.isArray(targets.badges) && targets.badges.length > 0) {
+        const allStudents = await getAllStudents();
+        recipients = allStudents
+          .filter(s => {
+            if (!s.email || !s.email.includes('@')) return false;
+            if (!s.badges || s.badges.length === 0) return false;
+            // Intersection: has at least one of the targeted badges
+            return targets.badges.some((bId: string) => s.badges?.includes(bId));
+          })
+          .map(s => ({ email: s.email!, name: s.name }));
+      }
     } else if (Array.isArray(targets)) {
       // targets is an array of student IDs
       for (const id of targets) {

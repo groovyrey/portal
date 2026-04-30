@@ -710,7 +710,7 @@ export default function StudyModePage() {
       <header className="relative z-[100] px-4 pt-4 pb-3 sm:p-6 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <Link
-            href="/student"
+            href="/"
             className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-black/50 px-2.5 py-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] text-white/80 transition-colors hover:bg-black/70 hover:text-white whitespace-nowrap"
           >
             <ChevronLeft className="h-3.5 w-3.5" />

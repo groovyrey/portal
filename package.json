@@ -90,5 +90,5 @@
     "url": "https://github.com/groovyrey/portal/issues"
   },
   "homepage": "https://github.com/groovyrey/portal#readme",
-  "type": "commonjs"
+  "type": "module"
 }

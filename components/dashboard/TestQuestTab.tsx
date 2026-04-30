@@ -56,6 +56,7 @@ export default function TestQuestTab() {
   const [evaluationFeedback, setEvaluationFeedback] = useState<string | null>(null);
   const [currentStats, setCurrentStats] = useState<any>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState('medium');
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(['multiple', 'boolean', 'open']);
 
   const { student } = useStudent();
   const totalQuestions = questions.length || 10;
@@ -115,6 +116,7 @@ export default function TestQuestTab() {
         body: JSON.stringify({ 
           category, 
           difficulty,
+          types: selectedTypes,
           excludedQuestions,
           force: true,
           practice: true
@@ -349,6 +351,41 @@ export default function TestQuestTab() {
                 </span>
                 <span className={`text-[8px] font-bold uppercase tracking-wider mt-0.5 ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground/50'}`}>
                    Multiplier: {diff.multiplier}x
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Question Type Selector */}
+        <div className="px-2 space-y-3">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Question Types</h3>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: 'multiple', name: 'Multiple Choice', icon: LayoutGrid },
+              { id: 'boolean', name: 'True/False', icon: Zap },
+              { id: 'open', name: 'Open Ended', icon: BrainCircuit }
+            ].map((type) => (
+              <button
+                key={type.id}
+                onClick={() => {
+                  setSelectedTypes(prev => {
+                    if (prev.includes(type.id)) {
+                      if (prev.length === 1) return prev; // Keep at least one
+                      return prev.filter(t => t !== type.id);
+                    }
+                    return [...prev, type.id];
+                  });
+                }}
+                className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${
+                  selectedTypes.includes(type.id)
+                    ? 'bg-primary/10 border-primary/40'
+                    : 'border-border hover:border-muted-foreground/30'
+                }`}
+              >
+                <type.icon className={`h-4 w-4 mb-1 ${selectedTypes.includes(type.id) ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className={`text-[10px] font-black uppercase tracking-wider ${selectedTypes.includes(type.id) ? 'text-primary' : 'text-muted-foreground'}`}>
+                  {type.name}
                 </span>
               </button>
             ))}

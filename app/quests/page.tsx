@@ -226,101 +226,9 @@ export default function QuestsPage() {
       <TabbedPageLayout
         title="Quest Center"
         icon={Trophy}
-        subtitle="Knowledge Challenge"
         tabs={TABS}
         activeTab={activeTab}
         onTabChange={handleTabChange}
-        headerRight={
-          <button 
-            onClick={() => setIsInfoOpen(true)}
-            className="p-2 rounded-xl bg-muted/50 text-muted-foreground hover:text-primary transition-colors flex items-center justify-center"
-          >
-            <Sparkles size={18} className="fill-current" />
-          </button>
-        }
-        sidebarFooter={
-        <div className="space-y-4">
-          <div className="bg-primary/5 p-4 rounded-lg border border-primary/10 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-2">
-                <Zap size={12} className="fill-primary" />
-                Daily EXP Cap
-              </h3>
-              <span className="text-[10px] font-black text-primary">{(currentStats?.dailyExp || 0)} / 500</span>
-            </div>
-            <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-primary" 
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(100, ((currentStats?.dailyExp || 0) / 500) * 100)}%` }}
-              />
-            </div>
-            <p className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">
-              Earn up to 500 EXP daily across all quest categories.
-            </p>
-          </div>
-
-          <div className="bg-orange-500/5 p-4 rounded-lg border border-orange-500/10 space-y-2">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[10px] font-black uppercase tracking-wider text-orange-500 flex items-center gap-2">
-                <Trophy size={12} className="fill-orange-500" />
-                Daily Streak
-              </h3>
-              <span className="text-xl font-black text-orange-500">{currentStats?.streak || 0}</span>
-            </div>
-            <p className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">
-              Quested {currentStats?.streak || 0} days in a row! Keep it up!
-            </p>
-          </div>
-
-          <div className="bg-primary/5 p-4 rounded-lg border border-primary/10 space-y-3">
-            <h3 className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-2">
-              <Sparkles size={12} />
-              What is Quest Center?
-            </h3>
-            <p className="text-[11px] font-bold text-foreground leading-relaxed">
-              Quest Center is a gamified learning platform where LCCians can test their knowledge with AI-generated trivia across diverse topics and their actual academic subjects.
-            </p>
-            <p className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">
-              Note: Questions are AI-powered and dynamically adjusted based on your student level.
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between px-1">
-            <h3 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Quick Rules</h3>
-            <button 
-              onClick={() => setIsInfoOpen(true)}
-              className="p-1 rounded bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
-              title="View Full Guide"
-            >
-              <Info size={12} />
-            </button>
-          </div>
-          <ul className="space-y-2">
-              {[
-                'One EXP-earning quest per day.',
-                '10 challenging questions per run.',
-                'Level-based difficulty scaling.',
-                ...(isStaff ? ['Test Mode: Sandbox for new features.'] : []),
-              ].map((rule, i) => (
-                <li key={i} className="flex items-start gap-2 group px-1">
-                  <div className="mt-1 h-1 w-1 rounded-full bg-primary group-hover:scale-125 transition-transform" />
-                  <span className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">{rule}</span>
-                </li>
-              ))}
-            </ul>
-
-          <div className="bg-primary/5 p-3 rounded-lg border border-primary/10 space-y-2">
-            <div className="flex items-center gap-2">
-              <Trophy className="h-3 w-3 text-primary" />
-              <h3 className="text-[9px] font-black uppercase tracking-wider text-primary">Achievements</h3>
-            </div>
-            <p className="text-[9px] font-bold text-foreground leading-tight">
-              Perfect runs earn the &ldquo;Quest Master&rdquo; badge. Reach Level 100 for the &ldquo;Centurion&rdquo; title!
-            </p>
-          </div>
-        </div>
-      }
     >
       {activeTab === 'daily' && (
         <div className="surface-neutral p-6 sm:p-8 rounded-lg border border-border/50">
@@ -338,13 +246,6 @@ export default function QuestsPage() {
         <LeaderboardTab />
       )}
     </TabbedPageLayout>
-
-    <QuestInfoDrawer 
-      isOpen={isInfoOpen}
-      onClose={() => setIsInfoOpen(false)}
-      currentStats={currentStats}
-      isStaff={!!isStaff}
-    />
     </>
   );
 }

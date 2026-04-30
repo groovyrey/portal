@@ -92,6 +92,7 @@ export async function POST(req: NextRequest) {
     const { 
       category: requestedCategory, 
       difficulty: requestedDifficulty, 
+      types: requestedTypes = ["multiple", "boolean", "open"],
       excludedQuestions: clientExcluded = [], 
       force = false,
       practice = false
@@ -147,11 +148,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. Fetch Student Level, Schedule (for Subject-Sync), & Recent Question History
-    const [statsResult, schedule, historyResult] = await Promise.all([
+    // 2. Fetch Student Level & Schedule (for Subject-Sync)
+    const [statsResult, schedule] = await Promise.all([
       query('SELECT level FROM student_stats WHERE user_id = ?', [userId]),
       getStudentSchedule(userId).catch(() => []),
-      query('SELECT questions FROM daily_quests WHERE user_id = ? ORDER BY quest_date DESC LIMIT 3', [userId])
     ]);
 
     const studentLevel = statsResult.rowCount > 0 ? statsResult.rows[0].level : 1;
@@ -170,9 +170,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 2.5 Fetch Exhaustive Question History for this Category to avoid repeats
+    const historyResult = await query(
+      'SELECT questions FROM daily_quests WHERE user_id = ? AND category = ?', 
+      [userId, category]
+    );
+
     console.log(`Generating quest for ${userId}: Category=${category}, Level=${studentLevel}, Difficulty=${requestedDifficulty}`);
 
-    // Combine client-side exclusion list with a small DB fallback
+    // Combine client-side exclusion list with DB history
     const dbExcluded: string[] = historyResult.rows.flatMap(row => {
       try {
         const qs = typeof row.questions === 'string' ? JSON.parse(row.questions) : row.questions;
@@ -183,6 +189,9 @@ export async function POST(req: NextRequest) {
     });
 
     const finalExclusionList = Array.from(new Set([...clientExcluded, ...dbExcluded]));
+    const exclusionPrompt = finalExclusionList.length > 0 
+      ? `\nPREVIOUSLY GENERATED QUESTIONS (DO NOT REPEAT ANY OF THESE):\n${finalExclusionList.map((q, i) => `${i+1}. ${q}`).join('\n')}`
+      : "";
 
     // 3. Generate 10 questions using Git Model
     const model = new ChatOpenAI({
@@ -206,10 +215,10 @@ TARGET DIFFICULTY: ${selectedDifficulty.toUpperCase()}
 DIFFICULTY GUIDELINE: ${difficultyGuideline}
 
 QUESTION TYPES:
-- Generate a mix of "Multiple Choice" (type: "multiple"), "True or False" (type: "boolean"), and "Open Ended" (type: "open").
-- For "Multiple Choice": provide 1 correct_answer and exactly 3 incorrect_answers.
-- For "True or False": **CRITICAL: set \`correct_answer\` to exactly "True" or "False". Provide exactly 1 incorrect_answer (the opposite of the correct one).**
-- For "Open Ended": provide a brief "Evaluation Guideline" or "Key Concepts" in the correct_answer field. For this type, set incorrect_answers to an EMPTY ARRAY []. **CRITICAL: Open-ended questions MUST focus on problem-solving, critical thinking, or situational "What would you do?" scenarios.**
+- ONLY generate the following question types: ${requestedTypes.join(", ")}.
+${requestedTypes.includes("multiple") ? '- For "Multiple Choice" (type: "multiple"): provide 1 correct_answer and exactly 3 incorrect_answers.' : ""}
+${requestedTypes.includes("boolean") ? '- For "True or False" (type: "boolean"): **CRITICAL: set `correct_answer` to exactly "True" or "False". Provide exactly 1 incorrect_answer (the opposite of the correct one).**' : ""}
+${requestedTypes.includes("open") ? '- For "Open Ended" (type: "open"): provide a brief "Evaluation Guideline" or "Key Concepts" in the correct_answer field. For this type, set incorrect_answers to an EMPTY ARRAY []. **CRITICAL: Open-ended questions MUST focus on problem-solving, critical thinking, or situational "What would you do?" scenarios.**' : ""}
 
 STUDENT CONTEXT:
 - Level: ${studentLevel}
@@ -234,6 +243,7 @@ Rules:
 6. **BOOLEAN NORMALIZATION:** For boolean types, use EXACTLY "True" or "False".
 7. Ensure no fields are left blank.
 8. **CONTENT:** Ensure questions are factually accurate and follow the target difficulty.
+${exclusionPrompt}
 `.trim();
 
     const prompt = ChatPromptTemplate.fromMessages([
