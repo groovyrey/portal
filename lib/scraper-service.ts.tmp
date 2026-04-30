@@ -1,0 +1,90 @@
+  async parseSchedule($eaf: cheerio.CheerioAPI, rawHtml?: string): Promise<ScrapedScheduleItem[]> {
+    if (!$eaf) return [];
+    const schedule: ScrapedScheduleItem[] = [];
+    $eaf('#otbEnrollmentTable tr').each((i, row) => {
+      if (i === 0) return; 
+      const cells = $eaf(row).find('td');
+      if (cells.length >= 6) {
+        const units = $eaf(cells[3]).text().trim();
+        if (!isNaN(parseFloat(units))) {
+          schedule.push({
+            subject: $eaf(cells[0]).text().trim(),
+            description: $eaf(cells[1]).text().trim(),
+            section: $eaf(cells[2]).text().trim(),
+            units: units,
+            time: $eaf(cells[4]).text().trim(),
+            room: $eaf(cells[5]).text().trim(),
+            instructor: cells.length >= 7 ? $eaf(cells[6]).text().trim() : "Not specified"
+          });
+        }
+      }
+    });
+
+    // FAILSAFE: If no schedule items found but HTML exists
+    if (schedule.length === 0 && rawHtml) {
+        const aiData = await aiExtract(rawHtml, 'schedule', this.userId);
+        if (Array.isArray(aiData) && aiData.length > 0) {
+            console.log(`[Scraper] AI Repair: Successfully recovered schedule.`);
+            return aiData;
+        }
+    }
+
+    return schedule;
+  }
+
+  async parseFinancials($eaf: cheerio.CheerioAPI, rawHtml?: string): Promise<ScrapedFinancials> {
+    if (!$eaf) return { total: "---", balance: "---", installments: [], assessment: [] } as any;
+    const installments: any[] = [];
+    $eaf('#otbAssessmentAdjustmentDueSummaryTable tr').each((i, row) => {
+      if (i === 0) return;
+      const cells = $eaf(row).find('td');
+      if (cells.length === 4) {
+        installments.push({
+          dueDate: $eaf(cells[0]).text().trim(),
+          description: $eaf(cells[1]).text().trim(),
+          assessed: $eaf(cells[2]).text().trim(),
+          outstanding: $eaf(cells[3]).text().trim()
+        });
+      }
+    });
+
+    const assessment: any[] = [];
+    $eaf('#otbAssessmentDetailsTable tr').each((i, row) => {
+      const cells = $eaf(row).find('td');
+      if (cells.length === 2 && !$eaf(row).find('.GroupHeaderText').length) {
+        const desc = $eaf(cells[0]).text().trim();
+        const amount = $eaf(cells[1]).text().trim();
+        if (desc && amount) {
+          assessment.push({ description: desc, amount: '₱' + amount.replace('₱', '') });
+        }
+      }
+    });
+
+    let totalAssessment = "---";
+    let totalBalance = "---";
+    const netTotalRow = $eaf('#otbAssessmentAdjustmentDueSummaryTable tr').last();
+    const netTotalCells = netTotalRow.find('td');
+    if (netTotalCells.length === 4) {
+      totalAssessment = '₱' + $eaf(netTotalCells[2]).text().trim();
+      totalBalance = '₱' + $eaf(netTotalCells[3]).text().trim();
+    }
+
+    // FAILSAFE: If balance extraction failed, try AI
+    if ((totalBalance === "---" || totalBalance === "₱") && rawHtml) {
+        const aiData = await aiExtract(rawHtml, 'financials', this.userId);
+        if (aiData && aiData.balance) {
+            console.log(`[Scraper] AI Repair: Successfully recovered financials.`);
+            return aiData;
+        }
+    }
+
+    return { 
+      total: totalAssessment, 
+      balance: totalBalance, 
+      installments, 
+      assessment,
+      netTotal: '₱' + $eaf('#fldNetTotal').text().trim(),
+      netBalance: '₱' + $eaf('#fldNetBalance').text().trim(),
+      dueToday: '₱' + $eaf('#fldNetDueBalance').text().trim()
+    };
+  }

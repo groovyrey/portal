@@ -149,21 +149,35 @@ export class SyncService {
   async performFullSync(scraper: ScraperService, dashboard$: cheerio.CheerioAPI, periodCode: string, dashboardUrl: string, rawDashboardHtml?: string) {
     console.log(`[SyncService] Starting full sync for ${this.userId}...`);
     
-    // Parallel Fetch all data from portal
-    const { eaf, grades, accounts } = await scraper.fetchAllData(periodCode, dashboardUrl, dashboard$);
+    // Fetch all data with individual error handling
+    const fetchWithFallback = async (name: string, fn: () => Promise<any>) => {
+        try {
+            return await fn();
+        } catch (e: any) {
+            console.warn(`[SyncService] Failed to fetch ${name}:`, e.message);
+            return { data: "", $: null };
+        }
+    };
+
+    const [eaf, grades, accounts] = await Promise.all([
+      fetchWithFallback('EAF', () => scraper.fetchEAF(periodCode)),
+      fetchWithFallback('Grades', () => scraper.fetchGrades(periodCode, dashboardUrl)),
+      fetchWithFallback('Accounts', () => scraper.fetchAccounts(periodCode, dashboardUrl)),
+    ]);
 
     // Parse all data - using await for newly async methods
-    const studentInfo = await scraper.parseStudentInfo(dashboard$, eaf.$, rawDashboardHtml, eaf.data);
-    const schedule = await scraper.parseSchedule(eaf.$, eaf.data);
-    const financials = await scraper.parseFinancials(eaf.$, eaf.data);
-    const extraFinancials = scraper.parseAccounts(accounts.$);
+    // We provide fallbacks for the $ cheerio instances
+    const studentInfo = await scraper.parseStudentInfo(dashboard$, eaf.$ || dashboard$, rawDashboardHtml, eaf.data);
+    const schedule = await scraper.parseSchedule(eaf.$!, eaf.data);
+    const financials = await scraper.parseFinancials(eaf.$!, eaf.data);
+    const extraFinancials = accounts.$ ? scraper.parseAccounts(accounts.$) : {};
 
     const mergedFinancials = {
       ...financials,
       ...extraFinancials
     };
 
-    const reportLinks = scraper.parseReportCardLinks(grades.$);
+    const reportLinks = grades.$ ? scraper.parseReportCardLinks(grades.$) : [];
 
     // Database Syncing
     const { isNewUser, settings, badges } = await this.syncStudentData(studentInfo, reportLinks);
