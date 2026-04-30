@@ -118,10 +118,14 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
                           return config;
                       });
 
-                      // Verify the proxy actually works before committing to it
-                      await proxyClient.get(`${PORTAL_BASE}/Student/Main.aspx?_sid=${userId}`, { timeout: 10000 });
-                      
-                      return { client: proxyClient as any, jar: newJar, isNew: false, userId, isProxy: true };
+                      // Verify the proxy actually works before committing to it (fast check)
+                      try {
+                          await proxyClient.get(`${PORTAL_BASE}/Student/Main.aspx?_sid=${userId}`, { timeout: 3500 });
+                          console.log(`[Proxy] Using optimized tunnel for ${userId}`);
+                          return { client: proxyClient as any, jar: newJar, isNew: false, userId, isProxy: true };
+                      } catch (e: any) {
+                          console.warn(`[Proxy] Re-verification failed for ${userId}, falling back to local.`);
+                      }
                   }
               } catch (proxyError: any) {
                   console.warn(`[Proxy] Failed to use proxy for ${userId}, falling back to local:`, proxyError.message);
@@ -132,7 +136,7 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
             jar: newJar, 
             withCredentials: true,
             headers: DEFAULT_HEADERS,
-            timeout: 20000
+            timeout: 12000 // Slightly shorter timeout for local
           }));
 
           const testRes = await hydratedClient.get(`${PORTAL_BASE}/Student/Main.aspx?_sid=${userId}`);
@@ -151,6 +155,54 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
   } catch (error) {
     console.error('Session Proxy retrieval error:', error);
   }
+
+  // FALLBACK: Use proxy even for NEW sessions (login) if available
+  const jar = new CookieJar();
+  if (RENDER_PROXY_URL && PROXY_SECRET) {
+      try {
+          // Quick health check of the proxy server before attempting login
+          await axios.get(`${RENDER_PROXY_URL}/health`, { timeout: 3000 });
+          
+          const proxyClient = axios.create({
+              baseURL: `${RENDER_PROXY_URL}/proxy/${userId}`,
+              headers: { 'x-proxy-secret': PROXY_SECRET },
+              timeout: 30000
+          });
+
+          proxyClient.interceptors.request.use((config) => {
+              if (config.url && (config.url.startsWith(PORTAL_BASE) || config.url.startsWith('./'))) {
+                  const urlStr = config.url.startsWith('./') ? `${PORTAL_BASE}/Student/${config.url.substring(2)}` : config.url;
+                  const urlObj = new URL(urlStr);
+                  
+                  if (config.params) {
+                      Object.entries(config.params).forEach(([key, value]) => {
+                          urlObj.searchParams.append(key, String(value));
+                      });
+                      config.params = {};
+                  }
+
+                  const path = urlObj.pathname + urlObj.search;
+                  const portalPath = path.startsWith('/LCC') ? path.replace('/LCC', '') : path;
+                  
+                  config.url = '';
+                  config.params = { path: portalPath };
+              }
+              return config;
+          });
+
+          console.log(`[Proxy] Routing new login attempt through tunnel for ${userId}`);
+          return { client: proxyClient as any, jar, isNew: true, userId, isProxy: true };
+      } catch (e) {
+          console.warn(`[Proxy] Server unavailable for new session, using local:`, e.message);
+      }
+  }
+
+  const client = wrapper(axios.create({ 
+    jar, 
+    withCredentials: true,
+    headers: DEFAULT_HEADERS,
+    timeout: 20000 
+  }));
 
   return { client, jar, isNew: true, userId };
 }
