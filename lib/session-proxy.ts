@@ -51,6 +51,14 @@ async function syncWithRemoteProxy(userId: string, jar: CookieJar) {
 }
 
 export async function getSessionClient(userId: string): Promise<SessionResult> {
+  const jar = new CookieJar();
+  const client = wrapper(axios.create({ 
+    jar, 
+    withCredentials: true,
+    headers: DEFAULT_HEADERS,
+    timeout: 20000 
+  }));
+
   try {
     const sessionRef = doc(db, 'portal_sessions', userId);
     const sessionSnap = await getDoc(sessionRef);
@@ -149,7 +157,6 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
   }
 
   // FALLBACK: Use proxy even for NEW sessions (login) if available
-  const jar = new CookieJar();
   if (RENDER_PROXY_URL && PROXY_SECRET) {
       try {
           // Quick health check of the proxy server before attempting login
@@ -188,13 +195,6 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
           console.warn(`[Proxy] Server unavailable for new session, using local:`, e.message);
       }
   }
-
-  const client = wrapper(axios.create({ 
-    jar, 
-    withCredentials: true,
-    headers: DEFAULT_HEADERS,
-    timeout: 20000 
-  }));
 
   return { client, jar, isNew: true, userId };
 }
