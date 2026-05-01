@@ -248,30 +248,6 @@ export default function MonitoringTab() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-muted rounded-md text-muted-foreground">
-                      <Zap size={12} className="text-amber-500" />
-                    </div>
-                    <p className="text-[10px] font-bold text-foreground">Session Proxy</p>
-                  </div>
-                  <div className={`text-[9px] font-black uppercase ${
-                    statusData?.proxy?.status === 'operational' ? 'text-emerald-500' : 
-                    statusData?.proxy?.status === 'degraded' ? 'text-amber-500' : 
-                    statusData?.proxy?.status === 'down' ? 'text-red-500' : 'text-muted-foreground'
-                  }`}>
-                    {statusData?.proxy?.status || 'Unknown'}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-[9px] font-mono bg-muted/30 p-1.5 rounded-lg border border-border/50">
-                  <div className="text-muted-foreground">HOST: <span className="text-foreground font-bold truncate max-w-[80px] inline-block align-bottom">{statusData?.proxy?.url || 'None'}</span></div>
-                  <div className="text-muted-foreground">LATENCY: <span className="text-foreground font-bold">{statusData?.proxy?.latency ? `${statusData.proxy.latency}ms` : '--'}</span></div>
-                  <div className="text-muted-foreground">STRATEGY: <span className="text-foreground font-bold">RAM-Cache</span></div>
-                  <div className="text-muted-foreground">SYNC: <span className="text-foreground font-bold">30m Cycle</span></div>
-                </div>
-              </div>
-
-              <div className="p-3 bg-card border border-border rounded-xl space-y-2 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-muted rounded-md text-muted-foreground">
                       <ShieldCheck size={12} />
                     </div>
                     <p className="text-[10px] font-bold text-foreground">Security Layer</p>

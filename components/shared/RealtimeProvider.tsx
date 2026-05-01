@@ -241,35 +241,10 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
       });
     };
 
-    const onProxyStatus = (message: any) => {
-      const { type, message: statusMessage } = message.data;
-      if (type === 'SESSION_SYNCED') {
-          // Use a specific ID to avoid spamming
-          toast.success('Session Synced', {
-              id: 'proxy-sync-success',
-              description: statusMessage,
-              duration: 3000,
-          });
-      } else if (type === 'REFRESH_COMPLETE') {
-          toast.info('Cloud Refresh', {
-              id: 'proxy-refresh-success',
-              description: statusMessage,
-              duration: 3000,
-          });
-      } else if (type === 'SESSION_EXPIRED') {
-          toast.error('Session Expired', {
-              id: 'proxy-session-expired',
-              description: statusMessage,
-              duration: 10000,
-          });
-      }
-    };
-
     communityChannel.subscribe('update', onUpdate);
     if (studentChannel) {
       studentChannel.subscribe('update', onStudentUpdate);
       studentChannel.subscribe('new-grade', onNewGrade);
-      studentChannel.subscribe('proxy-status', onProxyStatus);
     }
 
     return () => {
@@ -280,7 +255,6 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
       if (studentChannel) {
         studentChannel.unsubscribe('update', onStudentUpdate);
         studentChannel.unsubscribe('new-grade', onNewGrade);
-        studentChannel.unsubscribe('proxy-status', onProxyStatus);
       }
       communityChannel.presence.unsubscribe(['enter', 'leave', 'present', 'update'], updatePresenceData);
       ably.connection.off('connected', enterPresence);
