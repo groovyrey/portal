@@ -60,7 +60,8 @@ export const query = async (text: string, params: any[] = []) => {
       });
       return obj;
     }),
-    rowCount: result.rows.length
+    rowCount: result.rows.length,
+    rowsAffected: result.rowsAffected
   };
 };
 
@@ -73,14 +74,14 @@ export const getClient = async () => {
   return {
     query: async (text: string, params: any[] = []) => {
       const trimmedText = text.trim().toUpperCase();
-      if (trimmedText === 'BEGIN') return { rows: [], rowCount: 0 };
+      if (trimmedText === 'BEGIN') return { rows: [], rowCount: 0, rowsAffected: 0 };
       if (trimmedText === 'COMMIT') {
         await transaction.commit();
-        return { rows: [], rowCount: 0 };
+        return { rows: [], rowCount: 0, rowsAffected: 0 };
       }
       if (trimmedText === 'ROLLBACK') {
         await transaction.rollback();
-        return { rows: [], rowCount: 0 };
+        return { rows: [], rowCount: 0, rowsAffected: 0 };
       }
 
       const sqliteText = text.replace(/ILIKE/g, 'LIKE');
@@ -121,7 +122,8 @@ export const getClient = async () => {
           });
           return obj;
         }),
-        rowCount: result.rows.length
+        rowCount: result.rows.length,
+        rowsAffected: result.rowsAffected
       };
     },
     release: () => {

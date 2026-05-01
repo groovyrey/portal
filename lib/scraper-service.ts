@@ -116,7 +116,7 @@ export class ScraperService {
         headers: { 'Referer': dashboardUrl }
     });
 
-    if (res.data.includes('otbUserID') && res.data.includes('otbPassword')) {
+    if (this.isLoginPage(res.data)) {
         await this.client.get(dashboardUrl);
         res = await this.client.get(reportCardUrl, {
             headers: { 'Referer': dashboardUrl }
@@ -154,7 +154,17 @@ export class ScraperService {
         });
         $rc = cheerio.load(res.data);
     }
-    return { $: $rc, data: res.data };
+    return { $: $rc, data: res.data, isLoggedOut: this.isLoginPage(res.data) };
+  }
+
+  private isLoginPage(data: string): boolean {
+    if (!data || typeof data !== 'string') return false;
+    return (
+      data.includes('obtnLogin') || 
+      data.includes('otbUserID') || 
+      data.includes('LCC.Login.aspx') || 
+      data.includes('name="Login"')
+    );
   }
 
   async forceLogin(password: string) {
@@ -224,6 +234,9 @@ export class ScraperService {
     if (!$dashboard || !$eaf) {
        console.error('[Scraper] Missing Cheerio instances for student info parsing.');
        if (rawDashboardHtml || rawEafHtml) {
+           if (this.isLoginPage(rawDashboardHtml || "") || this.isLoginPage(rawEafHtml || "")) {
+               throw new Error('Could not parse student info: Session expired');
+           }
            const aiData = await aiExtract((rawDashboardHtml || "") + (rawEafHtml || ""), 'student_info', this.userId);
            if (aiData) return { ...aiData, periodCode: "", dashboardUrl: "" };
        }
@@ -317,6 +330,7 @@ export class ScraperService {
     });
 
     if (schedule.length === 0 && rawHtml) {
+        if (this.isLoginPage(rawHtml)) return [];
         const aiData = await aiExtract(rawHtml, 'schedule', this.userId);
         if (Array.isArray(aiData) && aiData.length > 0) {
             return aiData;
@@ -363,6 +377,7 @@ export class ScraperService {
     }
 
     if ((totalBalance === "---" || totalBalance === "₱") && rawHtml) {
+        if (this.isLoginPage(rawHtml)) return { total: "---", balance: "---", installments: [], assessment: [] } as any;
         const aiData = await aiExtract(rawHtml, 'financials', this.userId);
         if (aiData && aiData.balance) {
             return aiData;
@@ -588,6 +603,20 @@ export class ScraperService {
     });
 
     if (subjects.length === 0 && rawHtml) {
+        if (this.isLoginPage(rawHtml)) {
+            console.warn(`[Scraper] parseReportCard: Session expired, skipping AI repair.`);
+            return [];
+        }
+
+        const $ = cheerio.load(rawHtml);
+        const sCountText = $('#fldSCount').text().trim();
+        const sCount = parseInt(sCountText);
+
+        if (sCountText && !isNaN(sCount) && sCount === 0) {
+            console.log(`[Scraper] parseReportCard: Student has 0 subjects for this period. No repair needed.`);
+            return [];
+        }
+
         const aiData = await aiExtract(rawHtml, 'grades', this.userId);
         if (Array.isArray(aiData) && aiData.length > 0) {
             return aiData;
