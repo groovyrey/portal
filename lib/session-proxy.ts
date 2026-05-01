@@ -88,10 +88,15 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
 
           // Try to use the Proxy Server if available
           if (RENDER_PROXY_URL && PROXY_SECRET) {
+              // Proactively sync cookies in the background every time the portal is opened
+              // This ensures the proxy is always warm and has the latest state
+              syncWithRemoteProxy(userId, newJar).catch(e => 
+                  console.warn(`[ProxySync] Background sync failed for ${userId}:`, e.message)
+              );
+
               try {
                   // If recently verified, we can trust the proxy without a health check
-                  if (isRecentlyVerified) {
-                      const proxyClient = axios.create({
+                  if (isRecentlyVerified) {                      const proxyClient = axios.create({
                           baseURL: `${RENDER_PROXY_URL}/proxy/${userId}`,
                           headers: { 'x-proxy-secret': PROXY_SECRET },
                           timeout: 30000
