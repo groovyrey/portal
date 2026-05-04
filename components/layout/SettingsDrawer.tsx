@@ -31,6 +31,9 @@ import StarRating from '@/components/ui/StarRating';
 import { useStudent } from '@/lib/hooks';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface SettingsDrawerProps {
   type: string | null;
@@ -122,8 +125,8 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
       case 'profile':
         return (
           <div className="space-y-6">
-            <div className="flex items-center gap-4 p-4 bg-card rounded-xl border border-border shadow-sm">
-                <div className="w-16 h-16 rounded-full bg-accent border border-border shrink-0 overflow-hidden">
+            <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg border border-border">
+                <div className="w-16 h-16 rounded-full bg-background border border-border shrink-0 overflow-hidden">
                     <img 
                         src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student!.name)}&background=0f172a&color=f8fafc&size=256&bold=true`}
                         alt={student!.name}
@@ -131,38 +134,40 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                     />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-lg text-foreground leading-tight break-words">{student?.name || '?'}</h3>
+                    <h3 className="font-semibold text-lg text-foreground leading-tight break-words">{student?.name || '?'}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="px-1.5 py-0.5 bg-blue-50 dark:bg-blue-950/30 text-[9px] font-bold text-blue-600 dark:text-blue-400 rounded border border-blue-100 dark:border-blue-900/50 uppercase">ID</span>
-                      <p className="text-[11px] text-muted-foreground font-mono font-bold">{student?.id || '?'}</p>
+                      <Badge variant="secondary" className="text-[10px] h-4 px-1">ID</Badge>
+                      <p className="text-xs text-muted-foreground font-mono">{student?.id || '?'}</p>
                     </div>
                 </div>
             </div>
 
-            <div className="space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <DrawerInfoItem icon={<User />} label="First" value={student!.parsedName?.firstName} />
-                    <DrawerInfoItem icon={<User />} label="Middle" value={student!.parsedName?.middleName} />
-                    <DrawerInfoItem icon={<User />} label="Last" value={student!.parsedName?.lastName} />
+            <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <DrawerInfoItem label="First Name" value={student!.parsedName?.firstName} />
+                    <DrawerInfoItem label="Middle Name" value={student!.parsedName?.middleName} />
+                    <DrawerInfoItem label="Last Name" value={student!.parsedName?.lastName} />
                 </div>
                 
-                <div className="pt-5 border-t border-border space-y-3">
-                    <DrawerInfoItem icon={<Mail />} label="Email" value={student!.email} />
-                    <DrawerInfoItem icon={<Phone />} label="Mobile" value={student!.mobile} />
-                    <DrawerInfoItem icon={<MapPin />} label="Address" value={student!.address} />
+                <Separator />
+                
+                <div className="space-y-3">
+                    <DrawerInfoItem label="Email" value={student!.email} />
+                    <DrawerInfoItem label="Mobile" value={student!.mobile} />
+                    <DrawerInfoItem label="Address" value={student!.address} />
                 </div>
 
-                <div className="pt-5 border-t border-border grid grid-cols-2 gap-3">
-                    <DrawerInfoItem icon={<GraduationCap />} label="Program" value={student!.course} />
-                    <DrawerInfoItem icon={<Calendar />} label="Year/Sem" value={`${student!.yearLevel} / ${student!.semester}`} />
+                <Separator />
+
+                <div className="grid grid-cols-2 gap-4">
+                    <DrawerInfoItem label="Program" value={student!.course} />
+                    <DrawerInfoItem label="Year/Sem" value={`${student!.yearLevel} / ${student!.semester}`} />
                 </div>
             </div>
 
-            <div className="p-4 bg-primary rounded-xl text-primary-foreground flex items-center gap-3 shadow-md shadow-primary/20">
-              <div className="p-2 bg-primary-foreground/10 rounded-lg">
-                <Shield className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <p className="text-[10px] text-primary-foreground/80 font-medium leading-relaxed">Personal records are strictly private and only visible to you.</p>
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 flex items-start gap-3">
+              <Shield className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-xs text-muted-foreground leading-relaxed">Your records are private and only visible to you.</p>
             </div>
           </div>
         );
@@ -413,12 +418,14 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
   );
 }
 
-function DrawerInfoItem({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string }) {
+function DrawerInfoItem({ icon, label, value }: { icon?: React.ReactNode, label: string, value?: string }) {
   return (
     <div className="flex items-start gap-3 p-2">
-      <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center shrink-0 border border-border text-muted-foreground">
-        {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 14 }) : icon}
-      </div>
+      {icon && (
+        <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center shrink-0 border border-border text-muted-foreground">
+          {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 14 }) : icon}
+        </div>
+      )}
       <div className="min-w-0">
         <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">{label}</p>
         <p className="text-xs font-bold text-foreground break-words">{value || '?'}</p>
@@ -427,6 +434,8 @@ function DrawerInfoItem({ icon, label, value }: { icon: React.ReactNode, label: 
   );
 }
 
+// ... (other imports)
+
 function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon: React.ReactNode, title: string, description: string, enabled: boolean, onToggle?: (val: boolean) => void }) {
   const [isOn, setIsOn] = useState(enabled);
 
@@ -434,18 +443,16 @@ function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon:
     setIsOn(enabled);
   }, [enabled]);
 
-  const handleToggle = () => {
-    const nextVal = !isOn;
+  const handleToggle = (checked: boolean) => {
     if (onToggle) {
-      onToggle(nextVal);
+      onToggle(checked);
     } else {
-      setIsOn(nextVal);
+      setIsOn(checked);
     }
   };
 
   return (
-    <button 
-      onClick={handleToggle}
+    <div 
       className={`group w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
         isOn
           ? 'bg-card border-primary/50 shadow-sm'
@@ -463,14 +470,10 @@ function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon:
           <p className="text-[10px] font-medium text-muted-foreground">{description}</p>
         </div>
       </div>
-      <div className={`w-10 h-5 rounded-full relative transition-colors shadow-inner ${isOn ? 'bg-primary' : 'bg-muted'}`}>
-        <div
-          style={{ transform: `translateX(${isOn ? 22 : 2}px)` }}
-          className={`absolute top-1 w-3 h-3 rounded-full shadow-sm transition-colors ${
-            isOn ? 'bg-primary-foreground' : 'bg-white'
-          }`}
-        />
-      </div>
-    </button>
+      <Switch 
+        checked={isOn} 
+        onCheckedChange={handleToggle}
+      />
+    </div>
   );
 }

@@ -3,9 +3,14 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { FileText, ChevronLeft, CheckCircle2, XCircle } from 'lucide-react';
+import { FileText, ChevronLeft, CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
 import { SubjectGrade } from '@/types';
 import Skeleton from '@/components/ui/Skeleton';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 function isPassedSubject(sub: SubjectGrade) {
   const gradeNum = parseFloat(sub.grade);
@@ -40,124 +45,106 @@ export default function GradeReportPage() {
   const semesterTitle = (title || 'Grades').replace('Grades of ', '');
 
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground pb-12">
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in space-y-6">
-        <div className="surface-violet rounded-2xl border border-border/80 p-5 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
-              <FileText className="h-4 w-4" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-foreground">{semesterTitle}</h1>
-              <p className="text-xs text-muted-foreground">Grade Record</p>
-            </div>
-          </div>
+    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 pb-20">
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div className="flex items-center">
+          <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 text-muted-foreground">
+            <Link href="/grades">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Grades
+            </Link>
+          </Button>
         </div>
 
-        {!href ? (
-          <div className="surface-sky text-center py-16 rounded-xl border border-dashed border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-            <p className="text-sm text-muted-foreground">Missing report link. Open a semester from the Grades page.</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-3xl font-bold tracking-tight">{semesterTitle}</h2>
+            <p className="text-sm text-muted-foreground">Detailed grade report for this semester.</p>
           </div>
+          {grades && (
+            <Badge variant="secondary" className="h-7 px-3">
+              {grades.length} Subjects
+            </Badge>
+          )}
+        </div>
+
+        <Separator />
+
+        {!href ? (
+          <Card className="border-dashed bg-muted/20">
+            <CardContent className="p-12 text-center text-muted-foreground">
+              <p className="text-sm font-medium">Missing report link. Please return to the grades overview.</p>
+            </CardContent>
+          </Card>
         ) : isLoading ? (
           <div className="space-y-4">
-            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-12 w-full rounded-md" />
             <div className="space-y-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="p-4 border border-border rounded-xl flex justify-between">
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/4" />
-                  </div>
-                  <Skeleton className="h-8 w-12 rounded-lg" />
-                </div>
+                <Skeleton key={i} className="h-20 w-full rounded-md" />
               ))}
             </div>
           </div>
         ) : grades ? (
-          <div className="space-y-6">
-            <div className="surface-emerald p-4 rounded-xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                <span>Semester Summary</span>
-                <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded shadow-sm">{grades.length} Subjects</span>
-              </div>
+          <Card className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 border-b">
+                  <tr className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3 text-left">Code</th>
+                    <th className="px-6 py-3 text-left">Subject</th>
+                    <th className="px-6 py-3 text-center">Section</th>
+                    <th className="px-6 py-3 text-center">Grade</th>
+                    <th className="px-6 py-3 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {grades.map((sub, idx) => {
+                    const isPassed = isPassedSubject(sub);
+                    return (
+                      <tr key={idx} className="hover:bg-muted/50 transition-colors">
+                        <td className="px-6 py-4 font-mono text-[10px] font-bold text-muted-foreground uppercase">{sub.code}</td>
+                        <td className="px-6 py-4 font-medium">{sub.description}</td>
+                        <td className="px-6 py-4 text-center">
+                          <Badge variant="outline" className="text-[10px] uppercase h-5">
+                            {sub.section || '---'}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-center font-bold tabular-nums">
+                          <span className={cn(
+                              "text-xs px-2 py-1 rounded-md border",
+                              isPassed ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-destructive/5 text-destructive border-destructive/10"
+                          )}>
+                            {sub.grade}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {isPassed ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <XCircle className="h-3.5 w-3.5 text-destructive" />}
+                            <span className={cn(
+                                "text-[10px] font-bold uppercase tracking-wider",
+                                isPassed ? "text-emerald-600" : "text-destructive"
+                            )}>
+                              {sub.remarks}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-
-            <div className="surface-neutral rounded-2xl border border-border/80 shadow-sm overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border bg-accent/20">
-                      <th className="px-4 py-3">Code</th>
-                      <th className="px-4 py-3">Subject Description</th>
-                      <th className="px-4 py-3 text-center">Section</th>
-                      <th className="px-4 py-3 text-center">Grade</th>
-                      <th className="px-4 py-3 text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/50">
-                    {grades.map((sub, sIdx) => {
-                      const isPassed = isPassedSubject(sub);
-                      return (
-                        <tr key={sIdx} className="hover:bg-accent/50 transition-colors group">
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <span className="font-mono text-[10px] font-bold text-muted-foreground bg-accent group-hover:bg-background px-2 py-1 rounded transition-colors uppercase">
-                              {sub.code}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <p className="text-[11px] font-bold text-foreground uppercase leading-tight break-words">
-                              {sub.description}
-                            </p>
-                          </td>
-                          <td className="px-4 py-3 text-center whitespace-nowrap">
-                            <span className="text-[10px] font-bold text-muted-foreground bg-accent/50 px-2 py-0.5 rounded uppercase">
-                              {sub.section || '---'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-center whitespace-nowrap">
-                            <span
-                              className={
-                                'text-xs font-black px-2 py-1 rounded-lg border ' +
-                                (isPassed
-                                  ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50'
-                                  : 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/50')
-                              }
-                            >
-                              {sub.grade}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-right whitespace-nowrap">
-                            <div className="flex items-center justify-end gap-1.5">
-                              {isPassed ? (
-                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                              ) : (
-                                <XCircle className="h-3.5 w-3.5 text-rose-500" />
-                              )}
-                              <span
-                                className={
-                                  'text-[9px] font-black uppercase tracking-widest ' +
-                                  (isPassed ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')
-                                }
-                              >
-                                {sub.remarks}
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+          </Card>
         ) : (
-          <div className="text-center py-16 bg-accent rounded-xl border border-dashed border-border">
-            <FileText className="h-8 w-8 mx-auto mb-3 text-muted-foreground/30" />
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">No records available</p>
-          </div>
+          <Card className="border-dashed bg-muted/20">
+            <CardContent className="p-12 text-center text-muted-foreground">
+              <FileText className="h-10 w-10 mx-auto mb-3 opacity-20" />
+              <p className="text-sm font-medium">No records found for this report.</p>
+            </CardContent>
+          </Card>
         )}
-      </main>
+      </div>
     </div>
   );
 }

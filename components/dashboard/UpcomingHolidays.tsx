@@ -2,6 +2,10 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { PartyPopper } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Skeleton from '@/components/ui/Skeleton';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface Holiday {
   date: string;
@@ -45,77 +49,68 @@ export default function UpcomingHolidays() {
 
   if (loading) {
     return (
-      <div className="surface-amber relative overflow-hidden rounded-lg border border-border p-4 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background animate-pulse" />
-          <div className="h-4 w-32 bg-muted rounded animate-pulse" />
-        </div>
-        <div className="space-y-3">
+      <Card>
+        <CardHeader className="pb-4">
+          <Skeleton className="h-5 w-32" />
+        </CardHeader>
+        <CardContent className="space-y-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-3 py-2 animate-pulse">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-lg bg-background border border-border" />
-                <div className="space-y-2">
-                  <div className="h-3 w-24 bg-muted rounded" />
-                  <div className="h-2 w-16 bg-muted/60 rounded" />
-                </div>
-              </div>
-            </div>
+            <Skeleton key={i} className="h-14 w-full rounded-md" />
           ))}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (upcomingHolidays.length === 0) return null;
 
   return (
-    <div className="surface-amber relative overflow-hidden rounded-lg border border-border p-4 shadow-sm">
-      <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-amber-400/10 blur-3xl dark:bg-amber-400/5" />
-      <div className="flex items-center gap-3 mb-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background text-muted-foreground">
-          <PartyPopper size={16} />
-        </div>
-        <h3 className="text-sm font-medium">Upcoming holidays</h3>
-      </div>
-
-      <div className="space-y-3">
+    <Card>
+      <CardHeader className="pb-4 flex flex-row items-center gap-2 space-y-0">
+        <PartyPopper className="h-4 w-4 text-muted-foreground" />
+        <CardTitle className="text-sm font-medium">Holidays</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
         {upcomingHolidays.map((holiday, idx) => {
-          const daysLeft = Math.ceil((new Date(holiday.date).getTime() - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
+          const holidayDate = new Date(holiday.date);
+          const daysLeft = Math.ceil((holidayDate.getTime() - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
           const isToday = daysLeft === 0;
 
           return (
             <div 
               key={idx}
-              className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-3 py-2"
+              className="flex items-center justify-between gap-4 p-3 rounded-md border bg-muted/50"
             >
-              <div className="flex items-center gap-4">
-                <div className={`flex flex-col items-center justify-center h-10 w-10 rounded-lg border ${isToday ? 'bg-emerald-500 border-emerald-600 text-white' : 'bg-background border-border text-muted-foreground'}`}>
-                  <span className="text-[8px] font-black uppercase leading-none">
-                    {new Date(holiday.date).toLocaleDateString('en-US', { month: 'short' })}
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "flex flex-col items-center justify-center h-10 w-10 rounded-md border text-center",
+                  isToday ? "bg-primary border-primary text-primary-foreground" : "bg-background border-border text-muted-foreground"
+                )}>
+                  <span className="text-[8px] font-bold uppercase leading-none">
+                    {holidayDate.toLocaleDateString('en-US', { month: 'short' })}
                   </span>
-                  <span className="text-sm font-black leading-none mt-0.5">
-                    {new Date(holiday.date).getDate()}
+                  <span className="text-sm font-bold leading-none mt-0.5">
+                    {holidayDate.getDate()}
                   </span>
                 </div>
                 
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">
+                <div className="min-w-0">
+                  <h4 className="text-xs font-semibold truncate">
                     {holiday.localName || holiday.name}
                   </h4>
-                  <p className="text-[10px] font-medium text-muted-foreground">
-                    {new Date(holiday.date).toLocaleDateString('en-US', { weekday: 'long' })}
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {holidayDate.toLocaleDateString('en-US', { weekday: 'long' })}
                   </p>
                 </div>
               </div>
               
-              <span className={`text-[10px] font-black uppercase tracking-wider ${isToday ? 'text-emerald-600' : 'text-muted-foreground/60'}`}>
-                {isToday ? 'Today' : `${daysLeft} days`}
-              </span>
+              <Badge variant={isToday ? "default" : "secondary"} className="text-[10px] shrink-0">
+                {isToday ? 'Today' : `${daysLeft}d`}
+              </Badge>
             </div>
           );
         })}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

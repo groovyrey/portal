@@ -10,15 +10,23 @@ import {
   Loader2, 
   CheckCircle2, 
   AlertCircle,
-  X,
   Plus,
   Trash2,
   Info,
-  Award
+  Award,
+  ChevronLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BADGE_LIST } from '@/lib/badges';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 interface Student {
   id: string;
@@ -57,7 +65,6 @@ export default function EmailTab() {
         const res = await fetch(`/api/admin/students?search=${encodeURIComponent(searchQuery)}`);
         const data = await res.json();
         if (data.success) {
-          // Filter out already selected students
           const filtered = data.students.filter(
             (s: Student) => !selectedStudents.some(selected => selected.id === s.id)
           );
@@ -76,7 +83,7 @@ export default function EmailTab() {
 
   const handleAddStudent = (student: Student) => {
     if (!student.email) {
-      toast.error(`${student.name} does not have an email address recorded.`);
+      toast.error(`${student.name} has no email address.`);
       return;
     }
     setSelectedStudents([...selectedStudents, student]);
@@ -98,29 +105,23 @@ export default function EmailTab() {
 
   const handleSendEmails = async () => {
     if (!subject.trim() || !body.trim()) {
-      toast.error('Please provide both subject and body.');
+      toast.error('Missing subject or body.');
       return;
     }
 
     if (targetType === 'specific' && selectedStudents.length === 0) {
-      toast.error('Please select at least one recipient.');
+      toast.error('Select at least one recipient.');
       return;
     }
 
     if (targetType === 'badges' && selectedBadges.length === 0) {
-      toast.error('Please select at least one badge.');
+      toast.error('Select at least one badge group.');
       return;
     }
 
     setIsSending(true);
     setResults(null);
-    const toastId = toast.loading(
-      targetType === 'all' 
-        ? 'Broadcasting to all students...' 
-        : targetType === 'badges'
-        ? `Broadcasting to students with ${selectedBadges.length} selected badges...`
-        : `Sending to ${selectedStudents.length} recipients...`
-    );
+    const toastId = toast.loading('Sending announcements...');
 
     try {
       const res = await fetch('/api/admin/email/send', {
@@ -140,133 +141,117 @@ export default function EmailTab() {
       const data = await res.json();
       if (data.success) {
         setResults(data.results);
-        toast.success(`Broadcasting complete! ${data.results.success} sent successfully.`, { id: toastId });
+        toast.success(`Sent to ${data.results.success} students.`, { id: toastId });
         if (data.results.failure === 0) {
-          // Reset form on total success
           setSubject('');
           setBody('');
           setSelectedStudents([]);
           setSelectedBadges([]);
         }
       } else {
-        toast.error(data.error || 'Failed to send emails', { id: toastId });
+        toast.error(data.error || 'Failed to send', { id: toastId });
       }
     } catch (err) {
-      toast.error('Network error while sending emails', { id: toastId });
+      toast.error('Network error', { id: toastId });
     } finally {
       setIsSending(false);
     }
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-black uppercase tracking-tight text-foreground flex items-center gap-2">
-            <Mail className="h-5 w-5 text-primary" />
-            Announcement Center
-          </h2>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
-            Dispatch official communications to the student body
-          </p>
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold tracking-tight">Announcement Center</h2>
+          <p className="text-sm text-muted-foreground">Broadcast official messages to students.</p>
         </div>
 
-        <div className="flex bg-muted p-1 rounded-xl gap-1 self-start flex-wrap">
-          <button
+        <div className="flex bg-muted p-1 rounded-md">
+          <Button
+            variant={targetType === 'specific' ? 'secondary' : 'ghost'}
+            size="sm"
             onClick={() => setTargetType('specific')}
-            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${targetType === 'specific' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+            className="h-8 text-xs"
           >
             Specific
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={targetType === 'badges' ? 'secondary' : 'ghost'}
+            size="sm"
             onClick={() => setTargetType('badges')}
-            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${targetType === 'badges' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+            className="h-8 text-xs"
           >
             By Badge
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={targetType === 'all' ? 'secondary' : 'ghost'}
+            size="sm"
             onClick={() => setTargetType('all')}
-            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${targetType === 'all' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+            className="h-8 text-xs"
           >
             All Students
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Recipient Selection */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="surface-neutral p-5 rounded-2xl border border-border/50 h-full flex flex-col min-h-[400px]">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-4 flex items-center gap-2">
-              <Users className="h-3 w-3" />
+        <Card className="lg:col-span-2 flex flex-col h-[600px]">
+          <CardHeader className="py-4 border-b">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wider flex items-center gap-2">
+              <Users className="h-4 w-4" />
               Recipients
-            </h3>
+            </CardTitle>
+          </CardHeader>
 
+          <CardContent className="p-4 flex-1 flex flex-col overflow-hidden">
             {targetType === 'all' ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-3 bg-primary/5 rounded-xl border border-primary/10">
-                <div className="h-12 w-12 bg-primary/20 rounded-full flex items-center justify-center text-primary">
-                  <Users className="h-6 w-6" />
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4 bg-muted/20 border-dashed border-2 rounded-md">
+                <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                  <Mail className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">Global Broadcast</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Email will be sent to all registered students</p>
+                  <p className="font-bold">Global Broadcast</p>
+                  <p className="text-xs text-muted-foreground">Message will reach every registered student.</p>
                 </div>
               </div>
             ) : targetType === 'badges' ? (
-              <div className="flex-1 flex flex-col space-y-3">
-                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Select Targeting Badges</p>
-                 <div className="grid grid-cols-1 gap-2 overflow-y-auto custom-scrollbar pr-1">
-                    {BADGE_LIST.map((badge) => (
-                      <button
-                        key={badge.id}
-                        onClick={() => toggleBadge(badge.id)}
-                        className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-                          selectedBadges.includes(badge.id) 
-                            ? 'bg-primary/10 border-primary text-primary shadow-sm' 
-                            : 'bg-background border-border text-muted-foreground hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                           <div className={`p-1.5 rounded-lg ${selectedBadges.includes(badge.id) ? 'bg-primary/20' : 'bg-muted'}`}>
-                              <Award className="h-3.5 w-3.5" />
-                           </div>
-                           <div className="text-left">
-                              <p className="text-[11px] font-bold uppercase tracking-tight">{badge.name}</p>
-                              <p className="text-[8px] font-medium opacity-60 uppercase">{badge.description}</p>
-                           </div>
+              <ScrollArea className="flex-1 pr-4">
+                <div className="space-y-2 pb-4">
+                  {BADGE_LIST.map((badge) => (
+                    <button
+                      key={badge.id}
+                      onClick={() => toggleBadge(badge.id)}
+                      className={cn(
+                        "w-full flex items-center justify-between p-3 rounded-md border text-left transition-all",
+                        selectedBadges.includes(badge.id) 
+                          ? "border-primary/50 bg-primary/5 shadow-sm" 
+                          : "hover:bg-muted/50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Award className={cn("h-4 w-4", selectedBadges.includes(badge.id) ? "text-primary" : "text-muted-foreground")} />
+                        <div>
+                          <p className="text-xs font-bold uppercase">{badge.name}</p>
+                          <p className="text-[10px] text-muted-foreground line-clamp-1">{badge.description}</p>
                         </div>
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                          selectedBadges.includes(badge.id) ? 'bg-primary border-primary' : 'border-border'
-                        }`}>
-                           {selectedBadges.includes(badge.id) && <Plus className="h-2.5 w-2.5 text-white rotate-45" />}
-                        </div>
-                      </button>
-                    ))}
-                 </div>
-                 {selectedBadges.length > 0 && (
-                   <div className="mt-auto pt-4 border-t border-border/50">
-                      <p className="text-[9px] font-black text-primary uppercase tracking-widest">
-                        Targeting {selectedBadges.length} Badge Groups
-                      </p>
-                   </div>
-                 )}
-              </div>
+                      </div>
+                      {selectedBadges.includes(badge.id) && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
             ) : (
-              <div className="flex-1 flex flex-col space-y-4">
+              <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <input
-                    type="text"
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
                     placeholder="Search name or ID..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-background border border-border rounded-xl pl-9 pr-4 py-2 text-xs font-bold outline-none focus:border-primary transition-all"
+                    className="pl-9"
                   />
-                  {isSearching && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                    </div>
-                  )}
+                  {isSearching && <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-primary" />}
 
                   <AnimatePresence>
                     {searchResults.length > 0 && (
@@ -274,19 +259,19 @@ export default function EmailTab() {
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 5 }}
-                        className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-xl z-20 max-h-48 overflow-y-auto custom-scrollbar"
+                        className="absolute top-full left-0 right-0 mt-2 bg-popover border rounded-md shadow-lg z-20 overflow-hidden"
                       >
                         {searchResults.map((s) => (
                           <button
                             key={s.id}
                             onClick={() => handleAddStudent(s)}
-                            className="w-full flex items-center justify-between p-3 hover:bg-muted text-left transition-colors border-b last:border-0 border-border/50"
+                            className="w-full flex items-center justify-between p-3 hover:bg-muted text-left transition-colors border-b last:border-0"
                           >
                             <div className="min-w-0">
-                              <p className="text-[11px] font-bold text-foreground truncate">{s.name}</p>
-                              <p className="text-[9px] text-muted-foreground uppercase tracking-tight">{s.course || s.id}</p>
+                              <p className="text-xs font-bold truncate">{s.name}</p>
+                              <p className="text-[10px] text-muted-foreground uppercase">{s.course || s.id}</p>
                             </div>
-                            <Plus className="h-3 w-3 text-primary shrink-0" />
+                            <Plus className="h-4 w-4 text-primary" />
                           </button>
                         ))}
                       </motion.div>
@@ -294,115 +279,123 @@ export default function EmailTab() {
                   </AnimatePresence>
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[200px] max-h-[300px] space-y-2 pr-1">
-                  {selectedStudents.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center opacity-40 py-10">
-                      <User className="h-8 w-8 mb-2" />
-                      <p className="text-[10px] font-bold uppercase">No recipients selected</p>
-                    </div>
-                  ) : (
-                    selectedStudents.map((s) => (
-                      <div key={s.id} className="flex items-center justify-between p-3 bg-background border border-border rounded-xl group">
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-bold text-foreground truncate">{s.name}</p>
-                          <p className="text-[9px] text-muted-foreground uppercase tracking-tight">{s.id}</p>
-                        </div>
-                        <button
-                          onClick={() => handleRemoveStudent(s.id)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                <ScrollArea className="flex-1 -mx-1 pr-1">
+                  <div className="space-y-2 pb-4">
+                    {selectedStudents.length === 0 ? (
+                      <div className="py-20 text-center text-muted-foreground opacity-50">
+                        <User className="h-10 w-10 mx-auto mb-2" />
+                        <p className="text-xs font-medium uppercase tracking-widest">No recipients</p>
                       </div>
-                    ))
-                  )}
-                </div>
+                    ) : (
+                      selectedStudents.map((s) => (
+                        <div key={s.id} className="flex items-center justify-between p-3 bg-muted/30 border rounded-md group">
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold truncate">{s.name}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono">{s.id}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveStudent(s.id)}
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+          {targetType === 'badges' && selectedBadges.length > 0 && (
+            <div className="p-4 border-t bg-muted/10 text-center">
+              <p className="text-[10px] font-bold uppercase text-primary">Selected {selectedBadges.length} Badge Groups</p>
+            </div>
+          )}
+        </Card>
 
         {/* Message Content */}
-        <div className="lg:col-span-3 space-y-4">
-          <div className="surface-neutral p-6 rounded-2xl border border-border/50 space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-2 flex items-center gap-2">
-              <Info className="h-3 w-3" />
-              Message Details
-            </h3>
-
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Subject</label>
-                <input
-                  type="text"
+        <Card className="lg:col-span-3 flex flex-col h-[600px]">
+          <CardHeader className="py-4 border-b">
+             <CardTitle className="text-sm font-semibold uppercase tracking-wider flex items-center gap-2">
+                <Info className="h-4 w-4" />
+                Composition
+             </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 flex-1 flex flex-col space-y-6 overflow-hidden">
+            <div className="space-y-4 flex-1 flex flex-col">
+              <div className="space-y-2">
+                <Label htmlFor="subject">Subject</Label>
+                <Input
+                  id="subject"
                   placeholder="Official Announcement: [Subject]"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-primary transition-all"
+                  className="font-bold"
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Body Content</label>
+              <div className="space-y-2 flex-1 flex flex-col">
+                <Label htmlFor="body">Message Body</Label>
                 <textarea
-                  placeholder="Enter the announcement details here..."
+                  id="body"
+                  placeholder="Enter details..."
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
-                  rows={8}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-medium outline-none focus:border-primary transition-all resize-none custom-scrollbar"
+                  className="flex-1 w-full bg-background border border-input rounded-md p-4 text-sm resize-none focus:ring-1 focus:ring-primary outline-none custom-scrollbar"
                 />
               </div>
 
               {results && (
-                <div className={`p-4 rounded-xl border ${results.failure === 0 ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
-                  <div className="flex items-center gap-3 mb-2">
-                    {results.failure === 0 ? (
-                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                    ) : (
-                      <AlertCircle className="h-5 w-5 text-amber-500" />
-                    )}
-                    <p className="text-xs font-black uppercase tracking-tight text-foreground">
-                      Transmission Report
-                    </p>
+                <div className={cn(
+                  "p-4 rounded-md border",
+                  results.failure === 0 ? "bg-emerald-50 border-emerald-200" : "bg-warning-50 border-warning-200"
+                )}>
+                  <div className="flex items-center gap-2 mb-3">
+                    {results.failure === 0 ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <AlertCircle className="h-4 w-4 text-warning-600" />}
+                    <p className="text-xs font-bold uppercase">Transmission Report</p>
                   </div>
-                  <div className="grid grid-cols-3 gap-4 mt-3">
-                    <div className="text-center p-2 rounded-lg bg-background/50 border border-border/50">
-                      <p className="text-[9px] font-bold text-muted-foreground uppercase">Target</p>
-                      <p className="text-lg font-black">{results.total}</p>
-                    </div>
-                    <div className="text-center p-2 rounded-lg bg-background/50 border border-border/50">
-                      <p className="text-[9px] font-bold text-muted-foreground uppercase">Sent</p>
-                      <p className="text-lg font-black text-emerald-500">{results.success}</p>
-                    </div>
-                    <div className="text-center p-2 rounded-lg bg-background/50 border border-border/50">
-                      <p className="text-[9px] font-bold text-muted-foreground uppercase">Failed</p>
-                      <p className="text-lg font-black text-red-500">{results.failure}</p>
-                    </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <ReportStat label="Target" value={results.total} />
+                    <ReportStat label="Sent" value={results.success} color="text-emerald-600" />
+                    <ReportStat label="Failed" value={results.failure} color="text-destructive" />
                   </div>
                 </div>
               )}
-
-              <button
-                onClick={handleSendEmails}
-                disabled={isSending || !subject.trim() || !body.trim() || (targetType === 'specific' && selectedStudents.length === 0) || (targetType === 'badges' && selectedBadges.length === 0)}
-                className="w-full py-4 bg-primary text-primary-foreground rounded-xl font-black uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
-              >
-                {isSending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Processing Transmission...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Dispatch Announcement
-                  </>
-                )}
-              </button>
             </div>
-          </div>
-        </div>
+
+            <Button
+              onClick={handleSendEmails}
+              disabled={isSending || !subject.trim() || !body.trim() || (targetType === 'specific' && selectedStudents.length === 0) || (targetType === 'badges' && selectedBadges.length === 0)}
+              size="lg"
+              className="w-full h-12 uppercase font-bold tracking-widest"
+            >
+              {isSending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  Dispatch
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
+}
+
+function ReportStat({ label, value, color }: { label: string, value: number, color?: string }) {
+    return (
+        <div className="text-center p-2 rounded bg-background border border-border/50">
+            <p className="text-[8px] font-bold text-muted-foreground uppercase">{label}</p>
+            <p className={cn("text-lg font-black tabular-nums", color)}>{value}</p>
+        </div>
+    );
 }

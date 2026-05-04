@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { 
-  BookOpen, 
   School, 
   MapPin, 
   GraduationCap, 
@@ -10,7 +9,6 @@ import {
   Building2, 
   ClipboardCheck,
   Search,
-  ExternalLink,
   ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,262 +22,214 @@ import {
   IMPORTANT_OFFICES
 } from '@/lib/assistant-knowledge';
 import MarkdownRenderer from '@/components/shared/MarkdownRenderer';
-
-type Category = 'overview' | 'academic' | 'campus' | 'admin';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export default function KnowledgeTab() {
-  const [activeTab, setActiveTab] = useState<Category>('overview');
-
-  const categories = [
-    { id: 'overview', label: 'School Profile', icon: <School size={14} /> },
-    { id: 'academic', label: 'Academic Programs', icon: <GraduationCap size={14} /> },
-    { id: 'campus', label: 'Campus & Facilities', icon: <MapPin size={14} /> },
-    { id: 'admin', label: 'Procedures & Grading', icon: <ClipboardCheck size={14} /> },
-  ];
+  const [activeCategory, setActiveCategory] = useState('overview');
 
   return (
-    <div className="space-y-6">
-      {/* Category Navigation */}
-      <div className="flex flex-wrap gap-2">
-        {categories.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setActiveTab(cat.id as Category)}
-            className={`
-              flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all
-              ${activeTab === cat.id 
-                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
-                : 'bg-card border border-border text-muted-foreground hover:bg-accent'}
-            `}
-          >
-            {cat.icon}
-            {cat.label}
-          </button>
-        ))}
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h3 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Knowledge Base</h3>
+          <p className="text-xs text-muted-foreground">Reference data for the AI Assistant.</p>
+        </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {activeTab === 'overview' && (
-          <motion.div
-            key="overview"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="space-y-6"
-          >
-            {/* Header Card */}
-            <div className="bg-card border border-border rounded-2xl p-6 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-8 opacity-5">
-                <School size={120} />
-              </div>
-              <div className="relative z-10 space-y-4">
-                <div className="space-y-1">
-                  <h3 className="text-2xl font-black text-foreground uppercase tracking-tighter">{SCHOOL_INFO.name}</h3>
-                  <p className="text-sm font-bold text-primary uppercase tracking-widest">{SCHOOL_INFO.tagline}</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                  <div className="space-y-2">
-                    <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Our Vision</h4>
-                    <p className="text-xs leading-relaxed text-foreground font-medium">{SCHOOL_INFO.vision}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Our Mission</h4>
-                    <p className="text-xs leading-relaxed text-foreground font-medium">{SCHOOL_INFO.mission}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto p-1 bg-muted/50">
+          <TabsTrigger value="overview" className="gap-2 py-2">
+            <School className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Profile</span>
+          </TabsTrigger>
+          <TabsTrigger value="academic" className="gap-2 py-2">
+            <GraduationCap className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Programs</span>
+          </TabsTrigger>
+          <TabsTrigger value="campus" className="gap-2 py-2">
+            <MapPin className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Facilities</span>
+          </TabsTrigger>
+          <TabsTrigger value="admin" className="gap-2 py-2">
+            <ClipboardCheck className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Policies</span>
+          </TabsTrigger>
+        </TabsList>
 
-            {/* History & Core Values */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 bg-card border border-border rounded-2xl p-6 space-y-3">
-                <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-                  <Info size={12} className="text-primary" />
-                  Institutional History
-                </h4>
-                <p className="text-xs leading-relaxed text-muted-foreground font-medium">
-                  {SCHOOL_INFO.history}
-                </p>
-              </div>
-              <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6 space-y-4">
-                <h4 className="text-[10px] font-black uppercase text-primary tracking-widest">Core Values</h4>
-                <div className="space-y-2">
-                  {SCHOOL_INFO.coreValues.map((value, i) => (
-                    <div key={i} className="flex items-center gap-2 px-3 py-2 bg-background rounded-xl border border-primary/10">
-                      <ChevronRight size={12} className="text-primary" />
-                      <span className="text-[11px] font-black uppercase tracking-tight">{value}</span>
+        <div className="mt-8">
+          <AnimatePresence mode="wait">
+            <TabsContent value="overview">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{SCHOOL_INFO.name}</CardTitle>
+                    <CardDescription>{SCHOOL_INFO.tagline}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid md:grid-cols-2 gap-8 pt-4 border-t">
+                    <div className="space-y-2">
+                      <Label>Vision</Label>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{SCHOOL_INFO.vision}</p>
                     </div>
+                    <div className="space-y-2">
+                      <Label>Mission</Label>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{SCHOOL_INFO.mission}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="grid md:grid-cols-3 gap-6">
+                  <Card className="md:col-span-2">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm uppercase tracking-wider flex items-center gap-2">
+                        <Info className="h-4 w-4 text-primary" />
+                        History
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{SCHOOL_INFO.history}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-primary/5 border-primary/20">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm uppercase tracking-wider">Core Values</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {SCHOOL_INFO.coreValues.map((v, i) => (
+                        <div key={i} className="flex items-center gap-2 p-2 bg-background rounded-md border border-primary/10 text-xs font-bold uppercase tracking-tight">
+                           <ChevronRight className="h-3 w-3 text-primary" />
+                           {v}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
+              </motion.div>
+            </TabsContent>
+
+            <TabsContent value="academic">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base uppercase tracking-wider">College Programs</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1">
+                    {ACADEMIC_PROGRAMS.college.map((p, i) => (
+                      <div key={i} className="p-2.5 rounded-md hover:bg-muted transition-colors text-sm font-medium border border-transparent hover:border-border">
+                        {p}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base uppercase tracking-wider">Vocational</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1">
+                      {ACADEMIC_PROGRAMS.tesda.map((p, i) => (
+                        <div key={i} className="p-2.5 rounded-md text-sm font-medium border">{p}</div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-muted/30">
+                    <CardHeader>
+                      <CardTitle className="text-base uppercase tracking-wider">Basic Education</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap gap-2">
+                      {ACADEMIC_PROGRAMS.basic_ed.map((p, i) => (
+                        <Badge key={i} variant="outline" className="bg-background">{p}</Badge>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
+              </motion.div>
+            </TabsContent>
+
+            <TabsContent value="campus">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <div className="grid md:grid-cols-3 gap-4">
+                  {SCHOOL_INFO.campuses.map((c, i) => (
+                    <Card key={i}>
+                      <CardContent className="p-5 space-y-3">
+                        <div className="h-9 w-9 rounded-md bg-muted flex items-center justify-center text-primary"><Building2 size={18} /></div>
+                        <div>
+                          <p className="font-bold text-sm uppercase">{c.name}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{c.address}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base uppercase tracking-wider flex items-center justify-between">
+                      Facility Codes
+                      <Badge variant="secondary" className="font-mono text-[10px]">{Object.keys(BUILDING_CODES).length} Records</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    {Object.entries(BUILDING_CODES).map(([code, name]) => (
+                      <div key={code} className="flex items-center gap-3 p-2 bg-muted/20 border rounded-md group hover:border-primary/30 transition-colors">
+                        <div className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-bold">{code}</div>
+                        <p className="text-[11px] font-medium truncate">{name}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
 
-        {activeTab === 'academic' && (
-          <motion.div
-            key="academic"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-          >
-            <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
-              <div className="space-y-1">
-                <h3 className="text-lg font-black uppercase tracking-tight text-foreground">College Programs</h3>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">CHED Recognized Degrees</p>
-              </div>
-              <div className="space-y-2">
-                {ACADEMIC_PROGRAMS.college.map((program, i) => (
-                  <div key={i} className="p-3 bg-muted/30 rounded-xl border border-border/50 hover:border-primary/30 transition-colors group">
-                    <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">{program}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
-                <div className="space-y-1">
-                  <h3 className="text-lg font-black uppercase tracking-tight text-foreground">Technical Vocational</h3>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">TESDA Accredited Courses</p>
-                </div>
-                <div className="space-y-2">
-                  {ACADEMIC_PROGRAMS.tesda.map((program, i) => (
-                    <div key={i} className="p-3 bg-muted/30 rounded-xl border border-border/50">
-                      <p className="text-xs font-bold text-foreground">{program}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-accent/30 border border-border rounded-2xl p-6 space-y-6">
-                <div className="space-y-1">
-                  <h3 className="text-lg font-black uppercase tracking-tight text-foreground">Basic Education</h3>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">K-12 Pathways</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {ACADEMIC_PROGRAMS.basic_ed.map((level, i) => (
-                    <span key={i} className="px-3 py-1.5 bg-background border border-border rounded-lg text-[10px] font-black uppercase">
-                      {level}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'campus' && (
-          <motion.div
-            key="campus"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="space-y-6"
-          >
-            {/* Campus List */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {SCHOOL_INFO.campuses.map((campus, i) => (
-                <div key={i} className="bg-card border border-border rounded-2xl p-5 space-y-3 hover:shadow-md transition-shadow">
-                  <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                    <Building2 size={20} />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black uppercase tracking-tight">{campus.name}</h4>
-                    <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">{campus.address}</p>
-                  </div>
-                  <div className="pt-2 space-y-1">
-                    {campus.mobile && <p className="text-[10px] font-mono text-muted-foreground">{campus.mobile}</p>}
-                    {campus.phone && <p className="text-[10px] font-mono text-muted-foreground">{campus.phone}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Building Codes */}
-            <div className="bg-card border border-border rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="space-y-1">
-                  <h3 className="text-lg font-black uppercase tracking-tight text-foreground">Facility Reference</h3>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Building Codes & Locations</p>
-                </div>
-                <div className="hidden sm:block px-3 py-1.5 bg-muted rounded-full text-[10px] font-black uppercase text-muted-foreground">
-                  {Object.keys(BUILDING_CODES).length} Units Logged
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {Object.entries(BUILDING_CODES).map(([code, name]) => (
-                  <div key={code} className="flex items-center gap-3 p-3 bg-muted/20 border border-border/40 rounded-xl">
-                    <div className="px-2 py-1 bg-primary/10 text-primary rounded-md text-[10px] font-black">
-                      {code}
-                    </div>
-                    <p className="text-[11px] font-bold text-foreground truncate">{name}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'admin' && (
-          <motion.div
-            key="admin"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="grid grid-cols-1 lg:grid-cols-5 gap-6"
-          >
-            <div className="lg:col-span-3 space-y-6">
-              <div className="bg-card border border-border rounded-2xl p-6">
-                <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-6">Grading Standard</h3>
-                <div className="bg-muted/30 rounded-xl p-4 font-mono">
-                  <pre className="text-[11px] leading-relaxed whitespace-pre-wrap">{GRADING_SYSTEM.trim()}</pre>
-                </div>
-              </div>
-
-              <div className="bg-card border border-border rounded-2xl p-6">
-                <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-4">Common Procedures</h3>
-                <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
-                  <MarkdownRenderer content={COMMON_PROCEDURES} />
-                </div>
-              </div>
-            </div>
-
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
-                <h3 className="text-sm font-black uppercase tracking-widest text-primary mb-6">Key Offices</h3>
-                <div className="space-y-4">
-                  {IMPORTANT_OFFICES.map((office, i) => (
-                    <div key={i} className="space-y-1">
-                      <h4 className="text-xs font-black uppercase tracking-tight text-foreground">{office.name}</h4>
-                      <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
-                        {office.purpose}
-                      </p>
-                      {i !== IMPORTANT_OFFICES.length - 1 && <div className="pt-3 border-b border-primary/5" />}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-card border border-border rounded-2xl p-6 text-center space-y-3">
-                <div className="h-12 w-12 bg-accent rounded-full flex items-center justify-center mx-auto text-muted-foreground">
-                  <Search size={20} />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-xs font-black uppercase text-foreground">Missing something?</h4>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed px-4">
-                    The knowledge base is updated manually. Contact the dev team to add more info.
-                  </p>
-                </div>
-                <button className="w-full py-2 bg-muted hover:bg-accent rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors">
-                  Request Update
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <TabsContent value="admin">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid lg:grid-cols-5 gap-6">
+                 <div className="lg:col-span-3 space-y-6">
+                    <Card>
+                      <CardHeader><CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Grading System</CardTitle></CardHeader>
+                      <CardContent>
+                        <pre className="p-4 rounded-md bg-muted font-mono text-[10px] leading-relaxed whitespace-pre-wrap border">{GRADING_SYSTEM.trim()}</pre>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader><CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">Standard Procedures</CardTitle></CardHeader>
+                      <CardContent className="prose prose-sm dark:prose-invert max-w-none">
+                        <MarkdownRenderer content={COMMON_PROCEDURES} />
+                      </CardContent>
+                    </Card>
+                 </div>
+                 <div className="lg:col-span-2 space-y-6">
+                    <Card className="bg-primary/5 border-primary/20">
+                      <CardHeader><CardTitle className="text-sm uppercase tracking-wider">Key Offices</CardTitle></CardHeader>
+                      <CardContent className="space-y-4">
+                        {IMPORTANT_OFFICES.map((o, i) => (
+                          <div key={i} className="space-y-1">
+                            <p className="text-xs font-bold uppercase">{o.name}</p>
+                            <p className="text-[10px] text-muted-foreground leading-relaxed">{o.purpose}</p>
+                            {i < IMPORTANT_OFFICES.length - 1 && <Separator className="mt-3 opacity-30" />}
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                    <Card className="text-center">
+                       <CardContent className="pt-8 space-y-3">
+                          <Search className="h-10 w-10 mx-auto text-muted-foreground/30" />
+                          <p className="text-xs font-medium text-muted-foreground">Manual knowledge base updates only.</p>
+                          <Button variant="outline" size="sm" className="w-full text-[10px] uppercase font-bold tracking-widest">Contact Dev Team</Button>
+                       </CardContent>
+                    </Card>
+                 </div>
+              </motion.div>
+            </TabsContent>
+          </AnimatePresence>
+        </div>
+      </Tabs>
     </div>
   );
+}
+
+function Label({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
+    return <p className={cn("text-[10px] uppercase font-bold text-muted-foreground tracking-widest mb-1", className)} {...props} />
 }

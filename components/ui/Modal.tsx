@@ -1,8 +1,13 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 interface ModalProps {
   isOpen: boolean;
@@ -12,8 +17,13 @@ interface ModalProps {
   maxWidth?: string;
   className?: string;
   showCloseButton?: boolean;
+  noPadding?: boolean;
 }
 
+/**
+ * Standardized Modal component built on top of shadcn/ui Dialog.
+ * Gain accessibility features like focus trapping and ESC-to-close automatically.
+ */
 export default function Modal({
   isOpen,
   onClose,
@@ -21,95 +31,40 @@ export default function Modal({
   children,
   maxWidth = 'max-w-sm',
   className = '',
-  showCloseButton = true
+  showCloseButton = true,
+  noPadding = false
 }: ModalProps) {
-  // Disable background scrolling when modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
-  // Close on Escape key
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showCloseButton) onClose();
-    };
-    if (isOpen) {
-      window.addEventListener('keydown', handleEsc);
-    }
-    return () => {
-      window.removeEventListener('keydown', handleEsc);
-    };
-  }, [isOpen, onClose, showCloseButton]);
-
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="relative z-[700]">
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/40 dark:bg-black/60"
-            aria-hidden="true"
-          />
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent 
+        className={cn(
+          "p-0 gap-0 overflow-hidden border-border bg-card shadow-2xl sm:rounded-2xl",
+          maxWidth,
+          className
+        )}
+        hideClose={!showCloseButton}
+        onPointerDownOutside={(e) => !showCloseButton && e.preventDefault()}
+        onEscapeKeyDown={(e) => !showCloseButton && e.preventDefault()}
+      >
+        {title && (
+          <DialogHeader className="p-6 border-b border-border/50 space-y-0">
+            {typeof title === 'string' ? (
+              <DialogTitle className="text-lg font-semibold tracking-tight">
+                {title}
+              </DialogTitle>
+            ) : (
+              <div className="flex-1">{title}</div>
+            )}
+          </DialogHeader>
+        )}
 
-          {/* Scrollable Container */}
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 sm:p-6 text-center">
-              {/* Click handler for backdrop behavior on the wrapper */}
-              <div 
-                className="absolute inset-0" 
-                onClick={() => showCloseButton && onClose()} 
-              />
-
-              {/* Modal Panel */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className={`relative w-full ${maxWidth} bg-card rounded-3xl shadow-2xl overflow-hidden border border-border text-left align-middle ${className}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {title && (
-                  <div className="flex items-center justify-between p-6 border-b border-border">
-                    <div className="flex-1">{title}</div>
-                    {showCloseButton && (
-                      <button
-                        onClick={onClose}
-                        className="p-2 ml-2 bg-accent hover:bg-accent text-muted-foreground hover:text-muted-foreground rounded-xl transition-colors"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                )}
-                {!title && showCloseButton && (
-                  <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 z-10 p-2 bg-accent/20 hover:bg-accent/40 text-muted-foreground rounded-xl transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-                <div className="relative flex-1 flex flex-col">
-                  {children}
-                </div>
-              </motion.div>
-            </div>
-          </div>
+        <div className={cn(
+          "relative flex-1 flex flex-col",
+          !noPadding && "p-6"
+        )}>
+          {children}
         </div>
-      )}
-    </AnimatePresence>
+      </DialogContent>
+    </Dialog>
   );
 }

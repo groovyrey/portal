@@ -10,9 +10,13 @@ import {
   Calendar, 
   Shield,
   Save,
-  ChevronDown
+  Building
 } from 'lucide-react';
 import { Student } from '@/types';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 
 interface ProfileTabProps {
   student: Student;
@@ -22,10 +26,6 @@ interface ProfileTabProps {
 export default function ProfileTab({ student, updateSettings }: ProfileTabProps) {
   const [selectedCampus, setSelectedCampus] = useState(student.settings?.campus || '');
   const [isSaving, setIsSaving] = useState(false);
-
-  const handleCampusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCampus(event.target.value);
-  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -39,98 +39,81 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
   const hasChanges = selectedCampus !== (student.settings?.campus || '');
 
   return (
-    <div className="space-y-6">
-      <div className="surface-sky relative overflow-hidden flex items-center gap-4 p-6 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-          <div className="w-20 h-20 rounded-full bg-accent border border-border shrink-0 overflow-hidden">
-              <img 
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=0f172a&color=f8fafc&size=256&bold=true`}
-                  alt={student.name}
-                  className="w-full h-full object-cover dark:opacity-80"
-              />
-          </div>
-          <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-xl text-foreground leading-tight break-words">{student.name}</h3>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="px-2 py-0.5 bg-primary/10 text-[10px] font-bold text-primary rounded border border-primary/20 uppercase tracking-wider">ID</span>
-                <p className="text-xs text-muted-foreground font-mono font-bold tracking-tight">{student.id}</p>
-              </div>
-          </div>
+    <div className="space-y-8">
+      <div className="flex items-center gap-6">
+        <Avatar className="h-20 w-20 border">
+          <AvatarImage src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=0f172a&color=f8fafc&size=256`} />
+          <AvatarFallback>{student.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+        </Avatar>
+        <div className="space-y-1">
+          <h3 className="text-2xl font-bold tracking-tight">{student.name}</h3>
+          <p className="text-sm text-muted-foreground font-mono">ID: {student.id}</p>
+        </div>
       </div>
 
-      <div className="surface-emerald relative overflow-hidden rounded-2xl border border-border/80 p-6 shadow-sm ring-1 ring-black/5 dark:ring-white/10 space-y-6">
-          <div>
-            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Personal Details</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <InfoItem icon={<User />} label="First Name" value={student.parsedName?.firstName} />
-                <InfoItem icon={<User />} label="Middle Name" value={student.parsedName?.middleName} />
-                <InfoItem icon={<User />} label="Last Name" value={student.parsedName?.lastName} />
+      <Separator />
+
+      <div className="grid gap-8">
+        <section className="space-y-4">
+          <h4 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Personal Details</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <InfoItem icon={<User className="h-4 w-4" />} label="First Name" value={student.parsedName?.firstName} />
+            <InfoItem icon={<User className="h-4 w-4" />} label="Middle Name" value={student.parsedName?.middleName} />
+            <InfoItem icon={<User className="h-4 w-4" />} label="Last Name" value={student.parsedName?.lastName} />
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <h4 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Contact</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <InfoItem icon={<Mail className="h-4 w-4" />} label="Email" value={student.email} />
+            <InfoItem icon={<Phone className="h-4 w-4" />} label="Mobile" value={student.mobile} />
+            <div className="md:col-span-2">
+              <InfoItem icon={<MapPin className="h-4 w-4" />} label="Address" value={student.address} />
             </div>
           </div>
-          
-          <div className="pt-6 border-t border-border">
-              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Contact Information</h4>
-              <div className="space-y-4">
-                  <InfoItem icon={<Mail />} label="Email Address" value={student.email} />
-                  <InfoItem icon={<Phone />} label="Mobile Number" value={student.mobile} />
-                  <InfoItem icon={<MapPin />} label="Mailing Address" value={student.address} />
-              </div>
-          </div>
+        </section>
 
-          <div className="pt-6 border-t border-border">
-              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Academic Background</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <InfoItem icon={<GraduationCap />} label="Program" value={student.course} />
-                  <InfoItem icon={<Calendar />} label="Year & Semester" value={`${student.yearLevel} / ${student.semester}`} />
-              </div>
+        <section className="space-y-4">
+          <h4 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Academic</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <InfoItem icon={<GraduationCap className="h-4 w-4" />} label="Program" value={student.course} />
+            <InfoItem icon={<Calendar className="h-4 w-4" />} label="Level / Semester" value={`${student.yearLevel} / ${student.semester}`} />
           </div>
+        </section>
 
-          <div className="pt-6 border-t border-border">
-              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Campus Location</h4>
-              <div className="space-y-4">
-                <div className="relative">
-                  <label htmlFor="campus-select" className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                    Select Campus
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="campus-select"
-                      value={selectedCampus}
-                      onChange={handleCampusChange}
-                      className="w-full h-12 pl-4 pr-10 bg-background border border-border rounded-xl text-sm font-bold appearance-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                    >
-                      <option value="" disabled>Select Campus</option>
-                      <option value="Muzon Campus">Muzon Campus</option>
-                      <option value="Francisco Homes Campus">Francisco Homes Campus</option>
-                      <option value="Main Campus (CBAS)">Main Campus (CBAS)</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
-                      <ChevronDown size={18} />
-                    </div>
-                  </div>
-                </div>
+        <section className="space-y-4 pt-2">
+          <div className="grid gap-4 max-w-md">
+            <div className="space-y-2">
+              <Label htmlFor="campus">Current Campus</Label>
+              <select 
+                id="campus"
+                value={selectedCampus} 
+                onChange={(e) => setSelectedCampus(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="" disabled>Select a campus</option>
+                <option value="Muzon Campus">Muzon Campus</option>
+                <option value="Francisco Homes Campus">Francisco Homes Campus</option>
+                <option value="Main Campus (CBAS)">Main Campus (CBAS)</option>
+              </select>
+            </div>
 
-                <button
-                  onClick={handleSave}
-                  disabled={!hasChanges || isSaving}
-                  className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold transition-all ${
-                    hasChanges && !isSaving
-                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]'
-                      : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-                  }`}
-                >
-                  <Save size={18} className={isSaving ? 'animate-pulse' : ''} />
-                  {isSaving ? 'Saving Changes...' : 'Save Profile Settings'}
-                </button>
-              </div>
+            <Button 
+              onClick={handleSave} 
+              disabled={!hasChanges || isSaving}
+              className="w-full sm:w-auto"
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
           </div>
+        </section>
       </div>
 
-      <div className="relative overflow-hidden p-4 bg-primary rounded-xl text-primary-foreground flex items-center gap-4 shadow-lg shadow-primary/20">
-        <div className="p-2.5 bg-primary-foreground/10 rounded-lg">
-          <Shield className="h-5 w-5 text-primary-foreground" />
-        </div>
-        <p className="text-xs text-primary-foreground/80 font-medium leading-relaxed">
-          Your personal data is encrypted and strictly private. Only you can view these records.
+      <div className="rounded-md border bg-muted/50 p-4 flex items-start gap-3">
+        <Shield className="h-5 w-5 text-muted-foreground mt-0.5" />
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Your personal info is private and only visible to you.
         </p>
       </div>
     </div>
@@ -139,13 +122,11 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
 
 function InfoItem({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string }) {
   return (
-    <div className="flex items-start gap-4">
-      <div className="h-10 w-10 rounded-xl bg-accent dark:bg-card flex items-center justify-center shrink-0 border border-border text-primary shadow-sm">
-        {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 18 }) : icon}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
-        <p className="text-sm font-bold text-foreground leading-tight">{value || 'Not provided'}</p>
+    <div className="space-y-1">
+      <Label className="text-[10px] uppercase text-muted-foreground font-semibold">{label}</Label>
+      <div className="flex items-center gap-2">
+        <div className="text-muted-foreground">{icon}</div>
+        <p className="text-sm font-medium">{value || 'None'}</p>
       </div>
     </div>
   );

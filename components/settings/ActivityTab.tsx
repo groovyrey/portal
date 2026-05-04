@@ -11,9 +11,14 @@ import {
   Sparkles, 
   MessageSquare, 
   ShieldCheck, 
-  ChevronRight 
+  ChevronRight,
+  X
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export default function ActivityTab() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -41,126 +46,98 @@ export default function ActivityTab() {
 
   const filteredLogs = logs.filter(log => 
     log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    log.details.toLowerCase().includes(searchQuery.toLowerCase())
+    (typeof log.details === 'string' && log.details.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
     <div className="space-y-6">
-      <div className="surface-sky relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
-            <History className="h-6 w-6" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-foreground leading-none">Activity History</h3>
-            <p className="text-xs text-muted-foreground font-medium mt-1.5">Last 15 actions performed by you.</p>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h4 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Activity</h4>
+          <p className="text-sm text-muted-foreground">
+            Recent actions performed on your account.
+          </p>
         </div>
 
-        <div className="relative group min-w-[240px]">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <Search className={`h-4 w-4 transition-colors ${searchQuery ? 'text-primary' : 'text-muted-foreground'}`} />
-          </div>
-          <input
-            type="text"
-            placeholder="Filter logs..."
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search activity..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-accent border border-border focus:bg-card focus:border-primary focus:ring-1 focus:ring-primary rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium transition-all outline-none text-foreground"
+            className="pl-9 pr-8"
           />
           {searchQuery && (
-            <button 
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 top-0 h-9 w-8 hover:bg-transparent"
               onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-3 flex items-center text-[10px] font-bold text-muted-foreground hover:text-primary"
             >
-              Clear
-            </button>
+              <X className="h-3 w-3 text-muted-foreground" />
+            </Button>
           )}
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-4">
         {loading ? (
-          <div className="surface-emerald flex flex-col items-center justify-center py-24 gap-4 rounded-2xl border border-border/80 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Loader2 className="h-8 w-8 text-primary animate-spin" />
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Retrieving logs...</p>
-          </div>
-        ) : logs.length === 0 ? (
-          <div className="surface-neutral flex flex-col items-center justify-center py-24 text-center rounded-2xl border border-border/80 border-dashed shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-            <div className="h-16 w-16 bg-accent rounded-full flex items-center justify-center mb-4">
-              <History className="h-8 w-8 text-muted-foreground/30" />
-            </div>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">No Recent Activity</p>
+            <p className="text-sm text-muted-foreground">Loading your history...</p>
           </div>
         ) : filteredLogs.length === 0 ? (
-          <div className="surface-neutral flex flex-col items-center justify-center py-24 text-center rounded-2xl border border-border/80 border-dashed shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-            <div className="h-16 w-16 bg-accent rounded-full flex items-center justify-center mb-4">
-              <Search className="h-8 w-8 text-muted-foreground/30" />
-            </div>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">No matches for "{searchQuery}"</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed rounded-md bg-muted/20">
+            <History className="h-10 w-10 text-muted-foreground/30 mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">No activities found</p>
           </div>
         ) : (
-          <div className="space-y-0 divide-y divide-border/50 border-t border-border/50 mt-4">
-            <AnimatePresence mode="popLayout">
-              {filteredLogs.map((log) => {
-                const date = new Date(log.createdAt);
-                const isToday = new Date().toDateString() === date.toDateString();
-                
-                let Icon = History;
-                let iconBg = "bg-accent/50";
-                let iconColor = "text-muted-foreground";
+          <div className="border rounded-md divide-y overflow-hidden">
+            {filteredLogs.map((log) => {
+              const date = new Date(log.createdAt);
+              const isToday = new Date().toDateString() === date.toDateString();
+              
+              let Icon = History;
+              const action = log.action.toLowerCase();
+              if (action.includes('login')) Icon = Lock;
+              else if (action.includes('security') || action.includes('password')) Icon = Shield;
+              else if (action.includes('settings')) Icon = Info;
+              else if (action.includes('ai') || action.includes('assistant')) Icon = Sparkles;
+              else if (action.includes('community')) Icon = MessageSquare;
+              else if (action.includes('system')) Icon = ShieldCheck;
 
-                const action = log.action.toLowerCase();
-                if (action.includes('login')) { Icon = Lock; iconBg = "bg-blue-500/10"; iconColor = "text-blue-500"; }
-                else if (action.includes('security') || action.includes('password')) { Icon = Shield; iconBg = "bg-amber-500/10"; iconColor = "text-amber-500"; }
-                else if (action.includes('settings')) { Icon = Info; iconBg = "bg-purple-500/10"; iconColor = "text-purple-500"; }
-                else if (action.includes('ai') || action.includes('assistant')) { Icon = Sparkles; iconBg = "bg-indigo-500/10"; iconColor = "text-indigo-500"; }
-                else if (action.includes('community') || action.includes('post') || action.includes('comment')) { Icon = MessageSquare; iconBg = "bg-emerald-500/10"; iconColor = "text-emerald-500"; }
-                else if (action.includes('system') || action.includes('diagnostic')) { Icon = ShieldCheck; iconBg = "bg-primary/10"; iconColor = "text-primary"; }
-
-                return (
-                  <motion.div 
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    key={log.id} 
-                    className="group flex gap-4 py-5 px-1 hover:bg-accent/20 transition-all"
-                  >
-                    <div className={`w-10 h-10 rounded-xl ${iconBg} ${iconColor} flex items-center justify-center shrink-0 border border-white/10 shadow-sm`}>
-                      <Icon className="h-5 w-5" />
+              return (
+                <div key={log.id} className="flex items-start gap-4 p-4 hover:bg-muted/50 transition-colors group">
+                  <div className="h-9 w-9 rounded-md bg-muted flex items-center justify-center shrink-0">
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold truncate">
+                        {log.action}
+                      </p>
+                      <span className={cn(
+                        "text-[10px] font-medium whitespace-nowrap",
+                        isToday ? "text-primary" : "text-muted-foreground"
+                      )}>
+                        {isToday ? 'Today' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </span>
                     </div>
                     
-                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                      <div className="flex items-center justify-between gap-3 mb-1">
-                        <h4 className="text-sm font-bold text-foreground break-words uppercase tracking-tight">
-                          {typeof log.details === 'object' && log.details.message ? log.details.message : log.action}
-                        </h4>
-                        <span className={`text-[10px] font-bold shrink-0 uppercase tracking-wider ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground/50'}`}>
-                          {isToday ? 'Today' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                        </span>
-                      </div>
-                      
-                      <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-                        {typeof log.details === 'object' 
-                          ? (log.details.changes 
-                              ? `Changed: ${log.details.changes}` 
-                              : (log.details.post || log.details.comment || log.details.message || log.action))
-                          : log.details}
-                      </p>
-                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                      {typeof log.details === 'object' 
+                        ? (log.details.message || log.details.changes || log.action)
+                        : log.details}
+                    </p>
+                  </div>
 
-                    {log.link && (
-                      <div className="flex items-center pl-2">
-                        <div className="p-2 rounded-xl bg-accent text-muted-foreground group-hover:text-primary group-hover:bg-primary/5 transition-all shadow-sm">
-                          <ChevronRight className="h-4 w-4" />
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
+                  {log.link && (
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary transition-colors self-center" />
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

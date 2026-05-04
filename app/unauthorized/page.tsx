@@ -2,6 +2,7 @@ import React from 'react';
 import { Lock, ArrowLeft, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { Metadata } from 'next';
+import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
   title: 'Unauthorized Access',
@@ -12,37 +13,31 @@ export default function UnauthorizedPage() {
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
       <div className="mb-8 relative">
-        <div className="h-24 w-24 bg-red-50 rounded-full flex items-center justify-center animate-pulse">
-          <Lock className="h-10 w-10 text-red-600" />
+        <div className="h-24 w-24 bg-destructive/10 rounded-full flex items-center justify-center">
+          <Lock className="h-10 w-10 text-destructive" />
         </div>
-        <div className="absolute -top-2 -right-2 bg-card p-2 rounded-xl shadow-lg">
-          <ShieldAlert className="h-6 w-6 text-amber-500" />
+        <div className="absolute -top-2 -right-2 bg-background p-2 rounded-md border shadow-sm">
+          <ShieldAlert className="h-6 w-6 text-warning" />
         </div>
       </div>
 
-      <h1 className="text-3xl font-black text-foreground mb-3 tracking-tight">Access Restricted</h1>
-      <p className="text-muted-foreground max-w-sm mx-auto mb-10 font-medium leading-relaxed">
-        This area is reserved for authenticated students. Please log in to view your academic records, schedules, and financial data.
+      <h1 className="text-3xl font-bold tracking-tight text-foreground mb-3">Access Restricted</h1>
+      <p className="text-muted-foreground max-w-sm mx-auto mb-10 leading-relaxed">
+        This area is reserved for authenticated students. Please sign in to view your records and data.
       </p>
 
       <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
-        <Link 
-          href="/" 
-          className="flex-1 bg-foreground text-background font-bold py-3 px-6 rounded-2xl hover:opacity-90 transition-all shadow-xl shadow-primary/10 active:opacity-70 text-sm"
-        >
-          Sign In Now
-        </Link>
-        <Link 
-          href="/about" 
-          className="flex-1 bg-card text-muted-foreground font-bold py-3 px-6 rounded-2xl border border-border hover:bg-accent transition-all text-sm"
-        >
-          Learn More
-        </Link>
+        <Button asChild className="flex-1 h-12">
+            <Link href="/">Sign In</Link>
+        </Button>
+        <Button asChild variant="outline" className="flex-1 h-12">
+            <Link href="/about">About Hub</Link>
+        </Button>
       </div>
 
-      <div className="mt-12 pt-12 border-t border-border w-full max-w-md">
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
-          Security Protocol Active
+      <div className="mt-16 pt-8 border-t w-full max-w-md">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+          Security Active
         </p>
       </div>
     </div>

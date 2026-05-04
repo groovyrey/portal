@@ -11,15 +11,18 @@ import {
   Info, 
   Eye, 
   EyeOff,
-  Code,
   Copy,
-  ChevronDown,
   Terminal
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 export default function SecuritySettings() {
   const queryClient = useQueryClient();
@@ -32,10 +35,8 @@ export default function SecuritySettings() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [debugHtml, setDebugHtml] = useState<string | null>(null);
-  const [showDebug, setShowDebug] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [strength, setStrength] = useState({ score: 0, label: 'Very Weak', color: 'bg-slate-200' });
-  const router = useRouter();
+  const [strength, setStrength] = useState({ score: 0, label: 'Very Weak', variant: 'destructive' as any });
 
   useEffect(() => {
     calculateStrength(newPassword);
@@ -44,24 +45,22 @@ export default function SecuritySettings() {
   const calculateStrength = (pass: string) => {
     let score = 0;
     if (!pass) {
-      setStrength({ score: 0, label: 'None', color: 'bg-slate-200' });
+      setStrength({ score: 0, label: 'None', variant: 'outline' });
       return;
     }
 
     if (pass.length >= 8) score++;
     if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) score++;
     if (/\d/.test(pass)) score++;
-    
-    // Note: Special characters are NOT allowed by the school portal
     const hasSpecial = /[^A-Za-z0-9]/.test(pass);
     if (!hasSpecial && pass.length >= 6) score++;
 
     const results = [
-      { label: 'Very Weak', color: 'bg-red-500' },
-      { label: 'Weak', color: 'bg-orange-500' },
-      { label: 'Medium', color: 'bg-amber-500' },
-      { label: 'Strong', color: 'bg-emerald-500' },
-      { label: 'Very Strong', color: 'bg-blue-600' }
+      { label: 'Very Weak', variant: 'destructive' },
+      { label: 'Weak', variant: 'destructive' },
+      { label: 'Medium', variant: 'outline' },
+      { label: 'Strong', variant: 'default' },
+      { label: 'Very Strong', variant: 'default' }
     ];
 
     setStrength({ score, ...results[score] });
@@ -74,25 +73,25 @@ export default function SecuritySettings() {
     setDebugHtml(null);
 
     if (newPassword !== confirmPassword) {
-      toast.error("New passwords do not match.");
-      setError("New passwords do not match.");
+      toast.error("Passwords don't match.");
+      setError("Passwords don't match.");
       return;
     }
 
     if (/[^A-Za-z0-9]/.test(newPassword)) {
-      toast.error("Special characters are not allowed by the school portal.");
-      setError("Please use only letters and numbers (no @, #, !, etc.).");
+      toast.error("Special characters not allowed.");
+      setError("Please use only letters and numbers.");
       return;
     }
 
     if (strength.score < 2) {
-      toast.error("Password is too weak. Please use a stronger password.");
-      setError("Password strength must be at least Medium.");
+      toast.error("Password is too weak.");
+      setError("Please choose a stronger password.");
       return;
     }
 
     setLoading(true);
-    const updateToast = toast.loading('Updating password...');
+    const updateToast = toast.loading('Updating...');
 
     try {
       const res = await fetch('/api/student/change-password', {
@@ -105,33 +104,24 @@ export default function SecuritySettings() {
 
       if (data.success) {
         setSuccess(true);
-        toast.success('Password updated successfully!', { id: updateToast });
+        toast.success('Password updated!', { id: updateToast });
         
-        // Immediately clear cache and local storage
         queryClient.setQueryData(['student-data'], null);
         queryClient.invalidateQueries({ queryKey: ['student-data'] });
-        queryClient.invalidateQueries({ queryKey: ['student'] });
-        
         localStorage.removeItem('student_data');
         window.dispatchEvent(new Event('local-storage-update'));
 
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-        
         setTimeout(() => {
             window.location.href = '/';
         }, 2000);
       } else {
-        const msg = data.error || 'Failed to update password.';
+        const msg = data.error || 'Failed to update.';
         setError(msg);
-        if (data._debug_html) {
-          setDebugHtml(data._debug_html);
-        }
+        if (data._debug_html) setDebugHtml(data._debug_html);
         toast.error(msg, { id: updateToast });
       }
     } catch (err) {
-      setError('A network error occurred.');
+      setError('Network error.');
       toast.error('Network error.', { id: updateToast });
     } finally {
       setLoading(false);
@@ -140,109 +130,108 @@ export default function SecuritySettings() {
 
   if (success) {
     return (
-      <div className="text-center py-8">
-        <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-green-600">
-          <CheckCircle2 className="h-8 w-8" />
+      <div className="text-center py-12 space-y-4">
+        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto text-primary">
+          <CheckCircle2 className="h-6 w-6" />
         </div>
-        <h2 className="text-xl font-bold text-foreground mb-2">Success!</h2>
-        <p className="text-muted-foreground text-sm font-medium">
-          Your password has been updated. You will be redirected to login.
-        </p>
+        <div className="space-y-1">
+          <h3 className="text-lg font-bold">Success!</h3>
+          <p className="text-sm text-muted-foreground">Redirecting you to login...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1 mb-1.5 block">Current Password</label>
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-md">
+      <div className="space-y-2">
+        <Label htmlFor="current-password">Current Password</Label>
         <div className="relative">
-          <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
+          <Input
+            id="current-password"
             type={showCurrentPassword ? "text" : "password"}
             required
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            maxLength={64}
-            className="w-full bg-accent border border-border rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
-            placeholder="Enter current password"
+            className="pr-10"
+            placeholder="Enter old password"
           />
           <button
             type="button"
             onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
+            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
           >
             {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
       </div>
 
-      <div>
-        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1 mb-1.5 block">New Password</label>
-        <div className="relative">
-          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type={showNewPassword ? "text" : "password"}
-            required
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            maxLength={64}
-            className="w-full bg-accent border border-border rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
-            placeholder="Min 8 characters recommended"
-          />
-          <button
-            type="button"
-            onClick={() => setShowNewPassword(!showNewPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
-          >
-            {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
+      <div className="space-y-3">
+        <div className="space-y-2">
+          <Label htmlFor="new-password">New Password</Label>
+          <div className="relative">
+            <Input
+              id="new-password"
+              type={showNewPassword ? "text" : "password"}
+              required
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="pr-10"
+              placeholder="Min 8 characters recommended"
+            />
+            <button
+              type="button"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+              className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
 
-        {/* Password Strength Indicator */}
-        <div className="mt-2 px-1">
-          <div className="flex justify-between items-center mb-1.5">
-            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Strength</span>
-            <span className={`text-[9px] font-black uppercase tracking-widest transition-colors duration-300 ${strength.color.replace('bg-', 'text-')}`}>
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Strength</Label>
+            <Badge variant={strength.variant} className="text-[9px] h-4">
               {strength.label}
-            </span>
+            </Badge>
           </div>
-          <div className="h-1 w-full flex gap-1.5 mt-1">
+          <div className="h-1.5 w-full flex gap-1 bg-muted rounded-full overflow-hidden">
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
-                className={`h-full flex-1 rounded-full transition-all duration-500 ${
-                  i < strength.score 
-                    ? strength.color 
-                    : 'bg-accent'
-                }`}
+                className={cn(
+                  "h-full flex-1 transition-all",
+                  i < strength.score ? "bg-primary" : "bg-transparent"
+                )}
               />
             ))}
           </div>
-          <p className="mt-2 text-[10px] text-muted-foreground font-medium leading-relaxed flex items-start gap-1.5">
-            <Info className="h-3 w-3 shrink-0 mt-0.5 opacity-60" />
-            Use 8+ characters with mixed case and numbers. <span className="text-red-500 font-bold">Special characters (@, #, !, etc.) are NOT allowed.</span>
-          </p>
+          <div className="flex gap-2 text-[10px] text-muted-foreground leading-relaxed">
+            <Info className="h-3 w-3 shrink-0 mt-0.5" />
+            <p>
+              Use 8+ characters. <span className="font-bold text-destructive">Special characters (@, #, !) are not allowed by the portal.</span>
+            </p>
+          </div>
         </div>
       </div>
 
-      <div>
-        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1 mb-1.5 block">Confirm Password</label>
+      <div className="space-y-2">
+        <Label htmlFor="confirm-password">Confirm Password</Label>
         <div className="relative">
-          <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
+          <Input
+            id="confirm-password"
             type={showConfirmPassword ? "text" : "password"}
             required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            maxLength={64}
-            className="w-full bg-accent border border-border rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+            className="pr-10"
             placeholder="Repeat new password"
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
+            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
           >
             {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -250,67 +239,51 @@ export default function SecuritySettings() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg border border-destructive/20">
-          <AlertCircle className="h-4 w-4 flex-shrink-0" />
-          <p className="text-xs font-medium">{error}</p>
+        <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-md text-xs font-medium">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {error}
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-primary hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground text-primary-foreground font-bold text-sm py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/10 active:scale-[0.98]"
-      >
+      <Button type="submit" disabled={loading} className="w-full">
         {loading ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Updating...
           </>
         ) : (
           'Update Password'
         )}
-      </button>
+      </Button>
 
-      {/* Diagnostic Area */}
-      <AnimatePresence>
-        {debugHtml && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-8 pt-8 border-t border-border"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Terminal className="h-4 w-4" />
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">Diagnostic Data</h4>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(debugHtml);
-                  toast.success('Diagnostic data copied to clipboard');
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-secondary text-muted-foreground rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors border border-border"
-              >
-                <Copy className="h-3 w-3" />
-                Copy HTML
-              </button>
+      {debugHtml && (
+        <div className="pt-6 space-y-4">
+          <Separator />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Terminal className="h-4 w-4" />
+              <span className="text-xs font-semibold uppercase tracking-wider">Debug Info</span>
             </div>
-            
-            <p className="text-[10px] text-muted-foreground font-medium mb-3 leading-relaxed">
-              The school portal returned the following response. Copy this data and share it with support if the issue persists.
-            </p>
-            
-            <div className="relative group">
-              <textarea
-                readOnly
-                value={debugHtml}
-                className="w-full h-48 bg-muted text-foreground text-[10px] font-mono p-4 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none custom-scrollbar"
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                navigator.clipboard.writeText(debugHtml);
+                toast.success('Copied');
+              }}
+              className="h-7 text-[10px]"
+            >
+              <Copy className="mr-1.5 h-3 w-3" />
+              Copy Output
+            </Button>
+          </div>
+          <textarea
+            readOnly
+            value={debugHtml}
+            className="w-full h-32 bg-muted text-[10px] font-mono p-3 rounded-md border resize-none focus:outline-none"
+          />
+        </div>
+      )}
     </form>
   );
 }

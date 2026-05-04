@@ -10,6 +10,8 @@ import LottieAnimation from '@/components/ui/LottieAnimation';
 import Skeleton from '@/components/ui/Skeleton';
 import { useStudent } from '@/lib/hooks';
 import { GraduationCap, ArrowLeft, RefreshCcw, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 type ExtendedGrade = SubjectGrade & { semester: string };
 
@@ -35,7 +37,7 @@ export default function GradesPage() {
   const calculateStats = async () => {
     if (!student || !student.availableReports || isCalculating) return;
     setIsCalculating(true);
-    const statsToast = toast.loading('Aggregating academic data...');
+    const statsToast = toast.loading('Getting your grades...');
     let gathered: ExtendedGrade[] = [];
 
     try {
@@ -102,10 +104,10 @@ export default function GradesPage() {
 
       setAllGrades(unique);
       localStorage.setItem('all_grades_cache', JSON.stringify(unique));
-      toast.success('Analytics updated!', { id: statsToast });
+      toast.success('Grades updated!', { id: statsToast });
     } catch (err) {
       console.error('Failed to aggregate grades', err);
-      toast.error('Failed to aggregate data.', { id: statsToast });
+      toast.error('Failed to get your grades.', { id: statsToast });
     } finally {
       setIsCalculating(false);
     }
@@ -113,25 +115,22 @@ export default function GradesPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-5xl mx-auto space-y-8">
-          <div className="flex justify-between items-center">
-            <Skeleton className="h-10 w-48" />
-            <Skeleton className="h-10 w-10 circular" />
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <div className="flex items-center justify-between space-y-2">
+          <Skeleton className="h-9 w-[150px]" />
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-9 w-[100px]" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Skeleton className="h-28 w-full rounded-xl" />
-            <Skeleton className="h-28 w-full rounded-xl" />
-            <Skeleton className="h-28 w-full rounded-xl" />
-          </div>
-          <div className="space-y-4">
-            {[1, 2].map((i) => (
-              <div key={i} className="surface-neutral rounded-xl border border-border/50 p-6 space-y-4">
-                <Skeleton className="h-5 w-48" />
-                <Skeleton className="h-24 w-full" />
-              </div>
-            ))}
-          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <Skeleton className="h-64 md:col-span-4" />
+          <Skeleton className="h-64 md:col-span-3" />
         </div>
       </div>
     );
@@ -144,74 +143,68 @@ export default function GradesPage() {
           animationPath="/animations/error-404.json"
           className="w-56 h-56 mb-4"
         />
-        <h2 className="text-2xl font-black text-foreground mb-2 uppercase tracking-tight">Access Restricted</h2>
-        <p className="text-muted-foreground mb-8 max-w-sm font-bold uppercase text-[10px] tracking-widest leading-relaxed">
-          Sync your portal data from the main dashboard to view scholastic records.
+        <h2 className="text-2xl font-bold tracking-tight">Access Restricted</h2>
+        <p className="text-muted-foreground mb-8 max-w-sm">
+          Please sync your portal data from the dashboard to view your grades.
         </p>
-        <Link href="/" className="px-8 py-3 bg-primary text-primary-foreground font-black rounded-lg shadow-xl hover:opacity-90 transition-all text-xs uppercase tracking-widest active:opacity-70 flex items-center gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Dashboard
-        </Link>
+        <Button asChild variant="outline">
+          <Link href="/">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground pb-20">
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-3">
-             <div className="bg-primary p-2.5 rounded-lg text-primary-foreground">
-               <GraduationCap className="h-6 w-6" />
-             </div>
-             <div>
-               <h1 className="text-2xl font-black text-foreground uppercase tracking-tight leading-none">Scholastic Records</h1>
-               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1.5">Official Registry Overview</p>
-             </div>
-          </div>
-          <button 
+    <div className="flex-1 space-y-8 p-8 pt-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Grades</h2>
+          <p className="text-muted-foreground">
+            Official scholastic records and performance history.
+          </p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button 
             onClick={calculateStats}
             disabled={isCalculating}
-            className={`px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2.5 active:scale-95 shadow-lg ${
-              isCalculating 
-                ? 'bg-muted text-muted-foreground cursor-not-allowed' 
-                : 'bg-foreground text-background hover:opacity-90'
-            }`}
           >
             {isCalculating ? (
               <>
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Syncing...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Updating...
               </>
             ) : (
               <>
-                <RefreshCcw className="h-3 w-3" />
-                Run Analytics
+                <RefreshCcw className="mr-2 h-4 w-4" />
+                Sync Grades
               </>
             )}
-          </button>
+          </Button>
         </div>
+      </div>
 
-        <div className="space-y-10">
-          {allGrades.length > 0 && (
-             <section>
-                <div className="flex items-center gap-2 mb-4 px-1">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Global Analytics</h2>
-                </div>
-                <GradeStats allGrades={allGrades} />
-             </section>
-          )}
+      <Separator />
 
-          <section>
-            <div className="flex items-center gap-2 mb-4 px-1">
-              <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-              <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Semester Breakdown</h2>
+      <div className="space-y-8">
+        {allGrades.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold tracking-tight">Performance Summary</h3>
             </div>
-            <GradesList reports={student.availableReports} />
-          </section>
+            <GradeStats allGrades={allGrades} />
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold tracking-tight">Grade Reports</h3>
+          </div>
+          <GradesList reports={student.availableReports} />
         </div>
-      </main>
+      </div>
     </div>
   );
 }

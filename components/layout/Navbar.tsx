@@ -32,11 +32,14 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ThemeToggle } from '../shared/ThemeToggle';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { APP_VERSION } from '@/lib/version';
 import NotificationDrawer from './NotificationDrawer';
+import Drawer from './Drawer';
 import { useNotificationsQuery, useStudentQuery } from '@/lib/hooks';
+import { cn } from '@/lib/utils';
 import { Notification } from '@/types';
 
 type NavLeaf = {
@@ -227,8 +230,8 @@ export default function Navbar() {
   ];
 
   const workspaceLinks: NavLeaf[] = [
-    { name: 'Study Mode', href: '/study-mode', icon: Monitor, desc: 'Focused Study' },
-    { name: 'Quests', href: '/quests', icon: Trophy, desc: 'Daily Challenges' },
+    { name: 'Study Mode', href: '/study-mode', icon: Monitor, desc: 'Study Room' },
+    { name: 'Quests', href: '/quests', icon: Trophy, desc: 'Daily Tasks' },
   ];
 
   const socialLinks: NavLeaf[] = [
@@ -487,151 +490,118 @@ export default function Navbar() {
       />
 
       {/* Mobile Menu (Drawer) */}
-      <div 
-        className={`fixed inset-0 z-[110] lg:hidden transition-opacity duration-300 ${
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
+      <Drawer
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title="Student Hub"
+        side="right"
       >
-        {/* Overlay */}
-        <div 
-          className="absolute inset-0 bg-black/35"
-          onClick={() => setIsOpen(false)}
-        ></div>
-        
-        {/* Drawer */}
-        <div 
-          className={`absolute right-0 top-0 bottom-0 w-72 bg-card border-l border-border shadow-lg transition-transform duration-300 transform ${
-            isOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
-        >
-          <div className="flex flex-col h-full">
-            <div className="p-4 border-b border-border">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="relative h-5 w-5">
-                    <Image 
-                      src="/logo.png" 
-                      alt="Logo" 
-                      fill
-                      className="object-contain"
-                    />
+        <div className="flex flex-col h-full">
+          <div className="pb-4 border-b border-border">
+            {isLoggedIn && (
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <div className="text-base font-semibold text-foreground leading-tight">
+                    {studentName}
                   </div>
-                  <span className="font-bold text-[10px] uppercase tracking-tight text-muted-foreground">Student Console</span>
-                </div>
-                <button 
-                  onClick={() => setIsOpen(false)}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              
-              {isLoggedIn && (
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col gap-0.5">
-                    <div className="text-base font-bold text-foreground leading-tight">
-                      {studentName}
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className={`h-1.5 w-1.5 rounded-full ${isSyncing ? 'bg-primary animate-pulse' : 'bg-primary'}`}></div>
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
-                        {lastSynced || 'Just now'}
-                      </span>
-                    </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className={`h-2 w-2 rounded-full ${isSyncing ? 'bg-primary animate-pulse' : 'bg-primary'}`}></div>
+                    <span className="text-xs text-muted-foreground">
+                      {lastSynced ? `Updated ${lastSynced}` : 'Just now'}
+                    </span>
                   </div>
-                  
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleManualSync();
-                    }}
-                    disabled={isSyncing}
-                    className={`p-2 rounded-md border transition-colors ${
-                      isSyncing 
-                        ? 'bg-accent border-border text-muted-foreground cursor-not-allowed' 
-                        : 'bg-primary border-primary text-primary-foreground hover:opacity-90'
-                    }`}
-                    title="Manual Sync"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                  </button>
                 </div>
-              )}
-            </div>
-            
-            <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
-              {(isLoggedIn ? navLinks : publicLinks).map((link) => {
-                const Icon = link.icon;
                 
-                if (isNavGroup(link)) {
-                  const isExpanded = link.name === 'Portal' ? isPortalExpanded : link.name === 'Workspace' ? isWorkspaceExpanded : link.name === 'Social' ? isSocialExpanded : isAdminExpanded;
-                  const setIsExpanded = link.name === 'Portal' ? setIsPortalExpanded : link.name === 'Workspace' ? setIsWorkspaceExpanded : link.name === 'Social' ? setIsSocialExpanded : setIsAdminExpanded;
-                  
-                  return (
-                    <div key={link.name} className="space-y-1 py-1">
-                      <button 
-                        onClick={() => setIsExpanded(!isExpanded)}
-                        className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="p-1.5 rounded-md bg-accent">
-                            <Icon className="h-5 w-5" />
-                          </div>
-                          {link.name}
-                        </div>
-                        <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-                      </button>
-                      
-                      {isExpanded && (
-                        <div className="space-y-1 px-2 pb-1">
-                          {link.children.map((child) => {
-                            const ChildIcon = child.icon;
-                            return (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleManualSync();
+                  }}
+                  disabled={isSyncing}
+                  className="h-9 w-9"
+                  title="Update Now"
+                >
+                  <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} />
+                </Button>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex-1 py-4 space-y-1 overflow-y-auto custom-scrollbar">
+            {(isLoggedIn ? navLinks : publicLinks).map((link) => {
+              const Icon = link.icon;
+              
+              if (isNavGroup(link)) {
+                const isExpanded = link.name === 'Portal' ? isPortalExpanded : link.name === 'Workspace' ? isWorkspaceExpanded : link.name === 'Social' ? isSocialExpanded : isAdminExpanded;
+                const setIsExpanded = link.name === 'Portal' ? setIsPortalExpanded : link.name === 'Workspace' ? setIsWorkspaceExpanded : link.name === 'Social' ? setIsSocialExpanded : setIsAdminExpanded;
+                
+                return (
+                  <div key={link.name} className="py-1">
+                    <Button 
+                      variant="ghost"
+                      onClick={() => setIsExpanded(!isExpanded)}
+                      className="w-full justify-between px-3 h-10 font-medium text-muted-foreground hover:text-foreground"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className="h-4 w-4" />
+                        {link.name}
+                      </div>
+                      <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", isExpanded && "rotate-180")} />
+                    </Button>
+                    
+                    {isExpanded && (
+                      <div className="mt-1 ml-4 border-l border-border pl-2 space-y-1">
+                        {link.children.map((child) => {
+                          const ChildIcon = child.icon;
+                          return (
+                            <Button
+                              key={child.name}
+                              variant={isActive(child.href) ? "secondary" : "ghost"}
+                              asChild
+                              className="w-full justify-start h-9 px-3 text-sm"
+                            >
                               <Link
-                                key={child.name}
                                 href={child.href}
                                 onClick={() => setIsOpen(false)}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
-                                  isActive(child.href)
-                                    ? 'text-primary bg-primary/10'
-                                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-                                }`}
                               >
-                                <ChildIcon className={`h-5 w-5 transition-all ${isActive(child.href) ? 'text-primary' : 'text-muted-foreground/40'}`} />
-                                <span className="text-sm font-medium">{child.name}</span>
+                                <ChildIcon className={cn("h-4 w-4 mr-3", isActive(child.href) ? "text-primary" : "text-muted-foreground")} />
+                                {child.name}
                               </Link>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
 
-                return (
+              return (
+                <Button
+                  key={link.name}
+                  variant={isActive(link.href) ? "secondary" : "ghost"}
+                  asChild
+                  className="w-full justify-start h-10 px-3 text-sm"
+                >
                   <Link
-                    key={link.name}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                      isActive(link.href)
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                    }`}
                   >
-                    <Icon className="h-5 w-5" />
+                    <Icon className="h-4 w-4 mr-3" />
                     {link.name}
                   </Link>
-                );
-              })}
-            </div>
+                </Button>
+              );
+            })}
+          </div>
 
-            <div className="p-4 border-t border-border text-center">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">Version {APP_VERSION}</p>
-            </div>
+          <div className="pt-4 border-t border-border mt-auto">
+            <p className="text-[10px] text-center font-medium text-muted-foreground uppercase tracking-wider">Version {APP_VERSION}</p>
           </div>
         </div>
-      </div>
+      </Drawer>
 
       {/* Spacer to push content below fixed navbar */}
       <div className="h-16 w-full"></div>

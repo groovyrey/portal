@@ -2,9 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Info } from 'lucide-react';
+import { ArrowLeft, Info } from 'lucide-react';
 import CreatePostCard from '@/components/community/CreatePostCard';
 import { Student } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function CreatePostPage() {
   const router = useRouter();
@@ -18,34 +20,31 @@ export default function CreatePostPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="max-w-2xl mx-auto p-4 space-y-6">
-        <div className="flex items-center justify-between">
-          <button 
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors group"
-          >
-            <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-            Back to Community
-          </button>
+    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 pb-20">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="flex items-center">
+          <Button variant="ghost" size="sm" onClick={() => router.back()} className="gap-2 -ml-2 text-muted-foreground">
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
         </div>
 
-        <div className="space-y-2">
-          <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">New Post</h1>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Contribute to the LCCians community</p>
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">New Post</h1>
+          <p className="text-sm text-muted-foreground">Share your thoughts with the community.</p>
         </div>
 
-        <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-4 flex gap-3">
-          <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
-            <Info className="h-4 w-4 text-blue-500" />
-          </div>
-          <div className="space-y-1">
-            <h4 className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Guidelines</h4>
-            <p className="text-xs text-blue-600/70 dark:text-blue-400/70 font-medium leading-relaxed">
-              Be respectful and follow our community guidelines. Use Markdown for formatting and LaTeX for mathematical expressions.
-            </p>
-          </div>
-        </div>
+        <Card className="bg-muted/30 border-dashed">
+          <CardContent className="p-4 flex gap-4">
+            <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-xs font-semibold">Guidelines</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Be respectful and helpful. You can use Markdown for formatting and LaTeX for math.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         <CreatePostCard 
           student={student} 

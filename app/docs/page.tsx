@@ -1,10 +1,12 @@
 import React from 'react';
-import { Zap } from 'lucide-react';
+import { Zap, BookOpen, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import fs from 'fs';
 import path from 'path';
 import MarkdownRenderer from '@/components/shared/MarkdownRenderer';
 import { Metadata } from 'next';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 export const metadata: Metadata = {
   title: 'Documentation',
@@ -24,37 +26,45 @@ const DocsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 font-sans">
-      <div className="max-w-7xl mx-auto px-6 py-10">
-
-        
-        <header className="mb-16">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="bg-primary/10 p-2 rounded-xl">
-              <Zap className="h-6 w-6 text-primary" />
+    <div className="min-h-screen bg-background text-foreground pb-20">
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <header className="mb-16 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 p-2.5 rounded-lg border border-primary/20">
+              <BookOpen className="h-6 w-6 text-primary" />
             </div>
-            <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">Official Guide</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-primary">Official Documentation</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 text-foreground uppercase italic">
-            LCC Hub Manual
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl leading-relaxed font-medium">
-            A comprehensive guide to your new intelligent academic ecosystem. This documentation is automatically synchronized with the latest system updates.
-          </p>
-        </header>
-
-        <MarkdownRenderer content={content} />
-
-        <footer className="mt-40 pt-12 border-t border-border flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-primary h-8 w-8 flex items-center justify-center rounded-lg text-white font-black italic">H</div>
-            <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.3em]">
-              LCC Hub &copy; {new Date().getFullYear()} • Intelligence Redefined
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground">
+              Manual & Guide
+            </h1>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Learn how to make the most of your academic ecosystem.
             </p>
           </div>
-          <div className="flex gap-8">
-            <Link href="/disclaimer" className="text-[10px] font-black text-muted-foreground hover:text-primary transition-colors uppercase tracking-[0.2em]">Legal & Privacy</Link>
-            <Link href="/" className="text-[10px] font-black text-muted-foreground hover:text-primary transition-colors uppercase tracking-[0.2em]">Access Portal</Link>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Dashboard
+            </Link>
+          </Button>
+        </header>
+
+        <article className="prose prose-slate dark:prose-invert max-w-none">
+            <MarkdownRenderer content={content} />
+        </article>
+
+        <Separator className="mt-20 mb-8" />
+        
+        <footer className="flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <p className="font-semibold uppercase tracking-widest text-primary">LCC Hub</p>
+            <span>&copy; {new Date().getFullYear()}</span>
+          </div>
+          <div className="flex gap-6">
+            <Link href="/disclaimer" className="hover:text-primary transition-colors font-medium">Privacy Policy</Link>
+            <Link href="/" className="hover:text-primary transition-colors font-medium">Student Portal</Link>
           </div>
         </footer>
       </div>

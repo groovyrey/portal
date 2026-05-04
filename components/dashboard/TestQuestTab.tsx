@@ -10,6 +10,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useStudent } from '@/lib/hooks';
 import QuestMarkdown from '@/components/shared/QuestMarkdown';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from '@/lib/utils';
 
 interface TriviaQuestion {
   category: string;
@@ -19,8 +35,6 @@ interface TriviaQuestion {
   correct_answer: string;
   incorrect_answers: string[];
 }
-
-const TOTAL_QUESTIONS = 10;
 
 const CATEGORIES = [
   { id: 'General', name: 'General', icon: LayoutGrid },
@@ -35,10 +49,10 @@ const CATEGORIES = [
 ];
 
 const DIFFICULTY_CONFIG = [
-  { id: 'easy', name: 'Easy', multiplier: 1, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-  { id: 'medium', name: 'Medium', multiplier: 1.5, color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
-  { id: 'hard', name: 'Hard', multiplier: 2, color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
-  { id: 'extreme', name: 'Extreme', multiplier: 3, color: 'text-purple-600', bg: 'bg-purple-600/10', border: 'border-purple-600/20' },
+  { id: 'easy', name: 'Easy', multiplier: 1 },
+  { id: 'medium', name: 'Medium', multiplier: 1.5 },
+  { id: 'hard', name: 'Hard', multiplier: 2 },
+  { id: 'extreme', name: 'Extreme', multiplier: 3 },
 ];
 
 export default function TestQuestTab() {
@@ -62,15 +76,6 @@ export default function TestQuestTab() {
   const totalQuestions = questions.length || 10;
 
   useEffect(() => {
-    if (currentStats?.level) {
-        if (currentStats.level <= 3) setSelectedDifficulty('easy');
-        else if (currentStats.level <= 10) setSelectedDifficulty('medium');
-        else if (currentStats.level <= 20) setSelectedDifficulty('hard');
-        else setSelectedDifficulty('extreme');
-    }
-  }, [currentStats?.level]);
-
-  useEffect(() => {
     fetchCurrentStats();
   }, [student?.id]);
 
@@ -82,25 +87,16 @@ export default function TestQuestTab() {
         const data = await res.json();
         setCurrentStats(data);
       }
-    } catch (e) {
-      console.error("Failed to fetch current stats");
-    }
+    } catch (e) {}
   };
 
   const academicCategories = (student?.schedule || [])
     .map(s => s.description)
     .filter(desc => desc && desc.length > 5 && !desc.includes('BREAK') && !desc.includes('LUNCH'))
-    .filter((value, index, self) => self.indexOf(value) === index) // Unique
+    .filter((value, index, self) => self.indexOf(value) === index)
     .map(name => ({ id: `acad-${name}`, name, icon: GraduationCap, isAcademic: true }));
 
-  const allCategories = [...CATEGORIES, ...academicCategories];
-
-  const getDifficulty = () => {
-    return selectedDifficulty;
-  };
-
   const startQuest = async (category: string) => {
-    const difficulty = getDifficulty();
     setLoading(true);
     try {
       let excludedQuestions = [];
@@ -109,13 +105,12 @@ export default function TestQuestTab() {
         excludedQuestions = localHistory ? JSON.parse(localHistory) : [];
       } catch (e) {}
 
-      // For Test/Practice mode, we ALWAYS force a new generation and DON'T check server status
       const res = await fetch('/api/quests/daily', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           category, 
-          difficulty,
+          difficulty: selectedDifficulty,
           types: selectedTypes,
           excludedQuestions,
           force: true,
@@ -131,13 +126,13 @@ export default function TestQuestTab() {
         prepareQuestion(data.questions[0]);
       }
     } catch (e) {
-      toast.error("Failed to start test quest");
+      toast.error("Failed to start test");
     } finally {
       setLoading(false);
     }
   };
+
   const prepareQuestion = (question: TriviaQuestion) => {
-    // Note: AI cleanup - remove any accidentally generated markers like ">" or "*"
     const cleanCorrect = question.correct_answer.replace(/^[>*\-\s]+|["']/g, '').trim();
     const cleanIncorrect = (question.incorrect_answers || []).map(ans => 
       ans.replace(/^[>*\-\s]+|["']/g, '').trim()
@@ -150,12 +145,10 @@ export default function TestQuestTab() {
       setShuffledAnswers([]);
       setOpenAnswer("");
     } else if (question.type === 'boolean') {
-      // Force True/False for boolean types if they are missing or mangled
       setShuffledAnswers(['True', 'False']);
       setOpenAnswer("");
     } else {
-      const incorrect = question.incorrect_answers || [];
-      const all = [...incorrect, question.correct_answer].sort(() => Math.random() - 0.5);
+      const all = [...cleanIncorrect, cleanCorrect].sort(() => Math.random() - 0.5);
       setShuffledAnswers(all);
     }
     setSelectedAnswer(null);
@@ -169,7 +162,6 @@ export default function TestQuestTab() {
     
     const currentQuestion = questions[currentIndex];
     let isCorrect = false;
-    let finalAnswer = answer;
 
     if (currentQuestion.type === 'open') {
       setIsEvaluating(true);
@@ -187,52 +179,36 @@ export default function TestQuestTab() {
         isCorrect = evalResult.isCorrect;
         if (evalResult.feedback) setEvaluationFeedback(evalResult.feedback);
       } catch (e) {
-        // Fallback to simple string match if AI fails
         isCorrect = answer.toLowerCase().trim() === currentQuestion.correct_answer.toLowerCase().trim();
-        setEvaluationFeedback(isCorrect ? "Perfect match!" : `Expected: ${currentQuestion.correct_answer}`);
+        setEvaluationFeedback(isCorrect ? "Match!" : `Expected: ${currentQuestion.correct_answer}`);
       } finally {
         setIsEvaluating(false);
       }
-    } else if (currentQuestion.type === 'boolean') {
-      isCorrect = answer.toLowerCase() === currentQuestion.correct_answer.toLowerCase();
-      setEvaluationFeedback(isCorrect ? "Correct assessment!" : `Incorrect. The correct answer was: ${currentQuestion.correct_answer}`);
     } else {
-      isCorrect = answer === currentQuestion.correct_answer;
-      setEvaluationFeedback(isCorrect ? "Correct answer selected!" : `Incorrect. The correct answer was: ${currentQuestion.correct_answer}`);
+      isCorrect = answer.toLowerCase().trim() === currentQuestion.correct_answer.toLowerCase().trim();
+      setEvaluationFeedback(isCorrect ? "Correct!" : `Incorrect. Answer: ${currentQuestion.correct_answer}`);
     }
 
     setIsCurrentCorrect(isCorrect);
     setIsAnswered(true);
-    setSelectedAnswer(finalAnswer);
+    setSelectedAnswer(answer);
     
-    const newScore = isCorrect ? score + 1 : score;
-    const nextIndex = currentIndex + 1;
-    const completed = nextIndex >= totalQuestions;
-
     if (isCorrect) {
+      setScore(s => s + 1);
       toast.success("Correct!");
       saveToLocalHistory(currentQuestion.question);
     } else {
       toast.error("Incorrect!");
     }
-
-    setScore(newScore);
-
-    // Note: In TEST MODE, we DO NOT save progress via PATCH to /api/quests/daily
-    // This keeps the "Daily" record untouched for the real quest.
   };
 
   const nextQuestion = () => {
     const nextIndex = currentIndex + 1;
-    const completed = nextIndex >= totalQuestions;
-
-    if (completed) {
+    if (nextIndex >= totalQuestions) {
       setIsCompleted(true);
     } else {
       setCurrentIndex(nextIndex);
-      if (questions[nextIndex]) {
-        prepareQuestion(questions[nextIndex]);
-      }
+      prepareQuestion(questions[nextIndex]);
     }
   };
 
@@ -245,9 +221,7 @@ export default function TestQuestTab() {
         history = history.slice(0, 50);
         localStorage.setItem('quest_history_local', JSON.stringify(history));
       }
-    } catch (e) {
-      console.error("Local history save failed", e);
-    }
+    } catch (e) {}
   };
 
   const resetTest = () => {
@@ -258,8 +232,9 @@ export default function TestQuestTab() {
   };
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center p-20">
+    <div className="flex flex-col items-center justify-center py-20 gap-4">
       <Loader2 className="animate-spin h-10 w-10 text-primary" />
+      <p className="text-sm text-muted-foreground">Generating test...</p>
     </div>
   );
 
@@ -268,41 +243,34 @@ export default function TestQuestTab() {
     const expectedExp = Math.floor(score * 20 * diffInfo.multiplier);
 
     return (
-      <div className="text-center py-10 space-y-8 max-w-md mx-auto">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <BrainCircuit className="h-16 w-16 text-primary mx-auto" />
-        </motion.div>
-        
+      <div className="text-center py-6 space-y-8 max-w-sm mx-auto">
         <div className="space-y-2">
-            <h2 className="text-2xl font-black uppercase tracking-tight">Practice Over!</h2>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider text-primary">No EXP earned in Test Mode</p>
+            <BrainCircuit className="h-12 w-12 text-primary mx-auto mb-4" />
+            <h2 className="text-2xl font-bold tracking-tight">Test Over!</h2>
+            <p className="text-sm text-muted-foreground">Results from sandbox mode are not saved.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-            <div className="bg-muted/30 p-4 rounded-lg border border-border/50 text-center">
-                <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">Final Test Score</p>
-                <div className="text-2xl font-black text-primary">{score} / {totalQuestions}</div>
-            </div>
-            <div className="bg-muted/30 p-4 rounded-lg border border-border/50 text-center">
-                <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">Expected EXP</p>
-                <div className="text-xl font-black text-emerald-500">+{expectedExp}</div>
-                <div className={`text-[8px] font-black uppercase tracking-wider mt-0.5 ${diffInfo.color}`}>
-                    {diffInfo.name} ({diffInfo.multiplier}x)
-                </div>
-            </div>
+            <Card>
+                <CardHeader className="p-4 pb-2">
+                    <CardDescription className="text-[10px] uppercase font-bold">Score</CardDescription>
+                    <CardTitle className="text-2xl">{score}/{totalQuestions}</CardTitle>
+                </CardHeader>
+            </Card>
+            <Card>
+                <CardHeader className="p-4 pb-2">
+                    <CardDescription className="text-[10px] uppercase font-bold">Potential EXP</CardDescription>
+                    <CardTitle className="text-2xl text-emerald-600">+{expectedExp}</CardTitle>
+                </CardHeader>
+            </Card>
         </div>
 
-        <div className="flex flex-col gap-3">
-            <button 
-                onClick={resetTest}
-                className="w-full py-4 rounded-lg bg-primary text-primary-foreground font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-            >
-                <RefreshCcw className="h-5 w-5" />
-                Retake Another Test
-            </button>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                Test mode results are not saved to your profile.
-            </p>
+        <div className="grid gap-3 pt-4">
+            <Button onClick={resetTest} className="gap-2">
+                <RefreshCcw className="h-4 w-4" />
+                Start New Test
+            </Button>
+            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Practice makes perfect.</p>
         </div>
       </div>
     );
@@ -311,232 +279,172 @@ export default function TestQuestTab() {
   if (questions.length === 0) {
     return (
       <div className="space-y-8">
-        <div className="flex items-center justify-between px-2">
-            <div>
-                <h2 className="text-xl font-black uppercase tracking-tight text-primary">Test Mode</h2>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Sandbox for testing new features</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+                <h3 className="text-xl font-bold tracking-tight text-primary">Sandbox Mode</h3>
+                <p className="text-sm text-muted-foreground">Test features and practice questions.</p>
             </div>
-            <div className="bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20 flex items-center gap-2">
-                <span className="text-[10px] font-black text-primary uppercase tracking-wider">Staff Preview</span>
-                {currentStats && (
-                  <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase ${
-                    DIFFICULTY_CONFIG.find(d => d.id === selectedDifficulty)?.bg || 'bg-amber-500/10'
-                  } ${
-                    DIFFICULTY_CONFIG.find(d => d.id === selectedDifficulty)?.border || 'border-amber-500/20'
-                  } ${
-                    DIFFICULTY_CONFIG.find(d => d.id === selectedDifficulty)?.color || 'text-amber-600'
-                  }`}>
-                    {selectedDifficulty}
-                  </span>
-                )}
-            </div>
+            <Badge variant="outline" className="h-8 self-start sm:self-auto">Staff Access</Badge>
         </div>
 
-        {/* Difficulty Selector */}
-        <div className="px-2 space-y-3">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Practice Difficulty</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {DIFFICULTY_CONFIG.map((diff) => (
-              <button
-                key={diff.id}
-                onClick={() => setSelectedDifficulty(diff.id)}
-                className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${
-                  selectedDifficulty === diff.id
-                    ? `${diff.bg} ${diff.border}`
-                    : 'border-border hover:border-muted-foreground/30'
-                }`}
-              >
-                <span className={`text-[10px] font-black uppercase tracking-wider ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground'}`}>
-                  {diff.name}
-                </span>
-                <span className={`text-[8px] font-bold uppercase tracking-wider mt-0.5 ${selectedDifficulty === diff.id ? diff.color : 'text-muted-foreground/50'}`}>
-                   Multiplier: {diff.multiplier}x
-                </span>
-              </button>
-            ))}
+        <div className="grid gap-6">
+          <div className="space-y-3">
+            <Label className="text-xs uppercase font-bold text-muted-foreground ml-1">Practice Difficulty</Label>
+            <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Select difficulty" />
+              </SelectTrigger>
+              <SelectContent>
+                {DIFFICULTY_CONFIG.map((diff) => (
+                  <SelectItem key={diff.id} value={diff.id}>
+                    <div className="flex items-center justify-between gap-4 w-full">
+                      <span>{diff.name}</span>
+                      <span className="text-[10px] text-muted-foreground">({diff.multiplier}x)</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </div>
 
-        {/* Question Type Selector */}
-        <div className="px-2 space-y-3">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Question Types</h3>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { id: 'multiple', name: 'Multiple Choice', icon: LayoutGrid },
-              { id: 'boolean', name: 'True/False', icon: Zap },
-              { id: 'open', name: 'Open Ended', icon: BrainCircuit }
-            ].map((type) => (
-              <button
-                key={type.id}
-                onClick={() => {
-                  setSelectedTypes(prev => {
-                    if (prev.includes(type.id)) {
-                      if (prev.length === 1) return prev; // Keep at least one
-                      return prev.filter(t => t !== type.id);
-                    }
-                    return [...prev, type.id];
-                  });
-                }}
-                className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${
-                  selectedTypes.includes(type.id)
-                    ? 'bg-primary/10 border-primary/40'
-                    : 'border-border hover:border-muted-foreground/30'
-                }`}
-              >
-                <type.icon className={`h-4 w-4 mb-1 ${selectedTypes.includes(type.id) ? 'text-primary' : 'text-muted-foreground'}`} />
-                <span className={`text-[10px] font-black uppercase tracking-wider ${selectedTypes.includes(type.id) ? 'text-primary' : 'text-muted-foreground'}`}>
-                  {type.name}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {academicCategories.length > 0 && (
-          <div className="space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Academic Subjects</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {academicCategories.map(cat => (
-                <button 
-                  key={cat.id} 
-                  onClick={() => startQuest(cat.name)} 
-                  className="bg-muted/10 p-6 rounded-lg border border-primary/20 bg-primary/5 hover:border-primary/50 transition-all group flex flex-col items-center gap-3"
-                >
-                  <cat.icon className="h-8 w-8 transition-colors text-primary" />
-                  <span className="font-bold text-[10px] sm:text-xs uppercase tracking-wider text-center">{cat.name}</span>
-                </button>
+          <div className="space-y-3">
+            <Label className="text-xs uppercase font-bold text-muted-foreground ml-1">Question Types</Label>
+            <div className="flex flex-wrap gap-x-8 gap-y-4 p-4 rounded-lg border bg-muted/20">
+              {[
+                { id: 'multiple', name: 'Choices', icon: LayoutGrid },
+                { id: 'boolean', name: 'T/F', icon: Zap },
+                { id: 'open', name: 'Open', icon: BrainCircuit }
+              ].map((type) => (
+                <div key={type.id} className="flex items-center space-x-2.5">
+                  <Checkbox 
+                    id={type.id} 
+                    checked={selectedTypes.includes(type.id)}
+                    onCheckedChange={(checked) => {
+                      setSelectedTypes(prev => {
+                        if (!checked) {
+                          if (prev.length === 1) return prev;
+                          return prev.filter(t => t !== type.id);
+                        }
+                        return [...prev, type.id];
+                      });
+                    }}
+                  />
+                  <Label 
+                    htmlFor={type.id}
+                    className="text-sm font-medium leading-none cursor-pointer flex items-center gap-2"
+                  >
+                    <type.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                    {type.name}
+                  </Label>
+                </div>
               ))}
             </div>
           </div>
-        )}
-
-        <div className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">General Categories</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {CATEGORIES.map(cat => (
-              <button 
-                key={cat.id} 
-                onClick={() => startQuest(cat.name)} 
-                className="bg-muted/10 p-6 rounded-lg border border-border/50 hover:border-primary/50 transition-all group flex flex-col items-center gap-3"
-              >
-                <cat.icon className="h-8 w-8 transition-colors text-muted-foreground group-hover:text-primary" />
-                <span className="font-bold text-[10px] sm:text-xs uppercase tracking-wider text-center">{cat.name}</span>
-              </button>
-            ))}
-          </div>
         </div>
+
+        {[
+          { label: 'Academic Subjects', categories: academicCategories },
+          { label: 'General Knowledge', categories: CATEGORIES }
+        ].map((section, idx) => (
+          section.categories.length > 0 && (
+            <div key={idx} className="space-y-4">
+              <Separator />
+              <Label className="text-xs uppercase font-bold text-muted-foreground ml-1">{section.label}</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {section.categories.map(cat => (
+                  <Button 
+                    key={cat.id} 
+                    variant="outline"
+                    onClick={() => startQuest(cat.name)} 
+                    className="h-auto p-4 sm:p-6 flex-col gap-3 border-primary/20 bg-primary/5 hover:bg-primary/10 whitespace-normal"
+                  >
+                    <cat.icon className="h-6 w-6 text-primary" />
+                    <span className="text-[10px] sm:text-xs font-bold text-center line-clamp-2">{cat.name}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )
+        ))}
       </div>
     );
   }
 
   const currentQ = questions[currentIndex];
-
-  if (!currentQ) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (!currentQ) return null;
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center px-2">
+      <div className="flex justify-between items-center px-1">
         <div className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-amber-500" />
-          <span className="text-sm font-black uppercase tracking-wider">Test Run {currentIndex + 1}/{totalQuestions}</span>
+          <Zap className="h-4 w-4 text-amber-500" />
+          <span className="text-xs font-bold uppercase tracking-wider text-amber-600">Test Run: {currentIndex + 1} / {totalQuestions}</span>
         </div>
-        <div className="text-xs font-bold text-muted-foreground uppercase">Practice Score: {score}</div>
+        <Badge variant="outline" className="font-mono">Score: {score}</Badge>
       </div>
 
-      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-        <motion.div className="h-full bg-primary" animate={{ width: `${(currentIndex / totalQuestions) * 100}%` }} />
-      </div>
+      <Progress value={(currentIndex / totalQuestions) * 100} className="h-1" />
 
-      <div className="bg-card p-6 sm:p-8 rounded-lg border border-primary/20 bg-primary/5 space-y-8">
-        <QuestMarkdown content={currentQ.question} className="text-xl sm:text-2xl font-bold text-center leading-tight flex justify-center" />
+      <div className="space-y-8 pt-4">
+        <div className="text-lg md:text-xl font-bold text-center leading-tight">
+            <QuestMarkdown content={currentQ.question} />
+        </div>
         
         {currentQ.type === 'open' ? (
           <div className="space-y-4">
-            <input 
-              type="text"
+            <Input 
               value={openAnswer}
               onChange={(e) => setOpenAnswer(e.target.value)}
               disabled={isAnswered || isEvaluating}
-              placeholder="Type your answer here..."
-              className="w-full p-4 rounded-lg bg-background border border-border font-bold focus:border-primary outline-none transition-all"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && openAnswer.trim() && !isAnswered) {
-                  handleAnswer(openAnswer);
-                }
-              }}
+              placeholder="Type test answer..."
+              className="h-12 text-center"
+              onKeyDown={(e) => e.key === 'Enter' && openAnswer.trim() && !isAnswered && handleAnswer(openAnswer)}
             />
             {!isAnswered && (
-              <button
-                onClick={() => handleAnswer(openAnswer)}
-                disabled={isAnswered || isEvaluating || !openAnswer.trim()}
-                className="w-full py-4 rounded-lg bg-primary text-primary-foreground font-black uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isEvaluating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Submit Answer'}
-              </button>
+              <Button onClick={() => handleAnswer(openAnswer)} disabled={!openAnswer.trim() || isEvaluating} className="w-full h-12">
+                {isEvaluating ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                Evaluate
+              </Button>
             )}
           </div>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid gap-2">
             {shuffledAnswers.map((ans, i) => (
-              <button
+              <Button
                 key={i}
-                onClick={() => handleAnswer(ans)}
+                variant={isAnswered ? (ans === currentQ.correct_answer ? "default" : selectedAnswer === ans ? "destructive" : "outline") : "outline"}
                 disabled={isAnswered}
-                className={`p-4 rounded-lg border text-left font-bold transition-all ${
-                  isAnswered 
-                    ? ans === currentQ.correct_answer 
-                      ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-600'
-                      : selectedAnswer === ans ? 'bg-rose-500/10 border-rose-500/50 text-rose-600' : 'opacity-40 grayscale border-border'
-                    : 'border-border hover:border-primary hover:bg-primary/5'
-                }`}
+                onClick={() => handleAnswer(ans)}
+                className={cn(
+                  "h-auto py-4 px-6 justify-start text-left text-sm whitespace-normal",
+                  isAnswered && ans !== currentQ.correct_answer && selectedAnswer !== ans && "opacity-50"
+                )}
               >
                 <QuestMarkdown content={ans} />
-              </button>
+              </Button>
             ))}
           </div>
         )}
 
-        {isAnswered && (
-            <div 
-                className={`p-4 rounded-lg border flex flex-col gap-2 ${
-                    isCurrentCorrect
-                    ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700'
-                    : 'bg-rose-500/5 border-rose-500/20 text-rose-700'
-                }`}
-            >
-                <div className="flex items-center gap-2">
-                    {isCurrentCorrect ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                    <span className="text-[10px] font-black uppercase tracking-wider">
-                        {isCurrentCorrect ? 'Accepted' : 'Rejected'}
-                    </span>
-                </div>
-                <div className="text-sm font-medium leading-relaxed">
-                    "<QuestMarkdown content={evaluationFeedback || (isCurrentCorrect ? 'Correct!' : 'Incorrect.')} className="inline" />"
-                </div>
-            </div>
-        )}
+        <AnimatePresence>
+          {isAnswered && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn("p-4 rounded-md border text-sm", isCurrentCorrect ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-destructive/5 border-destructive/10 text-destructive")}>
+                  <p className="font-medium leading-relaxed italic">"{evaluationFeedback}"</p>
+              </motion.div>
+          )}
+        </AnimatePresence>
 
         {isAnswered && !isEvaluating && (
-          <button
-            onClick={nextQuestion}
-            className="w-full py-4 rounded-lg bg-foreground text-background font-black uppercase tracking-wider flex items-center justify-center gap-2"
-          >
-            {currentIndex + 1 >= totalQuestions ? 'Finish Practice' : 'Continue'}
-            <ArrowRight className="h-5 w-5" />
-          </button>
+          <div className="space-y-4">
+            <Button onClick={nextQuestion} size="lg" className="w-full gap-2">
+              {currentIndex + 1 >= totalQuestions ? 'Complete Practice' : 'Continue'}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={resetTest} className="w-full text-[10px] uppercase font-bold">
+              Exit Sandbox
+            </Button>
+          </div>
         )}
-      </div>
-      
-      <div className="text-center">
-        <button onClick={resetTest} className="text-[10px] font-black text-muted-foreground hover:text-rose-500 uppercase tracking-widest transition-colors">
-            Exit Test Mode
-        </button>
       </div>
     </div>
   );

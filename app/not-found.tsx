@@ -20,9 +20,9 @@ export default function NotFound() {
         </div>
 
         {/* Text Content */}
-        <h1 className="text-3xl font-bold text-foreground mb-3 tracking-tight">Page Not Found</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-3 tracking-tight">Lost?</h1>
         <p className="text-muted-foreground font-medium text-sm leading-relaxed mb-10">
-          The page you are looking for might have been moved, deleted, or never existed in the first place.
+          We can't find that page.
         </p>
 
         {/* Action Buttons */}
@@ -32,7 +32,7 @@ export default function NotFound() {
             className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs tracking-tight py-4 rounded-2xl transition-all shadow-lg shadow-primary/20 active:opacity-70"
           >
             <Home className="h-4 w-4" />
-            Back to Dashboard
+            Go Home
           </Link>
           
           <div className="grid grid-cols-2 gap-3">

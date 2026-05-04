@@ -7,8 +7,10 @@ import {
   CreditCard, 
   ShieldCheck 
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { Student } from '@/types';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 
 interface NotificationsTabProps {
   student: Student;
@@ -38,7 +40,7 @@ export default function NotificationsTab({ student, updateSettings }: Notificati
   };
 
   const handleClassReminderToggle = async (enabled: boolean) => {
-    classRemindersEnabled;
+    setClassRemindersEnabled(enabled);
     await updateSettings({ ...student.settings, classReminders: enabled });
   };
 
@@ -48,98 +50,58 @@ export default function NotificationsTab({ student, updateSettings }: Notificati
   };
 
   return (
-    <div className="space-y-6">
-      <div className="surface-cyan flex items-center gap-4 p-6 rounded-2xl border border-border/80 shadow-sm overflow-hidden relative group ring-1 ring-black/5 dark:ring-white/10">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-accent rounded-full -mr-16 -mt-16 group-hover:bg-primary/10 transition duration-700 opacity-50"></div>
-        <div className="w-14 h-14 rounded-2xl bg-accent border border-border shrink-0 flex items-center justify-center relative z-10 shadow-sm">
-          <Bell className="h-7 w-7 text-primary" />
-        </div>
-        <div className="relative z-10">
-          <h3 className="font-bold text-lg text-foreground leading-tight">Notification Preferences</h3>
-          <p className="text-sm text-muted-foreground font-medium mt-1">Manage how and when you receive updates.</p>
-        </div>
+    <div className="space-y-8">
+      <div className="space-y-1">
+        <h4 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Notifications</h4>
+        <p className="text-sm text-muted-foreground">
+          Manage how you receive updates and reminders.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <SettingsToggle 
-          icon={<Bell />} 
+      <div className="grid gap-6">
+        <SettingsItem 
           title="App Alerts" 
-          description="Grades and academic activities"
+          description="Updates about grades and school activities"
           enabled={appNotifsEnabled}
           onToggle={handleAppNotifToggle}
         />
-        <SettingsToggle 
-          icon={<Calendar />} 
+        <Separator />
+        <SettingsItem 
           title="Schedule Reminders" 
-          description="Daily morning schedule summary"
+          description="Daily summary of your classes"
           enabled={classRemindersEnabled}
           onToggle={handleClassReminderToggle}
         />
-        <SettingsToggle 
-          icon={<CreditCard />} 
-          title="Financial Alerts" 
-          description="Payment due date reminders"
+        <Separator />
+        <SettingsItem 
+          title="Payment Alerts" 
+          description="Reminders for upcoming due dates"
           enabled={paymentRemindersEnabled}
           onToggle={handlePaymentReminderToggle}
         />
       </div>
 
-      <div className="surface-emerald p-5 rounded-2xl border border-emerald-500/20 flex items-start gap-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-        <div className="p-2.5 bg-accent dark:bg-emerald-950/30 rounded-xl shadow-sm shrink-0 border border-emerald-500/20">
-          <ShieldCheck className="h-5 w-5 text-emerald-500" />
-        </div>
-        <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium leading-relaxed">
-          Privacy is our priority. We only send critical alerts related to your academic progress and important campus announcements.
+      <div className="rounded-md border bg-muted/50 p-4 flex items-start gap-3">
+        <ShieldCheck className="h-5 w-5 text-muted-foreground mt-0.5" />
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          We only send important notifications related to your academics.
         </p>
       </div>
     </div>
   );
 }
 
-function SettingsToggle({ icon, title, description, enabled, onToggle }: { icon: React.ReactNode, title: string, description: string, enabled: boolean, onToggle?: (val: boolean) => void }) {
-  const [isOn, setIsOn] = useState(enabled);
-
-  useEffect(() => {
-    setIsOn(enabled);
-  }, [enabled]);
-
-  const handleToggle = () => {
-    const nextVal = !isOn;
-    if (onToggle) {
-      onToggle(nextVal);
-    } else {
-      setIsOn(nextVal);
-    }
-  };
-
+function SettingsItem({ title, description, enabled, onToggle }: { title: string, description: string, enabled: boolean, onToggle: (val: boolean) => void }) {
   return (
-    <button 
-      onClick={handleToggle}
-      className={`group w-full flex items-center justify-between p-5 rounded-2xl border transition-all duration-300 ${
-        isOn
-          ? 'surface-sky border-primary/40 shadow-sm ring-1 ring-black/5 dark:ring-white/10'
-          : 'surface-neutral border-border text-muted-foreground hover:border-border hover:shadow-sm'
-      }`}
-    >
-      <div className="flex items-center gap-4">
-        <div className={`h-11 w-11 rounded-xl flex items-center justify-center border transition-all shadow-sm ${
-          isOn ? 'bg-primary border-primary text-primary-foreground' : 'bg-accent dark:bg-card border-border text-muted-foreground'
-        }`}>
-          {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 20 }) : icon}
-        </div>
-        <div className="text-left">
-          <p className="text-sm font-bold text-foreground leading-none mb-1">{title}</p>
-          <p className="text-[11px] font-medium text-muted-foreground leading-tight">{description}</p>
-        </div>
+    <div className="flex items-center justify-between gap-4">
+      <div className="space-y-0.5">
+        <Label className="text-sm font-semibold">{title}</Label>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </div>
-      <div className={`w-11 h-6 rounded-full relative transition-colors shadow-inner shrink-0 ${isOn ? 'bg-primary' : 'bg-muted'}`}>
-        <div
-          style={{ transform: `translateX(${isOn ? 22 : 3}px)` }}
-          className={`absolute top-1.5 w-3 h-3 rounded-full shadow-sm transition-colors ${
-            isOn ? 'bg-primary-foreground' : 'bg-white'
-          }`}
-        />
-      </div>
-    </button>
+      <Switch 
+        checked={enabled} 
+        onCheckedChange={onToggle}
+      />
+    </div>
   );
 }

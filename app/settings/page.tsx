@@ -14,13 +14,13 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import Link from 'next/link';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { useStudent } from '@/lib/hooks';
-import { AnimatePresence } from 'framer-motion';
 import { APP_VERSION } from '@/lib/version';
 import TabbedPageLayout from '@/components/layout/TabbedPageLayout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 import { Student } from '@/types';
 // Tab Components
@@ -51,8 +51,8 @@ export default function SettingsPage() {
     }
   }, [searchParams]);
 
-  const handleTabChange = (tabId: SettingsTab) => {
-    setActiveTab(tabId);
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId as SettingsTab);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tabId);
     router.replace(`${pathname}?${params.toString()}`);
@@ -82,11 +82,11 @@ export default function SettingsPage() {
       });
 
       if (!res.ok) throw new Error('Failed to update settings');
-      toast.success('Preferences Updated');
+      toast.success('Settings updated');
     } catch {
       localStorage.setItem('student_data', JSON.stringify(previousStudent));
       window.dispatchEvent(new Event('local-storage-update'));
-      toast.error('Failed to sync settings');
+      toast.error('Failed to save settings');
     }
   };
 
@@ -99,7 +99,7 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ['student-data'] });
       
       window.dispatchEvent(new Event('local-storage-update'));
-      toast.success('Session Terminated');
+      toast.success('Logged out');
       router.push('/');
     } catch (e) {
       console.error('Logout failed', e);
@@ -110,63 +110,68 @@ export default function SettingsPage() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <Loader2 className="h-10 w-10 text-primary animate-spin" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Configuring Environment...</p>
+        <p className="text-xs font-medium text-muted-foreground">Loading settings...</p>
       </div>
     );
   }
 
   const tabs = [
-    { id: 'profile', name: 'Profile', icon: User, desc: 'Identity' },
-    { id: 'security', name: 'Security', icon: Lock, desc: 'Authentication' },
-    { id: 'notifications', name: 'Alerts', icon: Bell, desc: 'Signals' },
-    { id: 'privacy', name: 'Privacy', icon: Eye, desc: 'Visibility' },
-    { id: 'activity', name: 'History', icon: History, desc: 'Logs' },
-    { id: 'support', name: 'Support', icon: LifeBuoy, desc: 'Assistance' },
+    { id: 'profile', name: 'Profile', icon: User, desc: 'Personal info' },
+    { id: 'security', name: 'Security', icon: Lock, desc: 'Login safety' },
+    { id: 'notifications', name: 'Alerts', icon: Bell, desc: 'Update settings' },
+    { id: 'privacy', name: 'Privacy', icon: Eye, desc: 'App visibility' },
+    { id: 'activity', name: 'History', icon: History, desc: 'Login logs' },
+    { id: 'support', name: 'Support', icon: LifeBuoy, desc: 'Get help' },
   ] as const;
 
   return (
     <TabbedPageLayout
-      title="Terminal"
+      title="Settings"
       icon={Settings}
-      subtitle="Settings & Preferences"
+      subtitle="Manage your preferences"
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={handleTabChange}
       headerRight={
-        <button 
+        <Button 
+          variant="ghost" 
+          size="sm" 
           onClick={handleLogout} 
-          className="flex items-center gap-2 px-3 py-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10"
         >
-          <LogOut className="h-4 w-4" />
-          <span className="text-[10px] font-black uppercase tracking-widest">Sign Out</span>
-        </button>
+          <LogOut className="mr-2 h-4 w-4" />
+          Log Out
+        </Button>
       }
       sidebarFooter={
         <div className="space-y-4">
-          <button 
+          <Button 
+            variant="outline" 
+            className="w-full justify-between hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 border-border group"
             onClick={handleLogout}
-            className="w-full flex items-center justify-between p-4 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 rounded-lg transition-all text-red-600 font-black group"
           >
-            <div className="flex items-center gap-3">
-              <LogOut size={16} />
-              <span className="text-[10px] uppercase tracking-widest">Terminate Session</span>
+            <div className="flex items-center gap-2">
+              <LogOut className="h-4 w-4" />
+              <span>Log Out</span>
             </div>
-            <ChevronRight className="h-3.5 w-3.5 opacity-30 group-hover:opacity-100 transition-opacity" />
-          </button>
+            <ChevronRight className="h-4 w-4 opacity-30 group-hover:opacity-100 transition-opacity" />
+          </Button>
           <div className="px-1 text-center">
-            <p className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest">Control Center v{APP_VERSION}</p>
+            <p className="text-[10px] text-muted-foreground/40 font-medium">Version {APP_VERSION}</p>
           </div>
         </div>
       }
     >
-      <div className="surface-neutral rounded-xl border border-border/50 p-6 md:p-8 shadow-sm ring-1 ring-black/5 min-h-[500px]">
-        {activeTab === 'profile' && <ProfileTab student={student} updateSettings={updateSettings} />}
-        {activeTab === 'security' && <SecurityTab />}
-        {activeTab === 'notifications' && <NotificationsTab student={student} updateSettings={updateSettings} />}
-        {activeTab === 'privacy' && <PrivacyTab student={student} updateSettings={updateSettings} />}
-        {activeTab === 'activity' && <ActivityTab />}
-        {activeTab === 'support' && <SupportTab />}
-      </div>
+      <Card className="min-h-[500px]">
+        <CardContent className="p-6 md:p-8">
+          {activeTab === 'profile' && <ProfileTab student={student} updateSettings={updateSettings} />}
+          {activeTab === 'security' && <SecurityTab />}
+          {activeTab === 'notifications' && <NotificationsTab student={student} updateSettings={updateSettings} />}
+          {activeTab === 'privacy' && <PrivacyTab student={student} updateSettings={updateSettings} />}
+          {activeTab === 'activity' && <ActivityTab />}
+          {activeTab === 'support' && <SupportTab />}
+        </CardContent>
+      </Card>
     </TabbedPageLayout>
   );
 }

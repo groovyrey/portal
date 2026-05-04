@@ -24,7 +24,7 @@ export default function PostReviewResultModal({ isOpen, onClose, result, isError
   const isApproved = result?.decision === 'APPROVED';
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} noPadding>
       <div className="p-8 flex flex-col items-center text-center">
         {/* Icon */}
         <div className={`mb-6 p-4 rounded-2xl ${

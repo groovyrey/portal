@@ -2,7 +2,9 @@
 
 import React, { useMemo } from 'react';
 import { Student } from '@/types';
-import { Clock, Calendar, BookOpen, TrendingUp, CreditCard } from 'lucide-react';
+import { Clock, Calendar, BookOpen, TrendingUp, CreditCard, ChevronRight } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface DashboardInsightsProps {
   student: Student;
@@ -34,13 +36,8 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
     const getDayFromTime = (timeStr: string) => {
       const dayAbbr = timeStr.substring(0, 3).toUpperCase();
       const map: Record<string, string> = {
-        MON: 'Monday',
-        TUE: 'Tuesday',
-        WED: 'Wednesday',
-        THU: 'Thursday',
-        FRI: 'Friday',
-        SAT: 'Saturday',
-        SUN: 'Sunday'
+        MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday', THU: 'Thursday',
+        FRI: 'Friday', SAT: 'Saturday', SUN: 'Sunday'
       };
       return map[dayAbbr];
     };
@@ -49,7 +46,6 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
       const day = getDayFromTime(item.time);
       const timeRange = item.time.match(/(\d+:\d+\s*(?:AM|PM))\s*-\s*(\d+:\d+\s*(?:AM|PM))/i);
       if (!timeRange || day !== currentDay) return false;
-
       const startTime = parseTime(timeRange[1]);
       return startTime !== null && startTime > currentHour;
     });
@@ -65,25 +61,14 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
 
   const weeklyLoad = useMemo(() => {
     const load: Record<string, number> = {
-      Monday: 0,
-      Tuesday: 0,
-      Wednesday: 0,
-      Thursday: 0,
-      Friday: 0,
-      Saturday: 0,
-      Sunday: 0
+      Monday: 0, Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0, Saturday: 0, Sunday: 0
     };
 
     schedule.forEach((item) => {
       const dayAbbr = item.time.substring(0, 3).toUpperCase();
       const map: Record<string, string> = {
-        MON: 'Monday',
-        TUE: 'Tuesday',
-        WED: 'Wednesday',
-        THU: 'Thursday',
-        FRI: 'Friday',
-        SAT: 'Saturday',
-        SUN: 'Sunday'
+        MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday', THU: 'Thursday',
+        FRI: 'Friday', SAT: 'Saturday', SUN: 'Sunday'
       };
       const day = map[dayAbbr];
       if (!day) return;
@@ -110,7 +95,6 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
   }, [schedule]);
 
   const maxLoad = Math.max(...Object.values(weeklyLoad), 1);
-
   const totalUnits = useMemo(() => {
     return schedule.reduce((acc, item) => acc + (parseFloat(item.units) || 0), 0);
   }, [schedule]);
@@ -125,89 +109,100 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <section className="surface-sky relative overflow-hidden rounded-lg border border-border/80 p-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-        <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-blue-400/10 blur-3xl dark:bg-blue-400/5" />
-        <div className="mb-3 flex items-center gap-2">
+      <Card>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-sm font-medium">Up Next</CardTitle>
           <Clock className="h-4 w-4 text-muted-foreground" />
-          <p className="text-xs text-muted-foreground">Next class</p>
-        </div>
-
-        {nextClass ? (
-          <>
-            <h3 className="text-lg font-semibold leading-tight">{nextClass.subject.split(' - ')[0]}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{nextClass.subject.split(' - ')[1] || 'Lecture'}</p>
-            <div className="mt-3 space-y-1 text-sm">
-              <p className="flex items-center gap-2">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                {nextClass.time.split('-')[0].trim()}
-              </p>
-              <p className="flex items-center gap-2">
-                <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
-                {nextClass.room || 'TBA'}
-              </p>
-            </div>
-          </>
-        ) : (
-          <div>
-            <h3 className="text-lg font-semibold">No more classes today</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Enjoy your break.</p>
-          </div>
-        )}
-      </section>
-
-      <section className="surface-emerald relative overflow-hidden rounded-lg border border-border/80 p-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-        <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-emerald-400/10 blur-3xl dark:bg-emerald-400/5" />
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">Weekly load</p>
-          </div>
-          <p className="text-xs text-muted-foreground">{Math.round(Object.values(weeklyLoad).reduce((a, b) => a + b, 0))} hrs</p>
-        </div>
-
-        <div className="flex h-24 items-end gap-2">
-          {DAYS.map((day) => {
-            const todayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
-            const isToday = day === DAYS[todayIndex];
-            return (
-              <div key={day} className="flex flex-1 flex-col items-center gap-1">
-                <div className="relative h-20 w-full overflow-hidden rounded-sm bg-muted/50">
-                  <div
-                    className={`absolute bottom-0 left-0 right-0 ${isToday ? 'bg-primary' : 'bg-primary/50'}`}
-                    style={{ height: `${(weeklyLoad[day] / maxLoad) * 100}%` }}
-                  />
-                </div>
-                <span className="text-[10px] text-muted-foreground">{day.slice(0, 3)}</span>
+        </CardHeader>
+        <CardContent>
+          {nextClass ? (
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-base font-semibold leading-none">{nextClass.subject.split(' - ')[0]}</h3>
+                <p className="mt-1.5 text-xs text-muted-foreground line-clamp-1">{nextClass.subject.split(' - ')[1] || 'Class'}</p>
               </div>
-            );
-          })}
-        </div>
-      </section>
+              <div className="flex flex-col gap-1.5 pt-1">
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Calendar className="mr-2 h-3.5 w-3.5" />
+                  {nextClass.time.split('-')[0].trim()}
+                </div>
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <BookOpen className="mr-2 h-3.5 w-3.5" />
+                  {nextClass.room || 'TBA'}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="py-2">
+              <p className="text-sm font-medium">No more classes</p>
+              <p className="text-xs text-muted-foreground mt-1">Relax!</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      <section className="surface-amber relative overflow-hidden rounded-lg border border-border/80 p-4 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-        <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-amber-400/10 blur-3xl dark:bg-amber-400/5" />
-        <div className="mb-4 flex items-center gap-2">
+      <Card>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-sm font-medium">Weekly Load</CardTitle>
+          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-20 items-end gap-1.5">
+            {DAYS.map((day) => {
+              const todayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+              const isToday = day === DAYS[todayIndex];
+              return (
+                <div key={day} className="flex flex-1 flex-col items-center gap-1.5">
+                  <div className="relative h-16 w-full overflow-hidden rounded-sm bg-muted">
+                    <div
+                      className={cn(
+                        "absolute bottom-0 left-0 right-0 transition-all",
+                        isToday ? "bg-primary" : "bg-primary/40"
+                      )}
+                      style={{ height: `${(weeklyLoad[day] / maxLoad) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-[9px] font-medium text-muted-foreground uppercase">{day.slice(0, 1)}</span>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-3 text-center font-medium">
+            Total: {Math.round(Object.values(weeklyLoad).reduce((a, b) => a + b, 0))} hrs / week
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-sm font-medium">Finances</CardTitle>
           <CreditCard className="h-4 w-4 text-muted-foreground" />
-          <p className="text-xs text-muted-foreground">Quick stats</p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3">
-          <div className="text-left">
-            <p className="text-xs text-muted-foreground">Total Units</p>
-            <p className="text-xl font-semibold">{totalUnits}</p>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Paid</p>
+                <p className="text-lg font-bold tabular-nums mt-0.5">{financialProgress}%</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-medium text-muted-foreground">Units</p>
+                <p className="text-lg font-bold tabular-nums mt-0.5">{totalUnits}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-[10px] font-medium text-muted-foreground uppercase">
+                <span>Progress</span>
+                <span>{financialProgress}%</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div className="h-full bg-primary transition-all" style={{ width: `${financialProgress}%` }} />
+              </div>
+            </div>
           </div>
-        </div>
-
-        <div className="mt-4 border-t border-border pt-3">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">Payment progress</p>
-            <p className="text-xs font-medium">{financialProgress}%</p>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-muted">
-            <div className="h-full bg-primary" style={{ width: `${financialProgress}%` }} />
-          </div>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
     </div>
   );
 }

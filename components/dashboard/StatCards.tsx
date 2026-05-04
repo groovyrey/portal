@@ -1,54 +1,49 @@
 'use client';
 
 import { Student } from '@/types';
-import { BookOpen, Wallet, GraduationCap, Layers, ChevronRight } from 'lucide-react';
+import { BookOpen, Wallet, GraduationCap, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export default function StatCards({ student }: { student: Student }) {
   const stats = [
     {
-      label: 'Financial Balance',
+      label: 'Balance',
       value: student.financials?.balance || '₱0.00',
       icon: Wallet,
-      href: '/accounts'
+      href: '/accounts',
     },
     {
-      label: 'Total Units',
+      label: 'Units',
       value: student.schedule?.reduce((acc, curr) => acc + (parseFloat(curr.units) || 0), 0) || 0,
       icon: BookOpen,
-      href: '/'
+      href: '/',
     },
     {
-      label: 'Available Reports',
+      label: 'Grade Reports',
       value: student.availableReports?.length || 0,
       icon: GraduationCap,
-      href: '/grades'
+      href: '/grades',
     }
   ];
 
-  const cardGradients = [
-    'surface-sky',
-    'surface-amber',
-    'surface-violet',
-  ];
-
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
       {stats.map((stat, idx) => (
         <Link key={idx} href={stat.href} className="group">
-          <article className={`relative flex h-full flex-col gap-2 overflow-hidden rounded-lg border border-border/80 p-4 transition-all duration-300 shadow-sm ring-1 ring-black/5 hover:shadow-md dark:ring-white/10 ${cardGradients[idx % cardGradients.length]}`}>
-            <div className="flex items-center justify-between">
-              <div className="flex h-8 w-8 items-center justify-center rounded-md border border-border/70 bg-background/80 text-muted-foreground shadow-sm backdrop-blur">
-                <stat.icon className="h-4 w-4" />
+          <Card className="h-full transition-colors hover:bg-accent/50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
+              <stat.icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold tracking-tight tabular-nums">{stat.value}</div>
+              <div className="mt-4 flex items-center text-xs text-muted-foreground">
+                Details
+                <ChevronRight className="ml-1 h-3 w-3" />
               </div>
-              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-            </div>
-
-            <div className="space-y-1">
-              <p className="text-[11px] text-muted-foreground">{stat.label}</p>
-              <p className="text-lg font-semibold tabular-nums">{stat.value}</p>
-            </div>
-          </article>
+            </CardContent>
+          </Card>
         </Link>
       ))}
     </div>

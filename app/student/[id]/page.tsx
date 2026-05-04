@@ -9,7 +9,10 @@ import {
   Lock,
   MessageSquare,
   Trash2,
-  BrainCircuit
+  BrainCircuit,
+  Circle,
+  XCircle,
+  ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -18,10 +21,15 @@ import { toast } from 'sonner';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useStudent } from '@/lib/hooks';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import Skeleton from '@/components/ui/Skeleton';
+import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import BadgeDisplay from '@/components/shared/BadgeDisplay';
-import Modal from '@/components/ui/Modal';
-import Image from 'next/image';
 
 function ProfileContent() {
   const queryClient = useQueryClient();
@@ -35,12 +43,7 @@ function ProfileContent() {
   const isOnline = !!memberStatus;
   const isStudying = !!memberStatus?.isStudying;
 
-  const [student, setStudent] = useState<Student | null>(() => {
-    if (currentUserData && profileId === currentUserData.id) {
-      return currentUserData;
-    }
-    return null;
-  });
+  const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPublicView, setIsPublicView] = useState(false);
   const [isPrivateProfile, setIsPrivateProfile] = useState(false);
@@ -85,14 +88,12 @@ function ProfileContent() {
             setStudent(null);
           }
         } catch (err) {
-          console.error('Failed to fetch public profile', err);
           setStudent(null);
         } finally {
           setLoading(false);
         }
       } else {
         setIsPrivateProfile(false);
-
         if (currentUserData) {
           setStudent(currentUserData);
           setLoading(false);
@@ -105,7 +106,6 @@ function ProfileContent() {
               setStudent(result.data);
             }
           } catch (e) {
-            console.error('Failed to fetch own profile', e);
           } finally {
             setLoading(false);
           }
@@ -129,7 +129,7 @@ function ProfileContent() {
       queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
     } catch {
-      toast.error('Failed to update reaction');
+      toast.error('Reaction failed');
     }
   };
 
@@ -146,43 +146,36 @@ function ProfileContent() {
       queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
     } catch {
-      toast.error('Failed to cast vote');
+      toast.error('Vote failed');
     }
   };
 
   const handleReport = async (postId: string) => {
     if (!currentUserData) return;
-
-    const toastId = toast.loading('Reporting post to Aegis...');
-
+    const reportToast = toast.loading('Reporting...');
     try {
       const res = await fetch('/api/community/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ postId }),
       });
-
       const data = await res.json();
-
       if (data.success) {
         if (data.decision === 'REJECTED') {
-          toast.success('Post removed: Aegis confirmed community guideline violations.', { id: toastId });
+          toast.success('Post removed.', { id: reportToast });
           queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
-          queryClient.invalidateQueries({ queryKey: ['community-posts'] });
         } else {
-          toast.success('Report processed: Aegis determined this post follows community guidelines.', { id: toastId });
+          toast.info('Report received.', { id: reportToast });
         }
-      } else {
-        toast.error(data.error || 'Failed to report post', { id: toastId });
       }
     } catch {
-      toast.error('Network error while reporting', { id: toastId });
+      toast.error('Error occurred', { id: reportToast });
     }
   };
 
   const handleDeletePost = async () => {
     if (!postToDelete) return;
-    const deleteToast = toast.loading('Deleting post...');
+    const deleteToast = toast.loading('Deleting...');
     try {
       const res = await fetch('/api/community', {
         method: 'DELETE',
@@ -193,45 +186,46 @@ function ProfileContent() {
       if (data.success) {
         toast.success('Post deleted', { id: deleteToast });
         queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
-        queryClient.invalidateQueries({ queryKey: ['community-posts'] });
-      } else {
-        toast.error(data.error || 'Failed to delete post', { id: deleteToast });
       }
     } catch {
-      toast.error('Failed to delete post', { id: deleteToast });
+      toast.error('Error occurred', { id: deleteToast });
     } finally {
       setPostToDelete(null);
     }
   };
 
-  const openPostModal = (post: CommunityPost) => {
-    router.push(`/post/${post.id}`);
-  };
-
   if (loading) return (
-    <div className="min-h-[80vh] flex items-center justify-center">
-      <Loader2 className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-spin" />
+    <div className="flex items-center justify-center min-h-screen">
+      <Loader2 className="h-8 w-8 text-primary animate-spin" />
     </div>
   );
 
   if (isPrivateProfile) return (
-    <div className="max-w-3xl mx-auto py-10 px-4">
-      <div className="bg-card border border-border rounded-2xl p-12 text-center shadow-sm">
-        <div className="h-16 w-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-6 border border-border">
-          <Lock className="h-8 w-8 text-slate-300" />
-        </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">This Profile is Private</h2>
-        <p className="text-muted-foreground max-w-sm mx-auto">
-          The student has chosen to keep their profile information private.
-        </p>
-      </div>
+    <div className="max-w-2xl mx-auto py-20 px-4">
+      <Card className="text-center p-12">
+        <CardContent className="space-y-4">
+          <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto">
+            <Lock className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <CardTitle className="text-2xl">Private Profile</CardTitle>
+          <CardDescription>
+            This student has chosen to keep their profile hidden.
+          </CardDescription>
+          <Button asChild variant="outline" className="mt-4">
+            <Link href="/community">Return to Community</Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 
   if (!student) return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center p-8 text-center">
-      <IdCard className="h-12 w-12 text-slate-200 mb-4" />
-      <h2 className="text-xl font-bold text-foreground">Profile Not Found</h2>
+    <div className="flex flex-col items-center justify-center min-h-screen p-8 text-center">
+      <XCircle className="h-12 w-12 text-destructive mb-4" />
+      <h2 className="text-xl font-bold">Student not found</h2>
+      <Button asChild variant="outline" className="mt-6">
+        <Link href="/community">Return to Community</Link>
+      </Button>
     </div>
   );
 
@@ -239,74 +233,57 @@ function ProfileContent() {
   const canShowStudentId = !isPublicView || (student.settings?.showStudentId ?? false);
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
-      <div className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border">
-        <div className="h-32 sm:h-40 bg-accent relative overflow-hidden" />
+    <div className="max-w-2xl mx-auto py-10 px-4 space-y-10">
+      <Card className="overflow-hidden">
+        <div className="h-32 bg-muted/50" />
+        <div className="px-6 pb-8">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 -mt-12 sm:-mt-16">
+            <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-background shadow-xl">
+              <AvatarImage 
+                src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${student.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`}
+              />
+              <AvatarFallback>{student.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
 
-        <div className="px-6 sm:px-8 pb-8 relative">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="shrink-0 -mt-12 sm:-mt-16 relative z-10">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl overflow-hidden bg-secondary/50 border-4 border-card shadow-xl flex items-center justify-center">
-                <Image 
-                  src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${student.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`}
-                  alt={`${student.name}'s avatar`}
-
-                  width={128}
-                  height={128}
-                  className="w-full h-full object-cover"
-                  unoptimized
-                />
-              </div>
-            </div>
-
-            <div className="flex-1 text-center sm:text-left space-y-3 pt-2">
+            <div className="flex-1 text-center sm:text-left pt-2 space-y-4">
               <div className="space-y-1">
-                <h1 className="text-2xl font-bold text-foreground tracking-tight">{student.name || '?'}</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{student.name}</h1>
                 <div className="flex items-center justify-center sm:justify-start gap-3">
                   {canShowStudentId && (
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800/50 shadow-sm">
-                      <span className="text-[8px] font-black uppercase tracking-[0.15em] text-blue-500 dark:text-blue-400/80">ID</span>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-300">
-                        {student.id || '?'}
-                      </span>
-                    </div>
+                    <Badge variant="secondary" className="font-mono text-[10px]">
+                      ID: {student.id}
+                    </Badge>
                   )}
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/80 dark:text-muted-foreground">
-                    <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-slate-300 dark:bg-slate-700'}`} />
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase">
+                    <span className={cn("h-1.5 w-1.5 rounded-full", isOnline ? "bg-emerald-500" : "bg-muted-foreground/30")} />
                     {isOnline ? 'Online' : 'Offline'}
                   </div>
                   {isStudying && (
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary animate-pulse">
-                      <BrainCircuit className="h-3 w-3" />
+                    <Badge variant="default" className="bg-primary animate-pulse text-[8px] h-4">
                       Studying
-                    </div>
+                    </Badge>
                   )}
                 </div>
               </div>
 
               {showAcademic && (
                 <div className="flex flex-wrap justify-center sm:justify-start gap-2">
-                  <div className="flex items-center gap-1.5 bg-accent/80 dark:bg-accent/40 px-3 py-1.5 rounded-xl border border-border/50">
-                    <GraduationCap className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
-                    <span className="text-xs font-bold text-foreground/80 dark:text-foreground/90 tracking-tight">{student.course || '?'}</span>
-                  </div>
-                  <div className="bg-accent/80 dark:bg-accent/40 px-3 py-1.5 rounded-xl text-xs font-bold text-foreground/80 dark:text-foreground/90 tracking-tight border border-border/50">
-                    Year {student.yearLevel || '?'} • Sem {student.semester || '?'}
-                  </div>
+                  <Badge variant="outline" className="gap-1.5 py-1">
+                    <GraduationCap className="h-3 w-3 text-primary" />
+                    {student.course}
+                  </Badge>
+                  <Badge variant="outline" className="py-1">
+                    Year {student.yearLevel} • Sem {student.semester}
+                  </Badge>
                 </div>
               )}
             </div>
           </div>
 
           {student.badges && student.badges.length > 0 && (
-            <div className="mt-10 pt-8 border-t border-border">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-6 w-6 rounded-lg bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
-                  <IdCard className="h-3.5 w-3.5" />
-                </div>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.15em] text-foreground/50 dark:text-foreground/60">Academic Badges</h3>
-              </div>
-              <div className="bg-accent p-5 rounded-2xl border border-border">
+            <div className="mt-8 pt-6 border-t">
+              <h4 className="text-[10px] uppercase font-bold text-muted-foreground mb-4">Earned Badges</h4>
+              <div className="p-4 rounded-md bg-muted/30 border border-dashed">
                 <BadgeDisplay
                   badgeIds={student.badges}
                   size="lg"
@@ -316,36 +293,36 @@ function ProfileContent() {
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
-      <div className="mt-10">
-        <div className="flex items-center justify-between mb-6 px-2">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-emerald-600 dark:bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <MessageSquare className="h-3.5 w-3.5" />
-            </div>
-            <h3 className="text-[10px] font-black uppercase tracking-[0.15em] text-foreground/50 dark:text-foreground/60">Activity Feed</h3>
-          </div>
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 px-1">
+          <MessageSquare className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Activity Feed</h3>
         </div>
 
         {loadingPosts ? (
           <div className="space-y-4">
             {[1, 2].map(i => (
-              <div key={i} className="bg-card rounded-xl p-5 border border-border space-y-4">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-8 w-8 rounded-full" />
-                  <div className="space-y-1.5 flex-1"><Skeleton className="h-3.5 w-24" /><Skeleton className="h-2.5 w-16" /></div>
-                </div>
-                <Skeleton className="h-16 w-full" />
-              </div>
+              <Card key={i}>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <Skeleton className="h-20 w-full" />
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-16 bg-card rounded-2xl border border-border shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">No activity recorded</p>
-          </div>
+          <Card className="border-dashed bg-muted/10">
+            <CardContent className="p-12 text-center">
+              <p className="text-sm font-medium text-muted-foreground">No recent activity.</p>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="grid gap-4">
             {posts.map((post: CommunityPost) => (
               <PostCard
                 key={post.id}
@@ -353,7 +330,7 @@ function ProfileContent() {
                 student={currentUserData}
                 onLike={handleLike}
                 onVote={handleVote}
-                onOpen={openPostModal}
+                onOpen={(p) => router.push(`/post/${p.id}`)}
                 onReport={handleReport}
                 onDelete={setPostToDelete}
                 isProfileView={true}
@@ -363,39 +340,30 @@ function ProfileContent() {
         )}
       </div>
 
-      <Modal
-        isOpen={!!postToDelete}
-        onClose={() => setPostToDelete(null)}
-        maxWidth="max-w-xs"
-        className="p-8 text-center"
-      >
-        <div className="h-16 w-16 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
-          <Trash2 className="h-8 w-8" />
-        </div>
-        <h3 className="text-lg font-bold text-foreground mb-2">Delete Post?</h3>
-        <p className="text-xs text-muted-foreground font-bold leading-relaxed mb-8">This action cannot be undone. Are you sure you want to remove this post?</p>
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={handleDeletePost}
-            className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-red-500/10 active:scale-95"
-          >
-            Delete Post
-          </button>
-          <button
-            onClick={() => setPostToDelete(null)}
-            className="w-full py-3.5 bg-accent hover:bg-accent/80 text-muted-foreground text-xs font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
-          >
-            Cancel
-          </button>
-        </div>
-      </Modal>
+      <Dialog open={!!postToDelete} onOpenChange={(open) => !open && setPostToDelete(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader className="items-center text-center">
+            <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center text-destructive mb-4">
+              <Trash2 className="h-6 w-6" />
+            </div>
+            <DialogTitle>Delete post?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-col pt-4">
+            <Button variant="destructive" onClick={handleDeletePost} className="w-full">Delete</Button>
+            <Button variant="ghost" onClick={() => setPostToDelete(null)} className="w-full">Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
 export default function ProfilePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-10 w-10 text-blue-600 dark:text-blue-400 animate-spin" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-10 w-10 text-primary animate-spin" /></div>}>
       <ProfileContent />
     </Suspense>
   );

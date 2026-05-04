@@ -13,8 +13,11 @@ import {
 } from 'lucide-react';
 import { useStudentQuery } from '@/lib/hooks';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
 import TabbedPageLayout from '@/components/layout/TabbedPageLayout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 import ManageTab from '@/components/admin/ManageTab';
 import StatsTab from '@/components/admin/StatsTab';
@@ -33,12 +36,12 @@ export default function AdminPage() {
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab && ['manage', 'stats', 'monitoring', 'email', 'incidents'].includes(tab)) {
-      setActiveTab(tab as 'manage' | 'stats' | 'monitoring' | 'email' | 'incidents');
+      setActiveTab(tab as any);
     }
   }, [searchParams]);
 
-  const handleTabChange = (tabId: 'manage' | 'stats' | 'monitoring' | 'email' | 'incidents') => {
-    setActiveTab(tabId);
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId as any);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tabId);
     router.replace(`${pathname}?${params.toString()}`);
@@ -46,60 +49,65 @@ export default function AdminPage() {
 
   if (isUserLoading) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-background p-8">
-        <div className="max-w-5xl mx-auto h-[60vh] flex items-center justify-center">
-          <Loader2 className="h-8 w-8 text-primary animate-spin" />
-        </div>
+      <div className="flex-1 h-[60vh] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
     );
   }
 
   if (!currentUser || !currentUser.badges?.includes('staff')) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-background p-4 md:p-8">
-        <div className="max-w-md mx-auto mt-10 bg-card border border-border rounded-lg p-6 space-y-4 text-center">
-          <div className="bg-destructive/10 p-4 rounded-full w-20 h-20 mx-auto flex items-center justify-center text-destructive">
-            <ShieldAlert className="h-10 w-10" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground uppercase tracking-tight">Access Denied</h1>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mt-1">
-              You do not have permission to view this page.
-            </p>
-          </div>
-        </div>
+      <div className="flex-1 p-4 md:p-8 pt-6 flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-md w-full text-center">
+          <CardHeader>
+            <div className="bg-destructive/10 p-4 rounded-full w-20 h-20 mx-auto flex items-center justify-center text-destructive mb-4">
+              <ShieldAlert className="h-10 w-10" />
+            </div>
+            <CardTitle className="text-2xl">Access Denied</CardTitle>
+            <CardDescription>
+              You do not have permission to view the admin panel.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" className="w-full">
+              <a href="/">Return Home</a>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   const tabs = [
-    { id: 'manage', name: 'Manage Users', icon: Users, desc: 'Badges & Registry' },
-    { id: 'incidents', name: 'Incident Reports', icon: AlertTriangle, desc: 'System Failures' },
-    { id: 'email', name: 'Email center', icon: Mail, desc: 'Mass Messaging' },
-    { id: 'stats', name: 'Statistics', icon: BarChart3, desc: 'Growth & Metrics' },
-    { id: 'monitoring', name: 'Monitoring', icon: Activity, desc: 'System Health' },
+    { id: 'manage', name: 'Users', icon: Users, desc: 'Manage profiles and badges' },
+    { id: 'incidents', name: 'Incidents', icon: AlertTriangle, desc: 'View system error reports' },
+    { id: 'email', name: 'Email', icon: Mail, desc: 'Send announcements' },
+    { id: 'stats', name: 'Stats', icon: BarChart3, desc: 'Growth and usage metrics' },
+    { id: 'monitoring', name: 'System', icon: Activity, desc: 'Check health and logs' },
   ] as const;
 
   return (
     <TabbedPageLayout
-      title="Admin Panel"
+      title="Admin"
       icon={ShieldCheck}
-      subtitle="Registry Access"
+      subtitle="Management Console"
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={handleTabChange}
       sidebarFooter={
-        <div className="p-3 rounded-lg bg-background border border-border">
-          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Signed in as</p>
-          <p className="text-[11px] font-bold break-words text-foreground">{currentUser.name}</p>
+        <div className="space-y-1">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase">Signed in as</p>
+          <p className="text-sm font-medium text-foreground">{currentUser.name}</p>
         </div>
       }
     >
-      {activeTab === 'manage' && <ManageTab />}
-      {activeTab === 'incidents' && <IncidentsTab />}
-      {activeTab === 'email' && <EmailTab />}
-      {activeTab === 'stats' && <StatsTab />}
-      {activeTab === 'monitoring' && <MonitoringTab />}
+      <div className="space-y-6">
+        {activeTab === 'manage' && <ManageTab />}
+        {activeTab === 'incidents' && <IncidentsTab />}
+        {activeTab === 'email' && <EmailTab />}
+        {activeTab === 'stats' && <StatsTab />}
+        {activeTab === 'monitoring' && <MonitoringTab />}
+      </div>
     </TabbedPageLayout>
   );
 }

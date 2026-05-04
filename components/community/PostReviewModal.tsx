@@ -14,7 +14,8 @@ export default function PostReviewModal({ isOpen }: PostReviewModalProps) {
       isOpen={isOpen} 
       onClose={() => {}} 
       showCloseButton={false}
-      className="p-8 flex flex-col items-center text-center relative overflow-hidden"
+      noPadding
+      className="flex flex-col items-center text-center relative overflow-hidden"
     >
       <div className="py-12 flex flex-col items-center max-w-xs mx-auto">
         {/* Animated Icon */}

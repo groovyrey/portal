@@ -5,6 +5,9 @@ import {
 } from 'recharts';
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, TrendingUp, Award, AlertCircle, BookOpen, Zap } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 type ExtendedGrade = SubjectGrade & { semester?: string };
 
@@ -144,178 +147,165 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
     : 0;
 
   return (
-    <div className="space-y-6 mb-8 animate-fade-in">
-      <div className={`grid grid-cols-2 ${totalUnits > 0 ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3`}>
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* GWA Card */}
-        <div className="surface-neutral p-4 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm relative group overflow-hidden ring-1 ring-black/5">
-          <div className="absolute -top-2 -right-2 p-3 opacity-5 pointer-events-none group-hover:scale-110 transition-transform">
-            <Award className="w-16 h-16" />
-          </div>
-          <div>
-             <div className="flex justify-between items-start">
-              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">GWA Score</span>
-              <button 
-                onClick={toggleGwa}
-                className="p-1 rounded bg-muted/50 text-muted-foreground hover:text-foreground transition-all active:scale-95 relative z-10"
-              >
-                {showGwa ? <EyeOff className="h-2.5 w-2.5" /> : <Eye className="h-2.5 w-2.5" />}
-              </button>
-             </div>
-             <p className="text-2xl font-black text-foreground mt-2 tracking-tight tabular-nums">
-               {showGwa ? gwa : '***'}
-             </p>
-          </div>
-          <div className="h-1.5 w-full bg-primary/5 mt-3 rounded-full overflow-hidden">
-             <div className="h-full bg-primary" style={{ width: `${gwaPercent}%` }}></div>
-          </div>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average</CardTitle>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 text-muted-foreground"
+              onClick={toggleGwa}
+            >
+              {showGwa ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold tracking-tight">{showGwa ? gwa : '***'}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Grade Average
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Units Card */}
-        {totalUnits > 0 && (
-          <div className="surface-neutral p-4 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm relative overflow-hidden ring-1 ring-black/5">
-            <div className="absolute -top-2 -right-2 p-3 opacity-5 pointer-events-none">
-              <BookOpen className="w-16 h-16" />
-            </div>
-            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Units Earned</span>
-            <p className="text-2xl font-black text-foreground mt-2 tracking-tight tabular-nums">{totalUnits.toFixed(1)}</p>
-            <div className="mt-3 flex items-center gap-1.5">
-              <Zap className="h-2.5 w-2.5 text-primary" />
-              <span className="text-[8px] font-black text-muted-foreground uppercase">Academic Progress</span>
-            </div>
-          </div>
-        )}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Units</CardTitle>
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold tracking-tight">{totalUnits.toFixed(1)}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Total units
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Best Grade */}
-        <div className="surface-neutral p-4 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm relative overflow-hidden ring-1 ring-black/5">
-           <div className="absolute -top-2 -right-2 p-3 opacity-5 pointer-events-none">
-            <TrendingUp className="w-16 h-16" />
-          </div>
-          <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Peak Grade</span>
-          <p className="text-2xl font-black text-emerald-500 mt-2 tracking-tight tabular-nums">{bestGrade}</p>
-          <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-3">Highest Recorded</p>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Highest</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold tracking-tight text-primary">{bestGrade}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Best grade
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Lowest Grade */}
-        <div className="surface-neutral p-4 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm relative overflow-hidden ring-1 ring-black/5">
-           <div className="absolute -top-2 -right-2 p-3 opacity-5 pointer-events-none">
-            <AlertCircle className="w-16 h-16" />
-          </div>
-          <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Floor Grade</span>
-          <p className="text-2xl font-black text-orange-500 mt-2 tracking-tight tabular-nums">{lowestGrade}</p>
-           <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-3">Area of Focus</p>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pass Rate</CardTitle>
+            <Zap className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold tracking-tight">{passRate}%</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Subjects passed
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         {/* Trend Chart */}
-        <div className="surface-neutral relative overflow-hidden p-6 rounded-xl border border-border/50 shadow-sm ring-1 ring-black/5">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h4 className="text-sm font-black text-foreground uppercase tracking-tight">Academic Momentum</h4>
-              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">GWA Semester Timeline</p>
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>History</CardTitle>
+            <CardDescription>Grades over time</CardDescription>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorGwa" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                  <XAxis 
+                    dataKey="semester" 
+                    axisLine={false} 
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
+                    dy={10}
+                  />
+                  <YAxis 
+                    domain={isPercentageScale ? [70, 100] : [1, 5]} 
+                    reversed={!isPercentageScale}
+                    axisLine={false} 
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
+                  />
+                  <Tooltip
+                    contentStyle={{ 
+                      backgroundColor: 'var(--card)', 
+                      borderRadius: 'var(--radius)',
+                      border: '1px solid var(--border)',
+                      fontSize: '12px',
+                    }}
+                    itemStyle={{ color: 'var(--primary)' }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="gwa" 
+                    stroke="hsl(var(--primary))" 
+                    fillOpacity={1} 
+                    fill="url(#colorGwa)" 
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
-          </div>
-          
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorGwa" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.5} />
-                <XAxis 
-                  dataKey="semester" 
-                  axisLine={false} 
-                  tickLine={false}
-                  tick={{ fontSize: 9, fontWeight: 800, fill: 'var(--muted-foreground)' }}
-                  dy={10}
-                />
-                <YAxis 
-                  domain={isPercentageScale ? [70, 100] : [1, 5]} 
-                  reversed={!isPercentageScale}
-                  axisLine={false} 
-                  tickLine={false}
-                  tick={{ fontSize: 9, fontWeight: 800, fill: 'var(--muted-foreground)' }}
-                />
-                <Tooltip
-                  contentStyle={{ 
-                    backgroundColor: 'var(--card)', 
-                    borderRadius: '8px',
-                    border: '1px solid var(--border)',
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                    fontSize: '10px',
-                    fontWeight: 900,
-                    textTransform: 'uppercase'
-                  }}
-                  itemStyle={{ color: 'var(--primary)' }}
-                  formatter={(value: any) => [value, 'GWA']}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="gwa" 
-                  stroke="var(--primary)" 
-                  fillOpacity={1} 
-                  fill="url(#colorGwa)" 
-                  strokeWidth={3}
-                  activeDot={{ r: 4, strokeWidth: 0 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Distribution Chart */}
-        <div className="surface-neutral relative overflow-hidden p-6 rounded-xl border border-border/50 shadow-sm ring-1 ring-black/5">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h4 className="text-sm font-black text-foreground uppercase tracking-tight">Subject Distribution</h4>
-              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">Performance Frequency</p>
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Breakdown</CardTitle>
+            <CardDescription>Grades count</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={distData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                  <XAxis 
+                    dataKey="grade" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
+                    dy={10}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: 'var(--accent)', opacity: 0.4 }}
+                    contentStyle={{ 
+                      backgroundColor: 'var(--card)',
+                      borderRadius: 'var(--radius)', 
+                      border: '1px solid var(--border)', 
+                      fontSize: '12px',
+                    }}
+                  />
+                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-             <div className="px-2 py-1 rounded bg-muted/50 text-[9px] font-black text-primary uppercase tracking-widest border border-border/50">
-               Passed: {passRate}%
-             </div>
-          </div>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={distData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.5} />
-                <XAxis 
-                  dataKey="grade" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 9, fontWeight: 800, fill: 'var(--muted-foreground)' }}
-                  dy={10}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false}
-                  tick={{ fontSize: 9, fontWeight: 800, fill: 'var(--muted-foreground)' }}
-                />
-                <Tooltip 
-                  cursor={{ fill: 'var(--accent)', opacity: 0.2 }}
-                  contentStyle={{ 
-                    backgroundColor: 'var(--card)',
-                    borderRadius: '8px', 
-                    border: '1px solid var(--border)', 
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                    fontSize: '10px',
-                    fontWeight: 900,
-                    textTransform: 'uppercase'
-                  }}
-                  itemStyle={{ color: 'var(--foreground)' }}
-                />
-                <Bar dataKey="count" radius={[2, 2, 0, 0]} barSize={24}>
-                  {distData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill="var(--primary)" fillOpacity={0.6} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

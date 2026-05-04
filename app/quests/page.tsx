@@ -4,19 +4,21 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Trophy, 
   TrendingUp, 
-  Sparkles,
-  ChevronRight,
   Loader2,
+  ChevronRight,
   Zap,
-  Info
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import DailyQuestTab from '@/components/dashboard/DailyQuestTab';
 import TestQuestTab from '@/components/dashboard/TestQuestTab';
 import TabbedPageLayout from '@/components/layout/TabbedPageLayout';
-import QuestInfoDrawer from '@/components/community/QuestInfoDrawer';
 import { useStudent } from '@/lib/hooks';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 type TabType = 'daily' | 'test' | 'leaderboard';
 
@@ -32,16 +34,11 @@ function LeaderboardTab() {
       .then(res => res.json())
       .then(data => {
         if (mounted) {
-          if (Array.isArray(data)) {
-            setData(data);
-          } else {
-            console.error("Leaderboard Error:", data.error || "Invalid response");
-            setData([]);
-          }
+          if (Array.isArray(data)) setData(data);
+          else setData([]);
         }
       })
-      .catch((e) => {
-        console.error("Fetch Error:", e);
+      .catch(() => {
         if (mounted) setData([]);
       })
       .finally(() => {
@@ -52,120 +49,114 @@ function LeaderboardTab() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
         <Loader2 className="h-10 w-10 text-primary animate-spin" />
-        <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">Fetching Champions...</p>
+        <p className="text-sm text-muted-foreground">Loading leaderboard...</p>
       </div>
     );
   }
 
   if (data.length === 0) {
      return (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-xl font-black uppercase tracking-tight">Hall of Fame</h3>
-            <div className="flex bg-muted p-1 rounded-lg gap-1">
-              <button 
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="text-2xl font-bold tracking-tight">Hall of Fame</h3>
+              <p className="text-sm text-muted-foreground">Top achievers this week.</p>
+            </div>
+            <div className="flex bg-muted rounded-md p-1 self-start sm:self-auto">
+              <Button 
+                variant={filter === 'all-time' ? 'secondary' : 'ghost'} 
+                size="sm" 
                 onClick={() => setFilter('all-time')}
-                className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${filter === 'all-time' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground'}`}
+                className="h-8 text-xs"
               >
                 All-Time
-              </button>
-              <button 
+              </Button>
+              <Button 
+                variant={filter === 'weekly' ? 'secondary' : 'ghost'} 
+                size="sm" 
                 onClick={() => setFilter('weekly')}
-                className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${filter === 'weekly' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground'}`}
+                className="h-8 text-xs"
               >
                 Weekly
-              </button>
+              </Button>
             </div>
           </div>
-          <div className="surface-neutral p-12 rounded-lg border border-border/50 flex flex-col items-center justify-center text-center gap-4 min-h-[300px]">
-            <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center">
-              <Trophy className="h-8 w-8 text-muted-foreground/30" />
-            </div>
-            <h3 className="text-xl font-bold uppercase">No Legends Yet</h3>
-            <p className="text-sm text-muted-foreground max-w-xs font-medium uppercase">
-              Be the first to complete a quest this week and claim your spot!
-            </p>
-          </div>
+          <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed bg-muted/20">
+            <Trophy className="h-10 w-10 text-muted-foreground/30 mb-4" />
+            <h3 className="text-lg font-bold">No entries yet</h3>
+            <p className="text-sm text-muted-foreground mt-1">Complete a quest to claim your spot!</p>
+          </Card>
         </div>
      );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between px-2">
-        <h3 className="text-xl font-black uppercase tracking-tight">Hall of Fame</h3>
-        <div className="flex bg-muted p-1 rounded-lg gap-1">
-          <button 
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h3 className="text-2xl font-bold tracking-tight">Hall of Fame</h3>
+          <p className="text-sm text-muted-foreground">Top players by experience points.</p>
+        </div>
+        <div className="flex bg-muted rounded-md p-1 self-start sm:self-auto">
+          <Button 
+            variant={filter === 'all-time' ? 'secondary' : 'ghost'} 
+            size="sm" 
             onClick={() => setFilter('all-time')}
-            className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${filter === 'all-time' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground'}`}
+            className="h-8 text-xs"
           >
             All-Time
-          </button>
-          <button 
+          </Button>
+          <Button 
+            variant={filter === 'weekly' ? 'secondary' : 'ghost'} 
+            size="sm" 
             onClick={() => setFilter('weekly')}
-            className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${filter === 'weekly' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground'}`}
+            className="h-8 text-xs"
           >
             Weekly
-          </button>
+          </Button>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between px-4 text-[10px] font-black uppercase tracking-wider text-muted-foreground/50">
-          <span>Rank & Student</span>
-          <span>{filter === 'weekly' ? 'Weekly' : 'Total'} EXP</span>
-        </div>
-        <div className="grid grid-cols-1 gap-2">
-          {data.map((student, index) => {
-            const isTop3 = index < 3;
-            const rankColors = [
-              'text-amber-500 border-amber-500/20 bg-amber-500/5', // 1st
-              'text-slate-400 border-slate-400/20 bg-slate-400/5', // 2nd
-              'text-orange-500 border-orange-500/20 bg-orange-500/5', // 3rd
-            ];
+      <div className="border rounded-md divide-y overflow-hidden">
+        {data.map((student, index) => {
+          const isTop3 = index < 3;
+          return (
+            <motion.div
+              key={student.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className={cn(
+                "flex items-center gap-3 p-4 transition-colors",
+                isTop3 ? "bg-accent/30" : "hover:bg-muted/50"
+              )}
+            >
+              <div className={cn(
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-md font-bold text-xs border",
+                index === 0 && "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
+                index === 1 && "bg-slate-400/10 text-slate-600 border-slate-400/20",
+                index === 2 && "bg-orange-500/10 text-orange-600 border-orange-500/20",
+                !isTop3 && "bg-muted text-muted-foreground"
+              )}>
+                {index + 1}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-sm truncate">{student.name}</h4>
+                <p className="text-xs text-muted-foreground truncate">{student.course || 'Student'}</p>
+              </div>
 
-            return (
-              <motion.div
-                key={student.id}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03 }}
-                className={`
-                  relative flex items-center justify-between p-3 rounded-lg border transition-all
-                  ${isTop3 ? 'bg-card border-primary/20' : 'bg-muted/10 border-border/40'}
-                `}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`
-                    flex h-8 w-8 items-center justify-center rounded-md font-black text-xs border
-                    ${isTop3 ? rankColors[index] : 'bg-muted/50 text-muted-foreground/50 border-border/50'}
-                  `}>
-                    {index + 1}
-                  </div>
-                  
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-sm leading-tight truncate max-w-[160px] sm:max-w-[240px]">
-                      {student.name}
-                    </h4>
-                    <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-tight">
-                      {student.course || 'LCC Student'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                   <div className="text-right">
-                      <p className="font-black text-base text-foreground tabular-nums leading-none">{(student.exp || 0).toLocaleString()}</p>
-                      <p className="text-[8px] font-black uppercase tracking-tight text-primary mt-1">Level {student.level || 1}</p>
-                   </div>
-                   <ChevronRight className="h-3 w-3 text-muted-foreground/20" />
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+              <div className="text-right shrink-0 flex items-center gap-2 sm:gap-3">
+                 <div>
+                    <p className="font-bold tabular-nums text-sm sm:text-base">{(student.exp || 0).toLocaleString()}</p>
+                    <p className="text-[10px] text-primary font-medium">Level {student.level || 1}</p>
+                 </div>
+                 <ChevronRight className="h-4 w-4 text-muted-foreground/30 hidden sm:block" />
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
@@ -176,35 +167,16 @@ export default function QuestsPage() {
   const isStaff = student?.badges?.includes('staff');
 
   const TABS = useMemo(() => [
-    { id: 'daily', name: 'Daily Quest', icon: Trophy, desc: 'Today\'s trivia challenge' },
-    ...(isStaff ? [{ id: 'test', name: 'Test Mode', icon: Zap, desc: 'Sandbox for testing features' }] : []),
-    { id: 'leaderboard', name: 'Leaderboard', icon: TrendingUp, desc: 'Top LCC Questers' },
-  ] as const, [isStaff]);
+    { id: 'daily' as const, name: 'Daily', icon: Trophy, desc: 'Challenge of the day' },
+    ...(isStaff ? [{ id: 'test' as const, name: 'Sandbox', icon: Zap, desc: 'Practice and testing' }] : []),
+    { id: 'leaderboard' as const, name: 'Board', icon: TrendingUp, desc: 'Top students' },
+  ], [isStaff]);
 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
   const [activeTab, setActiveTab] = useState<TabType>('daily');
-  const [currentStats, setCurrentStats] = useState<any>(null);
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-
-  const fetchCurrentStats = useCallback(async () => {
-    if (!student?.id) return;
-    try {
-      const res = await fetch(`/api/quests/stats?studentId=${student.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setCurrentStats(data);
-      }
-    } catch {
-      // console.error("Failed to fetch current stats");
-    }
-  }, [student?.id]);
-
-  useEffect(() => {
-    fetchCurrentStats();
-  }, [fetchCurrentStats]);
 
   // Sync tab with URL
   useEffect(() => {
@@ -214,39 +186,36 @@ export default function QuestsPage() {
     }
   }, [searchParams, TABS]);
 
-  const handleTabChange = (tabId: TabType) => {
-    setActiveTab(tabId);
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId as TabType);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tabId);
     router.replace(`${pathname}?${params.toString()}`);
   };
 
   return (
-    <>
-      <TabbedPageLayout
-        title="Quest Center"
-        icon={Trophy}
-        tabs={TABS}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
+    <TabbedPageLayout
+      title="Quests"
+      icon={Trophy}
+      tabs={TABS}
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
     >
-      {activeTab === 'daily' && (
-        <div className="surface-neutral p-6 sm:p-8 rounded-lg border border-border/50">
-          <DailyQuestTab />
-        </div>
-      )}
+      <div className="space-y-6">
+        {(activeTab === 'daily' || activeTab === 'test') && (
+          <Card>
+            <CardContent className="p-6 md:p-8">
+              {activeTab === 'daily' && <DailyQuestTab />}
+              {activeTab === 'test' && <TestQuestTab />}
+            </CardContent>
+          </Card>
+        )}
 
-      {activeTab === 'test' && (
-        <div className="surface-neutral p-6 sm:p-8 rounded-lg border border-border/50">
-          <TestQuestTab />
-        </div>
-      )}
-
-      {activeTab === 'leaderboard' && (
-        <LeaderboardTab />
-      )}
+        {activeTab === 'leaderboard' && (
+          <LeaderboardTab />
+        )}
+      </div>
     </TabbedPageLayout>
-    </>
   );
 }
 

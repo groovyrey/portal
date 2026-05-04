@@ -12,6 +12,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 interface CourseYearLevel {
   level: string;
@@ -67,7 +71,7 @@ export default function StatsTab() {
   const chartData = useMemo(
     () =>
       sortedCourses.map((course) => ({
-        name: course.name.length > 18 ? `${course.name.slice(0, 18)}...` : course.name,
+        name: course.name.length > 20 ? `${course.name.slice(0, 20)}...` : course.name,
         count: course.count,
       })),
     [sortedCourses]
@@ -75,18 +79,18 @@ export default function StatsTab() {
 
   if (loading) {
     return (
-      <div className="min-h-[260px] flex flex-col items-center justify-center text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin mb-3" />
-        <p className="text-[11px] font-bold uppercase tracking-wider">Loading statistics...</p>
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+        <p className="text-sm text-muted-foreground">Gathering analytics...</p>
       </div>
     );
   }
 
   if (!stats) {
     return (
-      <div className="bg-card border border-border rounded-lg p-6 text-center text-sm text-muted-foreground font-medium">
-        Unable to load statistics.
-      </div>
+      <Card className="p-12 text-center text-muted-foreground bg-muted/20 border-dashed">
+        <p className="text-sm font-medium">Unable to load statistics.</p>
+      </Card>
     );
   }
 
@@ -94,107 +98,104 @@ export default function StatsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-card border border-border rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <p className="text-[11px] text-muted-foreground">Total Students</p>
-          </div>
-          <p className="text-2xl font-semibold tabular-nums">{stats.totalStudents}</p>
-        </div>
-
-        <div className="bg-card border border-border rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <GraduationCap className="h-4 w-4 text-muted-foreground" />
-            <p className="text-[11px] text-muted-foreground">Departments</p>
-          </div>
-          <p className="text-2xl font-semibold tabular-nums">{stats.courses.length}</p>
-        </div>
-
-        <div className="bg-card border border-border rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            <p className="text-[11px] text-muted-foreground">Largest Program</p>
-          </div>
-          <p className="text-lg font-semibold leading-tight line-clamp-1">
-            {topCourse ? topCourse.name : 'N/A'}
-          </p>
-        </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatSummaryCard icon={<Users className="h-4 w-4" />} label="Total Students" value={stats.totalStudents.toString()} />
+        <StatSummaryCard icon={<GraduationCap className="h-4 w-4" />} label="Active Programs" value={stats.courses.length.toString()} />
+        <StatSummaryCard icon={<BarChart3 className="h-4 w-4" />} label="Top Program" value={topCourse ? topCourse.name : 'N/A'} isLargeValue={false} />
       </div>
 
-      <div className="bg-card border border-border rounded-lg p-5">
-        <div className="mb-6">
-          <h3 className="text-sm font-semibold">Student Distribution</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Enrollment count by course</p>
-        </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Enrollment Distribution</CardTitle>
+          <CardDescription>Student count by academic program.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[350px] w-full pt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 0, right: 10, left: -20, bottom: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis
+                  dataKey="name"
+                  angle={-45}
+                  textAnchor="end"
+                  interval={0}
+                  tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis 
+                  tickLine={false} 
+                  axisLine={false} 
+                  tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} 
+                />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: 'var(--radius)',
+                    border: '1px solid var(--border)',
+                    background: 'var(--card)',
+                    fontSize: 12,
+                  }}
+                  cursor={{ fill: 'var(--accent)', opacity: 0.4 }}
+                />
+                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
-        <div className="h-[320px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 16, left: 0, bottom: 52 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-              <XAxis
-                dataKey="name"
-                angle={-35}
-                textAnchor="end"
-                interval={0}
-                height={70}
-                tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis 
-                tickLine={false} 
-                axisLine={false} 
-                tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }} 
-              />
-              <Tooltip
-                contentStyle={{
-                  borderRadius: 8,
-                  border: '1px solid var(--border)',
-                  background: 'var(--card)',
-                  fontSize: 12,
-                }}
-                cursor={{ fill: 'var(--accent)', opacity: 0.4 }}
-              />
-              <Bar dataKey="count" fill="var(--primary)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+      <section className="space-y-4">
+        <div className="px-1">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Detailed Breakdown</h3>
         </div>
-      </div>
-
-      <div className="bg-card border border-border rounded-lg overflow-hidden">
-        <div className="px-5 py-4 border-b border-border bg-muted/10">
-          <h3 className="text-sm font-semibold">Course Breakdown</h3>
-        </div>
-
-        <div className="divide-y divide-border">
+        
+        <div className="grid gap-4">
           {sortedCourses.map((course) => {
             const percentage = stats.totalStudents > 0 ? (course.count / stats.totalStudents) * 100 : 0;
             return (
-              <div key={course.name} className="p-5 space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold">{course.name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{course.count} students</p>
-                  </div>
-                  <div className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold">
-                    {percentage.toFixed(1)}%
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {course.yearLevels.map((item) => (
-                    <div key={`${course.name}-${item.level}`} className="px-3 py-2 rounded-lg bg-muted/30 border border-border/50">
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{item.level}</p>
-                      <p className="text-xs font-semibold mt-0.5">{item.count}</p>
+              <Card key={course.name}>
+                <CardContent className="p-6 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-base font-bold">{course.name}</p>
+                      <p className="text-sm text-muted-foreground">{course.count} students enrolled</p>
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <Badge variant="secondary" className="font-mono">
+                      {percentage.toFixed(1)}%
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {course.yearLevels.map((item) => (
+                      <div key={`${course.name}-${item.level}`} className="p-3 rounded-md bg-muted/30 border border-border/50 text-center">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">{item.level}</p>
+                        <p className="text-base font-bold">{item.count}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
-      </div>
+      </section>
     </div>
   );
+}
+
+function StatSummaryCard({ icon, label, value, isLargeValue = true }: { icon: React.ReactNode, label: string, value: string, isLargeValue?: boolean }) {
+    return (
+      <Card className="overflow-hidden">
+        <CardContent className="p-6 space-y-2">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            {icon}
+            <span className="text-[10px] uppercase font-bold tracking-wider truncate">{label}</span>
+          </div>
+          <p className={cn(
+              "font-bold truncate",
+              isLargeValue ? "text-2xl sm:text-3xl tabular-nums" : "text-sm sm:text-base leading-tight"
+          )} title={value}>{value}</p>
+        </CardContent>
+      </Card>
+    );
 }

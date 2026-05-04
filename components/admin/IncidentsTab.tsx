@@ -6,18 +6,25 @@ import {
   Clock, 
   User, 
   Activity, 
-  ChevronRight, 
   Trash2, 
   Loader2, 
   FileCode, 
   Search,
   X,
   Bug,
-  Database,
   Braces,
-  CheckCircle2
+  CheckCircle2,
+  ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 interface Incident {
   id: number;
@@ -65,9 +72,10 @@ export default function IncidentsTab() {
       });
       if (res.ok) {
         setIncidents(prev => prev.filter(i => i.id !== id));
+        if (selectedIncident?.id === id) setSelectedIncident(null);
       }
     } catch (e) {
-      console.error('Failed to delete incident');
+      console.error('Failed to delete');
     } finally {
       setIsDeleting(null);
     }
@@ -75,172 +83,173 @@ export default function IncidentsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* List View */}
-        <div className="surface-neutral rounded-3xl border border-border/50 overflow-hidden flex flex-col h-[600px]">
-          <div className="px-6 py-4 border-b border-border bg-muted/30 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Recent Incidents</h3>
-            </div>
-            <button 
-                onClick={fetchIncidents}
-                className="p-1 hover:bg-background rounded-lg transition-all"
-                title="Refresh Logs"
-            >
-                <Activity className={`h-3 w-3 text-muted-foreground ${loading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
+        <Card className={cn("lg:col-span-2 flex flex-col h-[500px] lg:h-[600px]", selectedIncident && "hidden lg:flex")}>
+          <CardHeader className="py-4 flex flex-row items-center justify-between space-y-0 border-b">
+            <CardTitle className="text-sm font-semibold">Incident Log</CardTitle>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={fetchIncidents}>
+                <Activity className={cn("h-4 w-4 text-muted-foreground", loading && "animate-spin")} />
+            </Button>
+          </CardHeader>
           
-          <div className="flex-1 overflow-auto custom-scrollbar">
+          <ScrollArea className="flex-1">
             {loading ? (
-              <div className="h-full flex items-center justify-center">
-                <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <div className="h-[400px] flex items-center justify-center">
+                <Loader2 className="h-6 w-6 text-primary animate-spin" />
               </div>
             ) : incidents.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-8">
-                <CheckCircle2 className="h-12 w-12 text-emerald-500/20 mb-4" />
-                <p className="text-sm font-bold text-muted-foreground">System healthy. No incidents logged.</p>
+              <div className="h-[400px] flex flex-col items-center justify-center text-center p-8">
+                <CheckCircle2 className="h-10 w-10 text-emerald-500/20 mb-4" />
+                <p className="text-xs font-medium text-muted-foreground">No issues detected.</p>
               </div>
             ) : (
-              <div className="divide-y divide-border/50">
+              <div className="divide-y">
                 {incidents.map((incident) => (
                   <div
                     key={incident.id}
                     onClick={() => setSelectedIncident(incident)}
-                    className={`w-full text-left p-4 hover:bg-muted/50 transition-all flex items-start gap-4 cursor-pointer group ${
-                      selectedIncident?.id === incident.id ? 'bg-primary/5' : ''
-                    }`}
+                    className={cn(
+                      "w-full text-left p-4 hover:bg-muted/50 transition-colors flex items-start gap-4 cursor-pointer group relative",
+                      selectedIncident?.id === incident.id && "bg-accent"
+                    )}
                   >
-                    <div className={`p-2 rounded-xl shrink-0 ${
-                      incident.severity === 'error' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'
-                    }`}>
-                      <AlertTriangle className="h-5 w-5" />
+                    <div className={cn(
+                        "p-2 rounded-md shrink-0",
+                        incident.severity === 'error' ? "bg-destructive/10 text-destructive" : "bg-amber-500/10 text-amber-600"
+                    )}>
+                      <AlertTriangle className="h-4 w-4" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">{incident.task}</span>
-                        <span className="text-[9px] font-mono text-muted-foreground">
-                          {new Date(incident.created_at).toLocaleTimeString()}
+                    <div className="flex-1 min-w-0 pr-6">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-[10px] font-bold uppercase text-primary truncate pr-2">{incident.task}</span>
+                        <span className="text-[10px] font-mono text-muted-foreground whitespace-nowrap">
+                          {new Date(incident.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      <p className="text-xs font-bold text-foreground truncate">{incident.error_message}</p>
-                      <div className="flex items-center gap-3 mt-2 text-[9px] font-bold text-muted-foreground uppercase">
-                        <span className="flex items-center gap-1"><User className="h-3 w-3" /> {incident.user_id}</span>
-                        <span>{new Date(incident.created_at).toLocaleDateString()}</span>
+                      <p className="text-xs font-medium truncate">{incident.error_message}</p>
+                      <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
+                        <User className="h-3 w-3" />
+                        <span className="truncate">{incident.user_id}</span>
                       </div>
                     </div>
-                    <button 
+                    <Button 
+                      variant="ghost"
+                      size="icon"
                       onClick={(e) => handleDelete(incident.id, e)}
                       disabled={isDeleting === incident.id}
-                      className="p-2 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 lg:group-hover:opacity-100 transition-opacity hover:text-destructive"
                     >
                       {isDeleting === incident.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
             )}
-          </div>
-        </div>
+          </ScrollArea>
+        </Card>
 
         {/* Detail View */}
-        <div className="surface-neutral rounded-3xl border border-border/50 overflow-hidden flex flex-col h-[600px]">
+        <Card className={cn("lg:col-span-3 flex flex-col h-[600px]", !selectedIncident && "hidden lg:flex")}>
           <AnimatePresence mode="wait">
             {selectedIncident ? (
               <motion.div 
                 key={selectedIncident.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex-1 flex flex-col overflow-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex-1 flex flex-col h-full overflow-hidden"
               >
-                <div className="px-6 py-4 border-b border-border bg-muted/30 flex items-center justify-between">
+                <CardHeader className="py-4 flex flex-row items-center justify-between space-y-0 border-b">
                   <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden" onClick={() => setSelectedIncident(null)}>
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
                     <Bug className="h-4 w-4 text-primary" />
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-foreground">Incident Analysis</h3>
+                    <CardTitle className="text-sm font-semibold">Details</CardTitle>
                   </div>
-                  <button onClick={() => setSelectedIncident(null)} className="p-1 hover:bg-muted rounded-lg">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hidden lg:flex" onClick={() => setSelectedIncident(null)}>
                     <X className="h-4 w-4" />
-                  </button>
-                </div>
+                  </Button>
+                </CardHeader>
 
-                <div className="flex-1 overflow-auto p-6 space-y-6 custom-scrollbar">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-3 bg-background rounded-2xl border border-border/50">
-                      <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">Status</p>
-                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                        selectedIncident.severity === 'error' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'
-                      }`}>
-                        {selectedIncident.severity}
-                      </span>
-                    </div>
-                    <div className="p-3 bg-background rounded-2xl border border-border/50">
-                      <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">User ID</p>
-                      <p className="text-xs font-bold text-foreground">{selectedIncident.user_id}</p>
-                    </div>
-                  </div>
-
-                  {selectedIncident.student_name && (
-                    <div className="p-4 bg-primary/5 border border-primary/20 rounded-2xl flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                            <User className="h-5 w-5 text-primary" />
+                <ScrollArea className="flex-1">
+                  <div className="p-4 sm:p-6 space-y-6">
+                    <div className="flex flex-col sm:flex-row gap-4 justify-between">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Severity</Label>
+                        <div className="pt-1">
+                            <Badge variant={selectedIncident.severity === 'error' ? 'destructive' : 'secondary'} className={cn("text-[10px] uppercase", selectedIncident.severity === 'warning' && "bg-amber-500 hover:bg-amber-600 text-white")}>
+                                {selectedIncident.severity}
+                            </Badge>
                         </div>
-                        <div>
-                            <p className="text-[8px] font-black text-primary uppercase tracking-widest">Originating Student</p>
-                            <p className="text-sm font-black text-foreground uppercase">{selectedIncident.student_name}</p>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">{selectedIncident.student_course}</p>
-                        </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Error Description</p>
-                    <div className="p-4 bg-rose-500/5 border border-rose-500/20 rounded-2xl">
-                      <p className="text-sm font-medium text-foreground leading-relaxed">{selectedIncident.error_message}</p>
-                    </div>
-                  </div>
-
-                  {selectedIncident.ai_result && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">AI Extraction Result</p>
-                        <Braces className="h-3 w-3 text-muted-foreground" />
                       </div>
-                      <div className="p-4 bg-black/[0.02] dark:bg-white/[0.02] border border-border rounded-2xl">
-                        <pre className="text-[10px] font-mono whitespace-pre-wrap text-foreground overflow-auto">
+                      <div className="space-y-1 sm:text-right">
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">User Session</Label>
+                        <p className="text-xs font-mono pt-1 break-all">{selectedIncident.user_id}</p>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {selectedIncident.student_name && (
+                      <div className="flex items-center gap-4 p-4 rounded-md bg-muted/30 border">
+                        <Avatar className="h-10 w-10 shrink-0">
+                            <AvatarFallback><User className="h-5 w-5" /></AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                            <p className="text-[10px] font-bold text-primary uppercase">Origin Student</p>
+                            <p className="text-sm font-bold truncate">{selectedIncident.student_name}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase truncate">{selectedIncident.student_course}</p>
+                        </div>
+                      </div>
+                    )}
+
+                      <div className="space-y-2">
+                      <Label className="text-[10px] uppercase font-bold text-muted-foreground">Error Trace</Label>
+                      <div className="p-4 rounded-md bg-destructive/5 border border-destructive/20 overflow-hidden">
+                        <p className="text-xs font-medium leading-relaxed break-words overflow-hidden">{selectedIncident.error_message}</p>
+                      </div>
+                    </div>
+
+                    {selectedIncident.ai_result && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Structured Output</Label>
+                          <Braces className="h-3 w-3 text-muted-foreground" />
+                        </div>
+                        <pre className="p-4 rounded-md bg-muted text-[10px] font-mono whitespace-pre-wrap overflow-auto border max-h-[300px]">
                           {typeof selectedIncident.ai_result === 'string' 
                             ? JSON.stringify(JSON.parse(selectedIncident.ai_result), null, 2)
                             : JSON.stringify(selectedIncident.ai_result, null, 2)
                           }
                         </pre>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {selectedIncident.raw_html && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Evidence (Raw HTML)</p>
-                        <FileCode className="h-3 w-3 text-muted-foreground" />
+                    {selectedIncident.raw_html && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Source Material</Label>
+                          <FileCode className="h-3 w-3 text-muted-foreground" />
+                        </div>
+                        <div className="p-4 rounded-md bg-muted border h-64 overflow-auto">
+                          <pre className="text-[10px] font-mono text-muted-foreground whitespace-pre-wrap">
+                            {selectedIncident.raw_html}
+                          </pre>
+                        </div>
                       </div>
-                      <div className="p-4 bg-black/[0.02] dark:bg-white/[0.02] border border-border rounded-2xl h-[200px] overflow-auto custom-scrollbar">
-                        <pre className="text-[10px] font-mono whitespace-pre-wrap text-muted-foreground/80">
-                          {selectedIncident.raw_html}
-                        </pre>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                </ScrollArea>
               </motion.div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-12 text-muted-foreground opacity-50">
-                <Search className="h-12 w-12 mb-4" />
-                <p className="text-sm font-bold uppercase tracking-widest">Select an incident to investigate</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-12 text-muted-foreground/50">
+                <Search className="h-10 w-10 mb-4" />
+                <p className="text-sm font-medium">Select an incident to view details.</p>
               </div>
             )}
           </AnimatePresence>
-        </div>
+        </Card>
       </div>
     </div>
   );

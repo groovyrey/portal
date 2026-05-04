@@ -11,8 +11,7 @@ import LoginProgressModal from '@/components/auth/LoginProgressModal';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useStudentQuery } from '@/lib/hooks';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { LayoutDashboard, Calendar, School, LogOut, ChevronRight } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { LayoutDashboard, Calendar, School } from 'lucide-react';
 import TabbedPageLayout from '@/components/layout/TabbedPageLayout';
 
 export default function Home() {
@@ -61,7 +60,7 @@ export default function Home() {
         const displayName = result.data.parsedName ? result.data.parsedName.firstName : result.data.name;
         toast.success(`Welcome, ${displayName}!`);
       } else {
-        const msg = result.error || 'Login failed. Please check your credentials.';
+        const msg = result.error || 'Login failed. Please check your Student ID and password.';
         toast.error(msg);
       }
     },
@@ -81,13 +80,18 @@ export default function Home() {
         <div className="max-w-5xl mx-auto space-y-8">
           <div className="flex justify-between items-center">
             <div className="space-y-2">
-              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-10 w-48" />
               <Skeleton className="h-4 w-32" />
             </div>
-            <Skeleton className="h-10 w-10 circular" />
+            <Skeleton className="h-12 w-12 rounded-full" />
           </div>
           <div className="space-y-6">
-            <Skeleton className="h-[400px] w-full" />
+            <Skeleton className="h-64 w-full rounded-xl" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+               <Skeleton className="h-32 rounded-xl" />
+               <Skeleton className="h-32 rounded-xl" />
+               <Skeleton className="h-32 rounded-xl" />
+            </div>
           </div>
         </div>
       </div>
@@ -110,8 +114,8 @@ export default function Home() {
   }
 
   const tabs = [
-    { id: 'overview', name: 'Overview', icon: LayoutDashboard, desc: 'At a glance' },
-    { id: 'schedule', name: 'Schedule', icon: Calendar, desc: 'Classes & Holidays' },
+    { id: 'overview', name: 'Overview', icon: LayoutDashboard, desc: 'See your progress' },
+    { id: 'schedule', name: 'Schedule', icon: Calendar, desc: 'Check your classes' },
   ] as const;
 
   return (
@@ -122,9 +126,9 @@ export default function Home() {
       activeTab={activeTab}
       onTabChange={handleTabChange}
       sidebarFooter={
-        <div className="p-3 rounded-lg bg-background border border-border">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Signed in as</p>
-          <p className="text-xs font-bold break-words text-foreground">{student.name}</p>
+        <div className="p-4 rounded-xl bg-background border border-border">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Signed in as</p>
+          <p className="text-sm font-semibold break-words text-foreground">{student.name}</p>
         </div>
       }
     >

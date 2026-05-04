@@ -2,6 +2,7 @@
 
 import { ShieldCheck, Info, MessageSquare, AlertTriangle, GraduationCap, HeartHandshake } from 'lucide-react';
 import Drawer from '@/components/layout/Drawer';
+import { Separator } from '@/components/ui/separator';
 
 interface CommunityGuidelinesDrawerProps {
   isOpen: boolean;
@@ -44,13 +45,13 @@ export default function CommunityGuidelinesDrawer({ isOpen, onClose }: Community
       title="Community Guidelines"
       side="right"
     >
-      <div className="space-y-8 pb-10">
-        <div className="bg-accent rounded-2xl p-6 border border-border">
-          <div className="flex items-center gap-3 mb-2 text-foreground">
-            <Info className="h-5 w-5" />
-            <h3 className="font-bold text-sm">Why have guidelines?</h3>
+      <div className="space-y-6 pb-8">
+        <div className="bg-muted p-4 rounded-lg border border-border">
+          <div className="flex items-center gap-2 mb-2 text-foreground">
+            <Info className="h-4 w-4" />
+            <h3 className="font-semibold text-sm">Why have guidelines?</h3>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed font-medium">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             To ensure the LCCians Community remains a safe and productive space for all students, every post is reviewed for compliance with these standards.
           </p>
         </div>
@@ -58,11 +59,12 @@ export default function CommunityGuidelinesDrawer({ isOpen, onClose }: Community
         <div className="space-y-6">
           {GUIDELINES.map((item, idx) => (
             <div key={idx} className="flex gap-4 group">
-                                <div className="shrink-0 h-10 w-10 rounded-xl bg-card border border-border shadow-sm flex items-center justify-center group-hover:opacity-80 transition-opacity">                {item.icon}
+              <div className="shrink-0 h-10 w-10 rounded-md bg-muted border border-border flex items-center justify-center transition-colors">
+                {item.icon}
               </div>
               <div>
-                <h4 className="text-sm font-bold text-foreground mb-1">{item.title}</h4>
-                <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                <h4 className="text-sm font-semibold text-foreground mb-1">{item.title}</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   {item.description}
                 </p>
               </div>
@@ -70,8 +72,10 @@ export default function CommunityGuidelinesDrawer({ isOpen, onClose }: Community
           ))}
         </div>
 
-        <div className="pt-6 border-t border-border">
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] text-center">
+        <Separator />
+
+        <div className="pt-2">
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest text-center">
             Let&apos;s build a better LCC together
           </p>
         </div>

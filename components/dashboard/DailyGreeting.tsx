@@ -3,6 +3,9 @@
 import { Student } from '@/types';
 import { Cloud, Sun, Moon, Sparkles, Loader2, PartyPopper, RotateCcw } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const FALLBACK_QUOTES = [
   { q: "Education is the most powerful weapon which you can use to change the world.", a: 'Nelson Mandela' },
@@ -125,7 +128,7 @@ export default function DailyGreeting({ student }: { student: Student }) {
       case 'morning':
         return <Sun className="h-5 w-5 text-amber-500" />;
       case 'afternoon':
-        return <Cloud className="h-5 w-5 text-sky-500" />;
+        return <Cloud className="h-5 w-5 text-blue-500" />;
       case 'evening':
         return <Moon className="h-5 w-5 text-indigo-500" />;
     }
@@ -141,69 +144,75 @@ export default function DailyGreeting({ student }: { student: Student }) {
   }).format(currentDate);
 
   return (
-    <section className="surface-sky relative overflow-hidden rounded-lg border border-border/80 p-4 sm:p-5 shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-      <div className="pointer-events-none absolute -right-10 top-0 h-32 w-32 rounded-full bg-sky-400/10 blur-3xl dark:bg-sky-400/5" />
-      <div className="pointer-events-none absolute -left-10 bottom-0 h-28 w-28 rounded-full bg-indigo-400/10 blur-3xl dark:bg-indigo-400/5" />
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background">{getIcon()}</div>
-            <p className="text-xs font-medium">
-              {timeOfDay === 'morning' ? 'Good morning' : timeOfDay === 'afternoon' ? 'Good afternoon' : 'Good evening'}
+    <Card className="bg-card">
+      <CardContent className="p-6">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md border border-input bg-background shadow-sm">
+                {getIcon()}
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground leading-none">
+                  Good {timeOfDay},
+                </p>
+                <h2 className="text-2xl font-bold tracking-tight mt-1">{firstName}</h2>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <span className="px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground">Year {student.yearLevel || '?'}</span>
+              <span className="px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground">{student.semester || '?'}</span>
+            </div>
+          </div>
+
+          <div className="text-left sm:text-right">
+            <p className="text-sm font-semibold">{dayName}</p>
+            <p className="text-xs text-muted-foreground mt-1">{formattedDate}</p>
+          </div>
+        </div>
+
+        {holiday && (
+          <div className="mt-6 flex items-center gap-2 rounded-md bg-muted px-4 py-3 border border-border">
+            <PartyPopper className="h-4 w-4 text-primary" />
+            <p className="text-sm font-medium">
+              Today is {holiday.localName || holiday.name}.
             </p>
           </div>
-          <h2 className="text-2xl font-semibold tracking-tight">{firstName}</h2>
-          <p className="text-xs text-muted-foreground">
-            Year {student.yearLevel || '?'} • Semester {student.semester || '?'}
-          </p>
-        </div>
+        )}
 
-        <div className="text-left sm:text-right">
-          <p className="text-xs text-muted-foreground">{dayName}</p>
-          <p className="text-base font-medium tabular-nums">{formattedDate}</p>
-        </div>
-      </div>
-
-      {holiday && (
-        <div className="mt-4 flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
-          <PartyPopper className="h-4 w-4 text-primary" />
-          <p className="text-xs">
-            Today is {holiday.localName || holiday.name}.
-          </p>
-        </div>
-      )}
-
-      <div className="mt-4 flex flex-col gap-1 border-t border-border pt-4">
-        <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="h-3 w-3 text-primary" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">Today's Quote</span>
-        </div>
-        
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-2">
-            {loading ? (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>Loading quote...</span>
+        <div className="mt-8 pt-6 border-t border-border">
+          <div className="flex items-center justify-between gap-4">
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider">Today's Quote</span>
               </div>
-            ) : (
-              <div>
-                <p className="text-sm text-muted-foreground leading-relaxed">"{quote}"</p>
-                {author && <p className="mt-2 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-tight">— {author}</p>}
-              </div>
-            )}
+              
+              {loading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Loading quote...</span>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-sm text-muted-foreground italic leading-relaxed">"{quote}"</p>
+                  {author && <p className="mt-1 text-xs font-medium text-muted-foreground/60">— {author}</p>}
+                </div>
+              )}
+            </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => fetchQuote(true)}
+              disabled={loading}
+              className="h-8 w-8 shrink-0"
+            >
+              <RotateCcw className={cn("h-4 w-4", loading && "animate-spin")} />
+            </Button>
           </div>
-
-          <button
-            onClick={() => fetchQuote(true)}
-            disabled={loading}
-            className="shrink-0 rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
-            title="Refresh Quote"
-          >
-            <RotateCcw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
         </div>
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   );
 }

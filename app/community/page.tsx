@@ -5,28 +5,30 @@ import { toast } from 'sonner';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { 
   MessageSquare, 
-  Eye, 
-  MoreVertical, 
   Trash2, 
-  Heart, 
   X, 
-  BarChart2, 
-  ShieldAlert, 
   Search, 
   SlidersHorizontal, 
-  ChevronDown, 
-  Flag,
   Info,
-  Plus
+  Plus,
+  RefreshCcw,
+  ArrowRight
 } from 'lucide-react';
 import { CommunityPost, Student } from '@/types';
 import CommunityGuidelinesDrawer from '@/components/community/CommunityGuidelinesDrawer';
 import Skeleton from '@/components/ui/Skeleton';
+import { Label } from '@/components/ui/label';
 import PostCard from '@/components/community/PostCard';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
-import Modal from '@/components/ui/Modal';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 function CommunityContent() {
   const router = useRouter();
@@ -91,7 +93,6 @@ function CommunityContent() {
       }
       setDebouncedSearch(searchInput);
     }, 400);
-
     return () => clearTimeout(timer);
   }, [searchInput, searchQuery]);
 
@@ -106,7 +107,6 @@ function CommunityContent() {
       const savedStudent = localStorage.getItem('student_data');
       if (savedStudent) setStudent(JSON.parse(savedStudent));
     };
-
     checkStudent();
     window.addEventListener('local-storage-update', checkStudent);
     return () => window.removeEventListener('local-storage-update', checkStudent);
@@ -135,17 +135,10 @@ function CommunityContent() {
 
   useEffect(() => {
     if (!data) return;
-
-    if (offset === 0) {
-      setAllPosts(data.posts);
-    } else {
-      setAllPosts((prev) => [...prev, ...data.posts]);
-    }
-
+    if (offset === 0) setAllPosts(data.posts);
+    else setAllPosts((prev) => [...prev, ...data.posts]);
     setHasMore(data.hasMore);
   }, [data, offset]);
-
-  const posts = allPosts;
 
   const handleLike = async (postId: string, isLiked: boolean) => {
     if (!student) return;
@@ -159,7 +152,7 @@ function CommunityContent() {
       queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
     } catch (err) {
-      toast.error('Reaction failed');
+      toast.error('Could not react to post');
     }
   };
 
@@ -181,7 +174,7 @@ function CommunityContent() {
 
   const handleReport = async (postId: string) => {
     if (!student) return;
-    const toastId = toast.loading('Reviewing post protocol...');
+    const toastId = toast.loading('Reporting...');
     try {
       const res = await fetch('/api/community/report', {
         method: 'POST',
@@ -191,22 +184,22 @@ function CommunityContent() {
       const data = await res.json();
       if (data.success) {
         if (data.decision === 'REJECTED') {
-          toast.success('Guideline violation confirmed. Post purged.', { id: toastId });
+          toast.success('Post removed for policy violation.', { id: toastId });
           queryClient.invalidateQueries({ queryKey: ['community-posts'] });
         } else {
-          toast.success('Aegis: Content matches community safety protocols.', { id: toastId });
+          toast.success('Report received. Content is being monitored.', { id: toastId });
         }
       } else {
-        toast.error(data.error || 'Review failed', { id: toastId });
+        toast.error('Report failed', { id: toastId });
       }
     } catch (err) {
-      toast.error('Network protocol error', { id: toastId });
+      toast.error('Network error', { id: toastId });
     }
   };
 
   const handleDeletePost = async () => {
     if (!postToDelete) return;
-    const deleteToast = toast.loading('Purging record...');
+    const deleteToast = toast.loading('Deleting...');
     try {
       const res = await fetch('/api/community', {
         method: 'DELETE',
@@ -215,98 +208,172 @@ function CommunityContent() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Post purged', { id: deleteToast });
+        toast.success('Post deleted', { id: deleteToast });
         queryClient.invalidateQueries({ queryKey: ['community-posts'] });
       } else {
-        toast.error(data.error || 'Purge failed', { id: deleteToast });
+        toast.error('Delete failed', { id: deleteToast });
       }
     } catch (e) {
-      toast.error('Network failure', { id: deleteToast });
+      toast.error('Network error', { id: deleteToast });
     } finally {
       setPostToDelete(null);
     }
   };
 
-  const openPostModal = (post: CommunityPost) => {
-    router.push(`/post/${post.id}`);
-  };
-
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="max-w-2xl mx-auto p-4 space-y-6">
-        <div className="flex items-center justify-end mb-2">
-          <button onClick={() => setShowGuidelines(true)} className="p-2 rounded-lg bg-muted/50 text-muted-foreground hover:text-primary transition-colors border border-border/50">
-            <Info size={16} />
-          </button>
+    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 pb-20">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h2 className="text-3xl font-bold tracking-tight">Community</h2>
+            <p className="text-sm text-muted-foreground">Connect with other students.</p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={() => setShowGuidelines(true)}>
+            <Info className="h-5 w-5 text-muted-foreground" />
+          </Button>
         </div>
 
-        {/* Search & Main Filters */}
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-1 group">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
-              <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} maxLength={100} placeholder="Search the community..." className="w-full pl-10 pr-10 py-3 surface-neutral border border-border/50 rounded-lg text-[13px] font-black uppercase tracking-tight focus:outline-none focus:border-primary/50 transition-all text-foreground shadow-sm ring-1 ring-black/5" />
-              {searchInput && <button onClick={() => setSearchInput('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search posts..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="pl-9 pr-9"
+              />
+              {searchInput && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="absolute right-0 top-0 h-9 w-9 hover:bg-transparent"
+                  onClick={() => setSearchInput('')}
+                >
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              )}
             </div>
-            <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-5 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all ${showFilters || selectedType !== 'all' || sortBy !== 'newest' ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' : 'surface-neutral text-muted-foreground border-border/50 hover:border-muted-foreground shadow-sm'}`}><SlidersHorizontal className="h-3.5 w-3.5" />Refine Feed</button>
+            <Button 
+              variant={showFilters || selectedType !== 'all' || sortBy !== 'newest' ? "default" : "outline"}
+              onClick={() => setShowFilters(!showFilters)}
+              className="gap-2"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Filter
+            </Button>
           </div>
 
           {showFilters && (
-            <div className="surface-neutral rounded-lg border border-border/50 p-5 shadow-sm ring-1 ring-black/5 space-y-5 animate-in slide-in-from-top-2 duration-200">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-1">Order By</label>
-                  <div className="flex flex-wrap gap-2">{sortOptions.map(opt => <button key={opt.id} onClick={() => updateSearchParams({ sort: opt.id })} className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest border transition-all ${sortBy === opt.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border/50 hover:border-muted-foreground'}`}>{opt.label}</button>)}</div>
+            <Card>
+              <CardContent className="p-4 grid gap-6 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-semibold text-muted-foreground">Sort By</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {sortOptions.map(opt => (
+                      <Badge 
+                        key={opt.id} 
+                        variant={sortBy === opt.id ? "default" : "outline"}
+                        className="cursor-pointer px-3 py-1"
+                        onClick={() => updateSearchParams({ sort: opt.id })}
+                      >
+                        {opt.label}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-                <div className="space-y-3">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-1">Type</label>
-                  <div className="flex flex-wrap gap-2">{postTypes.map(type => <button key={type.id} onClick={() => updateSearchParams({ type: type.id })} className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest border transition-all ${selectedType === type.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/50 text-muted-foreground border-border/50 hover:border-muted-foreground'}`}>{type.label}</button>)}</div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase font-semibold text-muted-foreground">Type</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {postTypes.map(type => (
+                      <Badge 
+                        key={type.id} 
+                        variant={selectedType === type.id ? "default" : "outline"}
+                        className="cursor-pointer px-3 py-1"
+                        onClick={() => updateSearchParams({ type: type.id })}
+                      >
+                        {type.label}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
           <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-            {topics.map(topic => <button key={topic} onClick={() => updateSearchParams({ topic })} className={`px-4 py-2 rounded-md text-[9px] font-black uppercase tracking-widest whitespace-nowrap border transition-all ${selectedTopic === topic ? 'bg-primary text-primary-foreground border-primary shadow-sm' : 'bg-muted/30 text-muted-foreground border-border/50 hover:border-muted-foreground'}`}>{topic}</button>)}
+            {topics.map(topic => (
+              <Button
+                key={topic}
+                variant={selectedTopic === topic ? "default" : "secondary"}
+                size="sm"
+                className="rounded-full h-8 px-4 text-xs"
+                onClick={() => updateSearchParams({ topic })}
+              >
+                {topic}
+              </Button>
+            ))}
           </div>
         </div>
 
-        {/* Feed */}
         <div className="space-y-4">
           {loading ? (
             <div className="space-y-4">
               {[1, 2].map(i => (
-                <div key={i} className="surface-neutral rounded-xl p-6 border border-border/50 space-y-4 shadow-sm ring-1 ring-black/5">
-                  <div className="flex items-center gap-3"><Skeleton className="h-10 w-10 rounded-lg" /><div className="space-y-2 flex-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div></div>
-                  <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-2/3" /></div>
-                </div>
+                <Card key={i}>
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <div className="space-y-2 flex-1">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-20 w-full rounded-md" />
+                  </CardContent>
+                </Card>
               ))}
             </div>
           ) : isError ? (
-            <div className="surface-neutral text-center py-20 rounded-xl border border-red-500/20 shadow-sm ring-1 ring-black/5">
-              <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-6">Connection Interrupted</p>
-              <button onClick={() => refetch()} className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-colors shadow-lg shadow-primary/10">Retry Connection</button>
-            </div>
-          ) : posts.length === 0 ? (
-            <div className="surface-neutral text-center py-20 rounded-xl border border-border/50 shadow-sm ring-1 ring-black/5">
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">No posts found in this category</p>
-            </div>
+            <Card className="border-destructive/20 bg-destructive/5">
+              <CardContent className="p-12 text-center space-y-4">
+                <p className="text-sm font-medium text-destructive">Could not connect to the community.</p>
+                <Button variant="outline" size="sm" onClick={() => refetch()}>
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  Retry
+                </Button>
+              </CardContent>
+            </Card>
+          ) : allPosts.length === 0 ? (
+            <Card className="bg-muted/20 border-dashed">
+              <CardContent className="p-12 text-center text-muted-foreground">
+                <p className="text-sm font-medium">No posts found in this category.</p>
+              </CardContent>
+            </Card>
           ) : (
             <>
-              {posts.map(post => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  student={student}
-                  onLike={handleLike}
-                  onVote={handleVote}
-                  onOpen={openPostModal}
-                  onReport={handleReport}
-                  onDelete={setPostToDelete}
-                />
-              ))}
+              <div className="grid gap-4">
+                {allPosts.map(post => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    student={student}
+                    onLike={handleLike}
+                    onVote={handleVote}
+                    onOpen={(p) => router.push(`/post/${p.id}`)}
+                    onReport={handleReport}
+                    onDelete={setPostToDelete}
+                  />
+                ))}
+              </div>
               {hasMore && (
-                <button onClick={handleLoadMore} className="w-full py-4 surface-neutral border border-border/50 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all active:scale-[0.99] shadow-sm ring-1 ring-black/5">Load More Posts</button>
+                <Button 
+                  variant="outline" 
+                  className="w-full h-12" 
+                  onClick={handleLoadMore}
+                >
+                  Load More
+                </Button>
               )}
             </>
           )}
@@ -315,40 +382,34 @@ function CommunityContent() {
 
       <CommunityGuidelinesDrawer isOpen={showGuidelines} onClose={() => setShowGuidelines(false)} />
 
-      {/* Floating Create Button */}
       <Link 
         href="/community/create"
-        className="fixed bottom-24 right-6 h-14 w-14 bg-foreground text-background rounded-xl shadow-2xl shadow-primary/20 flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-40 md:hidden border border-white/10"
+        className="fixed bottom-24 right-6 h-14 w-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-40 md:bottom-8 md:right-8"
       >
-        <Plus className="h-7 w-7" />
+        <Plus className="h-6 w-6" />
       </Link>
 
-      <Modal 
-        isOpen={!!postToDelete} 
-        onClose={() => setPostToDelete(null)}
-        maxWidth="max-w-xs"
-        className="p-10 text-center"
-      >
-        <div className="h-16 w-16 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-red-500/10">
-            <Trash2 className="h-8 w-8" />
-        </div>
-        <h3 className="text-xl font-black text-foreground mb-3 uppercase tracking-tight">Delete Post?</h3>
-        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest leading-relaxed mb-10">This post will be permanently removed from the LCCians community database.</p>
-        <div className="flex flex-col gap-3">
-            <button 
-                onClick={handleDeletePost}
-                className="w-full py-4 bg-red-500 hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-red-500/20 active:scale-95"
-            >
-                Confirm Delete
-            </button>
-            <button 
-                onClick={() => setPostToDelete(null)}
-                className="w-full py-4 bg-muted text-muted-foreground text-[10px] font-black uppercase tracking-widest rounded-lg transition-all active:scale-95"
-            >
-                Cancel
-            </button>
-        </div>
-      </Modal>
+      <Dialog open={!!postToDelete} onOpenChange={(open) => !open && setPostToDelete(null)}>
+        <DialogContent className="sm:max-w-sm text-center">
+          <DialogHeader className="items-center">
+            <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center text-destructive mb-4">
+              <Trash2 className="h-6 w-6" />
+            </div>
+            <DialogTitle>Delete post?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This post will be permanently removed.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-col mt-4">
+            <Button variant="destructive" onClick={handleDeletePost} className="w-full">
+              Delete Post
+            </Button>
+            <Button variant="ghost" onClick={() => setPostToDelete(null)} className="w-full">
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -356,24 +417,30 @@ function CommunityContent() {
 export default function CommunityPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background p-4">
+      <div className="flex-1 space-y-6 p-8 pt-6">
         <div className="max-w-2xl mx-auto space-y-6">
-          <div className="flex items-center justify-between mb-4">
-            <Skeleton className="h-10 w-48 rounded-lg" />
-            <Skeleton className="h-8 w-8 rounded-lg" />
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-9 w-9 rounded-full" />
           </div>
-          <div className="surface-neutral rounded-xl p-6 border border-border/50">
-            <div className="flex gap-4">
-              <Skeleton className="h-10 w-10 rounded-lg" />
-              <Skeleton className="h-12 flex-1 rounded-lg" />
-            </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 flex-1 rounded-md" />
+            <Skeleton className="h-10 w-24 rounded-md" />
           </div>
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="surface-neutral rounded-xl p-6 border border-border/50 space-y-4">
-                <div className="flex items-center gap-3"><Skeleton className="h-10 w-10 rounded-lg" /><div className="space-y-2 flex-1"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-20" /></div></div>
-                <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-2/3" /></div>
-              </div>
+              <Card key={i}>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-24 w-full rounded-md" />
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>

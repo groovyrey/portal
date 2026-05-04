@@ -10,22 +10,22 @@ export default function PageHeader() {
 
   const getPageTitle = (path: string) => {
     if (path === '/') return 'Dashboard';
-    if (path === '/assistant') return 'Assistant AI';
-    if (path === '/g-space') return 'G-Space Sync';
-    if (path === '/grades') return 'Academic Registry';
+    if (path === '/assistant') return 'Assistant';
+    if (path === '/g-space') return 'G-Space';
+    if (path === '/grades') return 'Grades';
     if (path === '/grades/report') return 'Grade Record';
-    if (path === '/subjects') return 'Class Schedule';
-    if (path === '/accounts') return 'Financial Ledger';
-    if (path === '/community') return 'Student Feed';
-    if (path.startsWith('/student/')) return 'Student Profile';
-    if (path === '/eaf') return 'Assessment Form';
-    if (path === '/about') return 'About Hub';
-    if (path === '/disclaimer') return 'Legal Notice';
-    if (path === '/docs') return 'Documentation';
-    if (path === '/school') return 'School Information';
-    if (path === '/admin') return 'Admin Panel';
-    if (path === '/admin/test') return 'Moderation Lab';
-    if (path.startsWith('/post/')) return 'Post Details';
+    if (path === '/subjects') return 'Schedule';
+    if (path === '/accounts') return 'Accounts';
+    if (path === '/community') return 'Community';
+    if (path.startsWith('/student/')) return 'Profile';
+    if (path === '/eaf') return 'EAF';
+    if (path === '/about') return 'About';
+    if (path === '/disclaimer') return 'Disclaimer';
+    if (path === '/docs') return 'Docs';
+    if (path === '/school') return 'School';
+    if (path === '/admin') return 'Admin';
+    if (path === '/admin/test') return 'Admin Test';
+    if (path.startsWith('/post/')) return 'Post';
     return '';
   };
 

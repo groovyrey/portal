@@ -5,13 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, 
   Bot, 
-  Loader2,
   Sparkles,
-  User,
   BrainCircuit,
   HelpCircle,
-  MessageSquare,
-  ArrowLeft,
   Globe,
   Search,
   Copy,
@@ -23,7 +19,6 @@ import {
   Wallet,
   Youtube,
   Calculator,
-  Bell,
   List,
   FileText,
   CalendarDays,
@@ -32,8 +27,10 @@ import {
   VolumeX,
   Volume2,
   Mic,
-  StopCircle
-  } from 'lucide-react';import ReactMarkdown from 'react-markdown';
+  StopCircle,
+  Settings
+} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
@@ -43,10 +40,16 @@ import 'katex/dist/katex.min.css';
 import 'highlight.js/styles/github-dark.css';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import Modal from '@/components/ui/Modal';
 import { useStudent } from '@/lib/hooks';
 import AssistantTab from '@/components/settings/AssistantTab';
-import { Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 type Message = {
   id: string;
@@ -61,68 +64,64 @@ type Message = {
   };
 };
 
-// Modern Typing Indicator Component
 const TypingIndicator = ({ status }: { status?: string }) => (
   <motion.div 
     initial={{ opacity: 0, y: 5 }}
     animate={{ opacity: 1, y: 0 }}
-    className="px-4 py-3 bg-accent/50 rounded-xl border border-border w-fit flex items-center gap-3"
+    className="px-4 py-2.5 bg-muted/50 rounded-md border w-fit flex items-center gap-3"
   >
     <div className="flex gap-1">
       {[0, 1, 2].map((i) => (
         <motion.div
-        key={i}
-        animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }}
-        transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-        className="h-1.5 w-1.5 rounded-full bg-primary"
+          key={i}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.4, 1, 0.4] }}
+          transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+          className="h-1 w-1 rounded-full bg-primary"
         />
-        ))}
-        </div>
-        <span className="text-[10px] font-bold text-muted-foreground animate-pulse uppercase tracking-tight leading-none">
-          {status ? `Assistant is ${status.toLowerCase()}` : "Assistant is thinking"}
-        </span>
-        </motion.div>
-        );
+      ))}
+    </div>
+    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+      {status ? `Assistant is ${status.toLowerCase()}` : "Thinking"}
+    </span>
+  </motion.div>
+);
 
-        // Copy Button Component
-        const CopyButton = ({ content, className = "" }: { content: string, className?: string }) => {
-        const [copied, setCopied] = useState(false);
+const CopyButton = ({ content }: { content: string }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {}
+  };
 
-        const handleCopy = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        try {
-        await navigator.clipboard.writeText(content);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-        } catch (err) {
-        console.error('Failed to copy text: ', err);
-        }
-        };
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={handleCopy}
+      className="h-7 w-7 text-muted-foreground"
+    >
+      {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+    </Button>
+  );
+};
 
-        return (
-        <button
-        onClick={handleCopy}
-        className={`p-1.5 rounded-lg bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-all border border-border/50 shadow-sm active:scale-90 ${className}`}
-        title="Copy to clipboard"
-        >
-        {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-        </button>
-        );
-        };
+const SpeakButton = ({ messageId, content, isSpeaking, onSpeak }: { messageId: string, content: string, isSpeaking: boolean, onSpeak: (id: string, content: string) => void }) => {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={(e) => { e.stopPropagation(); onSpeak(messageId, content); }}
+      className="h-7 w-7 text-muted-foreground"
+    >
+      {isSpeaking ? <VolumeX className="h-3.5 w-3.5 animate-pulse" /> : <Volume2 className="h-3.5 w-3.5" />}
+    </Button>
+  );
+};
 
-        // Speak Button Component
-        const SpeakButton = ({ messageId, content, isSpeaking, onSpeak, className = "" }: { messageId: string, content: string, isSpeaking: boolean, onSpeak: (id: string, content: string) => void, className?: string }) => {
-        return (
-          <button
-            onClick={(e) => { e.stopPropagation(); onSpeak(messageId, content); }}
-            className={`p-1.5 rounded-lg bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-all border border-border/50 shadow-sm active:scale-90 ${className}`}
-            title={isSpeaking ? "Stop speaking" : "Read aloud"}
-          >
-            {isSpeaking ? <VolumeX className="h-3.5 w-3.5 text-primary animate-pulse" /> : <Volume2 className="h-3.5 w-3.5" />}
-          </button>
-        );
-        };
-// Sub-component for the input area to prevent full page re-renders on every keystroke
 const ChatInput = React.memo(({ 
   onSend, 
   onStop,
@@ -144,7 +143,7 @@ const ChatInput = React.memo(({
 
   const startRecording = async () => {
     if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      toast.error("Voice input is only available in secure contexts (HTTPS or localhost).");
+      toast.error("Microphone access is only available in secure contexts.");
       return;
     }
 
@@ -153,33 +152,20 @@ const ChatInput = React.memo(({
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-
+      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       mediaRecorder.onstop = async () => {
         const tracks = stream.getTracks();
         tracks.forEach(track => track.stop());
-
         const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
         if (audioBlob.size === 0) return;
-
         setIsTranscribing(true);
-        const toastId = toast.loading("Processing speech...");
-
+        const toastId = toast.loading("Processing...");
         try {
           const formData = new FormData();
           formData.append('audio', audioBlob);
           formData.append('language', 'en'); 
-
-          const response = await fetch('/api/deepgram', {
-            method: 'POST',
-            body: formData,
-          });
-
+          const response = await fetch('/api/deepgram', { method: 'POST', body: formData });
           if (!response.ok) throw new Error('Transcription failed');
-
           const data = await response.json();
           if (data.transcript) {
             setInput((prev) => prev ? `${prev} ${data.transcript}` : data.transcript);
@@ -188,18 +174,15 @@ const ChatInput = React.memo(({
             toast.info("No speech detected", { id: toastId });
           }
         } catch (error) {
-          console.error("Transcription error:", error);
-          toast.error("Failed to transcribe audio", { id: toastId });
+          toast.error("Failed to process audio", { id: toastId });
         } finally {
           setIsTranscribing(false);
         }
       };
-
       mediaRecorder.start();
       setIsRecording(true);
     } catch (err) {
-      console.error("Microphone access denied:", err);
-      toast.error("Microphone access denied. Please check permissions.");
+      toast.error("Microphone access denied.");
     }
   };
 
@@ -212,89 +195,63 @@ const ChatInput = React.memo(({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading) {
-      onStop();
-      return;
-    }
-    if (input.trim()) {
-      onSend(input);
-      setInput('');
-    }
+    if (isLoading) { onStop(); return; }
+    if (input.trim()) { onSend(input); setInput(''); }
   };
 
   return (
-    <div className="p-4 bg-card border-t border-border">
-      <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-        <div className={`relative flex items-center bg-accent border border-border focus-within:border-primary/50 focus-within:bg-card rounded-xl transition-all shadow-sm overflow-hidden ${isRecording ? 'ring-2 ring-red-500/50 border-red-500/50' : ''}`}>
-            {isRecording ? (
-              <button
-                type="button"
-                onClick={stopRecording}
-                className="pl-3 pr-2 flex items-center gap-2 text-red-500 animate-pulse hover:text-red-600 transition-colors"
-                title="Stop Recording"
-              >
-                <StopCircle className="h-5 w-5 fill-current" />
-                <span className="text-xs font-bold uppercase tracking-wider whitespace-nowrap hidden sm:block">Recording...</span>
-              </button>
-            ) : (
-              <div className="flex items-center pl-1">
-                <button
+    <div className="p-4 border-t bg-background">
+      <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-2">
+        <div className="flex gap-2 items-center">
+          <div className="relative flex-1">
+             <div className="absolute left-1 top-1 flex items-center">
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={onClear}
                   disabled={!hasMessages || isLoading}
-                  className="p-2 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-30"
-                  title="Clear Chat"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
                 >
-                  <RefreshCcw className="h-3.5 w-3.5" />
-                </button>
-                <button
+                  <RefreshCcw className="h-4 w-4" />
+                </Button>
+                <Button
                   type="button"
-                  onClick={startRecording}
+                  variant="ghost"
+                  size="icon"
+                  onClick={isRecording ? stopRecording : startRecording}
                   disabled={isLoading || isTranscribing}
-                  className="p-2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-30"
-                  title="Speak to Assistant"
+                  className={cn("h-8 w-8", isRecording ? "text-destructive animate-pulse" : "text-muted-foreground")}
                 >
-                  <Mic className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-            
-            <input 
-                type="text" 
+                  {isRecording ? <StopCircle className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
+             </div>
+             <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 disabled={isLoading || isTranscribing}
-                maxLength={2000}
-                placeholder={
-                  isRecording ? "Listening..." : 
-                  isTranscribing ? "Transcribing speech..." : 
-                  isLoading ? "Assistant is responding..." : "Ask a question..."
-                }
-                className="w-full bg-transparent px-3 py-3 text-sm font-medium transition-all outline-none disabled:opacity-60 text-foreground"
-            />
-            {input.length > 0 && (
-              <div className="absolute right-12 top-1/2 -translate-y-1/2">
-                <span className={`text-[8px] font-bold uppercase tracking-widest ${input.length >= 1900 ? 'text-red-500' : 'text-muted-foreground/30'}`}>
-                  {input.length}/2000
-                </span>
-              </div>
-            )}
-            <div className="pr-1.5">
-                <button 
-                    type="submit"
-                    disabled={(!input?.trim() && !isLoading) || isTranscribing}
-                    className={`${isLoading ? 'bg-red-500 text-white' : 'bg-primary text-primary-foreground'} p-2 rounded-lg hover:opacity-90 transition-all shadow-sm active:scale-90 flex items-center justify-center`}
-                    title={isLoading ? "Stop generating" : "Send message"}
-                >
-                    {isLoading ? <Square className="h-4 w-4 fill-current" /> : <Send className="h-4 w-4" />}
-                </button>
-            </div>
+                placeholder={isRecording ? "Listening..." : isLoading ? "Assistant is responding..." : "Ask a question..."}
+                className="pl-20 h-10 pr-12"
+             />
+             {input.length > 0 && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[8px] font-bold text-muted-foreground/40 uppercase">
+                   {input.length}/2000
+                </div>
+             )}
+          </div>
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={(!input.trim() && !isLoading) || isTranscribing}
+            variant={isLoading ? "destructive" : "default"}
+            className="h-10 w-10 shrink-0"
+          >
+            {isLoading ? <Square className="h-4 w-4 fill-current" /> : <Send className="h-4 w-4" />}
+          </Button>
         </div>
-        <div className="flex flex-col items-center gap-1 mt-2.5">
-          <p className="text-[9px] text-center text-muted-foreground font-bold uppercase tracking-tight leading-none">
-            AI may produce inaccurate information
-          </p>
-        </div>
+        <p className="text-[9px] text-center text-muted-foreground font-semibold uppercase tracking-wider">
+          AI may generate inaccurate information.
+        </p>
       </form>
     </div>
   );
@@ -308,42 +265,43 @@ export default function AssistantPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const lastAssistantMessageIdRef = useRef<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [currentlySpeakingId, setCurrentlySpeakingId] = useState<string | null>(null);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
 
-  // Auto-speak effect
-  useEffect(() => {
-    if (!isLoading && lastAssistantMessageIdRef.current && student?.settings?.assistant?.autoSpeak) {
-      const lastId = lastAssistantMessageIdRef.current;
-      const lastMsg = messages.find(m => m.id === lastId);
-      if (lastMsg && lastMsg.role === 'assistant' && lastMsg.content) {
-        handleSpeak(lastId, lastMsg.content);
-      }
-      lastAssistantMessageIdRef.current = null;
-    }
-  }, [isLoading, messages, student?.settings?.assistant?.autoSpeak]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalQuestion, setModalQuestion] = useState('');
+  const [modalPlaceholder, setModalPlaceholder] = useState('');
+  const [modalInput, setModalInput] = useState('');
+
+  const [isChoiceModalOpen, setIsChoiceModalOpen] = useState(false);
+  const [choiceQuestion, setChoiceQuestion] = useState('');
+  const [choiceOptions, setChoiceOptions] = useState<string[]>([]);
+
+  const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
+  const [htmlModalContent, setHtmlModalContent] = useState('');
+  const [htmlModalTitle, setHtmlModalTitle] = useState('');
+  const [htmlModalFullScreen, setHtmlModalFullScreen] = useState(false);
+
+  const [suggestions] = useState([
+    { text: "What's my schedule today?", icon: Calendar },
+    { text: "Check my remaining balance", icon: Wallet },
+    { text: "Help me with my grades", icon: Info }
+  ]);
 
   const updateSettings = async (newSettings: any) => {
     if (!student) return;
-    
-    // Optimistic update
     const updatedStudent = { ...student, settings: newSettings };
     localStorage.setItem('student_data', JSON.stringify(updatedStudent));
     window.dispatchEvent(new Event('local-storage-update'));
-
     try {
-      console.log("[Assistant] Saving settings:", newSettings);
       const res = await fetch('/api/student/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settings: newSettings }),
       });
-      
-      if (!res.ok) throw new Error('Failed to update settings');
-      toast.success('Preferences updated');
-    } catch (e) {
-      console.error("[Assistant] Settings update error:", e);
-      toast.error('Failed to save preferences');
-    }
+      if (res.ok) toast.success('Preferences updated');
+    } catch (e) { toast.error('Failed to save settings'); }
   };
 
   const handleStop = React.useCallback(() => {
@@ -351,118 +309,22 @@ export default function AssistantPage() {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
       setIsLoading(false);
-      toast.info('Response stopped');
     }
   }, []);
 
   const getToolIcon = (toolName: string) => {
     switch (toolName) {
       case 'web_search': return Globe;
-      case 'web_fetch': return FileText;
       case 'youtube_search': return Youtube;
       case 'execute_math': return Calculator;
       case 'ask_user': return HelpCircle;
       case 'ask_user_choice': return List;
       case 'get_day_schedule': return Calendar;
       case 'get_weekly_schedule': return CalendarDays;
-      case 'get_grades': return Check;
       case 'get_financials': return Wallet;
-      case 'get_full_student_data': return BrainCircuit;
       case 'render_html': return Sparkles;
       default: return Zap;
     }
-  };
-
-  const [suggestions, setSuggestions] = useState([
-    { text: "What are my classes for today?", icon: Calendar, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { text: "Check my remaining balance", icon: Wallet, color: "text-amber-500", bg: "bg-amber-500/10" },
-    { text: "Explain school policies", icon: Info, color: "text-purple-500", bg: "bg-purple-500/10" }
-  ]);
-
-  // Modal state for ask_user tool
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalQuestion, setModalQuestion] = useState('');
-  const [modalPlaceholder, setModalPlaceholder] = useState('');
-  const [modalInput, setModalInput] = useState('');
-
-  // Choice modal state for ask_user_choice tool
-  const [isChoiceModalOpen, setIsChoiceModalOpen] = useState(false);
-  const [choiceQuestion, setChoiceQuestion] = useState('');
-  const [choiceOptions, setChoiceOptions] = useState<string[]>([]);
-
-  // HTML modal state for render_html tool
-  const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
-  const [htmlModalContent, setHtmlModalContent] = useState('');
-  const [htmlModalTitle, setHtmlModalTitle] = useState('');
-  const [htmlModalFullScreen, setHtmlModalFullScreen] = useState(false);
-
-  // TTS State
-  const [currentlySpeakingId, setCurrentlySpeakingId] = useState<string | null>(null);
-  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
-
-  const cleanTextForTTS = (text: string) => {
-    let cleaned = text
-      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-      .replace(/!\[[^\]]*\]\([^\)]+\)/g, '') // Remove images
-      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Keep link text, remove URL
-      .replace(/https?:\/\/\S+/g, ''); // Remove standalone URLs
-
-    // Handle LaTeX and Math
-    cleaned = cleaned
-      .replace(/\$\$([\s\S]+?)\$\$/g, ' $1 ') // Block math
-      .replace(/\$([\s\S]+?)\$/g, ' $1 ')     // Inline math
-      .replace(/\\\[([\s\S]+?)\\\]/g, ' $1 ') // \[ \] math
-      .replace(/\\\(([\s\S]+?)\\\)/g, ' $1 ') // \( \) math
-      
-      // Common LaTeX command replacements
-      .replace(/\\frac\{(.+?)\}\{(.+?)\}/g, '$1 over $2')
-      .replace(/\\sqrt\{(.+?)\}/g, 'square root of $1')
-      .replace(/\\times/g, ' times ')
-      .replace(/\\div/g, ' divided by ')
-      .replace(/\\pm/g, ' plus or minus ')
-      .replace(/\\cdot/g, ' times ')
-      .replace(/\\approx/g, ' approximately ')
-      .replace(/\\ne/g, ' not equal to ')
-      .replace(/\\le/g, ' less than or equal to ')
-      .replace(/\\ge/g, ' greater than or equal to ')
-      .replace(/\\infty/g, ' infinity ')
-      .replace(/\\pi/g, ' pi ')
-      .replace(/\\sum/g, ' the sum of ')
-      .replace(/\\int/g, ' the integral of ')
-      
-      // Greek letters
-      .replace(/\\alpha/g, ' alpha ')
-      .replace(/\\beta/g, ' beta ')
-      .replace(/\\gamma/g, ' gamma ')
-      .replace(/\\theta/g, ' theta ')
-      .replace(/\\lambda/g, ' lambda ')
-      .replace(/\\mu/g, ' mu ')
-      .replace(/\\sigma/g, ' sigma ')
-      .replace(/\\Delta/g, ' delta ')
-      
-      // Clean up remaining LaTeX commands and braces
-      .replace(/\\text\{(.+?)\}/g, ' $1 ')
-      .replace(/\\([a-zA-Z]+)/g, ' ')
-      .replace(/[\{\}]/g, ' ');
-
-    // Spoken math operators
-    cleaned = cleaned
-      .replace(/ \+ /g, ' plus ')
-      .replace(/ - /g, ' minus ')
-      .replace(/ \* /g, ' times ')
-      .replace(/ \/ /g, ' divided by ')
-      .replace(/ = /g, ' equals ')
-      .replace(/\^(\d+)/g, ' to the power of $1')
-      .replace(/\^\{(.+?)\}/g, ' to the power of $1');
-
-    // Final cleanup
-    cleaned = cleaned
-      .replace(/₱/g, ' Pesos ')
-      .replace(/[*#~>|]/g, '')      // Remove remaining markdown markers
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    return cleaned;
   };
 
   const handleSpeak = async (messageId: string, content: string) => {
@@ -471,768 +333,296 @@ export default function AssistantPage() {
       setCurrentlySpeakingId(null);
       return;
     }
-
-    // Stop any current audio
-    if (currentAudio) {
-      currentAudio.pause();
-    }
-
-    const cleanedText = cleanTextForTTS(content);
+    if (currentAudio) currentAudio.pause();
+    const cleanedText = content.replace(/```[\s\S]*?```/g, '').replace(/[*#~>|]/g, '').trim();
     if (!cleanedText) return;
-
     try {
       setCurrentlySpeakingId(messageId);
       const voiceModel = student?.settings?.assistant?.voiceModel || 'aura-helios-en';
-      
       const response = await fetch('/api/deepgram', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: cleanedText, model: voiceModel }) 
       });
-
-      if (!response.ok) throw new Error('TTS failed');
-
+      if (!response.ok) throw new Error();
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
-      
-      audio.onended = () => {
-        setCurrentlySpeakingId(null);
-        URL.revokeObjectURL(url);
-      };
-
+      audio.onended = () => { setCurrentlySpeakingId(null); URL.revokeObjectURL(url); };
       setCurrentAudio(audio);
       audio.play();
-    } catch (err) {
-      console.error('Failed to speak text: ', err);
-      setCurrentlySpeakingId(null);
-    }
+    } catch (err) { setCurrentlySpeakingId(null); }
   };
-
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // Helper to generate the isolated iframe content
-  const getIframeSrcDoc = (content: string) => {
-    const isDark = typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : false;
-    
-    const libraries = `
-      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-      <script src="https://cdn.tailwindcss.com"></script>
-      <script src="https://unpkg.com/lucide@latest"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    `;
-
-    const lucideInit = `
-      <script>
-        const initLucide = () => {
-          if (typeof lucide !== 'undefined') lucide.createIcons();
-        };
-        document.addEventListener('DOMContentLoaded', initLucide);
-        setTimeout(initLucide, 500);
-        setTimeout(initLucide, 2000);
-      </script>
-    `;
-
-    // Check if content already contains a full HTML structure
-    if (content.trim().toLowerCase().includes('<!doctype html>') || content.trim().toLowerCase().includes('<html')) {
-      let finalContent = content;
-      
-      // Inject libraries and init if they seem to be missing
-      if (!content.includes('tailwind')) finalContent = finalContent.replace('</head>', `${libraries}</head>`);
-      if (!content.includes('lucide.createIcons')) finalContent = finalContent.replace('</body>', `${lucideInit}</body>`);
-      
-      return finalContent;
-    }
-
-    return `
-      <!DOCTYPE html>
-      <html lang="en" data-bs-theme="light">
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          ${libraries}
-          <style>
-            body { 
-              font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-              margin: 0;
-              padding: 0;
-              background: white;
-              overflow-x: hidden;
-              color: #0f172a;
-            }
-            #app-root { min-height: 100vh; }
-            ::-webkit-scrollbar { width: 5px; }
-            ::-webkit-scrollbar-track { background: transparent; }
-            ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
-          </style>
-        </head>
-        <body class="bg-white text-slate-800">
-          <div id="app-root">
-            ${content}
-          </div>
-          ${lucideInit}
-        </body>
-      </html>
-    `;
-  };
-
-  useEffect(() => {
-    const fetchStudentData = async () => {
-      try {
-        const response = await fetch('/api/student/me');
-        if (response.ok) {
-          const result = await response.json();
-          const subjects = result.data?.schedule || [];
-          if (subjects.length > 0) {
-            const randomSubject = subjects[Math.floor(Math.random() * subjects.length)];
-            const subjectTitle = randomSubject.description || randomSubject.subject;
-            if (subjectTitle) {
-              setSuggestions(prev => [
-                { text: `Resources for "${subjectTitle}"`, icon: Sparkles, color: "text-indigo-500", bg: "bg-indigo-500/10" },
-                ...prev
-              ]);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch student data for suggestions:', error);
-      }
-    };
-    fetchStudentData();
-  }, []);
-
-  const scrollToBottom = () => {
-    if (scrollContainerRef.current) {
-      const { scrollHeight, clientHeight } = scrollContainerRef.current;
-      scrollContainerRef.current.scrollTo({
-        top: scrollHeight - clientHeight,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
 
   const sendMessage = React.useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
-
-    // Create new AbortController for this request
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: content.trim(),
-    };
-
+    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: content.trim() };
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
-
     const assistantMessageId = (Date.now() + 1).toString();
-    lastAssistantMessageIdRef.current = assistantMessageId;
-    const temporaryAssistantMessage: Message = {
-      id: assistantMessageId,
-      role: 'assistant',
-      content: '',
-    };
-    setMessages((prev) => [...prev, temporaryAssistantMessage]);
+    setMessages((prev) => [...prev, { id: assistantMessageId, role: 'assistant', content: '' }]);
 
     try {
       const response = await fetch('/api/ai/assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, userMessage].map(m => ({
-            role: m.role,
-            content: m.content,
-          })),
+          messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content })),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }),
         signal: abortController.signal
       });
 
-      if (!response.ok) throw new Error(await response.text() || 'Failed to get a response');
-
+      if (!response.ok) throw new Error();
       const reader = response.body?.getReader();
-      if (!reader) throw new Error('No reader available');
-
+      if (!reader) throw new Error();
       const textDecoder = new TextDecoder();
       let buffer = "";
-      const activeAssistantMessageId = assistantMessageId;
 
       while (true) {
         const { done, value } = await reader.read();
-        if (value) {
-          const chunk = textDecoder.decode(value, { stream: true });
-          buffer += chunk;
-        }
+        if (value) buffer += textDecoder.decode(value, { stream: true });
         
-        // Process STATUS markers
         const statusRegex = /STATUS:(SEARCHING|PROCESSING|FETCHING|FINALIZING|COMPUTING|DESIGNING)\n?/g;
-        const showThinking = student?.settings?.assistant?.showThinkingProcess !== false;
-        
         let match;
         while ((match = statusRegex.exec(buffer)) !== null) {
           const statusVal = match[1];
-          if (showThinking) {
-            setMessages((prev) => prev.map((msg) => 
-              msg.id === activeAssistantMessageId ? { ...msg, status: statusVal } : msg
-            ));
-          }
+          setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, status: statusVal } : msg));
         }
-        
-        // Clean up status markers from buffer after processing
-        if (statusRegex.test(buffer)) {
-          buffer = buffer.replace(statusRegex, '');
-        }
+        buffer = buffer.replace(statusRegex, '');
 
         const toolCallPrefix = "TOOL_CALL:";
         const toolUsedPrefix = "TOOL_USED:";
 
-        // Process TOOL_USED markers first
         while (true) {
           const usedIndex = buffer.indexOf(toolUsedPrefix);
           if (usedIndex === -1) break;
-
           let endOfUsed = buffer.indexOf('\n', usedIndex);
           if (endOfUsed === -1 && done) endOfUsed = buffer.length;
-
           if (endOfUsed !== -1) {
             const toolName = buffer.substring(usedIndex + toolUsedPrefix.length, endOfUsed).trim();
-            
-            if (toolName && showThinking) {
-              setMessages((prev) => prev.map((msg) => 
-                msg.id === activeAssistantMessageId 
-                  ? { ...msg, tools: Array.from(new Set([...(msg.tools || []), toolName])) } 
-                  : msg
-              ));
+            if (toolName) {
+              setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, tools: Array.from(new Set([...(msg.tools || []), toolName])) } : msg));
             }
             buffer = buffer.substring(0, usedIndex) + buffer.substring(endOfUsed + (done ? 0 : 1));
-          } else {
-            break; // Wait for more data
-          }
+          } else break;
         }
 
-        // Process TOOL_CALL markers
         while (true) {
           const toolCallIndex = buffer.indexOf(toolCallPrefix);
           if (toolCallIndex === -1) {
-            // No tool call marker, process buffer as normal text
-            // Leave some room at the end for a partial marker
             const safeLength = Math.max(0, buffer.length - toolCallPrefix.length);
             const textToAppend = buffer.substring(0, safeLength);
             if (textToAppend) {
-              setMessages((prev) => prev.map((msg) => 
-                msg.id === activeAssistantMessageId ? { ...msg, content: msg.content + textToAppend } : msg
-              ));
+              setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: msg.content + textToAppend } : msg));
               buffer = buffer.substring(safeLength);
             }
             break; 
           }
-
-          // Marker found! Process text before marker first
           const contentBefore = buffer.substring(0, toolCallIndex);
           if (contentBefore) {
-            setMessages((prev) => prev.map((msg) => 
-              msg.id === activeAssistantMessageId ? { ...msg, content: msg.content + contentBefore } : msg
-            ));
+            setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: msg.content + contentBefore } : msg));
           }
-          
-          // Look for end of tool call (newline)
           const jsonStart = toolCallIndex + toolCallPrefix.length;
           let endOfToolCall = buffer.indexOf('\n', jsonStart);
           if (endOfToolCall === -1 && done) endOfToolCall = buffer.length;
-
           if (endOfToolCall !== -1) {
             const toolCallStr = buffer.substring(jsonStart, endOfToolCall).trim();
             if (toolCallStr) {
               try {
                 const toolCall = JSON.parse(toolCallStr);
-                console.log("[Assistant] Parsing Tool Call:", toolCall.name);
-                
-                if (toolCall.name === 'ask_user' && toolCall.parameters) {
-                  const { question, placeholder } = toolCall.parameters;
-                  setModalQuestion(question);
-                  setModalPlaceholder(placeholder || "Type your response here...");
+                if (toolCall.name === 'ask_user') {
+                  setModalQuestion(toolCall.parameters.question);
+                  setModalPlaceholder(toolCall.parameters.placeholder || "Response...");
                   setIsModalOpen(true);
-                } else if (toolCall.name === 'ask_user_choice' && toolCall.parameters) {
-                  const { question, options } = toolCall.parameters;
-                  setChoiceQuestion(question);
-                  setChoiceOptions(options || []);
+                } else if (toolCall.name === 'ask_user_choice') {
+                  setChoiceQuestion(toolCall.parameters.question);
+                  setChoiceOptions(toolCall.parameters.options || []);
                   setIsChoiceModalOpen(true);
-                } else if (toolCall.name === 'render_html' && toolCall.parameters) {
-                  const { html, title, fullScreen } = toolCall.parameters;
-                  console.log("[Assistant] Received Visualization:", { title, size: html.length });
-                  setMessages((prev) => prev.map((msg) => 
-                    msg.id === activeAssistantMessageId 
-                      ? { ...msg, inlineHtml: { html, title, fullScreen } } 
-                      : msg
-                  ));
+                } else if (toolCall.name === 'render_html') {
+                  setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, inlineHtml: toolCall.parameters } : msg));
                 }
-              } catch (e) {
-                console.error("[Assistant] Tool Call Parse Error:", e, "Payload:", toolCallStr.substring(0, 100));
-              }
+              } catch (e) {}
             }
             buffer = buffer.substring(endOfToolCall + (done ? 0 : 1));
-          } else {
-            // Tool call is incomplete, keep it in buffer and wait for more data
-            // We need to keep everything from toolCallIndex onwards
-            buffer = buffer.substring(toolCallIndex);
-            break;
-          }
+          } else { buffer = buffer.substring(toolCallIndex); break; }
         }
-
         if (done) {
-          // Final sweep for any remaining buffer text
-          if (buffer.trim()) {
-             setMessages((prev) => prev.map((msg) => 
-               msg.id === activeAssistantMessageId ? { ...msg, content: msg.content + buffer } : msg
-             ));
-          }
+          if (buffer.trim()) setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: msg.content + buffer } : msg));
           break;
         }
       }
-    } catch (err: any) {
-      if (err.name === 'AbortError') return;
-      console.error("[Assistant] Stream Error:", err);
-      const friendlyError = "I'm having trouble connecting right now.";
-      toast.error(friendlyError);
-      setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: `⚠️ ${friendlyError}` } : msg));
+    } catch (err) {
+      if ((err as any).name !== 'AbortError') toast.error("Connection failed.");
     } finally {
-      console.log("[Assistant] Message Stream Finalized");
-      setMessages(prev => prev.filter(msg => 
-        (msg.content && msg.content.trim() !== '') || 
-        msg.role !== 'assistant' || 
-        (msg.inlineHtml && msg.inlineHtml.html)
-      ));
       setIsLoading(false);
       abortControllerRef.current = null;
     }
-  }, [messages, isLoading, student]);
+  }, [messages, isLoading]);
 
-  const handleClear = React.useCallback(() => {
-    if (messages.length === 0) return;
-    setMessages([]);
-    toast.success('Conversation cleared');
-  }, [messages.length]);
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      const { scrollHeight, clientHeight } = scrollContainerRef.current;
+      scrollContainerRef.current.scrollTo({ top: scrollHeight - clientHeight, behavior: 'smooth' });
+    }
+  }, [messages, isLoading]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-4 md:py-6 flex flex-col h-[calc(100dvh-140px)]">
-      {/* Header with Settings */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 p-2 rounded-xl text-primary">
-            <Bot size={20} />
-          </div>
+    <div className="flex-1 flex flex-col h-[calc(100vh-10rem)] max-w-4xl mx-auto w-full p-4 md:p-6 gap-4">
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <Bot className="h-5 w-5 text-primary" />
+          <h2 className="text-xl font-bold tracking-tight">Assistant</h2>
         </div>
-        <button
-          onClick={() => setIsSettingsModalOpen(true)}
-          className="p-2 hover:bg-accent rounded-xl text-muted-foreground hover:text-foreground transition-all active:scale-95"
-          title="Assistant Settings"
-        >
-          <Settings size={18} />
-        </button>
+        <Button variant="ghost" size="icon" onClick={() => setIsSettingsModalOpen(true)}>
+          <Settings className="h-5 w-5" />
+        </Button>
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col relative">
-        <div 
-          ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth custom-scrollbar"
-        >
+      <Card className="flex-1 overflow-hidden flex flex-col shadow-sm">
+        <ScrollArea ref={scrollContainerRef} className="flex-1 p-4 md:p-6">
           {messages.length === 0 && (
-            <motion.div 
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="min-h-full flex flex-col items-center justify-center text-center max-w-xl mx-auto p-4 py-8"
-            >
-              <div className="relative mb-6">
-                <div className="absolute inset-0 bg-primary/10 blur-2xl rounded-full" />
-                <div className="relative flex items-center gap-3">
-                    <div className="bg-primary p-3.5 rounded-2xl text-primary-foreground shadow-lg shadow-primary/20">
-                      <Bot className="h-7 w-7" />
-                    </div>
-                </div>
+            <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-6">
+              <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                <Bot className="h-8 w-8" />
               </div>
-              
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent border border-border rounded-full text-[10px] font-bold tracking-wider uppercase mb-4">
-                <Sparkles className="h-3 w-3 text-blue-500 animate-pulse" />
-                Assistant AI
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold">Hello, {student?.parsedName?.firstName}!</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  I can help you check your grades, schedule, or balance. Just ask!
+                </p>
               </div>
-
-              <h2 className="text-2xl font-bold text-foreground mb-3 tracking-tight">Welcome, {student?.parsedName?.firstName || 'LCCian'}!</h2>
-              <p className="text-sm text-muted-foreground mb-8 leading-relaxed font-medium">
-                I&apos;m your <span className="text-primary font-bold italic">LCCian Hub</span> Companion. I have direct access to your <span className="text-foreground font-bold">academic records</span> and <span className="text-foreground font-bold">financial status</span>. How can I assist you today?
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-lg">
                 {suggestions.map((s, i) => (
-                  <motion.button
+                  <Button
                     key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
+                    variant="outline"
+                    className="h-auto flex-col p-4 gap-2 border-dashed bg-muted/20"
                     onClick={() => sendMessage(s.text)}
-                    className={`group flex flex-col items-start p-4 bg-accent/40 border border-border hover:border-primary/40 hover:bg-accent rounded-xl transition-all text-left relative overflow-hidden active:scale-[0.98] ${
-                      suggestions.length % 2 !== 0 && i === suggestions.length - 1 ? 'sm:col-span-2' : ''
-                    }`}
                   >
-                    <div className={`${s.bg} ${s.color} p-2 rounded-lg mb-2.5 transition-transform group-hover:scale-110`}>
-                        <s.icon className="h-3.5 w-3.5" />
-                    </div>
-                    <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors leading-tight">{s.text}</span>
-                  </motion.button>
+                    <s.icon className="h-4 w-4 text-primary" />
+                    <span className="text-xs font-semibold">{s.text}</span>
+                  </Button>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
-          <AnimatePresence initial={false} mode="popLayout">
+          <div className="space-y-6 pb-4">
             {messages.map((m, idx) => {
-              const isContinuation = idx > 0 && messages[idx - 1].role === m.role;
+              const isAssistant = m.role === 'assistant';
               return (
-                <motion.div 
-                  key={m.id} 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  className={`flex w-full ${m.role === 'user' ? 'justify-end' : 'justify-start'} ${isContinuation ? 'mt-1' : 'mt-6'}`}
-                >
-                  <div className={`flex gap-3.5 ${m.role === 'user' ? 'max-w-[85%] sm:max-w-[75%]' : 'flex-col w-full items-start'}`}>
-                    {/* Avatar & Label Area - Only show for first message of sequence */}
-                    {m.role !== 'user' && !isContinuation && (
-                      <div className="w-full flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <div className="flex-shrink-0 h-9 w-9 rounded-2xl bg-accent border border-border text-primary flex items-center justify-center shadow-sm">
-                            <BrainCircuit className="h-5 w-5" />
-                          </div>
-                          <div className="flex flex-col">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[11px] font-bold text-foreground uppercase tracking-tight">Assistant</span>
-                              <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
+                <div key={m.id} className={cn("flex flex-col gap-2", isAssistant ? "items-start" : "items-end")}>
+                  {isAssistant && (
+                    <div className="flex items-center justify-between w-full mb-1">
+                      <div className="flex items-center gap-2">
+                         <Badge variant="secondary" className="h-5 px-1.5 gap-1.5">
+                            <BrainCircuit className="h-3 w-3" />
+                            <span className="text-[10px] uppercase font-bold tracking-wider">AI Assistant</span>
+                         </Badge>
+                         {m.tools && m.tools.length > 0 && (
+                            <div className="flex -space-x-1">
+                               {m.tools.map((t, i) => {
+                                 const Icon = getToolIcon(t);
+                                 return <div key={i} className="h-5 w-5 rounded-full border bg-background flex items-center justify-center"><Icon className="h-2.5 w-2.5 text-primary" /></div>;
+                               })}
                             </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-4">
-                          {/* Tool Stack */}
-                          {m.tools && m.tools.length > 0 && (
-                            <div className="flex flex-col items-end gap-1">
-                              <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1">Tools Engaged</span>
-                              <div className="flex -space-x-1.5">
-                                {m.tools.map((tool, i) => {
-                                  const ToolIcon = getToolIcon(tool);
-                                  return (
-                                    <div key={i} className="relative group z-0 hover:z-10">
-                                      <div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center border-2 border-card shadow-sm transition-transform hover:scale-110">
-                                        <ToolIcon className="h-2.5 w-2.5" />
-                                      </div>
-                                      <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-popover text-popover-foreground text-[10px] rounded border border-border shadow-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
-                                        {tool.replace(/_/g, ' ')}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                          {m.content && !isLoading && (
-                            <div className="h-8 w-[1px] bg-border mx-1 hidden sm:block" />
-                          )}
-                          {m.content && !isLoading && (
-                            <div className="flex items-center gap-2">
-                              <SpeakButton 
-                                messageId={m.id} 
-                                content={m.content} 
-                                isSpeaking={currentlySpeakingId === m.id} 
-                                onSpeak={handleSpeak}
-                                className="scale-110" 
-                              />
-                              <CopyButton content={m.content} className="scale-110" />
-                            </div>
-                          )}
-                        </div>
+                         )}
                       </div>
-                    )}
-
-                    {/* Bubble / Card */}
-                    <div className={`leading-relaxed break-words overflow-hidden ${
-                      m.role === 'user' 
-                        ? 'p-3.5 rounded-2xl rounded-tr-none bg-primary text-primary-foreground font-medium shadow-md' 
-                        : 'w-full max-w-full'
-                    }`}>
-                      {m.role === 'user' ? (
-                        <p className="whitespace-pre-wrap text-sm">{m.content}</p>
-                      ) : (
-                        (m.content || m.inlineHtml) ? (
-                          <div className={`relative w-full overflow-x-auto bg-accent/10 p-5 md:p-7 border border-border/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] ${
-                            isContinuation ? 'rounded-2xl' : 'rounded-2xl rounded-tl-none'
-                          }`}>
-                            {m.content && (
-                              <ReactMarkdown 
-                                remarkPlugins={[remarkGfm, remarkMath]} 
-                                rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
-                                className={`prose prose-slate dark:prose-invert max-w-full leading-relaxed text-muted-foreground font-medium text-sm break-words ${
-                                  isLoading && idx === messages.length - 1 ? 'streaming-active' : ''
-                                }`}
-                                components={{
-                                  p: ({children}) => <p className="mb-5 last:mb-0 leading-relaxed text-sm/6">{children}</p>,
-                                  table: ({...props}) => <div className="overflow-x-auto my-8 rounded-xl border border-border/60 shadow-sm bg-card/50"><table className="w-full text-xs text-left" {...props} /></div>,
-                                  thead: ({...props}) => <thead className="bg-accent/80 text-foreground font-bold uppercase tracking-tight text-[10px]" {...props} />,
-                                  th: ({...props}) => <th className="px-4 py-3" {...props} />,
-                                  td: ({...props}) => <td className="px-4 py-3 border-t border-border/40" {...props} />,
-                                  code: ({className, children, ...props}) => {
-                                    const match = /language-(\w+)/.exec(className || '');
-                                    return match ? (
-                                      <div className="relative group my-6">
-                                        <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-                                          <div className="px-2 py-1 bg-accent rounded text-[9px] font-bold uppercase tracking-tight text-muted-foreground border border-border">
-                                            {match[1]}
-                                          </div>
-                                          <CopyButton content={String(children).replace(/\n$/, '')} />
-                                        </div>
-                                        <pre className="bg-muted text-foreground rounded-xl p-5 overflow-x-auto text-xs scroll-smooth custom-scrollbar border border-border shadow-xl">
-                                          <code className={className} {...props}>
-                                            {children}
-                                          </code>
-                                        </pre>
-                                      </div>
-                                    ) : (
-                                      <code className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 font-mono text-[0.9em] font-bold border border-primary/20" {...props}>
-                                        {children}
-                                      </code>
-                                    );
-                                  },
-                                  a: ({...props}) => <a className="text-primary font-bold hover:opacity-80 transition-all underline decoration-primary/30 underline-offset-4" target="_blank" rel="noopener noreferrer" {...props} />,
-                                  img: ({...props}) => <img className="rounded-2xl border border-border shadow-lg my-8 max-w-full h-auto" {...props} />,
-                                  ul: ({...props}) => <ul className="list-disc list-outside ml-6 my-5 space-y-2.5" {...props} />,
-                                  ol: ({...props}) => <ol className="list-decimal list-outside ml-6 my-5 space-y-2.5" {...props} />,
-                                  h1: ({children}) => <h1 className="text-xl font-bold text-foreground mt-10 mb-5 pb-3 border-b border-border/60 uppercase tracking-tight">{children}</h1>,
-                                  h2: ({children}) => <h2 className="text-lg font-bold text-foreground mt-8 mb-4 tracking-tight">{children}</h2>,
-                                  h3: ({children}) => <h3 className="text-base font-bold text-foreground mt-6 mb-3">{children}</h3>,
-                                  blockquote: ({...props}) => <blockquote className="border-l-4 border-primary/50 pl-5 py-3 my-8 text-muted-foreground italic bg-primary/5 rounded-r-2xl font-medium" {...props} />,
-                                  iframe: ({...props}) => <iframe className="max-w-full rounded-xl border border-border shadow-sm my-4" {...props} />,
-                                  video: ({...props}) => <video className="max-w-full rounded-xl border border-border shadow-sm my-4" controls {...props} />,
-                                }}
-                              >
-                                {(() => {
-                                  // Strip wrapping code blocks if they are markdown, text, txt, or generic
-                                  const content = m.content.trim();
-                                  const match = content.match(/^```(?:markdown|text|txt)?\s*([\s\S]*?)\s*```$/i);
-                                  return match ? match[1] : m.content;
-                                })()}
-                              </ReactMarkdown>
-                            )}
-
-                            {m.inlineHtml && (
-                              <div className={`${m.content ? 'mt-6' : ''} h-[500px] relative group border border-border/40 rounded-xl overflow-hidden bg-background/50`}>
-                                <div className="absolute top-4 right-4 z-20 flex gap-2">
-                                  <button 
-                                    onClick={() => {
-                                      setHtmlModalContent(m.inlineHtml!.html);
-                                      setHtmlModalTitle(m.inlineHtml!.title || 'Visualization');
-                                      setHtmlModalFullScreen(!!m.inlineHtml!.fullScreen);
-                                      setIsHtmlModalOpen(true);
-                                    }}
-                                    className="flex items-center gap-2 px-3 py-2 bg-primary/90 text-primary-foreground hover:bg-primary rounded-xl shadow-lg backdrop-blur-md border border-white/10 active:scale-95 transition-all text-[10px] font-black uppercase tracking-wider"
-                                    title="View Fullscreen"
-                                  >
-                                    <Maximize2 className="h-3.5 w-3.5" />
-                                    <span>Expand View</span>
-                                  </button>
-                                </div>
-                                <iframe
-                                  srcDoc={getIframeSrcDoc(m.inlineHtml.html)}
-                                  className="w-full h-full border-none bg-transparent"
-                                  title={m.inlineHtml.title || "Assistant Visualization"}
-                                  sandbox="allow-scripts allow-modals allow-popups allow-forms"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <TypingIndicator status={m.status} />
-                        )
+                      {!isLoading && m.content && (
+                        <div className="flex gap-1">
+                          <SpeakButton messageId={m.id} content={m.content} isSpeaking={currentlySpeakingId === m.id} onSpeak={handleSpeak} />
+                          <CopyButton content={m.content} />
+                        </div>
                       )}
                     </div>
-                </div>
-              </motion.div>
-            );
-            })}
-          </AnimatePresence>
-        </div>
+                  )}
 
-        {/* Input Area */}
+                  <div className={cn(
+                    "max-w-[85%] rounded-md p-3.5 text-sm leading-relaxed",
+                    isAssistant ? "bg-muted/50 border" : "bg-primary text-primary-foreground font-medium"
+                  )}>
+                    {isAssistant && !m.content && !m.inlineHtml ? (
+                      <TypingIndicator status={m.status} />
+                    ) : (
+                      <>
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm, remarkMath]} 
+                          rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
+                          className="prose prose-slate dark:prose-invert max-w-none text-sm leading-normal break-words"
+                        >
+                          {m.content}
+                        </ReactMarkdown>
+                        {m.inlineHtml && (
+                          <div className="mt-4 h-64 border rounded-md overflow-hidden bg-white">
+                            <iframe 
+                              srcDoc={m.inlineHtml.html} 
+                              className="w-full h-full border-none" 
+                              sandbox="allow-scripts"
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
+
         <ChatInput 
           onSend={sendMessage} 
           onStop={handleStop}
           isLoading={isLoading} 
-          onClear={handleClear}
+          onClear={() => { setMessages([]); toast.success("Cleared"); }}
           hasMessages={messages.length > 0}
         />
-      </div>
+      </Card>
 
-      {/* Ask User Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        maxWidth="max-w-md"
-        title={
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-2.5 rounded-xl text-primary">
-              <HelpCircle className="h-6 w-6" />
-            </div>
-            <h3 className="text-lg font-bold text-foreground">Assistant Request</h3>
-          </div>
-        }
-      >
-        <div className="p-6">
-          <p className="text-sm text-muted-foreground font-medium mb-6 leading-relaxed">
-            {modalQuestion}
-          </p>
+      <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
+        <DialogContent className="max-w-md">
+           <DialogHeader>
+              <DialogTitle>Assistant Settings</DialogTitle>
+              <DialogDescription>Customize your AI experience</DialogDescription>
+           </DialogHeader>
+           {student && <AssistantTab student={student} updateSettings={updateSettings} />}
+        </DialogContent>
+      </Dialog>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (modalInput.trim()) {
-                setIsModalOpen(false);
-                sendMessage(modalInput.trim());
-              }
-            }}
-          >
-            <input
-              autoFocus
-              type="text"
-              value={modalInput}
-              onChange={(e) => setModalInput(e.target.value)}
-              maxLength={500}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-sm">
+           <DialogHeader>
+              <DialogTitle>Question</DialogTitle>
+              <DialogDescription>{modalQuestion}</DialogDescription>
+           </DialogHeader>
+           <Input 
+              value={modalInput} 
+              onChange={(e) => setModalInput(e.target.value)} 
               placeholder={modalPlaceholder}
-              className="w-full bg-accent border border-border focus:border-primary/50 focus:bg-card rounded-xl px-4 py-3 text-sm font-medium outline-none transition-all mb-4"
-            />
-            {modalInput.length > 0 && (
-              <div className="flex justify-end mb-2 -mt-2">
-                <span className={`text-[8px] font-bold uppercase tracking-widest ${modalInput.length >= 450 ? 'text-red-500' : 'text-muted-foreground/30'}`}>
-                  {modalInput.length}/500
-                </span>
-              </div>
-            )}
-            
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="flex-1 px-4 py-2.5 bg-accent border border-border hover:bg-accent/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={!modalInput.trim()}
-                className="flex-1 px-4 py-2.5 bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-primary/20"
-              >
-                Submit
-              </button>
-            </div>
-          </form>
-        </div>
-      </Modal>
+           />
+           <DialogFooter>
+              <Button variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+              <Button onClick={() => { setIsModalOpen(false); sendMessage(modalInput); setModalInput(''); }}>Submit</Button>
+           </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Choice Modal */}
-      <Modal
-        isOpen={isChoiceModalOpen}
-        onClose={() => setIsChoiceModalOpen(false)}
-        maxWidth="max-w-md"
-        title={
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-2.5 rounded-xl text-primary">
-              <HelpCircle className="h-6 w-6" />
-            </div>
-            <h3 className="text-lg font-bold text-foreground">Assistant Suggestion</h3>
-          </div>
-        }
-      >
-        <div className="p-6">
-          <p className="text-sm text-muted-foreground font-medium mb-6 leading-relaxed">
-            {choiceQuestion}
-          </p>
-
-          <div className="flex flex-col gap-2 mb-6">
-            {choiceOptions.map((option, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  setIsChoiceModalOpen(false);
-                  sendMessage(option);
-                }}
-                className="w-full text-left p-3.5 bg-accent/40 border border-border hover:border-primary/40 hover:bg-accent rounded-xl transition-all text-xs font-bold text-foreground active:scale-[0.98]"
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-          
-          <button
-            onClick={() => setIsChoiceModalOpen(false)}
-            className="w-full px-4 py-2.5 bg-accent border border-border hover:bg-accent/80 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95"
-          >
-            Cancel
-          </button>
-        </div>
-      </Modal>
-
-      {/* HTML Visualization Modal */}
-      <Modal
-        isOpen={isHtmlModalOpen}
-        onClose={() => setIsHtmlModalOpen(false)}
-        title={htmlModalTitle}
-        maxWidth={htmlModalFullScreen ? "max-w-[95vw]" : "max-w-4xl"}
-        className={htmlModalFullScreen ? "h-[90vh] flex flex-col" : ""}
-      >
-        <div className={`w-full bg-card overflow-hidden relative ${htmlModalFullScreen ? "flex-1" : "h-[70vh]"}`}>
-          <iframe
-            srcDoc={getIframeSrcDoc(htmlModalContent)}
-            className="w-full h-full border-none"
-            title="Assistant Visualization"
-            sandbox="allow-scripts allow-modals allow-popups allow-forms"
-          />
-        </div>
-        <div className="flex justify-end p-4 border-t border-border bg-card">
-          <button
-            onClick={() => setIsHtmlModalOpen(false)}
-            className="px-6 py-2 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-blue-500/10 hover:opacity-90 transition-all active:scale-95"
-          >
-            Close
-          </button>
-        </div>
-      </Modal>
-
-      {/* Assistant Settings Modal */}
-      <Modal
-        isOpen={isSettingsModalOpen}
-        onClose={() => setIsSettingsModalOpen(false)}
-        maxWidth="max-w-2xl"
-        title={
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-2.5 rounded-xl text-primary">
-              <Bot className="h-6 w-6" />
-            </div>
-            <h3 className="text-lg font-bold text-foreground">Assistant Preferences</h3>
-          </div>
-        }
-      >
-        <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
-          {student && <AssistantTab student={student} updateSettings={updateSettings} />}
-        </div>
-      </Modal>
-
+      <Dialog open={isChoiceModalOpen} onOpenChange={setIsChoiceModalOpen}>
+        <DialogContent className="sm:max-w-sm">
+           <DialogHeader>
+              <DialogTitle>Please Choose</DialogTitle>
+              <DialogDescription>{choiceQuestion}</DialogDescription>
+           </DialogHeader>
+           <div className="grid gap-2">
+              {choiceOptions.map((opt, i) => (
+                <Button key={i} variant="outline" onClick={() => { setIsChoiceModalOpen(false); sendMessage(opt); }}>{opt}</Button>
+              ))}
+           </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
