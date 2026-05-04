@@ -29,7 +29,7 @@ export default function Modal({
   onClose,
   title,
   children,
-  maxWidth = 'max-w-sm',
+  maxWidth = 'max-w-lg',
   className = '',
   showCloseButton = true,
   noPadding = false
@@ -38,7 +38,7 @@ export default function Modal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent 
         className={cn(
-          "p-0 gap-0 overflow-hidden border-border bg-card shadow-2xl sm:rounded-2xl",
+          "p-0 gap-0 overflow-hidden border-border bg-card shadow-2xl sm:rounded-2xl w-[95vw] max-h-[90vh] flex flex-col fixed",
           maxWidth,
           className
         )}
@@ -47,7 +47,7 @@ export default function Modal({
         onEscapeKeyDown={(e) => !showCloseButton && e.preventDefault()}
       >
         {title && (
-          <DialogHeader className="p-6 border-b border-border/50 space-y-0">
+          <DialogHeader className="p-6 border-b border-border/50 space-y-0 shrink-0">
             {typeof title === 'string' ? (
               <DialogTitle className="text-lg font-semibold tracking-tight">
                 {title}
@@ -59,7 +59,7 @@ export default function Modal({
         )}
 
         <div className={cn(
-          "relative flex-1 flex flex-col",
+          "flex-1 overflow-y-auto min-h-0",
           !noPadding && "p-6"
         )}>
           {children}

@@ -18,6 +18,14 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { 
+  Select, 
+  SelectContent, 
+  SelectGroup,
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 interface AssistantTabProps {
@@ -133,27 +141,23 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
 
       <div className="space-y-4">
         <Label className="text-[10px] uppercase font-bold text-muted-foreground">Voice Model</Label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {voices.map((voice) => {
-            const isSelected = assistantSettings.voiceModel === voice.id;
-            return (
-              <Button
-                key={voice.id}
-                variant={isSelected ? "default" : "outline"}
-                onClick={() => setVoiceModel(voice.id)}
-                className="h-auto flex-col items-start p-3 gap-1"
-              >
-                <div className="flex w-full justify-between items-center">
-                  <span className="text-xs font-bold">{voice.name}</span>
-                  {isSelected && <CheckCircle2 size={12} />}
-                </div>
-                <span className={cn("text-[10px] font-medium", isSelected ? "opacity-90" : "text-muted-foreground")}>
-                  {voice.desc}
-                </span>
-              </Button>
-            );
-          })}
-        </div>
+        <Select value={assistantSettings.voiceModel} onValueChange={setVoiceModel}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a voice model" />
+          </SelectTrigger>
+          <SelectContent position="popper" className="z-[2000]">
+            <SelectGroup>
+              {voices.map((voice) => (
+                <SelectItem key={voice.id} value={voice.id}>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold">{voice.name}</span>
+                    <span className="text-[10px] text-muted-foreground">{voice.desc}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-6">

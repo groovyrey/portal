@@ -42,11 +42,11 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { useStudent } from '@/lib/hooks';
 import AssistantTab from '@/components/settings/AssistantTab';
+import Modal from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -470,7 +470,7 @@ export default function AssistantPage() {
   }, [messages, isLoading]);
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-10rem)] max-w-4xl mx-auto w-full p-4 md:p-6 gap-4">
+    <div className="flex-1 flex flex-col h-full max-w-4xl mx-auto w-full p-4 md:p-6 gap-4 overflow-hidden">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-primary" />
@@ -481,8 +481,8 @@ export default function AssistantPage() {
         </Button>
       </div>
 
-      <Card className="flex-1 overflow-hidden flex flex-col shadow-sm">
-        <ScrollArea ref={scrollContainerRef} className="flex-1 p-4 md:p-6">
+      <Card className="flex-1 flex flex-col shadow-sm overflow-hidden w-full">
+        <ScrollArea ref={scrollContainerRef} className="flex-1 p-4 md:p-6 w-full">
           {messages.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-6">
               <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
@@ -514,16 +514,16 @@ export default function AssistantPage() {
             {messages.map((m, idx) => {
               const isAssistant = m.role === 'assistant';
               return (
-                <div key={m.id} className={cn("flex flex-col gap-2", isAssistant ? "items-start" : "items-end")}>
+                <div key={m.id} className={cn("flex flex-col gap-2 w-full", isAssistant ? "items-start" : "items-end")}>
                   {isAssistant && (
-                    <div className="flex items-center justify-between w-full mb-1">
-                      <div className="flex items-center gap-2">
-                         <Badge variant="secondary" className="h-5 px-1.5 gap-1.5">
+                    <div className="flex items-center justify-between w-full max-w-[85%] mb-1">
+                      <div className="flex items-center gap-2 shrink-0">
+                         <Badge variant="secondary" className="h-5 px-1.5 gap-1.5 shrink-0">
                             <BrainCircuit className="h-3 w-3" />
                             <span className="text-[10px] uppercase font-bold tracking-wider">AI Assistant</span>
                          </Badge>
                          {m.tools && m.tools.length > 0 && (
-                            <div className="flex -space-x-1">
+                            <div className="flex -space-x-1 shrink-0">
                                {m.tools.map((t, i) => {
                                  const Icon = getToolIcon(t);
                                  return <div key={i} className="h-5 w-5 rounded-full border bg-background flex items-center justify-center"><Icon className="h-2.5 w-2.5 text-primary" /></div>;
@@ -532,7 +532,7 @@ export default function AssistantPage() {
                          )}
                       </div>
                       {!isLoading && m.content && (
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 shrink-0">
                           <SpeakButton messageId={m.id} content={m.content} isSpeaking={currentlySpeakingId === m.id} onSpeak={handleSpeak} />
                           <CopyButton content={m.content} />
                         </div>
@@ -541,20 +541,23 @@ export default function AssistantPage() {
                   )}
 
                   <div className={cn(
-                    "max-w-[85%] rounded-md p-3.5 text-sm leading-relaxed",
+                    isAssistant ? "max-w-[90%] md:max-w-[75%] min-w-[200px]" : "max-w-[90%] md:max-w-[85%]",
+                    "rounded-md p-3.5 text-sm leading-relaxed overflow-hidden",
                     isAssistant ? "bg-muted/50 border" : "bg-primary text-primary-foreground font-medium"
                   )}>
                     {isAssistant && !m.content && !m.inlineHtml ? (
                       <TypingIndicator status={m.status} />
                     ) : (
                       <>
-                        <ReactMarkdown 
-                          remarkPlugins={[remarkGfm, remarkMath]} 
-                          rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
-                          className="prose prose-slate dark:prose-invert max-w-none text-sm leading-normal break-words"
-                        >
-                          {m.content}
-                        </ReactMarkdown>
+                        <div className="w-full min-w-0">
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm, remarkMath]} 
+                            rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
+                            className="prose prose-sm prose-slate dark:prose-invert max-w-full break-words prose-p:leading-relaxed prose-table:w-full prose-table:table-fixed prose-table:overflow-hidden prose-pre:bg-muted/50 prose-pre:overflow-x-auto prose-pre:max-w-full prose-code:text-primary prose-code:bg-muted/50 prose-code:px-1 prose-code:rounded prose-code:before:content-none prose-code:after:content-none"
+                          >
+                            {m.content}
+                          </ReactMarkdown>
+                        </div>
                         {m.inlineHtml && (
                           <div className="mt-4 h-64 border rounded-md overflow-hidden bg-white">
                             <iframe 
@@ -582,47 +585,50 @@ export default function AssistantPage() {
         />
       </Card>
 
-      <Dialog open={isSettingsModalOpen} onOpenChange={setIsSettingsModalOpen}>
-        <DialogContent className="max-w-md">
-           <DialogHeader>
-              <DialogTitle>Assistant Settings</DialogTitle>
-              <DialogDescription>Customize your AI experience</DialogDescription>
-           </DialogHeader>
-           {student && <AssistantTab student={student} updateSettings={updateSettings} />}
-        </DialogContent>
-      </Dialog>
+      <Modal 
+        isOpen={isSettingsModalOpen} 
+        onClose={() => setIsSettingsModalOpen(false)} 
+        title="Assistant Settings"
+      >
+        <div className="p-6">
+          <p className="text-sm text-muted-foreground mb-4">Customize your AI experience</p>
+          {student && <AssistantTab student={student} updateSettings={updateSettings} />}
+        </div>
+      </Modal>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-sm">
-           <DialogHeader>
-              <DialogTitle>Question</DialogTitle>
-              <DialogDescription>{modalQuestion}</DialogDescription>
-           </DialogHeader>
-           <Input 
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        title="Question"
+      >
+        <div className="p-6">
+          <p className="text-sm text-muted-foreground mb-4">{modalQuestion}</p>
+          <Input 
               value={modalInput} 
               onChange={(e) => setModalInput(e.target.value)} 
               placeholder={modalPlaceholder}
            />
-           <DialogFooter>
+           <div className="flex justify-end gap-2 mt-4">
               <Button variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
               <Button onClick={() => { setIsModalOpen(false); sendMessage(modalInput); setModalInput(''); }}>Submit</Button>
-           </DialogFooter>
-        </DialogContent>
-      </Dialog>
+           </div>
+        </div>
+      </Modal>
 
-      <Dialog open={isChoiceModalOpen} onOpenChange={setIsChoiceModalOpen}>
-        <DialogContent className="sm:max-w-sm">
-           <DialogHeader>
-              <DialogTitle>Please Choose</DialogTitle>
-              <DialogDescription>{choiceQuestion}</DialogDescription>
-           </DialogHeader>
-           <div className="grid gap-2">
+      <Modal 
+        isOpen={isChoiceModalOpen} 
+        onClose={() => setIsChoiceModalOpen(false)} 
+        title="Please Choose"
+      >
+        <div className="p-6">
+          <p className="text-sm text-muted-foreground mb-4">{choiceQuestion}</p>
+          <div className="grid gap-2">
               {choiceOptions.map((opt, i) => (
                 <Button key={i} variant="outline" onClick={() => { setIsChoiceModalOpen(false); sendMessage(opt); }}>{opt}</Button>
               ))}
            </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </Modal>
     </div>
   );
 }
