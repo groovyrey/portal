@@ -82,11 +82,11 @@ export default function IncidentsTab() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* List View */}
         <Card className={cn("lg:col-span-2 flex flex-col h-[500px] lg:h-[600px]", selectedIncident && "hidden lg:flex")}>
-          <CardHeader className="py-4 flex flex-row items-center justify-between space-y-0 border-b">
+          <CardHeader className="py-3 flex flex-row items-center justify-between space-y-0 border-b">
             <CardTitle className="text-sm font-semibold">Incident Log</CardTitle>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={fetchIncidents}>
                 <Activity className={cn("h-4 w-4 text-muted-foreground", loading && "animate-spin")} />
@@ -110,15 +110,15 @@ export default function IncidentsTab() {
                     key={incident.id}
                     onClick={() => setSelectedIncident(incident)}
                     className={cn(
-                      "w-full text-left p-4 hover:bg-muted/50 transition-colors flex items-start gap-4 cursor-pointer group relative",
+                      "w-full text-left p-3 hover:bg-muted/50 transition-colors flex items-start gap-3 cursor-pointer group relative",
                       selectedIncident?.id === incident.id && "bg-accent"
                     )}
                   >
                     <div className={cn(
-                        "p-2 rounded-md shrink-0",
+                        "p-1.5 rounded-md shrink-0",
                         incident.severity === 'error' ? "bg-destructive/10 text-destructive" : "bg-amber-500/10 text-amber-600"
                     )}>
-                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTriangle className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex-1 min-w-0 pr-6">
                       <div className="flex items-center justify-between mb-0.5">
@@ -128,7 +128,7 @@ export default function IncidentsTab() {
                         </span>
                       </div>
                       <p className="text-xs font-medium truncate">{incident.error_message}</p>
-                      <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
+                      <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
                         <User className="h-3 w-3" />
                         <span className="truncate">{incident.user_id}</span>
                       </div>
@@ -150,7 +150,7 @@ export default function IncidentsTab() {
         </Card>
 
         {/* Detail View */}
-        <Card className={cn("lg:col-span-3 flex flex-col h-[600px]", !selectedIncident && "hidden lg:flex")}>
+        <Card className={cn("lg:col-span-3 flex flex-col h-[500px] lg:h-[600px]", !selectedIncident && "hidden lg:flex")}>
           <AnimatePresence mode="wait">
             {selectedIncident ? (
               <motion.div 
@@ -159,7 +159,7 @@ export default function IncidentsTab() {
                 animate={{ opacity: 1 }}
                 className="flex-1 flex flex-col h-full overflow-hidden"
               >
-                <CardHeader className="py-4 flex flex-row items-center justify-between space-y-0 border-b">
+                <CardHeader className="py-3 flex flex-row items-center justify-between space-y-0 border-b">
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden" onClick={() => setSelectedIncident(null)}>
                       <ChevronLeft className="h-4 w-4" />
@@ -173,41 +173,41 @@ export default function IncidentsTab() {
                 </CardHeader>
 
                 <ScrollArea className="flex-1">
-                  <div className="p-4 sm:p-6 space-y-6">
+                  <div className="p-4 sm:p-5 space-y-5">
                     <div className="flex flex-col sm:flex-row gap-4 justify-between">
                       <div className="space-y-1">
                         <Label className="text-[10px] uppercase font-bold text-muted-foreground">Severity</Label>
-                        <div className="pt-1">
-                            <Badge variant={selectedIncident.severity === 'error' ? 'destructive' : 'secondary'} className={cn("text-[10px] uppercase", selectedIncident.severity === 'warning' && "bg-amber-500 hover:bg-amber-600 text-white")}>
+                        <div className="pt-0.5">
+                            <Badge variant={selectedIncident.severity === 'error' ? 'destructive' : 'secondary'} className={cn("text-[10px] uppercase h-5", selectedIncident.severity === 'warning' && "bg-amber-500 hover:bg-amber-600 text-white")}>
                                 {selectedIncident.severity}
                             </Badge>
                         </div>
                       </div>
                       <div className="space-y-1 sm:text-right">
                         <Label className="text-[10px] uppercase font-bold text-muted-foreground">User Session</Label>
-                        <p className="text-xs font-mono pt-1 break-all">{selectedIncident.user_id}</p>
+                        <p className="text-xs font-mono pt-0.5 break-all">{selectedIncident.user_id}</p>
                       </div>
                     </div>
 
                     <Separator />
 
                     {selectedIncident.student_name && (
-                      <div className="flex items-center gap-4 p-4 rounded-md bg-muted/30 border">
-                        <Avatar className="h-10 w-10 shrink-0">
-                            <AvatarFallback><User className="h-5 w-5" /></AvatarFallback>
+                      <div className="flex items-center gap-4 p-3 rounded-md bg-muted/30 border">
+                        <Avatar className="h-9 w-9 shrink-0">
+                            <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
                             <p className="text-[10px] font-bold text-primary uppercase">Origin Student</p>
-                            <p className="text-sm font-bold truncate">{selectedIncident.student_name}</p>
-                            <p className="text-[10px] text-muted-foreground uppercase truncate">{selectedIncident.student_course}</p>
+                            <p className="text-sm font-bold break-words">{selectedIncident.student_name}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase break-words">{selectedIncident.student_course}</p>
                         </div>
                       </div>
                     )}
 
                       <div className="space-y-2">
                       <Label className="text-[10px] uppercase font-bold text-muted-foreground">Error Trace</Label>
-                      <div className="p-4 rounded-md bg-destructive/5 border border-destructive/20 overflow-hidden">
-                        <p className="text-xs font-medium leading-relaxed break-words overflow-hidden">{selectedIncident.error_message}</p>
+                      <div className="p-3 rounded-md bg-destructive/5 border border-destructive/20">
+                        <p className="text-xs font-medium leading-relaxed break-all whitespace-pre-wrap">{selectedIncident.error_message}</p>
                       </div>
                     </div>
 
@@ -217,7 +217,7 @@ export default function IncidentsTab() {
                           <Label className="text-[10px] uppercase font-bold text-muted-foreground">Structured Output</Label>
                           <Braces className="h-3 w-3 text-muted-foreground" />
                         </div>
-                        <pre className="p-4 rounded-md bg-muted text-[10px] font-mono whitespace-pre-wrap overflow-auto border max-h-[300px]">
+                        <pre className="p-3 rounded-md bg-muted text-[10px] font-mono whitespace-pre-wrap break-all border max-h-[300px] overflow-y-auto w-full">
                           {typeof selectedIncident.ai_result === 'string' 
                             ? JSON.stringify(JSON.parse(selectedIncident.ai_result), null, 2)
                             : JSON.stringify(selectedIncident.ai_result, null, 2)
@@ -232,8 +232,8 @@ export default function IncidentsTab() {
                           <Label className="text-[10px] uppercase font-bold text-muted-foreground">Source Material</Label>
                           <FileCode className="h-3 w-3 text-muted-foreground" />
                         </div>
-                        <div className="p-4 rounded-md bg-muted border h-64 overflow-auto">
-                          <pre className="text-[10px] font-mono text-muted-foreground whitespace-pre-wrap">
+                        <div className="p-3 rounded-md bg-muted border h-64 overflow-y-auto w-full">
+                          <pre className="text-[10px] font-mono text-muted-foreground whitespace-pre-wrap break-all">
                             {selectedIncident.raw_html}
                           </pre>
                         </div>

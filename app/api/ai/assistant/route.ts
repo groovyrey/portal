@@ -20,7 +20,6 @@ import {
   getStudentGrades,
   getFullStudentData
 } from '@/lib/data-service';
-import { generateVisualization } from '@/lib/ai-service';
 import { query } from '@/lib/turso';
 import { 
   SCHOOL_INFO, 
@@ -324,23 +323,6 @@ export async function POST(req: NextRequest) {
           question: z.string().describe("The question to ask the user"),
           placeholder: z.string().optional().describe("Hint for the input field")
         })
-      }),
-      tool(async ({ description, title }) => {
-         const [grades, financials, schedule] = await Promise.all([
-           getStudentGrades(userId),
-           getStudentFinancials(userId),
-           getStudentSchedule(userId)
-         ]);
-         
-         const combinedContext = JSON.stringify({ grades, financials, schedule });
-         return await generateVisualization(description, combinedContext);
-      }, {
-        name: "render_html",
-        description: "Generate interactive, animated, and fully responsive 2D visual components, 2D charts, and 2D educational demos. NO 3D OR THREE.JS. Supports Tailwind CSS and Bootstrap 5.",
-        schema: z.object({ 
-          description: z.string().describe("EXTREMELY DETAILED description for the Visualization Agent. Include specific 2D UI requirements using Tailwind CSS, Bootstrap 5, or both. Include interactive elements, physics parameters, color schemes, and expected behavior. **IMPORTANT: DO NOT USE 3D, WEBGL, OR THREE.JS. USE DOM/SVG/CANVAS 2D ONLY.** Mandate FULL RESPONSIVENESS."),
-          title: z.string().describe("Title of the component")
-        })
       })
     ];
 
@@ -366,7 +348,6 @@ You are the "LCCian Companion", an unofficial AI academic advisor for ${SCHOOL_I
 ${tutorModeProtocol}${contextProtocol}
 2. **Tools & Data:** **PRIORITY #1: CALL TOOLS IMMEDIATELY.** If a user asks a question requiring data, your **VERY FIRST OUTPUT** must be the tool call. **Wait for the system to provide the data with the prefix \`[SYSTEM_DATA_RETRIEVED]\`.** This data is **NOT** from the student; it is from your internal systems. NEVER thank or congratulate the student for data provided with this prefix.
 3. **Math/Science:** Use LaTeX ($E=mc^2$). Explain logic/formulas. **Use \`execute_math\` ONLY for complex math problems (e.g., calculus, statistics, complex algebra).** NEVER use it for simple arithmetic. In **Direct Answer Mode**, give the solution immediately. In **Tutor Mode**, give hints only. **IMPORTANT: All numerical results or data you want to see from \`execute_math\` MUST be explicitly printed using \`print()\`.**
-4. **Visualization:** Proactively use \`render_html\` for concepts/demos. \`description\` must be an EXTREMELY DETAILED technical prompt for a fully responsive, interactive UI. Explain the visualization's value to the student.
 5. **Persona:** You are a professional, supportive, and engaging academic advisor. **You are talking directly to a student.** You MUST always address the user by their **first name** (provided in the context) or as "LCCian" to maintain a warm, personal connection.
 6. **Formatting:** **MANDATORY: Use Markdown Tables** for all structured data (schedule, grades, financial breakdown). Use bolding for key figures (grades, amounts). Organize long text with headers and bullets. **CRITICAL: DO NOT WRAP YOUR RESPONSE IN A CODE BLOCK (\` \` \`). Only use code blocks for actual code snippets.**
 
@@ -391,7 +372,6 @@ ${tutorModeProtocol}${contextProtocol}
 11. get_full_student_data: {} - All info.
 12. ask_user_choice: { "question": string, "options": string[] }
 13. ask_user: { "question": string, "placeholder": string }
-14. render_html: { "description": string, "title": string } - Interactive 2D UI/2D demos. NO 3D. Supports Tailwind CSS and Bootstrap 5.
 
 ### FEW-SHOT EXAMPLES
 
@@ -597,16 +577,7 @@ STUDENT DATA:
                                           type: 'tool_call' as const
                                       });
                                   } 
-                                  // Note: 2. Check for render_html signature (description + title)
-                                  else if (parsed.description && parsed.title) {
-                                      collectedToolCalls.push({
-                                          name: 'render_html',
-                                          args: parsed,
-                                          id: `call_${Date.now()}_${collectedToolCalls.length}`,
-                                          type: 'tool_call' as const
-                                      });
-                                  }
-                                  // Note: 3. Check for execute_math signature (code)
+                                  // Note: 2. Check for execute_math signature (code)
                                   else if (parsed.code && (parsed.code.includes('import') || parsed.code.includes('print'))) {
                                       collectedToolCalls.push({
                                           name: 'execute_math',
@@ -645,7 +616,7 @@ STUDENT DATA:
 
             for (const toolCall of collectedToolCalls) {
                 // Security Check: Block sensitive tools if context awareness is disabled
-                const sensitiveTools = ['get_grades', 'get_financials', 'get_day_schedule', 'get_weekly_schedule', 'get_full_student_data', 'render_html'];
+                const sensitiveTools = ['get_grades', 'get_financials', 'get_day_schedule', 'get_weekly_schedule', 'get_full_student_data'];
                 if (assistantSettings.contextAwareness === false && sensitiveTools.includes(toolCall.name)) {
                     const output = "Error: Academic Context Access is disabled in your Assistant Settings. Please enable it to access this information.";
                     history.push(new HumanMessage(`TOOL_RESULT (${toolCall.name}): ${output}`));
@@ -658,7 +629,6 @@ STUDENT DATA:
                     if (toolCall.name === 'execute_math') status = "COMPUTING";
                     else if (['get_grades', 'get_financials', 'get_day_schedule', 'get_weekly_schedule', 'get_full_student_data', 'web_fetch'].includes(toolCall.name)) status = "FETCHING";
                     else if (['web_search', 'youtube_search', 'wikipedia_search'].includes(toolCall.name)) status = "SEARCHING";
-                    else if (toolCall.name === 'render_html') status = "DESIGNING";
                     
                     await writer.write(encoder.encode(`STATUS:${status}\n`));
                     await writer.write(encoder.encode(`TOOL_USED: ${toolCall.name}\n`));
@@ -671,19 +641,6 @@ STUDENT DATA:
                 if (selectedTool) {
                     try {
                         output = await (selectedTool as any).invoke(toolCall.args);
-                        
-                        // Note: Special Handling for Client UI (render_html)
-                        if (toolCall.name === 'render_html') {
-                             const clientPayload = {
-                                 name: 'render_html',
-                                 parameters: {
-                                     html: output,
-                                     title: toolCall.args.title || 'Visualization',
-                                     fullScreen: false
-                                 }
-                             };
-                             await writer.write(encoder.encode(`TOOL_CALL: ${JSON.stringify(clientPayload)}\n`));
-                        }
                         
                         // Note: Handle Interaction Tools
                         if (toolCall.name === 'ask_user' || toolCall.name === 'ask_user_choice') {

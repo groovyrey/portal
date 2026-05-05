@@ -23,8 +23,6 @@ export default function PageHeader() {
     if (path === '/disclaimer') return 'Disclaimer';
     if (path === '/docs') return 'Docs';
     if (path === '/school') return 'School';
-    if (path === '/admin') return 'Admin';
-    if (path === '/admin/test') return 'Admin Test';
     if (path.startsWith('/post/')) return 'Post';
     return '';
   };
@@ -35,7 +33,7 @@ export default function PageHeader() {
   if (pathname === '/' || !title) return null;
 
   return (
-    <div className="bg-background/95 border-b border-border sticky top-16 z-[90] backdrop-blur-xl supports-[backdrop-filter]:bg-background/85">
+    <div className="lg:hidden bg-background/95 border-b border-border sticky top-16 z-[90] backdrop-blur-xl supports-[backdrop-filter]:bg-background/85">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center gap-4">
         <AnimatePresence mode="wait">
           <motion.button

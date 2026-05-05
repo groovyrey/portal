@@ -6,29 +6,29 @@ import {
   Send, 
   Bot, 
   Sparkles,
-  BrainCircuit,
   HelpCircle,
   Globe,
   Search,
   Copy,
   Check,
   RefreshCcw,
-  Zap,
-  Info,
-  Calendar,
-  Wallet,
   Youtube,
   Calculator,
   List,
-  FileText,
+  Calendar,
   CalendarDays,
+  Wallet,
   Square,
-  Maximize2,
   VolumeX,
   Volume2,
   Mic,
   StopCircle,
-  Settings
+  Settings,
+  User,
+  Zap,
+  Trash2,
+  BrainCircuit,
+  MessageSquare
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -38,18 +38,24 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
 import 'highlight.js/styles/github-dark.css';
-import Link from 'next/link';
 import { toast } from 'sonner';
 import { useStudent } from '@/lib/hooks';
 import AssistantTab from '@/components/settings/AssistantTab';
-import Modal from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog';
+import TabbedPageLayout from '@/components/layout/TabbedPageLayout';
 import { cn } from '@/lib/utils';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 type Message = {
   id: string;
@@ -57,33 +63,26 @@ type Message = {
   content: string;
   tools?: string[];
   status?: string;
-  inlineHtml?: {
-    html: string;
-    title?: string;
-    fullScreen?: boolean;
-  };
 };
 
 const TypingIndicator = ({ status }: { status?: string }) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 5 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="px-4 py-2.5 bg-muted/50 rounded-md border w-fit flex items-center gap-3"
-  >
+  <div className="flex items-center gap-2 px-1">
     <div className="flex gap-1">
       {[0, 1, 2].map((i) => (
         <motion.div
           key={i}
           animate={{ scale: [1, 1.2, 1], opacity: [0.4, 1, 0.4] }}
           transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-          className="h-1 w-1 rounded-full bg-primary"
+          className="h-1.5 w-1.5 rounded-full bg-primary"
         />
       ))}
     </div>
-    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-      {status ? `Assistant is ${status.toLowerCase()}` : "Thinking"}
-    </span>
-  </motion.div>
+    {status && (
+      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+        {status}
+      </span>
+    )}
+  </div>
 );
 
 const CopyButton = ({ content }: { content: string }) => {
@@ -102,9 +101,9 @@ const CopyButton = ({ content }: { content: string }) => {
       variant="ghost"
       size="icon"
       onClick={handleCopy}
-      className="h-7 w-7 text-muted-foreground"
+      className="h-8 w-8 text-muted-foreground hover:text-foreground"
     >
-      {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+      {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
     </Button>
   );
 };
@@ -115,9 +114,9 @@ const SpeakButton = ({ messageId, content, isSpeaking, onSpeak }: { messageId: s
       variant="ghost"
       size="icon"
       onClick={(e) => { e.stopPropagation(); onSpeak(messageId, content); }}
-      className="h-7 w-7 text-muted-foreground"
+      className="h-8 w-8 text-muted-foreground hover:text-foreground"
     >
-      {isSpeaking ? <VolumeX className="h-3.5 w-3.5 animate-pulse" /> : <Volume2 className="h-3.5 w-3.5" />}
+      {isSpeaking ? <VolumeX className="h-4 w-4 animate-pulse" /> : <Volume2 className="h-4 w-4" />}
     </Button>
   );
 };
@@ -200,11 +199,11 @@ const ChatInput = React.memo(({
   };
 
   return (
-    <div className="p-4 border-t bg-background">
-      <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-2">
-        <div className="flex gap-2 items-center">
-          <div className="relative flex-1">
-             <div className="absolute left-1 top-1 flex items-center">
+    <div className="p-4 bg-background border-t">
+      <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-4">
+        <div className="flex gap-2 items-end">
+          <div className="relative flex-1 group">
+             <div className="absolute left-1.5 bottom-1 flex items-center gap-0.5">
                 <Button
                   type="button"
                   variant="ghost"
@@ -212,8 +211,9 @@ const ChatInput = React.memo(({
                   onClick={onClear}
                   disabled={!hasMessages || isLoading}
                   className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  title="Clear history"
                 >
-                  <RefreshCcw className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
                 <Button
                   type="button"
@@ -222,6 +222,7 @@ const ChatInput = React.memo(({
                   onClick={isRecording ? stopRecording : startRecording}
                   disabled={isLoading || isTranscribing}
                   className={cn("h-8 w-8", isRecording ? "text-destructive animate-pulse" : "text-muted-foreground")}
+                  title={isRecording ? "Stop recording" : "Voice input"}
                 >
                   {isRecording ? <StopCircle className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </Button>
@@ -230,11 +231,11 @@ const ChatInput = React.memo(({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 disabled={isLoading || isTranscribing}
-                placeholder={isRecording ? "Listening..." : isLoading ? "Assistant is responding..." : "Ask a question..."}
-                className="pl-20 h-10 pr-12"
+                placeholder={isRecording ? "Listening..." : "Ask a question..."}
+                className="pl-20 h-10 pr-12 focus-visible:ring-1 focus-visible:ring-primary/50"
              />
              {input.length > 0 && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[8px] font-bold text-muted-foreground/40 uppercase">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-medium text-muted-foreground/50">
                    {input.length}/2000
                 </div>
              )}
@@ -244,13 +245,13 @@ const ChatInput = React.memo(({
             size="icon" 
             disabled={(!input.trim() && !isLoading) || isTranscribing}
             variant={isLoading ? "destructive" : "default"}
-            className="h-10 w-10 shrink-0"
+            className="h-10 w-10 shrink-0 shadow-sm"
           >
-            {isLoading ? <Square className="h-4 w-4 fill-current" /> : <Send className="h-4 w-4" />}
+            {isLoading ? <Square className="h-4 w-4" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
-        <p className="text-[9px] text-center text-muted-foreground font-semibold uppercase tracking-wider">
-          AI may generate inaccurate information.
+        <p className="text-[10px] text-center text-muted-foreground/80 font-medium">
+          Assistant can make mistakes. Check important info.
         </p>
       </form>
     </div>
@@ -260,16 +261,20 @@ const ChatInput = React.memo(({
 ChatInput.displayName = 'ChatInput';
 
 export default function AssistantPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { student } = useStudent();
+  
+  const [activeTab, setActiveTab] = useState<'chat' | 'settings'>('chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [currentlySpeakingId, setCurrentlySpeakingId] = useState<string | null>(null);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [modalQuestion, setModalQuestion] = useState('');
   const [modalPlaceholder, setModalPlaceholder] = useState('');
   const [modalInput, setModalInput] = useState('');
@@ -278,16 +283,53 @@ export default function AssistantPage() {
   const [choiceQuestion, setChoiceQuestion] = useState('');
   const [choiceOptions, setChoiceOptions] = useState<string[]>([]);
 
-  const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
-  const [htmlModalContent, setHtmlModalContent] = useState('');
-  const [htmlModalTitle, setHtmlModalTitle] = useState('');
-  const [htmlModalFullScreen, setHtmlModalFullScreen] = useState(false);
-
-  const [suggestions] = useState([
-    { text: "What's my schedule today?", icon: Calendar },
-    { text: "Check my remaining balance", icon: Wallet },
-    { text: "Help me with my grades", icon: Info }
+  const [suggestions, setSuggestions] = useState([
+    { text: "What's my current balance?", icon: Wallet, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { text: "Show my schedule for today", icon: Calendar, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { text: "Search for Latest AI Advancement", icon: Search, color: "text-purple-500", bg: "bg-purple-500/10" },
+    { text: "Summarize: laconcepcioncollege.com", icon: Globe, color: "text-amber-500", bg: "bg-amber-500/10" }
   ]);
+
+  // Sync tab with URL
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['chat', 'settings'].includes(tab)) {
+      setActiveTab(tab as 'chat' | 'settings');
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tabId: 'chat' | 'settings') => {
+    setActiveTab(tabId);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tabId);
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const response = await fetch('/api/student/me');
+        if (response.ok) {
+          const result = await response.json();
+          const subjects = result.data?.schedule || [];
+          if (subjects.length > 0) {
+            const randomSubject = subjects[Math.floor(Math.random() * subjects.length)];
+            const subjectTitle = randomSubject.description || randomSubject.subject;
+            if (subjectTitle) {
+              setSuggestions(prev => {
+                if (prev.some(s => s.text.startsWith('Resources for'))) return prev;
+                return [
+                  ...prev.slice(0, 3),
+                  { text: `Resources for "${subjectTitle}"`, icon: Sparkles, color: "text-indigo-500", bg: "bg-indigo-500/10" }
+                ];
+              });
+            }
+          }
+        }
+      } catch (error) {}
+    };
+    fetchStudentData();
+  }, []);
 
   const updateSettings = async (newSettings: any) => {
     if (!student) return;
@@ -322,7 +364,6 @@ export default function AssistantPage() {
       case 'get_day_schedule': return Calendar;
       case 'get_weekly_schedule': return CalendarDays;
       case 'get_financials': return Wallet;
-      case 'render_html': return Sparkles;
       default: return Zap;
     }
   };
@@ -436,13 +477,11 @@ export default function AssistantPage() {
                 if (toolCall.name === 'ask_user') {
                   setModalQuestion(toolCall.parameters.question);
                   setModalPlaceholder(toolCall.parameters.placeholder || "Response...");
-                  setIsModalOpen(true);
+                  setIsQuestionModalOpen(true);
                 } else if (toolCall.name === 'ask_user_choice') {
                   setChoiceQuestion(toolCall.parameters.question);
                   setChoiceOptions(toolCall.parameters.options || []);
                   setIsChoiceModalOpen(true);
-                } else if (toolCall.name === 'render_html') {
-                  setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, inlineHtml: toolCall.parameters } : msg));
                 }
               } catch (e) {}
             }
@@ -469,166 +508,225 @@ export default function AssistantPage() {
     }
   }, [messages, isLoading]);
 
+  const tabs = [
+    { id: 'chat', name: 'Assistant', icon: MessageSquare, desc: 'AI Study Companion' },
+    { id: 'settings', name: 'Settings', icon: Settings, desc: 'AI Preferences' },
+  ] as const;
+
   return (
-    <div className="flex-1 flex flex-col h-full max-w-4xl mx-auto w-full p-4 md:p-6 gap-4 overflow-hidden">
-      <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-bold tracking-tight">Assistant</h2>
-        </div>
-        <Button variant="ghost" size="icon" onClick={() => setIsSettingsModalOpen(true)}>
-          <Settings className="h-5 w-5" />
-        </Button>
-      </div>
-
-      <Card className="flex-1 flex flex-col shadow-sm overflow-hidden w-full">
-        <ScrollArea ref={scrollContainerRef} className="flex-1 p-4 md:p-6 w-full">
-          {messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-6">
-              <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                <Bot className="h-8 w-8" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold">Hello, {student?.parsedName?.firstName}!</h3>
-                <p className="text-sm text-muted-foreground max-w-sm">
-                  I can help you check your grades, schedule, or balance. Just ask!
-                </p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-lg">
-                {suggestions.map((s, i) => (
-                  <Button
-                    key={i}
-                    variant="outline"
-                    className="h-auto flex-col p-4 gap-2 border-dashed bg-muted/20"
-                    onClick={() => sendMessage(s.text)}
-                  >
-                    <s.icon className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-semibold">{s.text}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-6 pb-4">
-            {messages.map((m, idx) => {
-              const isAssistant = m.role === 'assistant';
-              return (
-                <div key={m.id} className={cn("flex flex-col gap-2 w-full", isAssistant ? "items-start" : "items-end")}>
-                  {isAssistant && (
-                    <div className="flex items-center justify-between w-full max-w-[85%] mb-1">
-                      <div className="flex items-center gap-2 shrink-0">
-                         <Badge variant="secondary" className="h-5 px-1.5 gap-1.5 shrink-0">
-                            <BrainCircuit className="h-3 w-3" />
-                            <span className="text-[10px] uppercase font-bold tracking-wider">AI Assistant</span>
-                         </Badge>
-                         {m.tools && m.tools.length > 0 && (
-                            <div className="flex -space-x-1 shrink-0">
-                               {m.tools.map((t, i) => {
-                                 const Icon = getToolIcon(t);
-                                 return <div key={i} className="h-5 w-5 rounded-full border bg-background flex items-center justify-center"><Icon className="h-2.5 w-2.5 text-primary" /></div>;
-                               })}
-                            </div>
-                         )}
-                      </div>
-                      {!isLoading && m.content && (
-                        <div className="flex gap-1 shrink-0">
-                          <SpeakButton messageId={m.id} content={m.content} isSpeaking={currentlySpeakingId === m.id} onSpeak={handleSpeak} />
-                          <CopyButton content={m.content} />
-                        </div>
-                      )}
+    <TabbedPageLayout
+      title="Assistant"
+      icon={BrainCircuit}
+      subtitle="AI Powered Workspace"
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={(id) => handleTabChange(id as 'chat' | 'settings')}
+    >
+      <div className="flex flex-col h-[calc(100vh-16rem)] lg:h-[calc(100vh-12rem)] w-full max-w-full overflow-hidden">
+        {activeTab === 'chat' && (
+          <Card className="flex-1 flex flex-col shadow-sm overflow-hidden border-border/50 bg-background/50 w-full max-w-full">
+            <ScrollArea ref={scrollContainerRef} className="flex-1 w-full">
+              <div className="p-4 md:p-8 flex flex-col min-h-full w-full max-w-full overflow-hidden">
+                {messages.length === 0 && (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 py-12 w-full max-w-full">
+                    <div className="h-20 w-20 rounded-3xl bg-primary/5 flex items-center justify-center text-primary shadow-sm border border-primary/10">
+                      <Bot className="h-10 w-10" />
                     </div>
-                  )}
-
-                  <div className={cn(
-                    isAssistant ? "max-w-[90%] md:max-w-[75%] min-w-[200px]" : "max-w-[90%] md:max-w-[85%]",
-                    "rounded-md p-3.5 text-sm leading-relaxed overflow-hidden",
-                    isAssistant ? "bg-muted/50 border" : "bg-primary text-primary-foreground font-medium"
-                  )}>
-                    {isAssistant && !m.content && !m.inlineHtml ? (
-                      <TypingIndicator status={m.status} />
-                    ) : (
-                      <>
-                        <div className="w-full min-w-0">
-                          <ReactMarkdown 
-                            remarkPlugins={[remarkGfm, remarkMath]} 
-                            rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
-                            className="prose prose-sm prose-slate dark:prose-invert max-w-full break-words prose-p:leading-relaxed prose-table:w-full prose-table:table-fixed prose-table:overflow-hidden prose-pre:bg-muted/50 prose-pre:overflow-x-auto prose-pre:max-w-full prose-code:text-primary prose-code:bg-muted/50 prose-code:px-1 prose-code:rounded prose-code:before:content-none prose-code:after:content-none"
-                          >
-                            {m.content}
-                          </ReactMarkdown>
-                        </div>
-                        {m.inlineHtml && (
-                          <div className="mt-4 h-64 border rounded-md overflow-hidden bg-white">
-                            <iframe 
-                              srcDoc={m.inlineHtml.html} 
-                              className="w-full h-full border-none" 
-                              sandbox="allow-scripts"
-                            />
+                    <div className="space-y-2">
+                      <h2 className="text-3xl font-bold tracking-tight">How can I help you today?</h2>
+                      <p className="text-muted-foreground max-w-sm mx-auto text-sm">
+                        I have access to your <span className="text-foreground font-semibold">grades</span>, <span className="text-foreground font-semibold">schedules</span>, and <span className="text-foreground font-semibold">finances</span>.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl px-4">
+                      {suggestions.map((s, i) => (
+                        <motion.button
+                          key={i}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.1 }}
+                          onClick={() => sendMessage(s.text)}
+                          className="group flex flex-col items-start p-4 bg-card border hover:border-primary/50 hover:bg-accent/50 rounded-2xl transition-all text-left shadow-sm active:scale-[0.98] w-full"
+                        >
+                          <div className={cn("p-2 rounded-xl mb-3 transition-transform group-hover:scale-110 shadow-sm border border-border/50", s.bg, s.color)}>
+                              <s.icon className="h-4 w-4" />
                           </div>
-                        )}
-                      </>
-                    )}
+                          <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{s.text}</span>
+                        </motion.button>
+                      ))}
+                    </div>
                   </div>
+                )}
+
+                <div className="space-y-8 pb-4 w-full max-w-full flex flex-col overflow-hidden">
+                  {messages.map((m, idx) => {
+                    const isAssistant = m.role === 'assistant';
+                    return (
+                      <motion.div 
+                        key={m.id} 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={cn("flex w-full min-w-0 max-w-full", isAssistant ? "justify-start" : "justify-end")}
+                      >
+                        <div className={cn(
+                          "flex flex-col gap-1.5 max-w-[90%] sm:max-w-[85%] min-w-0 w-0 min-w-full overflow-hidden",
+                          isAssistant ? "items-start" : "items-end"
+                        )}>
+                          {/* Action Buttons & Tools */}
+                          {isAssistant && (
+                            <div className="flex items-center gap-2 px-1 h-6">
+                               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-1">
+                                  Assistant
+                               </span>
+                               {m.tools && m.tools.length > 0 && (
+                                  <div className="flex gap-1">
+                                     {m.tools.map((t, i) => {
+                                       const Icon = getToolIcon(t);
+                                       return (
+                                         <div key={i} className="bg-primary/5 p-1 rounded-md border border-primary/10" title={t}>
+                                           <Icon className="h-2.5 w-2.5 text-primary/60" />
+                                         </div>
+                                       );
+                                     })}
+                                  </div>
+                               )}
+                               {!isLoading && m.content && (
+                                  <div className="flex gap-0.5">
+                                    <SpeakButton messageId={m.id} content={m.content} isSpeaking={currentlySpeakingId === m.id} onSpeak={handleSpeak} />
+                                    <CopyButton content={m.content} />
+                                  </div>
+                                )}
+                            </div>
+                          )}
+
+                          {/* Content Bubble */}
+                          <div className={cn(
+                            "rounded-2xl px-4 py-3 shadow-sm border transition-colors min-w-0 w-full max-w-full overflow-hidden",
+                            isAssistant 
+                              ? "bg-accent/30 border-border/50 text-foreground rounded-tl-none" 
+                              : "bg-primary text-primary-foreground border-primary/20 rounded-tr-none"
+                          )}>
+                            {isAssistant ? (
+                              <div className="space-y-3 min-w-0 w-full max-w-full overflow-hidden">
+                                {m.content ? (
+                                  <ReactMarkdown 
+                                    remarkPlugins={[remarkGfm, remarkMath]} 
+                                    rehypePlugins={[rehypeHighlight, rehypeKatex, rehypeRaw]}
+                                    className={cn(
+                                      "text-sm leading-relaxed min-w-0 w-full max-w-full overflow-hidden",
+                                      isLoading && idx === messages.length - 1 && "streaming-active"
+                                    )}
+                                    components={{
+                                      p: ({children}) => <p className="mb-3 last:mb-0 break-words whitespace-pre-wrap">{children}</p>,
+                                      table: ({...props}) => (
+                                        <div className="overflow-x-auto w-full max-w-full my-3 rounded-lg border bg-background/50 custom-scrollbar block">
+                                          <table className="min-w-full text-xs text-left table-auto" {...props} />
+                                        </div>
+                                      ),
+                                      thead: ({...props}) => <thead className="bg-muted text-muted-foreground font-bold uppercase tracking-wider text-[10px]" {...props} />,
+                                      th: ({children, ...props}) => <th className="px-3 py-2 border-b whitespace-nowrap font-bold" {...props}>{children}</th>,
+                                      td: ({children, ...props}) => <td className="px-3 py-2 border-b" {...props}>{children}</td>,
+                                      code: ({className, children, ...props}) => {
+                                        const match = /language-(\w+)/.exec(className || '');
+                                        const codeContent = String(children).replace(/\n$/, '');
+                                        return match ? (
+                                          <div className="relative group my-3 min-w-0 w-full max-w-full overflow-hidden">
+                                            <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center gap-1">
+                                              <CopyButton content={codeContent} />
+                                            </div>
+                                            <pre className="bg-slate-950 text-slate-50 rounded-xl p-4 overflow-x-auto text-[11px] font-mono scrollbar-hide w-full max-w-full">
+                                              <code className={className} {...props}>{children}</code>
+                                            </pre>
+                                          </div>
+                                        ) : (
+                                          <code className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 font-mono text-[0.9em] font-bold" {...props}>
+                                            {children}
+                                          </code>
+                                        );
+                                      },
+                                      a: ({...props}) => <a className="text-primary font-bold hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                                      ul: ({...props}) => <ul className="list-disc list-outside ml-5 my-3 space-y-1.5" {...props} />,
+                                      ol: ({...props}) => <ol className="list-decimal list-outside ml-5 my-3 space-y-1.5" {...props} />,
+                                      blockquote: ({...props}) => <blockquote className="border-l-4 border-primary/30 pl-4 py-1 my-3 text-muted-foreground italic bg-primary/5 rounded-r-lg" {...props} />,
+                                      h1: ({children}) => <h1 className="text-base font-bold mt-4 mb-2 border-b pb-1">{children}</h1>,
+                                      h2: ({children}) => <h2 className="text-sm font-bold mt-3 mb-1">{children}</h2>,
+                                    }}
+                                  >
+                                    {m.content}
+                                  </ReactMarkdown>
+                                ) : (
+                                  <TypingIndicator status={m.status} />
+                                )}
+                              </div>
+                            ) : (
+                              <p className="whitespace-pre-wrap text-sm font-medium break-words overflow-hidden max-w-full">{m.content}</p>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+
+                  })}
                 </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
+              </div>
+            </ScrollArea>
 
-        <ChatInput 
-          onSend={sendMessage} 
-          onStop={handleStop}
-          isLoading={isLoading} 
-          onClear={() => { setMessages([]); toast.success("Cleared"); }}
-          hasMessages={messages.length > 0}
-        />
-      </Card>
+            <ChatInput 
+              onSend={sendMessage} 
+              onStop={handleStop}
+              isLoading={isLoading} 
+              onClear={() => { setMessages([]); toast.success("History cleared"); }}
+              hasMessages={messages.length > 0}
+            />
+          </Card>
+        )}
 
-      <Modal 
-        isOpen={isSettingsModalOpen} 
-        onClose={() => setIsSettingsModalOpen(false)} 
-        title="Assistant Settings"
-      >
-        <div className="p-6">
-          <p className="text-sm text-muted-foreground mb-4">Customize your AI experience</p>
-          {student && <AssistantTab student={student} updateSettings={updateSettings} />}
-        </div>
-      </Modal>
+        {activeTab === 'settings' && (
+          <Card className="flex-1 overflow-y-auto">
+            <CardContent className="p-6 md:p-8">
+              {student && <AssistantTab student={student} updateSettings={updateSettings} />}
+            </CardContent>
+          </Card>
+        )}
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title="Question"
-      >
-        <div className="p-6">
-          <p className="text-sm text-muted-foreground mb-4">{modalQuestion}</p>
-          <Input 
-              value={modalInput} 
-              onChange={(e) => setModalInput(e.target.value)} 
-              placeholder={modalPlaceholder}
-           />
-           <div className="flex justify-end gap-2 mt-4">
-              <Button variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-              <Button onClick={() => { setIsModalOpen(false); sendMessage(modalInput); setModalInput(''); }}>Submit</Button>
-           </div>
-        </div>
-      </Modal>
+        {/* Input Modal */}
+        <Dialog open={isQuestionModalOpen} onOpenChange={setIsQuestionModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Assistant Question</DialogTitle>
+              <DialogDescription>{modalQuestion}</DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Input 
+                  value={modalInput} 
+                  onChange={(e) => setModalInput(e.target.value)} 
+                  placeholder={modalPlaceholder}
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === 'Enter') { setIsQuestionModalOpen(false); sendMessage(modalInput); setModalInput(''); } }}
+               />
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setIsQuestionModalOpen(false)}>Cancel</Button>
+              <Button onClick={() => { setIsQuestionModalOpen(false); sendMessage(modalInput); setModalInput(''); }}>Submit</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      <Modal 
-        isOpen={isChoiceModalOpen} 
-        onClose={() => setIsChoiceModalOpen(false)} 
-        title="Please Choose"
-      >
-        <div className="p-6">
-          <p className="text-sm text-muted-foreground mb-4">{choiceQuestion}</p>
-          <div className="grid gap-2">
-              {choiceOptions.map((opt, i) => (
-                <Button key={i} variant="outline" onClick={() => { setIsChoiceModalOpen(false); sendMessage(opt); }}>{opt}</Button>
-              ))}
-           </div>
-        </div>
-      </Modal>
-    </div>
+        {/* Choice Modal */}
+        <Dialog open={isChoiceModalOpen} onOpenChange={setIsChoiceModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Please Choose</DialogTitle>
+              <DialogDescription>{choiceQuestion}</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-2 py-4">
+                {choiceOptions.map((opt, i) => (
+                  <Button key={i} variant="outline" className="justify-start h-auto py-3 px-4 font-semibold text-left" onClick={() => { setIsChoiceModalOpen(false); sendMessage(opt); }}>{opt}</Button>
+                ))}
+             </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </TabbedPageLayout>
   );
 }

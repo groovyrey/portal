@@ -35,7 +35,6 @@ LCC Hub is a sophisticated student portal for La Concepcion College (LCC) studen
 *   **Orchestrator:** **LangChain**
 *   **LLM:** **Google Gemini** (`gemma-3-27b-it` via `ChatGoogleGenerativeAI`).
 *   **Code Execution:** **Vercel Sandbox** (`@vercel/sandbox`) for running Python math/data analysis secure.
-* **Visualization:** **Cloudflare Workers AI** (`@cf/nvidia/nemotron-3-120b-a12b`) for generating interactive HTML/JS components on the fly.
 *   **Voice:** **Deepgram** for speech-to-text.
 
 ## 3. Key Workflows & Implementation Details
@@ -60,7 +59,6 @@ The assistant is a "ReAct-style" agent with custom tool handling:
 *   **Tool Calling:** The model outputs a specific token `||| { "name": "..." }`. The server parses this, executes the tool, and feeds the result back to the model.
 *   **Tools:**
     *   `execute_math`: Runs Python code in a secure Vercel Sandbox. Supports `numpy`, `pandas`, `scipy`, `matplotlib` (headless), `sympy`.
-    *   `render_html`: Generates a "Specialized Agent" prompt for Cloudflare AI to create UI components (Dashboards, 2D visualizations, interactive demos).
     *   `get_grades` / `get_schedule`: Fetches data from the local Firestore cache.
     *   `web_search` / `youtube_search`: External lookups.
 *   **Streaming:** Responses are streamed via `TransformStream` to the client.

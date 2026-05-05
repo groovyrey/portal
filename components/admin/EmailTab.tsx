@@ -159,14 +159,14 @@ export default function EmailTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <h2 className="text-xl font-bold tracking-tight">Announcement Center</h2>
-          <p className="text-sm text-muted-foreground">Broadcast official messages to students.</p>
+          <p className="text-xs text-muted-foreground">Broadcast official messages to students.</p>
         </div>
-
-        <div className="flex bg-muted p-1 rounded-md">
+      ...
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           <Button
             variant={targetType === 'specific' ? 'secondary' : 'ghost'}
             size="sm"
@@ -197,14 +197,14 @@ export default function EmailTab() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Recipient Selection */}
         <Card className="lg:col-span-2 flex flex-col h-[600px]">
-          <CardHeader className="py-4 border-b">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider flex items-center gap-2">
-              <Users className="h-4 w-4" />
+          <CardHeader className="py-3 border-b">
+            <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+              <Users className="h-3.5 w-3.5" />
               Recipients
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="p-4 flex-1 flex flex-col overflow-hidden">
+          <CardContent className="p-3 flex-1 flex flex-col overflow-hidden">
             {targetType === 'all' ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4 bg-muted/20 border-dashed border-2 rounded-md">
                 <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
@@ -318,33 +318,33 @@ export default function EmailTab() {
 
         {/* Message Content */}
         <Card className="lg:col-span-3 flex flex-col h-[600px]">
-          <CardHeader className="py-4 border-b">
-             <CardTitle className="text-sm font-semibold uppercase tracking-wider flex items-center gap-2">
-                <Info className="h-4 w-4" />
+          <CardHeader className="py-3 border-b">
+             <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                <Info className="h-3.5 w-3.5" />
                 Composition
              </CardTitle>
           </CardHeader>
-          <CardContent className="p-6 flex-1 flex flex-col space-y-6 overflow-hidden">
+          <CardContent className="p-4 flex-1 flex flex-col space-y-4 overflow-hidden">
             <div className="space-y-4 flex-1 flex flex-col">
-              <div className="space-y-2">
-                <Label htmlFor="subject">Subject</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="subject" className="text-xs">Subject</Label>
                 <Input
                   id="subject"
                   placeholder="Official Announcement: [Subject]"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="font-bold"
+                  className="font-bold h-9"
                 />
               </div>
 
-              <div className="space-y-2 flex-1 flex flex-col">
-                <Label htmlFor="body">Message Body</Label>
+              <div className="space-y-1.5 flex-1 flex flex-col">
+                <Label htmlFor="body" className="text-xs">Message Body</Label>
                 <textarea
                   id="body"
                   placeholder="Enter details..."
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
-                  className="flex-1 w-full bg-background border border-input rounded-md p-4 text-sm resize-none focus:ring-1 focus:ring-primary outline-none custom-scrollbar"
+                  className="flex-1 w-full bg-background border border-input rounded-md p-3 text-sm resize-none focus:ring-1 focus:ring-primary outline-none custom-scrollbar"
                 />
               </div>
 
@@ -370,7 +370,7 @@ export default function EmailTab() {
               onClick={handleSendEmails}
               disabled={isSending || !subject.trim() || !body.trim() || (targetType === 'specific' && selectedStudents.length === 0) || (targetType === 'badges' && selectedBadges.length === 0)}
               size="lg"
-              className="w-full h-12 uppercase font-bold tracking-widest"
+              className="w-full h-11 uppercase font-bold tracking-widest text-xs"
             >
               {isSending ? (
                 <>

@@ -47,7 +47,7 @@ export default function GradeReportPage() {
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 pb-20">
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex items-center">
+        <div className="hidden lg:flex items-center">
           <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 text-muted-foreground">
             <Link href="/grades">
               <ArrowLeft className="h-4 w-4" />

@@ -224,11 +224,14 @@ function CommunityContent() {
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 pb-20">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
-          <div className="space-y-1">
+          <div className="space-y-1 hidden lg:block">
             <h2 className="text-3xl font-bold tracking-tight">Community</h2>
             <p className="text-sm text-muted-foreground">Connect with other students.</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setShowGuidelines(true)}>
+          <Button variant="ghost" size="icon" onClick={() => setShowGuidelines(true)} className="lg:hidden ml-auto">
+            <Info className="h-5 w-5 text-muted-foreground" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => setShowGuidelines(true)} className="hidden lg:flex">
             <Info className="h-5 w-5 text-muted-foreground" />
           </Button>
         </div>

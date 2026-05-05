@@ -100,7 +100,7 @@ export default function TabbedPageLayout<T extends string>({
             {headerRight}
           </header>
 
-          <div className="lg:hidden flex items-center gap-1 bg-muted/30 p-2 border-b border-border overflow-x-auto no-scrollbar sticky top-[7.5rem] z-20">
+          <div className="lg:hidden flex items-center gap-1 bg-background p-2 border-b border-border overflow-x-auto no-scrollbar sticky top-[7.5rem] z-20">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -118,26 +118,27 @@ export default function TabbedPageLayout<T extends string>({
             ))}
           </div>
 
-          <main className="flex-1 p-4 lg:p-10">
+          <main className="flex-1 p-4 lg:p-6">
             <div className="max-w-5xl mx-auto">
-              <div className="mb-8 hidden lg:block">
+              <div className="mb-6 hidden lg:block">
                 <h2 className="text-3xl font-bold tracking-tight">
                   {currentTab.name}
                 </h2>
                 {currentTab.desc && (
-                  <p className="text-muted-foreground mt-2">
+                  <p className="text-muted-foreground mt-1">
                     {currentTab.desc}
                   </p>
                 )}
               </div>
 
               <AnimatePresence mode="wait">
-                <motion.div
+                <motion.div 
                   key={activeTab}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
                   transition={{ duration: 0.2 }}
+                  className="min-w-0 w-full"
                 >
                   {children}
                 </motion.div>

@@ -94,7 +94,7 @@ export default function AccountsPage() {
   return (
     <div className="flex-1 space-y-8 p-8 pt-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
-        <div>
+        <div className="hidden lg:block">
           <h2 className="text-3xl font-bold tracking-tight">Accounts</h2>
           <p className="text-muted-foreground">
             View your balance and payment history.

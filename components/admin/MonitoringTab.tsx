@@ -131,18 +131,18 @@ export default function MonitoringTab() {
   ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 15);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <h3 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Health</h3>
+          <h3 className="text-[11px] font-bold tracking-tight uppercase text-muted-foreground">Health</h3>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={fetchOnlineDetails}
-            className="h-7 rounded-full gap-2 px-3 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
+            className="h-6 rounded-full gap-2 px-3 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-bold uppercase tracking-wider">
+            <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[9px] font-bold uppercase tracking-wider">
               {onlineMembers.size} Online
             </span>
           </Button>
@@ -152,60 +152,61 @@ export default function MonitoringTab() {
           size="icon" 
           onClick={handleRefresh} 
           disabled={isLoading || isRefetching}
+          className="h-8 w-8"
         >
           <RefreshCw className={cn("h-4 w-4", (isLoading || isRefetching) && "animate-spin")} />
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={<Activity className="h-4 w-4" />} label="Version" value={APP_VERSION} />
-        <StatCard icon={<Timer className="h-4 w-4" />} label="Latency" value={latency ? `${latency}ms` : '--'} />
-        <StatCard icon={<Server className="h-4 w-4" />} label="Environment" value={process.env.NODE_ENV === 'production' ? 'PROD' : 'DEV'} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard icon={<Activity className="h-3.5 w-3.5" />} label="Version" value={APP_VERSION} />
+        <StatCard icon={<Timer className="h-3.5 w-3.5" />} label="Latency" value={latency ? `${latency}ms` : '--'} />
+        <StatCard icon={<Server className="h-3.5 w-3.5" />} label="Environment" value={process.env.NODE_ENV === 'production' ? 'PROD' : 'DEV'} />
         <StatCard 
-          icon={<HeartPulse className={cn("h-4 w-4", !statusData ? "text-destructive" : "text-emerald-500")} />} 
+          icon={<HeartPulse className={cn("h-3.5 w-3.5", !statusData ? "text-destructive" : "text-emerald-500")} />} 
           label="Status" 
           value={!statusData ? 'DOWN' : (latency && latency > 1000 ? 'SLOW' : 'OK')} 
           className={!statusData ? "text-destructive" : "text-emerald-600"}
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="space-y-6">
-          <section className="space-y-3">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Infrastructure</h4>
-            <div className="grid gap-3">
-              <InfrastructureItem icon={<Database className="h-4 w-4" />} label="Database" value="Firestore" status="Native" />
-              <InfrastructureItem icon={<Globe className="h-4 w-4" />} label="Realtime" value="Ably SDK" status="Connected" />
-              <InfrastructureItem icon={<ShieldCheck className="h-4 w-4" />} label="Security" value="AES-256" status="Active" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="space-y-4">
+          <section className="space-y-2">
+            <h4 className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground px-1">Infrastructure</h4>
+            <div className="grid gap-2">
+              <InfrastructureItem icon={<Database className="h-3.5 w-3.5" />} label="Database" value="Firestore" status="Native" />
+              <InfrastructureItem icon={<Globe className="h-3.5 w-3.5" />} label="Realtime" value="Ably SDK" status="Connected" />
+              <InfrastructureItem icon={<ShieldCheck className="h-3.5 w-3.5" />} label="Security" value="AES-256" status="Active" />
             </div>
           </section>
 
-          <section className="space-y-3">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Automated Jobs</h4>
-            <div className="grid gap-3">
+          <section className="space-y-2">
+            <h4 className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground px-1">Automated Jobs</h4>
+            <div className="grid gap-2">
               {jobs.map((job) => (
                 <Card key={job.id}>
-                  <CardContent className="p-4 space-y-4">
+                  <CardContent className="p-3 space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         {job.icon}
                         <div>
                           <p className="text-xs font-bold">{job.name}</p>
-                          <p className="text-[10px] text-muted-foreground font-mono">{job.path}</p>
+                          <p className="text-[9px] text-muted-foreground font-mono">{job.path}</p>
                         </div>
                       </div>
-                      <Badge variant={job.data?.status === 'success' ? "outline" : "secondary"} className="text-[8px] uppercase">
+                      <Badge variant={job.data?.status === 'success' ? "outline" : "secondary"} className="text-[8px] uppercase h-4">
                         {job.data?.status || 'Pending'}
                       </Badge>
                     </div>
                     <Separator />
-                    <div className="grid grid-cols-2 gap-4 text-[10px]">
+                    <div className="grid grid-cols-2 gap-2 text-[9px]">
                       <div>
-                        <p className="text-muted-foreground font-semibold uppercase mb-1">Last Run</p>
+                        <p className="text-muted-foreground font-semibold uppercase mb-0.5">Last Run</p>
                         <p className="font-mono">{job.data?.lastRun ? new Date(job.data.lastRun).toLocaleTimeString() : 'Never'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground font-semibold uppercase mb-1">Schedule</p>
+                        <p className="text-muted-foreground font-semibold uppercase mb-0.5">Schedule</p>
                         <p className="font-medium">{job.schedule}</p>
                       </div>
                     </div>
@@ -217,8 +218,8 @@ export default function MonitoringTab() {
         </div>
 
         <Card className="lg:col-span-2 flex flex-col min-h-[400px]">
-          <CardHeader className="py-4 border-b">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider">System Activity Stream</CardTitle>
+          <CardHeader className="py-3 border-b">
+            <CardTitle className="text-xs font-bold uppercase tracking-widest">System Activity Stream</CardTitle>
           </CardHeader>
           <ScrollArea className="flex-1">
             <div className="p-4 font-mono text-[10px] space-y-2">
@@ -269,12 +270,12 @@ export default function MonitoringTab() {
 function StatCard({ icon, label, value, className }: { icon: React.ReactNode, label: string, value: string, className?: string }) {
   return (
     <Card>
-      <CardContent className="p-3 space-y-1 min-w-0">
+      <CardContent className="p-2.5 space-y-0.5 min-w-0">
         <div className="flex items-center gap-1.5 text-muted-foreground">
           {icon}
-          <span className="text-[10px] font-bold uppercase tracking-tight truncate">{label}</span>
+          <span className="text-[9px] font-bold uppercase tracking-tight truncate">{label}</span>
         </div>
-        <p className={cn("text-base font-bold font-mono truncate", className)}>{value}</p>
+        <p className={cn("text-sm font-bold font-mono truncate", className)}>{value}</p>
       </CardContent>
     </Card>
   );
@@ -282,15 +283,15 @@ function StatCard({ icon, label, value, className }: { icon: React.ReactNode, la
 
 function InfrastructureItem({ icon, label, value, status }: { icon: React.ReactNode, label: string, value: string, status: string }) {
   return (
-    <div className="p-3 bg-card border rounded-md flex items-center justify-between shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="p-1.5 bg-muted rounded text-muted-foreground">{icon}</div>
+    <div className="p-2.5 bg-card border rounded-md flex items-center justify-between shadow-sm">
+      <div className="flex items-center gap-2.5">
+        <div className="p-1 bg-muted rounded text-muted-foreground">{icon}</div>
         <div>
-          <p className="text-[10px] font-bold leading-none">{label}</p>
-          <p className="text-[9px] text-muted-foreground font-mono mt-1 uppercase">{value}</p>
+          <p className="text-[9px] font-bold leading-none">{label}</p>
+          <p className="text-[8px] text-muted-foreground font-mono mt-0.5 uppercase">{value}</p>
         </div>
       </div>
-      <Badge variant="outline" className="text-[8px] uppercase h-4 px-1.5">{status}</Badge>
+      <Badge variant="outline" className="text-[7px] uppercase h-3.5 px-1">{status}</Badge>
     </div>
   );
 }
