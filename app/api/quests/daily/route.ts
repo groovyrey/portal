@@ -246,14 +246,12 @@ Rules:
 ${exclusionPrompt}
 `.trim();
 
-    const prompt = ChatPromptTemplate.fromMessages([
-      SystemMessagePromptTemplate.fromTemplate(systemPrompt),
-      HumanMessagePromptTemplate.fromTemplate("Generate 10 trivia questions (mix multiple, boolean, and open-ended)."),
-    ]);
-
     let result;
     try {
-      result = await prompt.pipe(structuredLlm).invoke({});
+      result = await structuredLlm.invoke([
+        ["system", systemPrompt],
+        ["human", "Generate 10 trivia questions (mix multiple, boolean, and open-ended)."]
+      ]);
     } catch (e) {
       console.error("AI Generation attempt 1 failed:", e);
       try {
@@ -294,8 +292,8 @@ ${exclusionPrompt}
       await query(
         `INSERT INTO daily_quests (user_id, quest_date, category, questions, difficulty, current_index, score, is_completed, stats_updated, updated_at)
          VALUES (?, ?, ?, ?, ?, 0, 0, 0, 0, CURRENT_TIMESTAMP)
-         ON CONFLICT(user_id, category) DO UPDATE SET
-         quest_date = excluded.quest_date,
+         ON CONFLICT(user_id, quest_date) DO UPDATE SET
+         category = excluded.category,
          questions = excluded.questions,
          difficulty = excluded.difficulty,
          current_index = 0,
