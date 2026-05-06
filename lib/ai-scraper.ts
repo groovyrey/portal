@@ -3,7 +3,7 @@ import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { logIncident } from "./incident-service";
 
 const model = new ChatGoogleGenerativeAI({
-  model: "gemma-3-27b-it",
+  model: "models/gemma-4-26b-a4b-it",
   apiKey: process.env.AI_SCRAPPER_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "NO_KEY",
   temperature: 0,
 });

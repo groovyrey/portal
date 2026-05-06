@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Ratelimit } from "@upstash/ratelimit"
+import { Redis } from "@upstash/redis"
+
+// Create a new ratelimiter that allows 15 requests per 1 minute
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(15, "60 s"),
+  analytics: true,
+  prefix: "@upstash/ratelimit/portal",
+})
 
 // Routes that require authentication
-const protectedRoutes = [
+const authProtectedRoutes = [
   '/eaf',
   '/grades',
   '/settings',
@@ -22,16 +32,50 @@ const protectedRoutes = [
   '/api/ai'
 ];
 
-export function proxy(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // Rate Limiting Logic for Gemma 4 (15 RPM)
+  const rateProtectedRoutes = [
+    '/api/ai',
+    '/api/student/login',
+    '/api/community/report',
+    '/api/community/comments/report'
+  ];
+
+  if (rateProtectedRoutes.some(route => pathname.startsWith(route))) {
+    const identifier = req.ip ?? "127.0.0.1"
+    try {
+      const { success, limit, reset, remaining } = await ratelimit.limit(identifier)
+      if (!success) {
+        return new NextResponse(
+          JSON.stringify({ 
+            error: "Gemma 4 is experiencing high demand. Please wait a moment.",
+            code: "RATE_LIMIT_EXCEEDED"
+          }),
+          { 
+            status: 429, 
+            headers: { 
+              "Content-Type": "application/json",
+              "X-Ratelimit-Limit": limit.toString(),
+              "X-Ratelimit-Remaining": remaining.toString(),
+              "X-Ratelimit-Reset": reset.toString(),
+            } 
+          }
+        )
+      }
+    } catch (error) {
+      console.error("Ratelimit error:", error)
+    }
+  }
 
   // EXPLICITLY skip for audio proxy
   if (pathname.startsWith('/api/audio/proxy')) {
     return NextResponse.next();
   }
 
-  // Check if the current route is protected
-  const isProtected = protectedRoutes.some(route => pathname.startsWith(route));
+  // Check if the current route is protected by auth
+  const isProtected = authProtectedRoutes.some(route => pathname.startsWith(route));
 
   if (isProtected) {
     const sessionToken = req.cookies.get('session_token');

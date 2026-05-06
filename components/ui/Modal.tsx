@@ -46,6 +46,9 @@ export default function Modal({
         onPointerDownOutside={(e) => !showCloseButton && e.preventDefault()}
         onEscapeKeyDown={(e) => !showCloseButton && e.preventDefault()}
       >
+        {/* Accessibility: DialogContent requires a DialogTitle */}
+        {!title && <DialogTitle className="sr-only">Dialog</DialogTitle>}
+
         {title && (
           <DialogHeader className="p-6 border-b border-border/50 space-y-0 shrink-0">
             {typeof title === 'string' ? (
@@ -53,7 +56,10 @@ export default function Modal({
                 {title}
               </DialogTitle>
             ) : (
-              <div className="flex-1">{title}</div>
+              <>
+                <DialogTitle className="sr-only">Dialog</DialogTitle>
+                <div className="flex-1">{title}</div>
+              </>
             )}
           </DialogHeader>
         )}
