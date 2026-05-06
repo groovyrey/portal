@@ -18,7 +18,7 @@ export default function QuestMarkdown({ content, className = "" }: QuestMarkdown
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}
-        className="prose prose-slate dark:prose-invert max-w-none prose-p:my-0 prose-p:leading-normal"
+        className="prose prose-neutral dark:prose-invert max-w-none prose-p:my-0 prose-p:leading-normal"
         components={{
           p: ({children}) => <span className="inline-block">{children}</span>,
           code: ({node, inline, className, children, ...props}: any) => {
