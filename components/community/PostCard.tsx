@@ -110,7 +110,17 @@ export default function PostCard({
           </Avatar>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold truncate">{post.userName}</span>
+              {post.isAnonymous ? (
+                <span className="text-sm font-bold truncate">{post.userName}</span>
+              ) : (
+                <Link 
+                  href={`/student/${post.userId}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-sm font-bold truncate hover:text-primary transition-colors"
+                >
+                  {post.userName}
+                </Link>
+              )}
               {post.isUnreviewed && <Badge variant="outline" className="h-4 text-[8px] uppercase px-1 border-amber-200 text-amber-600 bg-amber-50">Pending</Badge>}
             </div>
             <div className="flex items-center gap-2 mt-0.5">
