@@ -25,6 +25,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CommunityPost, Student, CommunityComment } from '@/types';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
 import CommunityMarkdown from '@/components/community/CommunityMarkdown';
+import ReportModal from '@/components/community/ReportModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
@@ -63,6 +64,12 @@ export default function PostPage() {
   const [commenting, setCommenting] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<{postId: string, commentId: string} | null>(null);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [reportingTarget, setReportingTarget] = useState<{
+    type: 'post' | 'comment';
+    id: string;
+    content: string;
+    userName: string;
+  } | null>(null);
 
   useEffect(() => {
     const savedStudent = localStorage.getItem('student_data');
@@ -176,27 +183,23 @@ export default function PostPage() {
     }
   };
 
-  const handleReportPost = async () => {
+  const handleReportPost = () => {
     if (!post) return;
-    const reportToast = toast.loading('Reporting...');
-    try {
-      const res = await fetch('/api/community/report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId })
-      });
-      const data = await res.json();
-      if (data.success) {
-        if (data.decision === 'REJECTED') {
-          toast.success('Post removed.', { id: reportToast });
-          router.push('/community');
-        } else {
-          toast.info('Report received.', { id: reportToast });
-        }
-      }
-    } catch (error) {
-      toast.error('Error occurred', { id: reportToast });
-    }
+    setReportingTarget({
+      type: 'post',
+      id: post.id,
+      content: post.content,
+      userName: post.userName
+    });
+  };
+
+  const handleReportComment = (comment: CommunityComment) => {
+    setReportingTarget({
+      type: 'comment',
+      id: comment.id,
+      content: comment.content,
+      userName: comment.userName
+    });
   };
 
   const handleComment = async () => {
@@ -495,7 +498,7 @@ export default function PostPage() {
                                 ) : (
                                   <DropdownMenuItem 
                                     className="text-destructive focus:text-destructive"
-                                    onClick={() => {}}
+                                    onClick={() => handleReportComment(comment)}
                                   >
                                     <Flag className="mr-2 h-4 w-4" />
                                     Report
@@ -553,6 +556,24 @@ export default function PostPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ReportModal 
+        isOpen={!!reportingTarget}
+        onClose={() => setReportingTarget(null)}
+        targetType={reportingTarget?.type || 'post'}
+        targetId={reportingTarget?.id || ''}
+        content={reportingTarget?.content || ''}
+        authorName={reportingTarget?.userName || ''}
+        onReportSuccess={(decision) => {
+          if (decision === 'REJECTED') {
+            if (reportingTarget?.type === 'post') {
+              router.push('/community');
+            } else {
+              queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+            }
+          }
+        }}
+      />
     </div>
   );
 }

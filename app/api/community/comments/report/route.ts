@@ -110,8 +110,8 @@ COMMENT CONTENT: ${comment.content}
       // Note: Notify the author
       await createNotification({
         userId: comment.user_id,
-        title: 'Comment Removed',
-        message: `Your comment was removed because it violates our community guidelines. Reason: ${result.reason}`,
+        title: 'Comment Removed by Aegis',
+        message: `Your comment was removed by Aegis (our AI moderator) for violating community guidelines. Reason: ${result.reason}`,
         type: 'error',
         link: `/post/${comment.post_id}`
       });

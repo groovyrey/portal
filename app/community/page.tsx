@@ -19,6 +19,7 @@ import CommunityGuidelinesDrawer from '@/components/community/CommunityGuideline
 import Skeleton from '@/components/ui/Skeleton';
 import { Label } from '@/components/ui/label';
 import PostCard from '@/components/community/PostCard';
+import ReportModal from '@/components/community/ReportModal';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -53,6 +54,7 @@ function CommunityContent() {
   const [student, setStudent] = useState<Student | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [reportingPost, setReportingPost] = useState<CommunityPost | null>(null);
 
   const updateSearchParams = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -172,29 +174,9 @@ function CommunityContent() {
     }
   };
 
-  const handleReport = async (postId: string) => {
-    if (!student) return;
-    const toastId = toast.loading('Reporting...');
-    try {
-      const res = await fetch('/api/community/report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        if (data.decision === 'REJECTED') {
-          toast.success('Post removed for policy violation.', { id: toastId });
-          queryClient.invalidateQueries({ queryKey: ['community-posts'] });
-        } else {
-          toast.success('Report received. Content is being monitored.', { id: toastId });
-        }
-      } else {
-        toast.error('Report failed', { id: toastId });
-      }
-    } catch (err) {
-      toast.error('Network error', { id: toastId });
-    }
+  const handleReport = (postId: string) => {
+    const post = allPosts.find(p => p.id === postId);
+    if (post) setReportingPost(post);
   };
 
   const handleDeletePost = async () => {
@@ -413,6 +395,20 @@ function CommunityContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ReportModal 
+        isOpen={!!reportingPost}
+        onClose={() => setReportingPost(null)}
+        targetType="post"
+        targetId={reportingPost?.id || ''}
+        content={reportingPost?.content || ''}
+        authorName={reportingPost?.userName || ''}
+        onReportSuccess={(decision) => {
+          if (decision === 'REJECTED') {
+            queryClient.invalidateQueries({ queryKey: ['community-posts'] });
+          }
+        }}
+      />
     </div>
   );
 }

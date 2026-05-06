@@ -17,6 +17,7 @@ import {
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import PostCard from '@/components/community/PostCard';
+import ReportModal from '@/components/community/ReportModal';
 import { toast } from 'sonner';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useStudent } from '@/lib/hooks';
@@ -48,6 +49,7 @@ function ProfileContent() {
   const [isPublicView, setIsPublicView] = useState(false);
   const [isPrivateProfile, setIsPrivateProfile] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [reportingPost, setReportingPost] = useState<CommunityPost | null>(null);
 
   const { data: posts = [], isLoading: loadingPosts } = useQuery({
     queryKey: ['user-posts', profileId],
@@ -150,27 +152,9 @@ function ProfileContent() {
     }
   };
 
-  const handleReport = async (postId: string) => {
-    if (!currentUserData) return;
-    const reportToast = toast.loading('Reporting...');
-    try {
-      const res = await fetch('/api/community/report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        if (data.decision === 'REJECTED') {
-          toast.success('Post removed.', { id: reportToast });
-          queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
-        } else {
-          toast.info('Report received.', { id: reportToast });
-        }
-      }
-    } catch {
-      toast.error('Error occurred', { id: reportToast });
-    }
+  const handleReport = (postId: string) => {
+    const post = posts.find((p: CommunityPost) => p.id === postId);
+    if (post) setReportingPost(post);
   };
 
   const handleDeletePost = async () => {
@@ -357,6 +341,20 @@ function ProfileContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ReportModal 
+        isOpen={!!reportingPost}
+        onClose={() => setReportingPost(null)}
+        targetType="post"
+        targetId={reportingPost?.id || ''}
+        content={reportingPost?.content || ''}
+        authorName={reportingPost?.userName || ''}
+        onReportSuccess={(decision) => {
+          if (decision === 'REJECTED') {
+            queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
+          }
+        }}
+      />
     </div>
   );
 }

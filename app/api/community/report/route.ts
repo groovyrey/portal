@@ -75,8 +75,8 @@ export async function POST(req: NextRequest) {
       try {
         await createNotification({
           userId: authorId,
-          title: 'Post Removed',
-          message: `Your post "${postPreview}..." was removed because it violated our community guidelines. Reason: ${result.reason}`,
+          title: 'Post Removed by Aegis',
+          message: `Your post "${postPreview}..." was removed by Aegis (our AI moderator) for violating community guidelines. Reason: ${result.reason}`,
           type: 'error'
         });
       } catch (notifyError) {
