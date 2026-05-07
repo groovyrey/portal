@@ -455,18 +455,21 @@ export default function AssistantPage() {
           } else break;
         }
 
+        // ... inside the while loop before updating message content
+        const filterThoughts = (text: string) => showThinking ? text : text.replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, '');
+
         while (true) {
           const toolCallIndex = buffer.indexOf(toolCallPrefix);
           if (toolCallIndex === -1) {
             const safeLength = Math.max(0, buffer.length - toolCallPrefix.length);
-            const textToAppend = buffer.substring(0, safeLength);
+            const textToAppend = filterThoughts(buffer.substring(0, safeLength));
             if (textToAppend) {
               setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: msg.content + textToAppend } : msg));
               buffer = buffer.substring(safeLength);
             }
             break; 
           }
-          const contentBefore = buffer.substring(0, toolCallIndex);
+          const contentBefore = filterThoughts(buffer.substring(0, toolCallIndex));
           if (contentBefore) {
             setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: msg.content + contentBefore } : msg));
           }
@@ -493,7 +496,10 @@ export default function AssistantPage() {
           } else { buffer = buffer.substring(toolCallIndex); break; }
         }
         if (done) {
-          if (buffer.trim()) setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: msg.content + buffer } : msg));
+          if (buffer.trim()) {
+            const finalContent = showThinking ? buffer : buffer.replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, '');
+            setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: msg.content + finalContent } : msg));
+          }
           break;
         }
       }
@@ -507,10 +513,13 @@ export default function AssistantPage() {
 
   useEffect(() => {
     if (scrollContainerRef.current) {
-      const { scrollHeight, clientHeight } = scrollContainerRef.current;
-      scrollContainerRef.current.scrollTo({ top: scrollHeight - clientHeight, behavior: 'smooth' });
+      const { scrollHeight } = scrollContainerRef.current;
+      scrollContainerRef.current.scrollTo({
+        top: scrollHeight,
+        behavior: 'smooth'
+      });
     }
-  }, [messages, isLoading]);
+  }, [messages, messages[messages.length - 1]?.content, isLoading]);
 
   const tabs = [
     { id: 'chat', name: 'Assistant', icon: MessageSquare, desc: 'AI Study Companion' },
@@ -573,7 +582,7 @@ export default function AssistantPage() {
                         className={cn("flex w-full min-w-0 max-w-full", isAssistant ? "justify-start" : "justify-end")}
                       >
                         <div className={cn(
-                          "flex flex-col gap-1.5 max-w-[90%] sm:max-w-[85%] min-w-0 w-0 min-w-full overflow-hidden",
+                          "flex flex-col gap-1.5 max-w-[90%] sm:max-w-[85%] w-fit overflow-hidden",
                           isAssistant ? "items-start" : "items-end"
                         )}>
                           {/* Action Buttons & Tools */}
@@ -605,7 +614,7 @@ export default function AssistantPage() {
 
                           {/* Content Bubble */}
                           <div className={cn(
-                            "rounded-2xl px-4 py-3 shadow-sm border transition-colors min-w-0 w-full max-w-full overflow-hidden",
+                            "rounded-2xl px-4 py-3 shadow-sm border transition-colors w-fit max-w-full overflow-hidden",
                             isAssistant 
                               ? "bg-accent/30 border-border/50 text-foreground rounded-tl-none" 
                               : "bg-primary text-primary-foreground border-primary/20 rounded-tr-none"

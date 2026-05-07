@@ -292,8 +292,8 @@ ${exclusionPrompt}
       await query(
         `INSERT INTO daily_quests (user_id, quest_date, category, questions, difficulty, current_index, score, is_completed, stats_updated, updated_at)
          VALUES (?, ?, ?, ?, ?, 0, 0, 0, 0, CURRENT_TIMESTAMP)
-         ON CONFLICT(user_id, quest_date) DO UPDATE SET
-         category = excluded.category,
+         ON CONFLICT(user_id, category) DO UPDATE SET
+         quest_date = excluded.quest_date,
          questions = excluded.questions,
          difficulty = excluded.difficulty,
          current_index = 0,
