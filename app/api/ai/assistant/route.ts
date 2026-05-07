@@ -250,7 +250,7 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
           
           const responseStream = await model.generateContentStream({
             contents,
-            tools
+            tools: tools as any
           });
 
           let modelText = "";

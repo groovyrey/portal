@@ -44,7 +44,7 @@ export async function proxy(req: NextRequest) {
   ];
 
   if (rateProtectedRoutes.some(route => pathname.startsWith(route))) {
-    const identifier = req.ip ?? "127.0.0.1"
+    const identifier = (req as any).ip ?? "127.0.0.1"
     try {
       const { success, limit, reset, remaining } = await ratelimit.limit(identifier)
       if (!success) {
