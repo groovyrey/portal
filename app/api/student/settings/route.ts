@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { initDatabase } from '@/lib/db-init';
+import { query } from '@/lib/turso';
 import { decrypt } from '@/lib/auth';
 import { logActivity } from '@/lib/activity-service';
 
@@ -24,12 +22,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    await initDatabase();
-    if (!db) return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
-
-    const studentRef = doc(db, 'students', userId);
-    const studentSnap = await getDoc(studentRef);
-    const existingSettings = studentSnap.exists() ? studentSnap.data()?.settings || {} : {};
+    const res = await query('SELECT settings FROM students WHERE id = ?', [userId]);
+    const existingSettings = res.rowCount > 0 ? res.rows[0].settings || {} : {};
 
     // Identify precisely which keys changed
     const changedKeys: string[] = [];
@@ -50,7 +44,7 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    await updateDoc(studentRef, { settings: newSettings });
+    await query('UPDATE students SET settings = ? WHERE id = ?', [JSON.stringify(newSettings), userId]);
 
     // Only log if something actually changed
     if (changedKeys.length > 0) {

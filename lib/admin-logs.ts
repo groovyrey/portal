@@ -1,9 +1,8 @@
-import { db } from './db';
-import { collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { query } from './turso';
 
 export interface AdminLog {
   id?: string;
-  timestamp: any;
+  timestamp: string;
   adminId: string;
   adminName: string;
   targetId: string;
@@ -14,11 +13,13 @@ export interface AdminLog {
 
 export async function logAdminAction(data: Omit<AdminLog, 'id' | 'timestamp'>) {
   try {
-    const logsRef = collection(db, 'admin_logs');
-    await addDoc(logsRef, {
-      ...data,
-      timestamp: serverTimestamp(),
-    });
+    const now = new Date().toISOString();
+    await query(`
+      INSERT INTO admin_logs (timestamp, admin_id, admin_name, target_id, target_name, action, details)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [
+      now, data.adminId, data.adminName, data.targetId, data.targetName || null, data.action, data.details
+    ]);
   } catch (error) {
     console.error('Error logging admin action:', error);
   }
@@ -26,26 +27,18 @@ export async function logAdminAction(data: Omit<AdminLog, 'id' | 'timestamp'>) {
 
 export async function getAdminLogs(maxCount: number = 50): Promise<AdminLog[]> {
   try {
-    const logsRef = collection(db, 'admin_logs');
-    const q = query(logsRef, orderBy('timestamp', 'desc'), limit(maxCount));
-    const querySnap = await getDocs(q);
+    const res = await query('SELECT * FROM admin_logs ORDER BY timestamp DESC LIMIT ?', [maxCount]);
     
-    const logs: AdminLog[] = [];
-    querySnap.forEach(doc => {
-      const data = doc.data();
-      logs.push({
-        id: doc.id,
-        timestamp: data.timestamp,
-        adminId: data.adminId,
-        adminName: data.adminName,
-        targetId: data.targetId,
-        targetName: data.targetName,
-        action: data.action,
-        details: data.details,
-      });
-    });
-    
-    return logs;
+    return res.rows.map(data => ({
+      id: data.id.toString(),
+      timestamp: data.timestamp,
+      adminId: data.admin_id,
+      adminName: data.admin_name,
+      targetId: data.target_id,
+      targetName: data.target_name,
+      action: data.action,
+      details: data.details,
+    }));
   } catch (error) {
     console.error('Error fetching admin logs:', error);
     return [];

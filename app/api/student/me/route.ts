@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 import { getFullStudentData } from '@/lib/data-service';
@@ -45,7 +44,8 @@ export async function GET(req: NextRequest) {
 
         // --- AUTO-SYNC LOGIC ---
         // Check if data is stale
-        const lastUpdate = studentData.updated_at?.toDate ? studentData.updated_at.toDate() : new Date(studentData.updated_at || 0);
+        const lastUpdateStr = studentData.updated_at || "0";
+        const lastUpdate = new Date(lastUpdateStr);
         const isStale = (Date.now() - lastUpdate.getTime()) > AUTO_SYNC_THRESHOLD_MS;
         const host = req.headers.get('host') || '';
 

@@ -1,4 +1,4 @@
-import { adminDb as db } from './firebase-admin';
+import { query } from './turso';
 
 export interface Holiday {
   date: string;
@@ -41,7 +41,7 @@ export async function fetchPHHolidays(year: number = new Date().getFullYear()): 
       localName: event.summary,
       name: event.summary,
       countryCode: 'PH',
-      fixed: true, // Google doesn't explicitly flag this, but most holidays are fixed dates
+      fixed: true,
       global: true,
       types: ['Public']
     }));
@@ -52,23 +52,26 @@ export async function fetchPHHolidays(year: number = new Date().getFullYear()): 
 }
 
 /**
- * Caches holidays in Firestore
+ * Caches holidays in Turso
  */
 export async function syncHolidays(year: number = new Date().getFullYear()) {
-  if (!db) {
-    console.error('[HolidayService] Firebase Admin DB not initialized');
-    return { success: false, error: 'Database not initialized' };
-  }
-
   const holidays = await fetchPHHolidays(year);
   if (holidays.length === 0) return { success: false, message: 'No holidays fetched' };
 
   try {
-    const docRef = db.collection('metadata').doc('holidays');
-    await docRef.set({
-      [`y${year}`]: holidays,
-      lastUpdated: new Date().toISOString()
-    }, { merge: true });
+    const res = await query('SELECT data FROM metadata WHERE id = ?', ['holidays']);
+    let currentData: any = {};
+    if (res.rowCount > 0) {
+      currentData = res.rows[0].data || {};
+    }
+
+    currentData[`y${year}`] = holidays;
+    currentData.lastUpdated = new Date().toISOString();
+
+    await query(`
+      INSERT INTO metadata (id, data) VALUES (?, ?)
+      ON CONFLICT(id) DO UPDATE SET data = excluded.data
+    `, ['holidays', JSON.stringify(currentData)]);
 
     return { success: true, count: holidays.length };
   } catch (error) {
@@ -78,18 +81,15 @@ export async function syncHolidays(year: number = new Date().getFullYear()) {
 }
 
 /**
- * Retrieves cached holidays from Firestore
+ * Retrieves cached holidays from Turso
  */
 export async function getCachedHolidays(year: number = new Date().getFullYear()): Promise<Holiday[]> {
-  if (!db) return [];
-
   try {
-    const docRef = db.collection('metadata').doc('holidays');
-    const docSnap = await docRef.get();
+    const res = await query('SELECT data FROM metadata WHERE id = ?', ['holidays']);
     
-    if (docSnap.exists) {
-      const data = docSnap.data();
-      return data?.[`y${year}`] || [];
+    if (res.rowCount > 0) {
+      const data = res.rows[0].data || {};
+      return data[`y${year}`] || [];
     }
     return [];
   } catch (error) {

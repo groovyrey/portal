@@ -1,10 +1,9 @@
-import { db } from './db';
-import { doc, getDoc, getDocs, collection, query, where } from 'firebase/firestore';
+import { query } from './turso';
 import { Student, ScheduleItem, Financials, ProspectusSubject, SubjectGrade } from '@/types';
 import { parseStudentName } from './utils';
 
 /**
- * Centralized Data Service
+ * Centralized Data Service (Turso Implementation)
  * Handles all data retrieval and aggregation for the student portal.
  * consistent data structure across API routes.
  */
@@ -16,9 +15,9 @@ export interface AggregatedStudentData extends Student {
 
 export async function getStudentProfile(userId: string): Promise<Student | null> {
   try {
-    const studentDoc = await getDoc(doc(db, 'students', userId));
-    if (!studentDoc.exists()) return null;
-    const data = studentDoc.data();
+    const res = await query('SELECT * FROM students WHERE id = ?', [userId]);
+    if (res.rowCount === 0) return null;
+    const data = res.rows[0];
     
     return {
       id: userId,
@@ -31,9 +30,9 @@ export async function getStudentProfile(userId: string): Promise<Student | null>
       enrollment_date: data.enrollment_date,
       yearLevel: data.year_level,
       semester: data.semester,
-      availableReports: data.available_reports,
+      availableReports: data.available_reports || [],
       updated_at: data.updated_at,
-      settings: data.settings,
+      settings: data.settings || {},
       badges: data.badges || []
     };
   } catch (error) {
@@ -44,28 +43,23 @@ export async function getStudentProfile(userId: string): Promise<Student | null>
 
 export async function getAllStudents(): Promise<Student[]> {
   try {
-    const querySnap = await getDocs(collection(db, 'students'));
-    const students: Student[] = [];
-    querySnap.forEach(doc => {
-      const data = doc.data();
-      students.push({
-        id: doc.id,
-        name: data.name,
-        parsedName: parseStudentName(data.name),
-        course: data.course,
-        email: data.email,
-        address: data.address,
-        mobile: data.mobile,
-        enrollment_date: data.enrollment_date,
-        yearLevel: data.year_level,
-        semester: data.semester,
-        availableReports: data.available_reports,
-        updated_at: data.updated_at,
-        settings: data.settings,
-        badges: data.badges || []
-      });
-    });
-    return students;
+    const res = await query('SELECT * FROM students');
+    return res.rows.map(data => ({
+      id: data.id,
+      name: data.name,
+      parsedName: parseStudentName(data.name),
+      course: data.course,
+      email: data.email,
+      address: data.address,
+      mobile: data.mobile,
+      enrollment_date: data.enrollment_date,
+      yearLevel: data.year_level,
+      semester: data.semester,
+      availableReports: data.available_reports || [],
+      updated_at: data.updated_at,
+      settings: data.settings || {},
+      badges: data.badges || []
+    }));
   } catch (error) {
     console.error('Error fetching all students:', error);
     return [];
@@ -74,29 +68,26 @@ export async function getAllStudents(): Promise<Student[]> {
 
 export async function getStaffMembers(): Promise<Student[]> {
   try {
-    const q = query(collection(db, 'students'), where('badges', 'array-contains', 'staff'));
-    const querySnap = await getDocs(q);
-    const staff: Student[] = [];
-    querySnap.forEach(doc => {
-      const data = doc.data();
-      staff.push({
-        id: doc.id,
-        name: data.name,
-        parsedName: parseStudentName(data.name),
-        course: data.course,
-        email: data.email,
-        address: data.address,
-        mobile: data.mobile,
-        enrollment_date: data.enrollment_date,
-        yearLevel: data.year_level,
-        semester: data.semester,
-        availableReports: data.available_reports,
-        updated_at: data.updated_at,
-        settings: data.settings,
-        badges: data.badges || []
-      });
-    });
-    return staff;
+    // In SQL, we'll need to handle the 'badges' array. 
+    // Since we don't have a separate table for badges yet, and it might be stored as JSON or not migrated correctly yet.
+    // Let's check how badges are stored. If they are in the students table as JSON.
+    const res = await query("SELECT * FROM students WHERE badges LIKE '%staff%'");
+    return res.rows.map(data => ({
+      id: data.id,
+      name: data.name,
+      parsedName: parseStudentName(data.name),
+      course: data.course,
+      email: data.email,
+      address: data.address,
+      mobile: data.mobile,
+      enrollment_date: data.enrollment_date,
+      yearLevel: data.year_level,
+      semester: data.semester,
+      availableReports: data.available_reports || [],
+      updated_at: data.updated_at,
+      settings: data.settings || {},
+      badges: data.badges || []
+    }));
   } catch (error) {
     console.error('Error fetching staff members:', error);
     return [];
@@ -105,9 +96,9 @@ export async function getStaffMembers(): Promise<Student[]> {
 
 export async function getStudentSchedule(userId: string): Promise<ScheduleItem[]> {
   try {
-    const docSnap = await getDoc(doc(db, 'schedules', userId));
-    if (docSnap.exists()) {
-      return docSnap.data().items || [];
+    const res = await query('SELECT items FROM schedules WHERE student_id = ?', [userId]);
+    if (res.rowCount > 0) {
+      return res.rows[0].items || [];
     }
     return [];
   } catch (error) {
@@ -118,9 +109,9 @@ export async function getStudentSchedule(userId: string): Promise<ScheduleItem[]
 
 export async function getStudentFinancials(userId: string): Promise<Financials | null> {
   try {
-    const docSnap = await getDoc(doc(db, 'financials', userId));
-    if (docSnap.exists()) {
-      const data = docSnap.data();
+    const res = await query('SELECT * FROM financials WHERE student_id = ?', [userId]);
+    if (res.rowCount > 0) {
+      const data = res.rows[0];
       const details = data.details || {};
       return {
         total: data.total,
@@ -140,70 +131,32 @@ export async function getStudentFinancials(userId: string): Promise<Financials |
   }
 }
 
-// Simple in-memory cache for offered subjects (TTL: 1 hour)
-let offeredSubjectsCache: { data: ProspectusSubject[], timestamp: number } | null = null;
-const CACHE_TTL = 60 * 60 * 1000;
-
 export async function getStudentGrades(userId: string): Promise<SubjectGrade[]> {
   try {
-    // 1. Fetch offered subjects for unit cross-referencing
-    // const offeredSubjects = await getOfferedSubjects(); // DISABLED
-    const unitsMap = new Map<string, string>();
-    // offeredSubjects.forEach(s => unitsMap.set(s.code.toLowerCase(), s.units)); // DISABLED
-
-    // 2. Fetch by Query (New Format)
-    const q = query(collection(db, 'grades'), where('student_id', '==', userId));
-    const querySnap = await getDocs(q);
+    const res = await query('SELECT * FROM grades WHERE student_id = ? ORDER BY updated_at DESC', [userId]);
     
-    // We'll use a map to deduplicate by subject key, keeping the latest one based on updated_at
-    const subjectsMap = new Map<string, { grade: SubjectGrade, updatedAt: number }>();
+    // De-duplicate by subject key (description + section)
+    const subjectsMap = new Map<string, SubjectGrade>();
 
-    // Helper to process items
-    const processItems = (items: any[], updatedAt: any) => {
-        if (!items) return;
-        const ts = updatedAt?.toMillis ? updatedAt.toMillis() : (updatedAt instanceof Date ? updatedAt.getTime() : 0);
-        
-        items.forEach((item: any) => {
-           const code = item.code || 'N/A';
-           const desc = item.description || item.subject || 'Unknown Subject';
-           const key = `${code}-${desc}`.toLowerCase();
-           
-           // Resolve units: prioritize item.units, then prospectus, then fallback to '3.0' for college courses
-           const resolvedUnits = item.units && item.units !== '0' 
-                ? item.units 
-                : (unitsMap.get(code.toLowerCase()) || '3.0');
-
-           const current = subjectsMap.get(key);
-           if (!current || ts >= current.updatedAt) {
-               subjectsMap.set(key, {
-                   grade: {
-                       code,
-                       description: desc,
-                       grade: item.grade || 'N/A',
-                       units: resolvedUnits,
-                       remarks: item.remarks || 'N/A'
-                   },
-                   updatedAt: ts
-               });
-           }
+    res.rows.forEach((item: any) => {
+      const section = item.section || item.code || 'N/A';
+      const subjectCode = item.subject_code || 'N/A';
+      const desc = item.description || 'Unknown Subject';
+      const key = `${section}-${desc}`.toLowerCase();
+      
+      if (!subjectsMap.has(key)) {
+        subjectsMap.set(key, {
+          code: subjectCode,
+          section: section,
+          description: desc,
+          grade: item.grade || 'N/A',
+          units: item.units || '3.0',
+          remarks: item.remarks || 'N/A'
         });
-    };
-
-    querySnap.forEach(doc => {
-      const data = doc.data();
-      processItems(data.items, data.updated_at);
-    });
-
-    // If no grades found in query, check direct document for legacy compatibility
-    if (subjectsMap.size === 0) {
-      const directSnap = await getDoc(doc(db, 'grades', userId));
-      if (directSnap.exists()) {
-         const data = directSnap.data();
-         processItems(data.items, data.updated_at);
       }
-    }
+    });
     
-    return Array.from(subjectsMap.values()).map(v => v.grade);
+    return Array.from(subjectsMap.values());
   } catch (error) {
     console.error('Error fetching grades:', error);
     return [];
@@ -211,29 +164,14 @@ export async function getStudentGrades(userId: string): Promise<SubjectGrade[]> 
 }
 
 export async function getOfferedSubjects(): Promise<ProspectusSubject[]> {
-  // Check cache
-  if (offeredSubjectsCache && (Date.now() - offeredSubjectsCache.timestamp < CACHE_TTL)) {
-    return offeredSubjectsCache.data;
-  }
-
   try {
-    const querySnap = await getDocs(collection(db, 'prospectus_subjects'));
-    const subjects: ProspectusSubject[] = [];
-    querySnap.forEach(doc => {
-      const data = doc.data();
-      subjects.push({
-        code: doc.id,
-        description: data.description || '',
-        units: data.units || '0',
-        preReq: data.pre_req || ''
-      });
-    });
-    const sorted = subjects.sort((a, b) => a.code.localeCompare(b.code));
-    
-    // Update cache
-    offeredSubjectsCache = { data: sorted, timestamp: Date.now() };
-    
-    return sorted;
+    const res = await query('SELECT * FROM prospectus_subjects ORDER BY code ASC');
+    return res.rows.map(data => ({
+      code: data.code,
+      description: data.description || '',
+      units: data.units || '0',
+      preReq: data.pre_req || ''
+    }));
   } catch (error) {
     console.error('Error fetching offered subjects:', error);
     return [];
@@ -247,26 +185,17 @@ export async function getFullStudentData(userId: string): Promise<AggregatedStud
   const [schedule, financials, grades] = await Promise.all([
     getStudentSchedule(userId),
     getStudentFinancials(userId),
-    getStudentGrades(userId),
-    // getOfferedSubjects() // DISABLED
+    getStudentGrades(userId)
   ]);
 
   // Calculate Weighted GPA
   let totalWeightedGrade = 0;
   let totalUnits = 0;
 
-  // Create a map for quick subject lookup to get units
-  const subjectUnitsMap = new Map<string, number>();
-  /* offeredSubjects.forEach(s => {
-    const units = parseFloat(s.units);
-    if (!isNaN(units)) subjectUnitsMap.set(s.code.toLowerCase(), units);
-  }); */ // DISABLED
-
   grades.forEach(g => {
     const grade = parseFloat(g.grade);
     if (!isNaN(grade) && grade > 0) {
-      // Use units from the grade record if available, otherwise fallback to map or default
-      const units = g.units ? parseFloat(g.units) : (subjectUnitsMap.get(g.code.toLowerCase()) || 3.0);
+      const units = g.units ? parseFloat(g.units) : 3.0;
       totalWeightedGrade += grade * units;
       totalUnits += units;
     }
@@ -279,7 +208,7 @@ export async function getFullStudentData(userId: string): Promise<AggregatedStud
     schedule,
     financials: financials || undefined,
     allGrades: grades,
-    offeredSubjects: [], // RETURN EMPTY
+    offeredSubjects: [],
     gpa
   };
 }

@@ -455,14 +455,23 @@ export default function AssistantPage() {
           } else break;
         }
 
-        const filterThoughts = (text: string) => showThinking ? text : text.replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, '');
+        const filterThoughts = (text: string) => {
+          if (showThinking) return text;
+          // Remove tags and their content
+          let filtered = text.replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, '');
+          // Catch common patterns if they leak outside tags (optional safety)
+          if (!filtered.trim() && text.includes('<thought>')) return '';
+          return filtered;
+        };
 
         while (true) {
           const toolCallIndex = buffer.indexOf(toolCallPrefix);
           if (toolCallIndex === -1) {
             const safeLength = Math.max(0, buffer.length - toolCallPrefix.length);
-            const textToAppend = filterThoughts(buffer.substring(0, safeLength));
-            if (textToAppend) {
+            const rawChunk = buffer.substring(0, safeLength);
+            const textToAppend = filterThoughts(rawChunk);
+            
+            if (textToAppend || (rawChunk && !showThinking)) {
               setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, content: msg.content + textToAppend } : msg));
               buffer = buffer.substring(safeLength);
             }
@@ -629,16 +638,16 @@ export default function AssistantPage() {
                                       isLoading && idx === messages.length - 1 && "streaming-active"
                                     )}
                                     components={{
-                                      p: ({children}) => <p className="mb-3 last:mb-0 break-words whitespace-pre-wrap">{children}</p>,
-                                      table: ({...props}) => (
+                                      p: ({children}: {children: React.ReactNode}) => <p className="mb-3 last:mb-0 break-words whitespace-pre-wrap">{children}</p>,
+                                      table: ({...props}: any) => (
                                         <div className="overflow-x-auto my-3 rounded-lg border bg-background/50 custom-scrollbar">
                                           <table className="min-w-full text-xs text-left table-auto" {...props} />
                                         </div>
                                       ),
-                                      thead: ({...props}) => <thead className="bg-muted text-muted-foreground font-bold uppercase tracking-wider text-[10px]" {...props} />,
-                                      th: ({children, ...props}) => <th className="px-3 py-2 border-b whitespace-nowrap font-bold" {...props}>{children}</th>,
-                                      td: ({children, ...props}) => <td className="px-3 py-2 border-b" {...props}>{children}</td>,
-                                      code: ({className, children, ...props}) => {
+                                      thead: ({...props}: any) => <thead className="bg-muted text-muted-foreground font-bold uppercase tracking-wider text-[10px]" {...props} />,
+                                      th: ({children, ...props}: {children: React.ReactNode}) => <th className="px-3 py-2 border-b whitespace-nowrap font-bold" {...props}>{children}</th>,
+                                      td: ({children, ...props}: {children: React.ReactNode}) => <td className="px-3 py-2 border-b" {...props}>{children}</td>,
+                                      code: ({className, children, ...props}: {className?: string, children: React.ReactNode}) => {
                                         const match = /language-(\w+)/.exec(className || '');
                                         const codeContent = String(children).replace(/\n$/, '');
                                         return match ? (
@@ -647,26 +656,42 @@ export default function AssistantPage() {
                                               <CopyButton content={codeContent} />
                                             </div>
                                             <pre className="bg-slate-950 text-slate-50 rounded-xl p-4 overflow-x-auto text-[11px] font-mono scrollbar-hide">
-                                              <code className={className} {...props}>{children}</code>
+                                              <code className={className} {...props as any}>{children}</code>
                                             </pre>
                                           </div>
                                         ) : (
-                                          <code className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 font-mono text-[0.9em] font-bold" {...props}>
+                                          <code className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 font-mono text-[0.9em] font-bold" {...props as any}>
                                             {children}
                                           </code>
                                         );
                                       },
-                                      a: ({...props}) => <a className="text-primary font-bold hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
-                                      ul: ({...props}) => <ul className="list-disc list-outside ml-5 my-3 space-y-1.5" {...props} />,
-                                      ol: ({...props}) => <ol className="list-decimal list-outside ml-5 my-3 space-y-1.5" {...props} />,
-                                      blockquote: ({...props}) => <blockquote className="border-l-4 border-primary/30 pl-4 py-1 my-3 text-muted-foreground italic bg-primary/5 rounded-r-lg" {...props} />,
-                                      h1: ({children}) => <h1 className="text-base font-bold mt-4 mb-2 border-b pb-1">{children}</h1>,
-                                      h2: ({children}) => <h2 className="text-sm font-bold mt-3 mb-1">{children}</h2>,
-                                    }}
+                                      a: ({...props}: any) => <a className="text-primary font-bold hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                                      ul: ({...props}: any) => <ul className="list-disc list-outside ml-5 my-3 space-y-1.5" {...props} />,
+                                      ol: ({...props}: any) => <ol className="list-decimal list-outside ml-5 my-3 space-y-1.5" {...props} />,
+                                      blockquote: ({...props}: any) => <blockquote className="border-l-4 border-primary/30 pl-4 py-1 my-3 text-muted-foreground italic bg-primary/5 rounded-r-lg" {...props} />,
+                                      h1: ({children}: {children: React.ReactNode}) => <h1 className="text-base font-bold mt-4 mb-2 border-b pb-1">{children}</h1>,
+                                      h2: ({children}: {children: React.ReactNode}) => <h2 className="text-sm font-bold mt-3 mb-1">{children}</h2>,
+                                      // Custom component for AI thoughts/reasoning
+                                      thought: ({children}: {children: React.ReactNode}) => (
+                                        <div className="text-[11px] leading-relaxed text-muted-foreground/50 italic border-l border-muted-foreground/20 pl-4 py-2 my-4 bg-muted/5 rounded-r-xl transition-all hover:text-muted-foreground/80 group/thought relative overflow-hidden">
+                                          <div className="flex items-center gap-2 mb-2 font-black uppercase tracking-[0.2em] text-[9px] opacity-40 group-hover/thought:opacity-70 transition-opacity">
+                                            <BrainCircuit className="h-3 w-3" />
+                                            <span>System Reasoning</span>
+                                          </div>
+                                          <div className="relative z-10">{children}</div>
+                                          <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover/thought:opacity-[0.07] transition-opacity pointer-events-none">
+                                            <Sparkles className="h-12 w-12" />
+                                          </div>
+                                        </div>
+                                      ),
+                                    } as any}
                                   >
                                     {(() => {
                                       const showThinking = student?.settings?.assistant?.showThinkingProcess === true;
-                                      if (showThinking) return m.content;
+                                      if (showThinking) {
+                                        // Ensure the <thought> tag is treated as a component by ReactMarkdown/rehype-raw
+                                        return m.content;
+                                      }
                                       return m.content.replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, '').trim();
                                     })()}
                                   </ReactMarkdown>

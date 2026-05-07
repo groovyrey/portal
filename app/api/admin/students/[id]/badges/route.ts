@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { doc, updateDoc } from 'firebase/firestore';
+import { query } from '@/lib/turso';
 import { decrypt, isStaff } from '@/lib/auth';
 import { getStudentProfile } from '@/lib/data-service';
 import { logAdminAction } from '@/lib/admin-logs';
@@ -45,10 +44,7 @@ export async function POST(
     const added = newBadges.filter(b => !existingBadges.includes(b));
     const removed = existingBadges.filter(b => !newBadges.includes(b));
 
-    const studentRef = doc(db, 'students', id);
-    await updateDoc(studentRef, {
-      badges: newBadges
-    });
+    await query('UPDATE students SET badges = ? WHERE id = ?', [JSON.stringify(newBadges), id]);
 
     // Note: Log the action
     let detailedAction = 'No changes';

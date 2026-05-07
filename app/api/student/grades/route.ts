@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { initDatabase } from '@/lib/db-init';
+import { query } from '@/lib/turso';
 import { decrypt } from '@/lib/auth';
 import { getSessionClient, saveSession } from '@/lib/session-proxy';
 import { ScraperService } from '@/lib/scraper-service';
@@ -32,39 +30,47 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required parameters or valid session' }, { status: 401 });
     }
 
-    await initDatabase();
-
     // --- OPTIMIZATION: CACHE-FIRST CHECK ---
-    // Generate the same slug used by SyncService to check for existing records
     let reportName = body.reportName || 'Unknown Report';
-    let reportSlug = undefined;
     if (reportName === 'Unknown Report' && href.includes('_nm=')) {
         const match = href.match(/_nm=([^&]+)/);
         if (match) reportName = decodeURIComponent(match[1].replace(/\+/g, ' '));
     }
 
-    if (reportName === 'Unknown Report') {
-        const hash = href.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
-        reportSlug = `unknown_${Math.abs(hash)}`;
-    }
-    
-    const slug = reportSlug || reportName.replace(/[^a-zA-Z0-9]/g, '_');
-    const reportId = `${userId}_${slug}`;
-    
     try {
-        const cachedDoc = await doc(db, 'grades', reportId);
-        const snap = await import('firebase/firestore').then(m => m.getDoc(cachedDoc));
+        // In Turso, we can check for existing grades for this student.
+        // Since grades are now granular (per subject), we might need to check if there are any recent ones.
+        // Or we can add a 'report_name' to the grades table if we want to mimic Firestore behavior.
+        // For now, let's just check if we have any grades for this student that are fresh.
+        const res = await query('SELECT * FROM grades WHERE student_id = ? ORDER BY updated_at DESC', [userId]);
         
-        if (snap.exists()) {
-            const data = snap.data();
-            const lastUpdate = data.updated_at?.toDate ? data.updated_at.toDate() : new Date(0);
+        if (res.rowCount > 0) {
+            const lastUpdate = res.rows[0].updated_at ? new Date(res.rows[0].updated_at) : new Date(0);
             const isFresh = (Date.now() - lastUpdate.getTime()) < 1000 * 60 * 60 * 24; // 24 hours fresh
 
-            if (isFresh && data.items && data.items.length > 0) {
-                console.log(`[Grades] Serving cached report for ${userId}: ${reportName}`);
+            if (isFresh) {
+                // Return deduplicated grades
+                const subjectsMap = new Map<string, any>();
+                res.rows.forEach((item: any) => {
+                  const section = item.section || item.code || 'N/A';
+                  const subjectCode = item.subject_code || 'N/A';
+                  const key = `${section}-${item.description}`.toLowerCase();
+                  if (!subjectsMap.has(key)) {
+                    subjectsMap.set(key, {
+                      code: subjectCode,
+                      section: section,
+                      description: item.description,
+                      grade: item.grade,
+                      units: item.units,
+                      remarks: item.remarks
+                    });
+                  }
+                });
+
+                console.log(`[Grades] Serving cached report for ${userId}`);
                 return NextResponse.json({ 
                     success: true, 
-                    subjects: data.items,
+                    subjects: Array.from(subjectsMap.values()),
                     is_cached: true
                 });
             }

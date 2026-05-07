@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { collection, getDocs, doc, getDoc, setDoc, addDoc, query, where, orderBy, writeBatch } from 'firebase/firestore';
+import { query } from '@/lib/turso';
 import { getStudentSchedule } from '@/lib/data-service';
 import { createNotification } from '@/lib/notification-service';
 import { sendEmail, getScheduleEmailTemplate, getPaymentReminderEmailTemplate } from '@/lib/email-service';
@@ -8,7 +7,7 @@ import { parseStudentName } from '@/lib/utils';
 import { logAdminAction } from '@/lib/admin-logs';
 
 /**
- * Daily Consolidated Cron Job
+ * Daily Consolidated Cron Job (Turso Implementation)
  * Handles all daily tasks and specific weekly tasks based on a map.
  */
 
@@ -30,14 +29,14 @@ function parseTimeValue(timeStr: string): number {
 async function runScheduleReminders(phTime: Date, baseUrl: string) {
   const dayMap = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   const todayCode = dayMap[phTime.getDay()];
-  const studentsSnap = await getDocs(collection(db, 'students'));
+  
+  const res = await query('SELECT * FROM students');
   let count = 0;
   let emailCount = 0;
 
-  for (const studentDoc of studentsSnap.docs) {
+  for (const studentData of res.rows) {
     try {
-      const userId = studentDoc.id;
-      const studentData = studentDoc.data();
+      const userId = studentData.id;
       if (studentData.settings?.classReminders === false) continue;
 
       const schedule = await getStudentSchedule(userId);
@@ -83,20 +82,19 @@ async function runPaymentReminders(phTime: Date, baseUrl: string) {
   targetDate.setDate(phTime.getDate() + 5);
   const targetDateStr = `${targetDate.getFullYear()}/${String(targetDate.getMonth() + 1).padStart(2, '0')}/${String(targetDate.getDate()).padStart(2, '0')}`;
   
-  const studentsSnap = await getDocs(collection(db, 'students'));
+  const res = await query('SELECT * FROM students');
   let count = 0;
   let emailCount = 0;
 
-  for (const studentDoc of studentsSnap.docs) {
+  for (const studentData of res.rows) {
     try {
-      const userId = studentDoc.id;
-      const studentData = studentDoc.data();
+      const userId = studentData.id;
       if (studentData.settings?.paymentReminders === false) continue;
 
-      const financialSnap = await getDoc(doc(db, 'financials', userId));
-      if (!financialSnap.exists()) continue;
+      const finRes = await query('SELECT details FROM financials WHERE student_id = ?', [userId]);
+      if (finRes.rowCount === 0) continue;
 
-      const installments = financialSnap.data().details?.installments || [];
+      const installments = finRes.rows[0].details?.installments || [];
       const due = installments.find((inst: any) => {
         const instDate = inst.dueDate?.replace(/-/g, '/').trim();
         return instDate === targetDateStr && inst.outstanding && inst.outstanding !== "0.00";
@@ -129,19 +127,16 @@ export async function GET(req: NextRequest) {
 
   try {
     const phTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Manila"}));
-    const dayIndex = phTime.getDay(); // Note: 0=SUN, 1=MON, etc.
+    const dayIndex = phTime.getDay(); 
     const baseUrl = process.env.NODE_ENV === 'production' ? 'https://lcchub.vercel.app' : `http://${req.headers.get('host')}`;
     
-    // Note: --- Weekly Task Map ---
-    // Note: Tasks that run every single day
     const dailyTasks = ['scheduleReminders', 'paymentReminders'];
     
-    // Note: Tasks that run only on specific days
     const weeklyTaskMap: Record<number, string[]> = {
-      0: [], // Note: Sunday
-      1: ['weeklySummary'], // Note: Monday
-      3: ['midWeekCheck'],  // Note: Wednesday
-      5: ['weekendPreview'] // Note: Friday
+      0: [], 
+      1: ['weeklySummary'], 
+      3: ['midWeekCheck'],  
+      5: ['weekendPreview'] 
     };
 
     const activeTasks = [...dailyTasks, ...(weeklyTaskMap[dayIndex] || [])];
@@ -170,31 +165,33 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Note: Log the consolidated run with unique ID for history
-    const runRef = collection(db, 'cron_runs');
-    await addDoc(runRef, {
-      jobId: 'daily-consolidated',
-      status: 'success',
-      lastRun: new Date().toISOString(),
-      tasks: activeTasks,
-      results: results.data
-    });
+    // Note: Log the consolidated run
+    await query(`
+      INSERT INTO cron_runs (job_id, status, last_run, tasks, results)
+      VALUES (?, ?, ?, ?, ?)
+    `, [
+      'daily-consolidated', 
+      'success', 
+      new Date().toISOString(), 
+      JSON.stringify(activeTasks), 
+      JSON.stringify(results.data)
+    ]);
 
-    // Reminder: Cleanup: Keep only last 15 records total for this jobId
-    const q = query(
-      collection(db, 'cron_runs'), 
-      where('jobId', '==', 'daily-consolidated'),
-      orderBy('lastRun', 'desc')
-    );
-    const snap = await getDocs(q);
-    if (snap.size > 15) {
-      const batch = writeBatch(db);
-      snap.docs.slice(15).forEach(d => batch.delete(d.ref));
-      await batch.commit();
-    }
+    // Keep only last 15 records
+    await query(`
+      DELETE FROM cron_runs 
+      WHERE job_id = 'daily-consolidated' 
+      AND id NOT IN (
+        SELECT id FROM cron_runs 
+        WHERE job_id = 'daily-consolidated' 
+        ORDER BY last_run DESC 
+        LIMIT 15
+      )
+    `);
 
     return NextResponse.json({ success: true, ...results });
   } catch (error: any) {
+    console.error('Daily cron error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

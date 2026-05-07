@@ -1,19 +1,117 @@
 import { query } from './turso';
 
-export async function migrateCommunity() {
+export async function migratePortalTables() {
   try {
-    // 1. Create students table (minimal for community feature)
+    // 1. Students table (Full)
     await query(`
       CREATE TABLE IF NOT EXISTS students (
         id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
+        name TEXT,
         course TEXT,
         email TEXT,
-        year_level TEXT,
-        semester TEXT,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        address TEXT,
+        mobile TEXT,
+        enrollment_date TEXT,
+        year_level INTEGER,
+        semester INTEGER,
+        available_reports TEXT, -- JSON
+        settings TEXT, -- JSON
+        badges TEXT, -- JSON
+        updated_at TEXT
       );
     `);
+
+    // Ensure columns exist for older tables if any
+    const studentCols = ['address', 'mobile', 'enrollment_date', 'available_reports', 'settings', 'badges'];
+    for (const col of studentCols) {
+      try {
+        await query(`ALTER TABLE students ADD COLUMN ${col} TEXT;`);
+      } catch (e) {}
+    }
+
+    // 2. Schedules
+    await query(`
+      CREATE TABLE IF NOT EXISTS schedules (
+        id TEXT PRIMARY KEY,
+        student_id TEXT REFERENCES students(id) ON DELETE CASCADE,
+        items TEXT -- JSON
+      );
+    `);
+
+    // 3. Financials
+    await query(`
+      CREATE TABLE IF NOT EXISTS financials (
+        student_id TEXT PRIMARY KEY REFERENCES students(id) ON DELETE CASCADE,
+        total REAL,
+        balance REAL,
+        due_today REAL,
+        details TEXT -- JSON
+      );
+    `);
+
+    // 4. Grades
+    await query(`
+      CREATE TABLE IF NOT EXISTS grades (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id TEXT REFERENCES students(id) ON DELETE CASCADE,
+        subject_code TEXT,
+        section TEXT,
+        description TEXT,
+        grade TEXT,
+        units TEXT,
+        remarks TEXT,
+        updated_at TEXT
+      );
+    `);
+
+    // Ensure section and subject_code exist
+    try {
+      await query(`ALTER TABLE grades ADD COLUMN section TEXT;`);
+    } catch (e) {}
+    try {
+      await query(`ALTER TABLE grades ADD COLUMN subject_code TEXT;`);
+    } catch (e) {}
+
+    // 5. Portal Sessions
+    await query(`
+      CREATE TABLE IF NOT EXISTS portal_sessions (
+        id TEXT PRIMARY KEY,
+        encrypted_jar TEXT,
+        consecutive_failures INTEGER DEFAULT 0,
+        last_attempt_at TEXT,
+        updated_at TEXT,
+        refresh_lock_until TEXT
+      );
+    `);
+
+    // 6. Ratings
+    await query(`
+      CREATE TABLE IF NOT EXISTS ratings (
+        user_id TEXT PRIMARY KEY,
+        rating INTEGER,
+        feedback TEXT,
+        updated_at TEXT
+      );
+    `);
+
+    // 7. Metadata
+    await query(`
+      CREATE TABLE IF NOT EXISTS metadata (
+        id TEXT PRIMARY KEY,
+        data TEXT -- JSON
+      );
+    `);
+
+  } catch (error) {
+    console.error("Migration Error (Portal Tables):", error);
+    throw error;
+  }
+}
+
+export async function migrateCommunity() {
+  try {
+    // Ensure students table exists
+    await migratePortalTables();
 
     // 2. Create community_posts table
     await query(`
@@ -34,16 +132,12 @@ export async function migrateCommunity() {
     // Ensure image_url exists for older tables
     try {
       await query(`ALTER TABLE community_posts ADD COLUMN image_url TEXT;`);
-    } catch (e) {
-      // Column might already exist
-    }
+    } catch (e) {}
 
     // Ensure is_anonymous exists for older tables
     try {
       await query(`ALTER TABLE community_posts ADD COLUMN is_anonymous INTEGER DEFAULT 0;`);
-    } catch (e) {
-      // Column might already exist
-    }
+    } catch (e) {}
 
     // 3. Create community_comments table
     await query(`
@@ -85,26 +179,15 @@ export async function migrateCommunity() {
     `);
 
   } catch (error) {
+    console.error("Migration Error (Community):", error);
     throw error;
   }
 }
 
 export async function migrateNotifications() {
   try {
-    // Ensure students table exists
-    await query(`
-      CREATE TABLE IF NOT EXISTS students (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        course TEXT,
-        email TEXT,
-        year_level TEXT,
-        semester TEXT,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
+    await migratePortalTables();
 
-    // Create notifications table
     await query(`
       CREATE TABLE IF NOT EXISTS notifications (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -117,28 +200,16 @@ export async function migrateNotifications() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-
   } catch (error) {
+    console.error("Migration Error (Notifications):", error);
     throw error;
   }
 }
 
 export async function migrateActivityLogs() {
   try {
-    // Ensure students table exists
-    await query(`
-      CREATE TABLE IF NOT EXISTS students (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        course TEXT,
-        email TEXT,
-        year_level TEXT,
-        semester TEXT,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
+    await migratePortalTables();
 
-    // Create activity_logs table
     await query(`
       CREATE TABLE IF NOT EXISTS activity_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -149,7 +220,6 @@ export async function migrateActivityLogs() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-
   } catch (error) {
     console.error("Migration Error (Activity Logs):", error);
     throw error;
@@ -158,20 +228,8 @@ export async function migrateActivityLogs() {
 
 export async function migrateStudentStats() {
   try {
-    // Ensure students table exists
-    await query(`
-      CREATE TABLE IF NOT EXISTS students (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        course TEXT,
-        email TEXT,
-        year_level TEXT,
-        semester TEXT,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
+    await migratePortalTables();
 
-    // Create student_stats table
     await query(`
       CREATE TABLE IF NOT EXISTS student_stats (
         user_id TEXT PRIMARY KEY REFERENCES students(id) ON DELETE CASCADE,
@@ -184,9 +242,7 @@ export async function migrateStudentStats() {
       );
     `);
 
-    // Add triggers or indexes if needed
     await query(`CREATE INDEX IF NOT EXISTS idx_stats_exp ON student_stats(exp DESC);`);
-
   } catch (error) {
     console.error("Migration Error (Student Stats):", error);
     throw error;
@@ -195,7 +251,8 @@ export async function migrateStudentStats() {
 
 export async function migrateDailyQuests() {
   try {
-    // Create daily_quests table
+    await migratePortalTables();
+
     await query(`
       CREATE TABLE IF NOT EXISTS daily_quests (
         user_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
@@ -212,23 +269,11 @@ export async function migrateDailyQuests() {
       );
     `);
 
-    // Ensure difficulty column exists for older tables
     try {
       await query(`ALTER TABLE daily_quests ADD COLUMN difficulty TEXT DEFAULT 'medium';`);
-    } catch (e) {
-      // Column might already exist
-    }
+    } catch (e) {}
 
-    // Ensure unique constraint for (user_id, category) exists
-    try {
-      await query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_quests_user_cat_unique ON daily_quests(user_id, category);`);
-    } catch (e) {
-      // Index might already exist
-    }
-
-    // Create index for fast lookups (non-unique version if needed, but the unique one covers it)
     await query(`CREATE INDEX IF NOT EXISTS idx_daily_quests_user_cat ON daily_quests(user_id, category);`);   
-
   } catch (error) {
     console.error("Migration Error (Daily Quests):", error);
     throw error;
@@ -252,10 +297,46 @@ export async function migrateIncidentReports() {
     
     await query(`CREATE INDEX IF NOT EXISTS idx_incidents_task ON incident_reports(task);`);
     await query(`CREATE INDEX IF NOT EXISTS idx_incidents_created ON incident_reports(created_at DESC);`);
-
   } catch (error) {
     console.error("Migration Error (Incident Reports):", error);
     throw error;
   }
 }
 
+export async function migrateAdminLogs() {
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS admin_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT,
+        admin_id TEXT,
+        admin_name TEXT,
+        target_id TEXT,
+        target_name TEXT,
+        action TEXT,
+        details TEXT
+      );
+    `);
+  } catch (error) {
+    console.error("Migration Error (Admin Logs):", error);
+    throw error;
+  }
+}
+
+export async function migrateCronRuns() {
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS cron_runs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        job_id TEXT,
+        status TEXT,
+        last_run TEXT,
+        tasks TEXT, -- JSON
+        results TEXT -- JSON
+      );
+    `);
+  } catch (error) {
+    console.error("Migration Error (Cron Runs):", error);
+    throw error;
+  }
+}

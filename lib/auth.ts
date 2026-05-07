@@ -1,6 +1,5 @@
 import crypto from 'crypto';
-import { db } from './db';
-import { doc, getDoc } from 'firebase/firestore';
+import { query } from './turso';
 
 const ALGORITHM = 'aes-256-cbc';
 const SECRET_KEY = process.env.SESSION_SECRET;
@@ -37,10 +36,9 @@ export function decrypt(text: string): string {
 export async function isStaff(userId: string): Promise<boolean> {
   if (!userId) return false;
   try {
-    const studentDoc = await getDoc(doc(db, 'students', userId));
-    if (!studentDoc.exists()) return false;
-    const data = studentDoc.data();
-    const badges = data.badges || [];
+    const res = await query("SELECT badges FROM students WHERE id = ?", [userId]);
+    if (res.rowCount === 0) return false;
+    const badges = res.rows[0].badges || [];
     return badges.includes('staff');
   } catch (error) {
     console.error('Error in isStaff check:', error);

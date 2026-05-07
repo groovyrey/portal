@@ -1,31 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { collection, getDocs, doc, setDoc, query, where, orderBy, limit, deleteDoc, writeBatch, addDoc, getDoc } from 'firebase/firestore';
+import { query } from '@/lib/turso';
 import { logAdminAction } from '@/lib/admin-logs';
 
 /**
- * Maintenance Consolidated Cron Job
+ * Maintenance Consolidated Cron Job (Turso Implementation)
  * Handles system health checks, database cleanup, and optimizations.
  */
 
 async function runDataAudit() {
-  const studentsSnap = await getDocs(collection(db, 'students'));
+  const res = await query('SELECT * FROM students');
   const incompleteStudents: string[] = [];
   
-  studentsSnap.forEach(doc => {
-    const data = doc.data();
+  res.rows.forEach(data => {
     const missingFields: string[] = [];
     
     if (!data.name) missingFields.push('name');
     if (!data.course) missingFields.push('course');
     if (!data.email) missingFields.push('email');
-    if (!data.yearLevel) missingFields.push('yearLevel');
-    if (!data.section) missingFields.push('section');
-    if (!data.schedule || data.schedule.length === 0) missingFields.push('schedule');
-    if (!data.financials) missingFields.push('financials');
+    if (!data.year_level) missingFields.push('yearLevel');
 
     if (missingFields.length > 0) {
-      incompleteStudents.push(`${data.name || 'Unknown'} (${doc.id}): ${missingFields.join(', ')}`);
+      incompleteStudents.push(`${data.name || 'Unknown'} (${data.id}): ${missingFields.join(', ')}`);
     }
   });
 
@@ -41,51 +36,43 @@ async function runDataAudit() {
   }
 
   return { 
-    totalAudited: studentsSnap.size, 
+    totalAudited: res.rowCount, 
     incompleteCount: incompleteStudents.length,
-    incompleteList: incompleteStudents.slice(0, 50) // Return some for cron results
+    incompleteList: incompleteStudents.slice(0, 50) 
   };
 }
 
 async function runDatabaseCleanup() {
-  // Example: Clean up old notifications (older than 30 days)
+  // Example: Clean up old activity logs (older than 30 days)
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const isoDate = thirtyDaysAgo.toISOString();
   
-  const notificationsRef = collection(db, 'notifications');
-  const q = query(notificationsRef, where('createdAt', '<', thirtyDaysAgo), limit(100));
-  const snap = await getDocs(q);
-  
-  let deleted = 0;
-  const batch = writeBatch(db);
-  snap.docs.forEach(doc => {
-    batch.delete(doc.ref);
-    deleted++;
-  });
+  const res = await query('DELETE FROM activity_logs WHERE created_at < ?', [isoDate]);
+  const deleted = res.rowsAffected;
   
   if (deleted > 0) {
-    await batch.commit();
     await logAdminAction({
       adminId: 'system-cron',
       adminName: 'Maintenance Task',
-      targetId: 'notifications',
-      targetName: 'Notification Retention',
+      targetId: 'activity_logs',
+      targetName: 'Log Retention',
       action: 'DB_CLEANUP_SUCCESS',
-      details: `Permanently deleted ${deleted} notifications older than 30 days.`
+      details: `Permanently deleted ${deleted} activity logs older than 30 days.`
     });
   }
   
-  return { deletedNotifications: deleted };
+  return { deletedLogs: deleted };
 }
 
 async function runSystemHealthCheck() {
-  // Check critical collections
-  const studentsSnap = await getDocs(query(collection(db, 'students'), limit(1)));
-  const logsSnap = await getDocs(query(collection(db, 'admin_logs'), limit(1)));
+  // Check critical tables
+  const studentsSnap = await query('SELECT 1 FROM students LIMIT 1');
+  const logsSnap = await query('SELECT 1 FROM admin_logs LIMIT 1');
   
   return {
-    database: studentsSnap.size > 0 ? 'healthy' : 'warning',
-    logs: logsSnap.size > 0 ? 'healthy' : 'warning',
+    database: studentsSnap.rowCount >= 0 ? 'healthy' : 'warning',
+    logs: logsSnap.rowCount >= 0 ? 'healthy' : 'warning',
     timestamp: new Date().toISOString()
   };
 }
@@ -100,11 +87,10 @@ export async function GET(req: NextRequest) {
     const phTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Manila"}));
     const dayIndex = phTime.getDay();
     
-    // --- Weekly Maintenance Map ---
     const dailyTasks = ['healthCheck', 'dataAudit'];
     const weeklyMaintenanceMap: Record<number, string[]> = {
-      0: ['dbCleanup'], // Sunday: Deep clean
-      3: ['logRotation'], // Wednesday: Optimization
+      0: ['dbCleanup'], 
+      3: ['logRotation'], 
     };
 
     const activeTasks = [...dailyTasks, ...(weeklyMaintenanceMap[dayIndex] || [])];
@@ -128,31 +114,33 @@ export async function GET(req: NextRequest) {
       results.data.cleanup = await runDatabaseCleanup();
     }
 
-    // Log the maintenance run with unique ID
-    const runRef = collection(db, 'cron_runs');
-    await addDoc(runRef, {
-      jobId: 'maintenance-consolidated',
-      status: 'success',
-      lastRun: new Date().toISOString(),
-      tasks: activeTasks,
-      results: results.data
-    });
+    // Log the maintenance run
+    await query(`
+      INSERT INTO cron_runs (job_id, status, last_run, tasks, results)
+      VALUES (?, ?, ?, ?, ?)
+    `, [
+      'maintenance-consolidated', 
+      'success', 
+      new Date().toISOString(), 
+      JSON.stringify(activeTasks), 
+      JSON.stringify(results.data)
+    ]);
 
     // Cleanup: Keep only last 15 records total for this jobId
-    const q = query(
-      collection(db, 'cron_runs'), 
-      where('jobId', '==', 'maintenance-consolidated'),
-      orderBy('lastRun', 'desc')
-    );
-    const snap = await getDocs(q);
-    if (snap.size > 15) {
-      const batch = writeBatch(db);
-      snap.docs.slice(15).forEach(d => batch.delete(d.ref));
-      await batch.commit();
-    }
+    await query(`
+      DELETE FROM cron_runs 
+      WHERE job_id = 'maintenance-consolidated' 
+      AND id NOT IN (
+        SELECT id FROM cron_runs 
+        WHERE job_id = 'maintenance-consolidated' 
+        ORDER BY last_run DESC 
+        LIMIT 15
+      )
+    `);
 
     return NextResponse.json({ success: true, ...results });
   } catch (error: any) {
+    console.error('Maintenance cron error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

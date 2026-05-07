@@ -1,10 +1,6 @@
 import * as cheerio from 'cheerio';
-import { db } from '@/lib/db';
-import { doc, setDoc, getDoc, serverTimestamp, writeBatch, updateDoc, arrayUnion } from 'firebase/firestore';
-import { initDatabase } from '@/lib/db-init';
+import { query } from './turso';
 import { ScraperService, ScrapedStudentInfo, ScrapedScheduleItem, ScrapedFinancials } from './scraper-service';
-
-import { query } from '@/lib/turso';
 
 export class SyncService {
   private userId: string;
@@ -14,17 +10,14 @@ export class SyncService {
   }
 
   async syncStudentData(info: ScrapedStudentInfo, reports: any[]) {
-    await initDatabase();
+    // 1. Check if existing
+    const res = await query('SELECT settings, badges FROM students WHERE id = ?', [this.userId]);
+    const exists = res.rowCount > 0;
     
-    // 1. Sync to Firebase
-    const studentRef = doc(db, 'students', this.userId);
-    const existingStudentDoc = await getDoc(studentRef);
-    const isNewUser = !existingStudentDoc.exists();
+    let settings = exists ? res.rows[0].settings : null;
+    const badges = exists ? res.rows[0].badges : [];
     
-    let settings = existingStudentDoc.exists() ? (existingStudentDoc.data().settings || null) : null;
-    const badges = existingStudentDoc.exists() ? (existingStudentDoc.data().badges || []) : [];
-    
-    if (!settings) {
+    if (!settings || Object.keys(settings).length === 0) {
         settings = { 
             notifications: true, 
             isPublic: true, 
@@ -34,51 +27,40 @@ export class SyncService {
         };
     }
 
-    await setDoc(studentRef, {
-      name: info.name,
-      course: info.course,
-      email: info.email,
-      year_level: info.yearLevel,
-      semester: info.semester,
-      available_reports: reports,
-      address: info.address,
-      mobile: info.mobile,
-      enrollment_date: info.enrollmentDate,
-      settings,
-      updated_at: serverTimestamp()
-    }, { merge: true });
+    const now = new Date().toISOString();
+    await query(`
+      INSERT INTO students (id, name, course, email, year_level, semester, available_reports, address, mobile, enrollment_date, settings, badges, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        course = excluded.course,
+        email = excluded.email,
+        year_level = excluded.year_level,
+        semester = excluded.semester,
+        available_reports = excluded.available_reports,
+        address = excluded.address,
+        mobile = excluded.mobile,
+        enrollment_date = excluded.enrollment_date,
+        settings = excluded.settings,
+        badges = excluded.badges,
+        updated_at = excluded.updated_at
+    `, [
+      this.userId, info.name, info.course, info.email, info.yearLevel, info.semester,
+      JSON.stringify(reports), info.address, info.mobile, info.enrollmentDate,
+      JSON.stringify(settings), JSON.stringify(badges), now
+    ]);
 
-    // 2. Sync to Turso (Relational)
-    try {
-      await query(`
-        INSERT INTO students (id, name, course, email, year_level, semester, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        ON CONFLICT(id) DO UPDATE SET
-          name = excluded.name,
-          course = excluded.course,
-          email = excluded.email,
-          year_level = excluded.year_level,
-          semester = excluded.semester,
-          updated_at = CURRENT_TIMESTAMP
-      `, [this.userId, info.name, info.course, info.email, info.yearLevel, info.semester]);
-    } catch (error) {
-      console.error('[SyncService] Turso Student Sync Error:', error);
-    }
-
-    return { isNewUser, settings, badges };
+    return { isNewUser: !exists, settings, badges };
   }
 
   async grantBadge(badgeId: string) {
     try {
-      const studentRef = doc(db, 'students', this.userId);
-      const studentDoc = await getDoc(studentRef);
-      
-      if (studentDoc.exists()) {
-        const currentBadges = studentDoc.data().badges || [];
+      const res = await query('SELECT badges FROM students WHERE id = ?', [this.userId]);
+      if (res.rowCount > 0) {
+        const currentBadges = res.rows[0].badges || [];
         if (!currentBadges.includes(badgeId)) {
-          await updateDoc(studentRef, {
-            badges: arrayUnion(badgeId)
-          });
+          const newBadges = [...currentBadges, badgeId];
+          await query('UPDATE students SET badges = ? WHERE id = ?', [JSON.stringify(newBadges), this.userId]);
           console.log(`[BadgeSystem] Granted '${badgeId}' badge to ${this.userId}`);
           return true;
         }
@@ -104,52 +86,66 @@ export class SyncService {
   async syncGrades(reportName: string, subjects: any[], reportSlug?: string) {
     if (!subjects || subjects.length === 0) return;
 
-    const slug = reportSlug || reportName.replace(/[^a-zA-Z0-9]/g, '_');
-    const reportId = `${this.userId}_${slug}`;
-    const gradeRef = doc(db, 'grades', reportId);
+    const now = new Date().toISOString();
     
-    await setDoc(gradeRef, {
-      student_id: this.userId,
-      report_name: reportName,
-      items: subjects,
-      updated_at: serverTimestamp()
-    });
+    for (const item of subjects) {
+      await query(`
+        INSERT INTO grades (student_id, subject_code, section, description, grade, units, remarks, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        this.userId, 
+        item.subject_code || 'N/A',
+        item.code || item.section || 'N/A', // item.code is section based on user note
+        item.description || item.subject, 
+        item.grade, 
+        item.units, 
+        item.remarks, 
+        now
+      ]);
+    }
 
     // Automatically check for badges whenever grades are synced
     await this.checkAndGrantBadges(subjects);
   }
 
   async syncFinancials(financials: ScrapedFinancials) {
-    const financialRef = doc(db, 'financials', this.userId);
-    await setDoc(financialRef, {
-      total: financials.total,
-      balance: financials.balance,
-      due_today: financials.dueToday || "₱0.00",
-      details: {
-        installments: financials.installments || [],
-        assessment: financials.assessment || [],
-        dueAccounts: financials.dueAccounts || [],
-        payments: financials.payments || [],
-        adjustments: financials.adjustments || []
-      },
-      updated_at: serverTimestamp()
-    }, { merge: true });
+    const now = new Date().toISOString();
+    const details = {
+      installments: financials.installments || [],
+      assessment: financials.assessment || [],
+      dueAccounts: financials.dueAccounts || [],
+      payments: financials.payments || [],
+      adjustments: financials.adjustments || []
+    };
+
+    await query(`
+      INSERT INTO financials (student_id, total, balance, due_today, details)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(student_id) DO UPDATE SET
+        total = excluded.total,
+        balance = excluded.balance,
+        due_today = excluded.due_today,
+        details = excluded.details
+    `, [
+      this.userId, financials.total, financials.balance, financials.dueToday || "₱0.00",
+      JSON.stringify(details)
+    ]);
   }
 
   async syncSchedule(items: ScrapedScheduleItem[]) {
     if (items && items.length > 0) {
-      const schedulesRef = doc(db, 'schedules', this.userId);
-      await setDoc(schedulesRef, {
-        items,
-        updated_at: serverTimestamp()
-      });
+      await query(`
+        INSERT INTO schedules (id, student_id, items)
+        VALUES (?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          items = excluded.items
+      `, [this.userId, this.userId, JSON.stringify(items)]);
     }
   }
 
   async performFullSync(scraper: ScraperService, dashboard$: cheerio.CheerioAPI, periodCode: string, dashboardUrl: string, rawDashboardHtml?: string) {
     console.log(`[SyncService] Starting full sync for ${this.userId}...`);
     
-    // Fetch all data with individual error handling
     const fetchWithFallback = async (name: string, fn: () => Promise<any>) => {
         try {
             return await fn();
@@ -165,8 +161,6 @@ export class SyncService {
       fetchWithFallback('Accounts', () => scraper.fetchAccounts(periodCode, dashboardUrl)),
     ]);
 
-    // Parse all data - using await for newly async methods
-    // We provide fallbacks for the $ cheerio instances
     const studentInfo = await scraper.parseStudentInfo(dashboard$, eaf.$ || dashboard$, rawDashboardHtml, eaf.data);
     const schedule = await scraper.parseSchedule(eaf.$!, eaf.data);
     const financials = await scraper.parseFinancials(eaf.$!, eaf.data);
@@ -184,8 +178,7 @@ export class SyncService {
     
     await Promise.all([
       this.syncFinancials(mergedFinancials),
-      this.syncSchedule(schedule),
-      this.syncToRelationalDB(studentInfo)
+      this.syncSchedule(schedule)
     ]);
 
     return { 
@@ -197,24 +190,5 @@ export class SyncService {
       mergedFinancials, 
       reportLinks
     };
-  }
-
-  async syncToRelationalDB(info: ScrapedStudentInfo) {
-    try {
-      const { query: tursoQuery } = await import('@/lib/turso');
-      await tursoQuery(`
-        INSERT INTO students (id, name, course, email, year_level, semester, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
-        ON CONFLICT (id) DO UPDATE SET
-          name = excluded.name,
-          course = excluded.course,
-          email = excluded.email,
-          year_level = excluded.year_level,
-          semester = excluded.semester,
-          updated_at = CURRENT_TIMESTAMP
-      `, [this.userId, info.name, info.course, info.email, info.yearLevel, info.semester]);
-    } catch (error) {
-      console.error('Turso student sync error:', error);
-    }
   }
 }

@@ -1,13 +1,12 @@
 import axios, { AxiosInstance } from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
-import { db } from './db';
-import { doc, getDoc, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
+import { query, getClient } from './turso';
 import { decrypt, encrypt } from './auth';
 import { PORTAL_BASE } from './constants';
 
 /**
- * Session Proxy
+ * Session Proxy (Turso Implementation)
  * Maintains a persistent, encrypted session for the school portal locally.
  */
 
@@ -36,13 +35,12 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
   }));
 
   try {
-    const sessionRef = doc(db, 'portal_sessions', userId);
-    const sessionSnap = await getDoc(sessionRef);
+    const res = await query('SELECT * FROM portal_sessions WHERE id = ?', [userId]);
 
-    if (sessionSnap.exists()) {
-      const data = sessionSnap.data();
-      const lastUpdate = data.updated_at?.toDate ? data.updated_at.toDate() : new Date(0);
-      const lastAttempt = data.last_attempt_at?.toDate ? data.last_attempt_at.toDate() : new Date(0);
+    if (res.rowCount > 0) {
+      const data = res.rows[0];
+      const lastUpdate = data.updated_at ? new Date(data.updated_at) : new Date(0);
+      const lastAttempt = data.last_attempt_at ? new Date(data.last_attempt_at) : new Date(0);
       const consecutiveFailures = data.consecutive_failures || 0;
       
       // Trust the session if it was verified in the last 30 minutes (Local Trust)
@@ -53,14 +51,14 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
           return { client: localClient, jar, isNew: false, userId, isLocked: true, consecutiveFailures };
       }
 
-      const lockUntil = data.refresh_lock_until?.toDate ? data.refresh_lock_until.toDate() : new Date(0);
+      const lockUntil = data.refresh_lock_until ? new Date(data.refresh_lock_until) : new Date(0);
       if (Date.now() < lockUntil.getTime()) {
           return { client: localClient, jar, isNew: false, userId, isLocked: true };
       }
 
-      if (data.encryptedJar) {
+      if (data.encrypted_jar) {
         try {
-          const decrypted = decrypt(data.encryptedJar);
+          const decrypted = decrypt(data.encrypted_jar);
           const jarData = JSON.parse(decrypted);
           const newJar = CookieJar.fromJSON(jarData);
           
@@ -79,7 +77,7 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
           const testRes = await hydratedLocalClient.get(`${PORTAL_BASE}/Student/Main.aspx?_sid=${userId}`);
           if (!testRes.data.includes('obtnLogin') && !testRes.data.includes('otbUserID')) {
             if (consecutiveFailures > 0) {
-                await setDoc(sessionRef, { consecutive_failures: 0 }, { merge: true });
+                await query('UPDATE portal_sessions SET consecutive_failures = 0 WHERE id = ?', [userId]);
             }
             return { client: hydratedLocalClient, jar: newJar, isNew: false, userId };
           }
@@ -98,29 +96,42 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
 
 export async function saveSession(userId: string, jar: CookieJar, isSuccess: boolean = true) {
   try {
-    const sessionRef = doc(db, 'portal_sessions', userId);
+    const now = new Date().toISOString();
     
     if (!isSuccess) {
-        const snap = await getDoc(sessionRef);
-        const currentFailures = snap.exists() ? (snap.data().consecutive_failures || 0) : 0;
-        await setDoc(sessionRef, {
-            consecutive_failures: currentFailures + 1,
-            last_attempt_at: serverTimestamp(),
-            refresh_lock_until: new Date(0)
-        }, { merge: true });
+        const res = await query('SELECT consecutive_failures FROM portal_sessions WHERE id = ?', [userId]);
+        const currentFailures = res.rowCount > 0 ? (res.rows[0].consecutive_failures || 0) : 0;
+        
+        await query(`
+          INSERT INTO portal_sessions (id, consecutive_failures, last_attempt_at, refresh_lock_until) 
+          VALUES (?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET 
+            consecutive_failures = ?, 
+            last_attempt_at = ?, 
+            refresh_lock_until = ?
+        `, [
+          userId, currentFailures + 1, now, new Date(0).toISOString(),
+          currentFailures + 1, now, new Date(0).toISOString()
+        ]);
         return;
     }
 
     const jarJson = JSON.stringify(jar.toJSON());
     const encrypted = encrypt(jarJson);
     
-    await setDoc(sessionRef, {
-      encryptedJar: encrypted,
-      updated_at: serverTimestamp(),
-      last_attempt_at: serverTimestamp(),
-      consecutive_failures: 0,
-      refresh_lock_until: new Date(0)
-    }, { merge: true });
+    await query(`
+      INSERT INTO portal_sessions (id, encrypted_jar, updated_at, last_attempt_at, consecutive_failures, refresh_lock_until)
+      VALUES (?, ?, ?, ?, 0, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        encrypted_jar = ?,
+        updated_at = ?,
+        last_attempt_at = ?,
+        consecutive_failures = 0,
+        refresh_lock_until = ?
+    `, [
+      userId, encrypted, now, now, new Date(0).toISOString(),
+      encrypted, now, now, new Date(0).toISOString()
+    ]);
 
   } catch (error) {
     console.error('Failed to save portal session:', error);
@@ -128,30 +139,39 @@ export async function saveSession(userId: string, jar: CookieJar, isSuccess: boo
 }
 
 export async function acquireRefreshLock(userId: string): Promise<boolean> {
+    const dbClient = await getClient();
     try {
-        const sessionRef = doc(db, 'portal_sessions', userId);
-        const lockDuration = 60 * 1000;
-
-        return await runTransaction(db, async (transaction) => {
-            const sessionSnap = await transaction.get(sessionRef);
-            const now = Date.now();
-            
-            if (sessionSnap.exists()) {
-                const data = sessionSnap.data();
-                const lockUntil = data.refresh_lock_until?.toDate ? data.refresh_lock_until.toDate() : new Date(0);
-                if (now < lockUntil.getTime()) return false;
+        const now = Date.now();
+        const res = await dbClient.query('SELECT refresh_lock_until FROM portal_sessions WHERE id = ?', [userId]);
+        
+        if (res.rowCount > 0) {
+            const data = res.rows[0];
+            const lockUntil = data.refresh_lock_until ? new Date(data.refresh_lock_until) : new Date(0);
+            if (now < lockUntil.getTime()) {
+                dbClient.release();
+                return false;
             }
+        }
 
-            const newLockUntil = new Date(now + lockDuration);
-            transaction.set(sessionRef, {
-                refresh_lock_until: newLockUntil,
-                last_attempt_at: serverTimestamp()
-            }, { merge: true });
-            
-            return true;
-        });
+        const lockDuration = 60 * 1000;
+        const newLockUntil = new Date(now + lockDuration).toISOString();
+        const nowIso = new Date().toISOString();
+
+        await dbClient.query(`
+          INSERT INTO portal_sessions (id, refresh_lock_until, last_attempt_at)
+          VALUES (?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            refresh_lock_until = ?,
+            last_attempt_at = ?
+        `, [userId, newLockUntil, nowIso, newLockUntil, nowIso]);
+        
+        await dbClient.commit();
+        return true;
     } catch (e) {
         console.error('Failed to acquire lock:', e);
+        await dbClient.rollback();
         return false;
+    } finally {
+        dbClient.release();
     }
 }
