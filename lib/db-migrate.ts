@@ -54,6 +54,7 @@ export async function migratePortalTables() {
       CREATE TABLE IF NOT EXISTS grades (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         student_id TEXT REFERENCES students(id) ON DELETE CASCADE,
+        report_name TEXT,
         subject_code TEXT,
         section TEXT,
         description TEXT,
@@ -64,12 +65,15 @@ export async function migratePortalTables() {
       );
     `);
 
-    // Ensure section and subject_code exist
+    // Ensure section, subject_code, and report_name exist
     try {
       await query(`ALTER TABLE grades ADD COLUMN section TEXT;`);
     } catch (e) {}
     try {
       await query(`ALTER TABLE grades ADD COLUMN subject_code TEXT;`);
+    } catch (e) {}
+    try {
+      await query(`ALTER TABLE grades ADD COLUMN report_name TEXT;`);
     } catch (e) {}
 
     // 5. Portal Sessions

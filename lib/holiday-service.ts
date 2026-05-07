@@ -14,7 +14,7 @@ export interface Holiday {
  * Fetches Philippine holidays for a given year from Google Calendar API
  */
 export async function fetchPHHolidays(year: number = new Date().getFullYear()): Promise<Holiday[]> {
-  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   const calendarId = 'en.philippines#holiday@group.v.calendar.google.com';
   
   if (!apiKey) {

@@ -88,12 +88,20 @@ export class SyncService {
 
     const now = new Date().toISOString();
     
+    // Clear existing grades for this specific report to avoid duplicates
+    try {
+      await query('DELETE FROM grades WHERE student_id = ? AND report_name = ?', [this.userId, reportName]);
+    } catch (e) {
+      console.warn(`[SyncService] Failed to clear old grades for ${reportName}:`, e);
+    }
+
     for (const item of subjects) {
       await query(`
-        INSERT INTO grades (student_id, subject_code, section, description, grade, units, remarks, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO grades (student_id, report_name, subject_code, section, description, grade, units, remarks, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
-        this.userId, 
+        this.userId,
+        reportName,
         item.subject_code || 'N/A',
         item.code || item.section || 'N/A', // item.code is section based on user note
         item.description || item.subject, 

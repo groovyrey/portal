@@ -27,7 +27,7 @@
 | **🎓 Student Dashboard** | Instant access to grades, schedules, and financials in a unified, **mobile-first** interface built with Tailwind CSS v4. Widgets include **Grade Stats**, **Financial Summary**, **Schedule Table**, and **Upcoming Holidays**. |
 | **🤖 Portal Assistant** | A specialized ReAct agent powered by **Gemma 3 27B**. It possesses a deep understanding of student records and can perform complex math, web searches, and YouTube lookups. |
 | **🎨 AI Architect** | A secondary agent powered by **Nvidia Nemotron 3 120B**. It generates interactive **2D visualizations**, **Dynamic Charts**, and **GSAP animations** on demand to visualize academic concepts. |
-| **⚡ Realtime Sync** | Powered by **Ably**, providing instant notifications for grades and announcements. The **Dual-Database** strategy (Firestore + Turso) ensures data is always available, even offline. |
+| **⚡ Realtime Sync** | Powered by **Ably**, providing instant notifications for grades and announcements. The **Local-First** strategy with **Turso (LibSQL)** ensures data is always available, even when the legacy portal is offline. |
 | **🏆 Badge System** | Gamified academic tracking. The system automatically awards badges (e.g., **'Perfect Grade'** for 1.00 GPAs) during data synchronization. |
 | **🛡️ Secure & Private** | **AES-256-CBC** encryption for session data. No passwords are ever stored. Granular privacy controls for AI data access. |
 
@@ -103,9 +103,8 @@ Delegates to a specialized **"Visualizer"** agent (powered by `Nvidia Nemotron 3
 
 LCC Hub uses a robust **"Stale-While-Revalidate"** strategy to ensure offline resilience.
 
-1.  **Dual-Database Architecture:**
-    *   **Firebase Firestore:** Primary store for user profiles, grades, schedules, and settings.
-    *   **Turso (LibSQL):** High-performance SQL store for structured analytics and logs.
+1.  **Turso Database Architecture:**
+    *   **Turso (LibSQL):** Edge-optimized SQL store for student profiles, grades, schedules, settings, and logs.
 2.  **Smart Sync:**
     *   **Trigger:** Runs on login, manual refresh, or background interval.
     *   **Scope:** Synchronizes Student Info, Schedule, Financials, and Grades from the legacy portal.
@@ -119,7 +118,7 @@ LCC Hub uses a robust **"Stale-While-Revalidate"** strategy to ensure offline re
 | :--- | :--- | :--- |
 | **Frontend** | [Next.js 16](https://nextjs.org/) | App Router, React 19, Tailwind CSS v4 |
 | **State** | **React Query** | Server state management and background syncing |
-| **Database** | **Firestore / Turso** | Hybrid NoSQL/SQL data strategy |
+| **Database** | **Turso (LibSQL)** | Edge-optimized relational data strategy |
 | **Realtime** | **Ably** | Global Pub/Sub for instant notifications |
 | **AI Core** | **Gemma 3 27B** | LLM orchestration via LangChain |
 | **Sandbox** | **Vercel Sandbox** | Secure Python 3.13 code execution |

@@ -24,8 +24,7 @@ LCC Hub is a sophisticated student portal for La Concepcion College (LCC) studen
 ### Backend (Server)
 *   **Runtime:** Next.js Server Actions & API Routes (Node.js environment).
 *   **Database:**
-    *   **Firebase Firestore:** Stores user profiles, logs, settings, and cached portal data.
-    *   **LibSQL (Turso):** Relational data (likely for analytics or structured features).
+    *   **LibSQL (Turso):** Primary store for user profiles, grades, schedules, settings, and cached portal data.
 *   **Authentication:** Hybrid approach.
     *   **Credential Scraping:** Logs into the legacy portal to validate identity.
     *   **Session Management:** Custom encrypted HTTPOnly cookie (`session_token`).
@@ -33,7 +32,7 @@ LCC Hub is a sophisticated student portal for La Concepcion College (LCC) studen
 
 ### AI & Intelligence Layer
 *   **Orchestrator:** **LangChain**
-*   **LLM:** **Google Gemini** (`gemma-3-27b-it` via `ChatGoogleGenerativeAI`).
+*   **LLM:** **Google Gemini** (`gemma-4-26b-a4b-it` via `@google/generative-ai`).
 *   **Code Execution:** **Vercel Sandbox** (`@vercel/sandbox`) for running Python math/data analysis secure.
 *   **Voice:** **Deepgram** for speech-to-text.
 
@@ -48,7 +47,7 @@ The login process is complex to ensure security and reliability:
     *   Extracts `__VIEWSTATE`, `__EVENTVALIDATION`, etc.
     *   Submits the login form.
     *   Checks for success indicators (absence of login button, presence of student name).
-5.  **Sync:** `SyncService` scrapes the dashboard (Schedule, Financials, Grades) immediately upon login and caches it to Firestore.
+5.  **Sync:** `SyncService` scrapes the dashboard (Schedule, Financials, Grades) immediately upon login and caches it to Turso.
 6.  **Token Generation:**
     *   Encrypts `userId` and `password` using AES-256-CBC (`lib/auth.ts`).
     *   Sets `session_token` (HTTPOnly) and `portal_session_active` (Client-readable) cookies.
@@ -59,14 +58,14 @@ The assistant is a "ReAct-style" agent with custom tool handling:
 *   **Tool Calling:** The model outputs a specific token `||| { "name": "..." }`. The server parses this, executes the tool, and feeds the result back to the model.
 *   **Tools:**
     *   `execute_math`: Runs Python code in a secure Vercel Sandbox. Supports `numpy`, `pandas`, `scipy`, `matplotlib` (headless), `sympy`.
-    *   `get_grades` / `get_schedule`: Fetches data from the local Firestore cache.
+    *   `get_grades` / `get_schedule`: Fetches data from the local Turso cache.
     *   `web_search` / `youtube_search`: External lookups.
 *   **Streaming:** Responses are streamed via `TransformStream` to the client.
 
 ### 3.3 Data Synchronization
 *   **Strategy:** "Stale-while-revalidate" inspired.
-*   **Primary Source:** Firestore cache is the source of truth for the UI (`useStudentQuery` in `lib/hooks.ts`).
-*   **Background Sync:** The `ScraperService` runs periodically (or on specific triggers) to fetch fresh data from the legacy portal and update Firestore.
+*   **Primary Source:** Turso cache is the source of truth for the UI (`useStudentQuery` in `lib/hooks.ts`).
+*   **Background Sync:** The `ScraperService` runs periodically (or on specific triggers) to fetch fresh data from the legacy portal and update Turso.
 *   **Client:** React Query handles caching on the frontend. `localStorage` is used for an immediate "offline-first" render before the query freshens the data.
 
 ## 4. Directory Structure
@@ -88,7 +87,7 @@ The assistant is a "ReAct-style" agent with custom tool handling:
 ├── lib/                    # Business Logic
 │   ├── ai-service.ts       # AI visualization logic
 │   ├── auth.ts             # Encryption & Role checks
-│   ├── db.ts               # Firebase init
+│   ├── turso.ts            # LibSQL client
 │   ├── scraper-service.ts  # Legacy portal scraping logic
 │   └── session-proxy.ts    # Connection management
 ├── types/                  # TypeScript Interfaces
@@ -101,8 +100,8 @@ The application requires a robust `.env.local` configuration:
 
 ### Critical Keys
 *   `SESSION_SECRET`: 32-byte hex string for cookie encryption.
-*   `NEXT_PUBLIC_FIREBASE_*`: Firebase configuration.
-*   `FIREBASE_ADMIN_*`: Service account for server-side Firestore access.
+*   `TURSO_DATABASE_URL`: Turso database URL.
+*   `TURSO_AUTH_TOKEN`: Turso auth token.
 
 ### AI Services
 *   `GEMINI_API_KEY` / `GOOGLE_API_KEY`: For the main chat model.
@@ -120,16 +119,16 @@ The application requires a robust `.env.local` configuration:
 *   **Commits:** Follow conventional commits.
 *   **Testing:** (Placeholder - no explicit test runner seen in `package.json`, possibly manual or using Next.js default).
 
-## 7. Database Schema (Inferred)
+## 7. Database Schema (Turso)
 
-### Firestore Collections
-*   `students/{studentId}`: Main profile document.
-    *   `schedule`: Array of classes.
-    *   `financials`: Balance and payment history.
-    *   `grades`: Nested or array of semester grades.
-    *   `settings`: User preferences (notifications, AI settings).
-*   `logs/{logId}`: Activity logs (logins, errors).
-*   `admin_stats`: aggregated statistics.
+### Tables
+*   `students`: Main profile table.
+*   `schedules`: Array of classes stored as JSON.
+*   `financials`: Balance and payment history.
+*   `grades`: Semester grades.
+*   `community_posts`: Social features.
+*   `activity_logs`: User activity logs.
+
 
 ## 8. Common Scripts
 

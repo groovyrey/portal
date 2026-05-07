@@ -39,7 +39,7 @@ The assistant utilizes a **ReAct (Reasoning + Acting)** loop to provide verifiab
 ## PART 2: IMPLEMENTATION ROADMAP (ACTION PLAN)
 
 ### Phase 1: Core Infrastructure & Authentication Bridge
-- **Step 1.1:** Setup of Firebase Admin SDK and Turso LibSQL client.
+- **Step 1.1:** Setup of Turso LibSQL client and schema migration scripts.
 - **Step 1.2:** Implementation of the `lib/auth.ts` encryption module (AES-256-CBC).
 - **Step 1.3:** Development of the `SessionProxy` to handle persistent cookie jars and ASP.NET login handshake.
 - **Step 1.4:** Configuration of Ably realtime channels for cross-device state synchronization.

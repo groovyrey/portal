@@ -7,10 +7,14 @@ import { getSessionClient, saveSession } from '@/lib/session-proxy';
 import { ScraperService } from '@/lib/scraper-service';
 import { SyncService } from '@/lib/sync-service';
 import { logActivity } from '@/lib/activity-service';
+import { initDatabase } from '@/lib/db-init';
 
 import { decrypt } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
+  // Ensure database is initialized
+  await initDatabase().catch(e => console.error('DB Init Error:', e));
+
   let { userId, password } = await req.json().catch(() => ({}));
   
   try {

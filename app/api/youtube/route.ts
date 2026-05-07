@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 });
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+  const apiKey = process.env.YOUTUBE_API_KEY;
 
   if (!apiKey) {
     return NextResponse.json({ error: 'API Key not configured' }, { status: 500 });

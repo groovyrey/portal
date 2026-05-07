@@ -24,7 +24,7 @@ export const maxDuration = 300;
  */
 
 async function performYoutubeSearch(query: string) {
-  const apiKey = process.env.YOUTUBE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+  const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) return "YouTube search is currently unavailable.";
   try {
     const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=5&key=${apiKey}`);

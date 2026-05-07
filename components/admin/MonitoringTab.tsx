@@ -175,7 +175,7 @@ export default function MonitoringTab() {
           <section className="space-y-2">
             <h4 className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground px-1">Infrastructure</h4>
             <div className="grid gap-2">
-              <InfrastructureItem icon={<Database className="h-3.5 w-3.5" />} label="Database" value="Firestore" status="Native" />
+              <InfrastructureItem icon={<Database className="h-3.5 w-3.5" />} label="Database" value="Turso (LibSQL)" status="Native" />
               <InfrastructureItem icon={<Globe className="h-3.5 w-3.5" />} label="Realtime" value="Ably SDK" status="Connected" />
               <InfrastructureItem icon={<ShieldCheck className="h-3.5 w-3.5" />} label="Security" value="AES-256" status="Active" />
             </div>

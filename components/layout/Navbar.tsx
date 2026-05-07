@@ -114,7 +114,7 @@ export default function Navbar() {
           
           if (parsed.updated_at) {
             try {
-              // Handle multiple possible date formats (Firebase Timestamp, ISO string, etc.)
+              // Handle multiple possible date formats (ISO string, etc.)
               let date: Date;
               if (typeof parsed.updated_at === 'object' && parsed.updated_at.seconds) {
                 date = new Date(parsed.updated_at.seconds * 1000);

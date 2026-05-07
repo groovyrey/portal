@@ -131,18 +131,32 @@ export async function getStudentFinancials(userId: string): Promise<Financials |
   }
 }
 
-export async function getStudentGrades(userId: string): Promise<SubjectGrade[]> {
+export async function getStudentGrades(userId: string, reportName?: string): Promise<SubjectGrade[]> {
   try {
-    const res = await query('SELECT * FROM grades WHERE student_id = ? ORDER BY updated_at DESC', [userId]);
+    let sql = 'SELECT * FROM grades WHERE student_id = ?';
+    const params: any[] = [userId];
+
+    if (reportName) {
+      sql += ' AND report_name = ?';
+      params.push(reportName);
+    }
+
+    sql += ' ORDER BY updated_at DESC';
     
-    // De-duplicate by subject key (description + section)
+    const res = await query(sql, params);
+    
+    // De-duplicate by subject key (description + section + report_name)
     const subjectsMap = new Map<string, SubjectGrade>();
 
     res.rows.forEach((item: any) => {
       const section = item.section || item.code || 'N/A';
       const subjectCode = item.subject_code || 'N/A';
       const desc = item.description || 'Unknown Subject';
-      const key = `${section}-${desc}`.toLowerCase();
+      const report = item.report_name || 'Unknown';
+      
+      // If reportName is provided, we only care about uniqueness within that report
+      // If not, we want all grades across all reports, but unique within their respective reports
+      const key = `${report}-${section}-${desc}`.toLowerCase();
       
       if (!subjectsMap.has(key)) {
         subjectsMap.set(key, {

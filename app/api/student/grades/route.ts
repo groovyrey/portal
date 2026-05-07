@@ -4,8 +4,12 @@ import { decrypt } from '@/lib/auth';
 import { getSessionClient, saveSession } from '@/lib/session-proxy';
 import { ScraperService } from '@/lib/scraper-service';
 import { SyncService } from '@/lib/sync-service';
+import { initDatabase } from '@/lib/db-init';
 
 export async function POST(req: NextRequest) {
+  // Ensure database is initialized
+  await initDatabase().catch(e => console.error('DB Init Error:', e));
+
   let debugLog = "";
   try {
     const body = await req.json();
@@ -38,11 +42,11 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        // In Turso, we can check for existing grades for this student.
-        // Since grades are now granular (per subject), we might need to check if there are any recent ones.
-        // Or we can add a 'report_name' to the grades table if we want to mimic Firestore behavior.
-        // For now, let's just check if we have any grades for this student that are fresh.
-        const res = await query('SELECT * FROM grades WHERE student_id = ? ORDER BY updated_at DESC', [userId]);
+        // In Turso, we check for existing grades for this student and SPECIFIC report.
+        const res = await query(
+          'SELECT * FROM grades WHERE student_id = ? AND report_name = ? ORDER BY updated_at DESC', 
+          [userId, reportName]
+        );
         
         if (res.rowCount > 0) {
             const lastUpdate = res.rows[0].updated_at ? new Date(res.rows[0].updated_at) : new Date(0);
@@ -67,7 +71,7 @@ export async function POST(req: NextRequest) {
                   }
                 });
 
-                console.log(`[Grades] Serving cached report for ${userId}`);
+                console.log(`[Grades] Serving cached report "${reportName}" for ${userId}`);
                 return NextResponse.json({ 
                     success: true, 
                     subjects: Array.from(subjectsMap.values()),
