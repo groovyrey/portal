@@ -677,7 +677,7 @@ export default function AssistantPage() {
         
         // Process STATUS markers
         const statusRegex = /STATUS:(SEARCHING|PROCESSING|FETCHING|FINALIZING|COMPUTING|DESIGNING)\n?/g;
-        const showThinking = student?.settings?.assistant?.showThinkingProcess !== false;
+        const showThinking = student?.settings?.assistant?.showThinkingProcess === true;
         
         let match;
         while ((match = statusRegex.exec(buffer)) !== null) {
@@ -1024,10 +1024,14 @@ export default function AssistantPage() {
                                 }}
                               >
                                 {(() => {
+                                  const showThinking = student?.settings?.assistant?.showThinkingProcess === true;
                                   // Strip wrapping code blocks if they are markdown, text, txt, or generic
-                                  const content = m.content.trim();
+                                  let content = m.content.trim();
                                   const match = content.match(/^```(?:markdown|text|txt)?\s*([\s\S]*?)\s*```$/i);
-                                  return match ? match[1] : m.content;
+                                  content = match ? match[1] : content;
+                                  
+                                  if (showThinking) return content;
+                                  return content.replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, '').trim();
                                 })()}
                               </ReactMarkdown>
                             )}

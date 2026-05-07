@@ -70,7 +70,7 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
     autoSpeak: false,
     voiceModel: 'aura-helios-en',
     saveHistory: true,
-    showThinkingProcess: true,
+    showThinkingProcess: false,
     contextAwareness: true,
     tutorMode: true
   };

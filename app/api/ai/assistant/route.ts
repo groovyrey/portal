@@ -108,7 +108,10 @@ export async function POST(req: NextRequest) {
 
     const { userId } = JSON.parse(decrypt(sessionCookie.value));
     console.log(`[Assistant] Request for user ${userId}`);
-    await initDatabase();
+    
+    // Non-blocking DB init - don't crash the assistant if Turso is down
+    initDatabase().catch(e => console.error('[Assistant] DB Init non-fatal error:', e.message));
+    
     const student = await getStudentProfile(userId);
     if (!student) {
       console.error(`[Assistant] Profile not found for ${userId}`);
@@ -119,13 +122,23 @@ export async function POST(req: NextRequest) {
     const modelId = "gemma-4-26b-a4b-it";
     console.log(`[Assistant] Initializing model: ${modelId}`);
 
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
     const model = genAI.getGenerativeModel({
         model: modelId,
         systemInstruction: `You are the "LCCian Companion" for ${SCHOOL_INFO.name}. 
+Today's date is ${today}.
 Address user as ${student.name.split(' ')[0]}. 
 Be concise and helpful. Avoid repeating yourself.
 Use Markdown Tables for structured data.
 Base answers ONLY on tool data or provided context.
+
+REASONING: You possess a native thinking channel. You MUST wrap all your internal reasoning, planning, and multi-step logic inside <thought>...</thought> tags. This is your internal workspace. DO NOT repeat these thoughts in your final answer. The final response outside the tags should be clean and direct.
+
+STRICT NO REPETITION: In multi-turn tool-calling sessions, DO NOT include thoughts or text from previous turns in your new response. Each turn must start ONLY with the new thought or the new information. Repeating previous output is a failure and degrades the experience.
+
+TUTOR MODE: If a student asks a question that requires critical thinking, problem-solving, or is an academic assignment, DO NOT provide the answer directly. Instead, guide them using the Socratic method: ask leading questions, provide hints, or explain the underlying concepts to help them reach the solution themselves. Ask one step at a time and wait for their response.
+
 Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
         generationConfig: {
           temperature: 0.7,
@@ -166,18 +179,24 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
       const contents: any[] = [];
       msgs.forEach((m: any) => {
         let role = (m.role === 'assistant' || m.role === 'model') ? 'model' : 'user';
-        const parts: any[] = [];
+        if (m.role === 'tool' || m.role === 'function') role = 'function';
         
-        if (m.tool_calls) {
-          role = 'model';
-          m.tool_calls.forEach((tc: any) => {
-            parts.push({ functionCall: { name: tc.function.name, args: JSON.parse(tc.function.arguments) } });
-          });
-        } else if (m.role === 'tool' || m.role === 'function') {
-          role = 'function';
+        const parts: any[] = [];
+        let content = m.content || "";
+
+        if (m.role === 'tool' || m.role === 'function') {
           parts.push({ functionResponse: { name: m.name || m.tool_call_id, response: { content: m.content } } });
         } else {
-          parts.push({ text: m.content || " " });
+          if (role === 'model' && content) {
+            content = content.replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, '').trim();
+          }
+          if (content) parts.push({ text: content });
+
+          if (m.tool_calls) {
+            m.tool_calls.forEach((tc: any) => {
+              parts.push({ functionCall: { name: tc.function.name, args: JSON.parse(tc.function.arguments) } });
+            });
+          }
         }
 
         if (parts.length === 0) return;
@@ -191,12 +210,34 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
       return contents;
     };
 
+    if (!messages || messages.length === 0) {
+      return new Response('No messages provided', { status: 400 });
+    }
+
+    const userMessage = messages[messages.length - 1].content;
     const contents = mapMessagesToContents(messages.slice(0, -1));
-    contents.push({ role: 'user', parts: [{ text: userMessage }] });
+    const lastPart = { text: userMessage };
+    
+    if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
+      contents[contents.length - 1].parts.push(lastPart);
+    } else {
+      contents.push({ role: 'user', parts: [lastPart] });
+    }
 
     const encoder = new TextEncoder();
     const transformStream = new TransformStream();
     const writer = transformStream.writable.getWriter();
+
+    const safeWrite = async (text: string) => {
+      try {
+        await writer.write(encoder.encode(text));
+      } catch (e) {
+        // Only log if it's not a closed stream error
+        if (!(e instanceof Error && e.message.includes('closed'))) {
+          console.warn("[Assistant] Write failed:", e);
+        }
+      }
+    };
 
     (async () => {
       try {
@@ -221,7 +262,7 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
               for (const part of parts) {
                 if (part.text) {
                   modelText += part.text;
-                  await writer.write(encoder.encode(part.text));
+                  await safeWrite(part.text);
                 }
                 if (part.functionCall) {
                   toolCalls.push(part.functionCall);
@@ -230,7 +271,9 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
             }
           } catch (chunkErr: any) {
             console.error(`[Assistant] Chunk processing error:`, chunkErr);
-            throw chunkErr;
+            // If we already have some text, we might be able to stop gracefully
+            if (!modelText && toolCalls.length === 0) throw chunkErr;
+            break; 
           }
 
           const modelTurn: any = { role: 'model', parts: [] };
@@ -247,9 +290,14 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
             console.log(`[Assistant] Model requested ${toolCalls.length} tools`);
             const toolResults = await Promise.all(toolCalls.map(async (tc) => {
               const { name, args } = tc;
-              await writer.write(encoder.encode(`\nSTATUS:PROCESSING\nTOOL_USED: ${name}\n`));
-              const toolResult = await toolMap[name](args);
-              return { functionResponse: { name, response: { content: toolResult } } };
+              await safeWrite(`\nSTATUS:PROCESSING\nTOOL_USED: ${name}\n`);
+              try {
+                const toolResult = await toolMap[name](args);
+                return { functionResponse: { name, response: { content: toolResult } } };
+              } catch (toolErr: any) {
+                console.error(`[Assistant] Tool ${name} failed:`, toolErr);
+                return { functionResponse: { name, response: { content: `Error: ${toolErr.message}` } } };
+              }
             }));
             
             contents.push({ role: 'function', parts: toolResults });
@@ -259,10 +307,12 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
           break; 
         }
       } catch (err: any) {
-        console.error("[Assistant] Stream Error:", err);
-        await writer.write(encoder.encode(`\n\n[System Error: ${err.message}]`));
+        console.error("[Assistant] Final Stream Error:", err);
+        await safeWrite(`\n\n[System Error: ${err.message}]`);
       } finally {
-        await writer.close();
+        try {
+          await writer.close();
+        } catch (e) {}
       }
     })();
 

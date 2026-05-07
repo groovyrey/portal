@@ -427,10 +427,14 @@ export default function AssistantPage() {
         if (value) buffer += textDecoder.decode(value, { stream: true });
         
         const statusRegex = /STATUS:(SEARCHING|PROCESSING|FETCHING|FINALIZING|COMPUTING|DESIGNING)\n?/g;
+        const showThinking = student?.settings?.assistant?.showThinkingProcess === true;
+        
         let match;
         while ((match = statusRegex.exec(buffer)) !== null) {
           const statusVal = match[1];
-          setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, status: statusVal } : msg));
+          if (showThinking) {
+            setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, status: statusVal } : msg));
+          }
         }
         buffer = buffer.replace(statusRegex, '');
 
@@ -444,7 +448,7 @@ export default function AssistantPage() {
           if (endOfUsed === -1 && done) endOfUsed = buffer.length;
           if (endOfUsed !== -1) {
             const toolName = buffer.substring(usedIndex + toolUsedPrefix.length, endOfUsed).trim();
-            if (toolName) {
+            if (toolName && showThinking) {
               setMessages((prev) => prev.map((msg) => msg.id === assistantMessageId ? { ...msg, tools: Array.from(new Set([...(msg.tools || []), toolName])) } : msg));
             }
             buffer = buffer.substring(0, usedIndex) + buffer.substring(endOfUsed + (done ? 0 : 1));
@@ -652,7 +656,11 @@ export default function AssistantPage() {
                                       h2: ({children}) => <h2 className="text-sm font-bold mt-3 mb-1">{children}</h2>,
                                     }}
                                   >
-                                    {m.content}
+                                    {(() => {
+                                      const showThinking = student?.settings?.assistant?.showThinkingProcess === true;
+                                      if (showThinking) return m.content;
+                                      return m.content.replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, '').trim();
+                                    })()}
                                   </ReactMarkdown>
                                 ) : (
                                   <TypingIndicator status={m.status} />
