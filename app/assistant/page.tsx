@@ -455,7 +455,6 @@ export default function AssistantPage() {
           } else break;
         }
 
-        // ... inside the while loop before updating message content
         const filterThoughts = (text: string) => showThinking ? text : text.replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, '');
 
         while (true) {
@@ -620,19 +619,19 @@ export default function AssistantPage() {
                               : "bg-primary text-primary-foreground border-primary/20 rounded-tr-none"
                           )}>
                             {isAssistant ? (
-                              <div className="space-y-3 min-w-0 w-full max-w-full overflow-hidden">
+                              <div className="space-y-3">
                                 {m.content ? (
                                   <ReactMarkdown 
                                     remarkPlugins={[remarkGfm, remarkMath]} 
                                     rehypePlugins={[rehypeHighlight, rehypeKatex, rehypeRaw]}
                                     className={cn(
-                                      "text-sm leading-relaxed min-w-0 w-full max-w-full overflow-hidden",
+                                      "text-sm leading-relaxed",
                                       isLoading && idx === messages.length - 1 && "streaming-active"
                                     )}
                                     components={{
                                       p: ({children}) => <p className="mb-3 last:mb-0 break-words whitespace-pre-wrap">{children}</p>,
                                       table: ({...props}) => (
-                                        <div className="overflow-x-auto w-full max-w-full my-3 rounded-lg border bg-background/50 custom-scrollbar block">
+                                        <div className="overflow-x-auto my-3 rounded-lg border bg-background/50 custom-scrollbar">
                                           <table className="min-w-full text-xs text-left table-auto" {...props} />
                                         </div>
                                       ),
@@ -643,11 +642,11 @@ export default function AssistantPage() {
                                         const match = /language-(\w+)/.exec(className || '');
                                         const codeContent = String(children).replace(/\n$/, '');
                                         return match ? (
-                                          <div className="relative group my-3 min-w-0 w-full max-w-full overflow-hidden">
+                                          <div className="relative group my-3">
                                             <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center gap-1">
                                               <CopyButton content={codeContent} />
                                             </div>
-                                            <pre className="bg-slate-950 text-slate-50 rounded-xl p-4 overflow-x-auto text-[11px] font-mono scrollbar-hide w-full max-w-full">
+                                            <pre className="bg-slate-950 text-slate-50 rounded-xl p-4 overflow-x-auto text-[11px] font-mono scrollbar-hide">
                                               <code className={className} {...props}>{children}</code>
                                             </pre>
                                           </div>
@@ -676,7 +675,7 @@ export default function AssistantPage() {
                                 )}
                               </div>
                             ) : (
-                              <p className="whitespace-pre-wrap text-sm font-medium break-words overflow-hidden max-w-full">{m.content}</p>
+                              <p className="whitespace-pre-wrap text-sm font-medium break-words">{m.content}</p>
                             )}
                           </div>
                         </div>
