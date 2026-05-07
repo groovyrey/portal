@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { Sandbox } from '@vercel/sandbox';
 import * as cheerio from 'cheerio';
 
@@ -162,14 +162,14 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
 
     const tools = [{
       functionDeclarations: [
-        { name: "execute_math", description: "Execute Python for complex math.", parameters: { type: "OBJECT", properties: { code: { type: "string" } }, required: ["code"] } },
+        { name: "execute_math", description: "Execute Python for complex math.", parameters: { type: SchemaType.OBJECT, properties: { code: { type: SchemaType.STRING } }, required: ["code"] } },
         { name: "get_grades", description: "Get student grades." },
         { name: "get_financials", description: "Get financial balance." },
         { name: "get_weekly_schedule", description: "Get full schedule." },
-        { name: "web_search", description: "Search web.", parameters: { type: "OBJECT", properties: { query: { type: "string" } }, required: ["query"] } },
-        { name: "web_fetch", description: "Fetch URL content.", parameters: { type: "OBJECT", properties: { url: { type: "string" } }, required: ["url"] } },
-        { name: "youtube_search", description: "Search YouTube.", parameters: { type: "OBJECT", properties: { query: { type: "string" } }, required: ["query"] } },
-        { name: "wikipedia_search", description: "Search Wikipedia.", parameters: { type: "OBJECT", properties: { query: { type: "string" } }, required: ["query"] } },
+        { name: "web_search", description: "Search web.", parameters: { type: SchemaType.OBJECT, properties: { query: { type: SchemaType.STRING } }, required: ["query"] } },
+        { name: "web_fetch", description: "Fetch URL content.", parameters: { type: SchemaType.OBJECT, properties: { url: { type: SchemaType.STRING } }, required: ["url"] } },
+        { name: "youtube_search", description: "Search YouTube.", parameters: { type: SchemaType.OBJECT, properties: { query: { type: SchemaType.STRING } }, required: ["query"] } },
+        { name: "wikipedia_search", description: "Search Wikipedia.", parameters: { type: SchemaType.OBJECT, properties: { query: { type: SchemaType.STRING } }, required: ["query"] } },
         { name: "get_full_student_data", description: "Get all student info." }
       ]
     }];
