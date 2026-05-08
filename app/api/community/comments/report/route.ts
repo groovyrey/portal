@@ -71,7 +71,7 @@ COMMENT CONTENT: ${comment.content}
 
     // Note: 3. Inference Call
     const hfToken = process.env.HUGGINGFACE_MODERATION_TOKEN || process.env.HUGGINGFACE_API_KEY;
-    const aiModel = "google/gemma-4-26b-a4b-it";
+    const aiModel = "meta-llama/Llama-3.1-8B-Instruct";
 
     if (!hfToken) {
        return NextResponse.json({ error: 'Moderation API token is not set.' }, { status: 500 });

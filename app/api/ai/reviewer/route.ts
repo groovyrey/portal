@@ -60,7 +60,7 @@ POLL OPTIONS: ${poll.options.join(', ')}` : ''}
 
     // Note: 2. Inference Call
     const hfToken = process.env.HUGGINGFACE_MODERATION_TOKEN || process.env.HUGGINGFACE_API_KEY;
-    const aiModel = "google/gemma-4-26b-a4b-it"; // Note: High-quality reasoning model from Google
+    const aiModel = "meta-llama/Llama-3.1-8B-Instruct"; // Note: High-quality reasoning model from Meta
 
     if (!hfToken) {
        return NextResponse.json({ error: 'Moderation API token is not set.' }, { status: 500 });
