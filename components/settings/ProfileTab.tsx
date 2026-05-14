@@ -132,7 +132,7 @@ function InfoItem({ icon, label, value }: { icon: React.ReactNode, label: string
       <Label className="text-[9px] uppercase text-muted-foreground font-bold tracking-wider">{label}</Label>
       <div className="flex items-center gap-1.5">
         <div className="text-muted-foreground/70">{icon}</div>
-        <p className="text-sm font-semibold truncate">{value || 'None'}</p>
+        <p className="text-sm font-semibold">{value || 'None'}</p>
       </div>
     </div>
   );

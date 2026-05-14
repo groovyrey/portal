@@ -17,14 +17,16 @@ const client = createClient({
  */
 export const query = async (text: string, params: any[] = []) => {
   // Convert $1, $2, ... to ? for SQLite compatibility if needed
-  // However, libsql client supports $1 syntax too
   
   // Replace ILIKE with LIKE for SQLite compatibility
   const sqliteText = text.replace(/ILIKE/g, 'LIKE');
 
+  // Sanitize params: LibSQL does not support 'undefined', must be 'null'
+  const sanitizedParams = params.map(p => p === undefined ? null : p);
+
   const result = await client.execute({
     sql: sqliteText,
-    args: params
+    args: sanitizedParams
   });
 
   // Transform result to match pg-like structure
@@ -85,9 +87,11 @@ export const getClient = async () => {
       }
 
       const sqliteText = text.replace(/ILIKE/g, 'LIKE');
+      const sanitizedParams = params.map(p => p === undefined ? null : p);
+
       const result = await transaction.execute({
         sql: sqliteText,
-        args: params
+        args: sanitizedParams
       });
       
       return {

@@ -1,26 +1,29 @@
 import { SubjectGrade } from '@/types';
 import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   AreaChart, Area, CartesianGrid
 } from 'recharts';
 import { useState, useEffect } from 'react';
-import { Eye, EyeOff, TrendingUp, Award, AlertCircle, BookOpen, Zap } from 'lucide-react';
+import { Eye, EyeOff, TrendingUp, BookOpen, Zap } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 type ExtendedGrade = SubjectGrade & { semester?: string };
 
 interface GradeStatsProps {
   allGrades: ExtendedGrade[];
+  enrolledUnits?: number;
 }
 
-export default function GradeStats({ allGrades }: GradeStatsProps) {
+export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps) {
   const [showGwa, setShowGwa] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('hide_gwa');
-    if (saved === 'false') setShowGwa(true);
+    // We update this in an effect to avoid hydration mismatch
+    if (saved === 'false') {
+      setShowGwa(true);
+    }
   }, []);
 
   const toggleGwa = () => {
@@ -57,17 +60,25 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
         ? (numericGrades.reduce((a, b) => a + b.val, 0) / numericGrades.length).toFixed(2)
         : 'N/A');
 
-  // Pass Rate
-  const totalPassed = allGrades.filter(g => {
-    const gLower = g.remarks.toLowerCase();
+  // Pass Rate calculation improvements
+  const subjectsWithOutcome = allGrades.filter(g => {
+    const gLower = g.remarks?.toLowerCase() || '';
+    const val = parseFloat(g.grade);
+    return gLower.includes('pass') || gLower.includes('fail') || (!isNaN(val) && val > 0);
+  });
+
+  const totalPassed = subjectsWithOutcome.filter(g => {
+    const gLower = g.remarks?.toLowerCase() || '';
     const val = parseFloat(g.grade);
     if (gLower.includes('pass')) return true;
     if (gLower.includes('fail')) return false;
-    if (isNaN(val)) return false;
     
     return isPercentageScale ? val >= 75 : val <= 3.0;
   }).length;
-  const passRate = ((totalPassed / allGrades.length) * 100).toFixed(0);
+  
+  const passRate = subjectsWithOutcome.length > 0 
+    ? ((totalPassed / subjectsWithOutcome.length) * 100).toFixed(0)
+    : '0';
 
   // Normalize grade to a 0-100 scale for comparison
   const getSemanticScore = (val: number) => {
@@ -78,15 +89,14 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
     return val;
   };
 
-  // Highest & Lowest (Normalized comparison)
+  // Highest (Normalized comparison)
   const sortedBySemantic = [...numericGrades].sort((a, b) => getSemanticScore(b.val) - getSemanticScore(a.val));
   const bestGrade = sortedBySemantic.length > 0 ? sortedBySemantic[0].val.toFixed(2) : 'N/A';
-  const lowestGrade = sortedBySemantic.length > 0 ? sortedBySemantic[sortedBySemantic.length - 1].val.toFixed(2) : 'N/A';
 
-  // Total Units
-  const totalUnits = allGrades.reduce((acc, curr) => {
+  // Total Earned Units (Cumulative)
+  const earnedUnits = allGrades.reduce((acc, curr) => {
     const u = parseFloat(curr.units || '0');
-    const gLower = curr.remarks.toLowerCase();
+    const gLower = curr.remarks?.toLowerCase() || '';
     const val = parseFloat(curr.grade);
     let isPassed = false;
     if (gLower.includes('pass')) isPassed = true;
@@ -107,8 +117,8 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
     .map(([grade, count]) => ({ grade, count }))
     .sort((a, b) => parseFloat(a.grade) - parseFloat(b.grade));
 
-  // Semester Trend Data
-  const semesterGroups: { [key: string]: number[] } = {};
+  // Semester Trend Data (Weighted by Units)
+  const semesterGroups: { [key: string]: ExtendedGrade[] } = {};
   const semesterOrder: string[] = [];
   allGrades.forEach(g => {
     if (g.semester && !semesterGroups[g.semester]) {
@@ -116,18 +126,32 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
       semesterOrder.push(g.semester);
     }
     if (g.semester) {
-      const val = parseFloat(g.grade);
-      if (!isNaN(val) && val > 0) {
-        semesterGroups[g.semester].push(val);
-      }
+      semesterGroups[g.semester].push(g);
     }
   });
 
   const trendData = [...semesterOrder].reverse().map(sem => {
-    const grades = semesterGroups[sem];
-    const avg = grades.length > 0 
-      ? grades.reduce((a, b) => a + b, 0) / grades.length 
-      : 0;
+    const subjectsInSem = semesterGroups[sem];
+    const numericInSem = subjectsInSem
+      .map(g => ({ ...g, val: parseFloat(g.grade) }))
+      .filter(g => !isNaN(g.val) && g.val > 0);
+      
+    let semWeightedGrades = 0;
+    let semGwaUnits = 0;
+
+    numericInSem.forEach(g => {
+      const u = parseFloat(g.units || '0');
+      if (!isNaN(u) && u > 0) {
+        semWeightedGrades += (g.val * u);
+        semGwaUnits += u;
+      }
+    });
+
+    const semAvg = semGwaUnits > 0 
+      ? semWeightedGrades / semGwaUnits
+      : (numericInSem.length > 0 
+          ? numericInSem.reduce((a, b) => a + b.val, 0) / numericInSem.length
+          : 0);
     
     let shortName = sem.replace('First Semester', '1st').replace('Second Semester', '2nd').replace('Summer', 'Sum');
     shortName = shortName.replace(/20(\d{2})-20(\d{2})/, '$1-$2'); 
@@ -135,16 +159,9 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
     return {
       semester: shortName,
       fullSemester: sem,
-      gwa: parseFloat(avg.toFixed(2))
+      gwa: parseFloat(semAvg.toFixed(2))
     };
   }).filter(d => d.gwa > 0);
-
-  const gwaNum = parseFloat(gwa as string);
-  const gwaPercent = !isNaN(gwaNum) 
-    ? (isPercentageScale 
-        ? (gwaNum / 100) * 100 
-        : Math.min(((5 - gwaNum) / 4) * 100, 100))
-    : 0;
 
   return (
     <div className="space-y-6">
@@ -177,9 +194,11 @@ export default function GradeStats({ allGrades }: GradeStatsProps) {
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tracking-tight">{totalUnits.toFixed(1)}</div>
+            <div className="text-2xl font-bold tracking-tight">
+              {enrolledUnits !== undefined && enrolledUnits > 0 ? enrolledUnits.toFixed(1) : earnedUnits.toFixed(1)}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Total units
+              {enrolledUnits !== undefined && enrolledUnits > 0 ? `Current load (${earnedUnits.toFixed(1)} earned)` : 'Total earned units'}
             </p>
           </CardContent>
         </Card>

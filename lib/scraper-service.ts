@@ -331,8 +331,10 @@ export class ScraperService {
 
     if (schedule.length === 0 && rawHtml) {
         if (this.isLoginPage(rawHtml)) return [];
+        console.log(`[Scraper] parseSchedule: Manual extraction found 0 items. Triggering AI fallback...`);
         const aiData = await aiExtract(rawHtml, 'schedule', this.userId);
         if (Array.isArray(aiData) && aiData.length > 0) {
+            console.log(`[Scraper] parseSchedule: AI fallback successfully recovered ${aiData.length} items.`);
             return aiData;
         }
     }
@@ -378,8 +380,10 @@ export class ScraperService {
 
     if ((totalBalance === "---" || totalBalance === "₱") && rawHtml) {
         if (this.isLoginPage(rawHtml)) return { total: "---", balance: "---", installments: [], assessment: [] } as any;
+        console.log(`[Scraper] parseFinancials: Manual extraction failed (Balance: ${totalBalance}). Triggering AI fallback...`);
         const aiData = await aiExtract(rawHtml, 'financials', this.userId);
-        if (aiData && aiData.balance) {
+        if (aiData && aiData.balance && aiData.balance !== "---") {
+            console.log(`[Scraper] parseFinancials: AI fallback successfully recovered financial data.`);
             return aiData;
         }
     }
@@ -617,8 +621,10 @@ export class ScraperService {
             return [];
         }
 
+        console.log(`[Scraper] parseReportCard: Manual extraction found 0 items (sCount: ${sCountText}). Triggering AI fallback...`);
         const aiData = await aiExtract(rawHtml, 'grades', this.userId);
         if (Array.isArray(aiData) && aiData.length > 0) {
+            console.log(`[Scraper] parseReportCard: AI fallback successfully recovered ${aiData.length} grades.`);
             return aiData;
         }
     }

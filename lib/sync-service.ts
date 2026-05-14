@@ -45,9 +45,19 @@ export class SyncService {
         badges = excluded.badges,
         updated_at = excluded.updated_at
     `, [
-      this.userId, info.name, info.course, info.email, info.yearLevel, info.semester,
-      JSON.stringify(reports), info.address, info.mobile, info.enrollmentDate,
-      JSON.stringify(settings), JSON.stringify(badges), now
+      this.userId, 
+      info.name || null, 
+      info.course || null, 
+      info.email || null, 
+      info.yearLevel || null, 
+      info.semester || null,
+      JSON.stringify(reports), 
+      info.address || null, 
+      info.mobile || null, 
+      info.enrollmentDate || null,
+      JSON.stringify(settings), 
+      JSON.stringify(badges), 
+      now
     ]);
 
     return { isNewUser: !exists, settings, badges };
@@ -96,20 +106,23 @@ export class SyncService {
     }
 
     for (const item of subjects) {
+      // Ensure no undefined values are passed to Turso (LibSQL), as it throws "Unsupported type of value"
+      const params = [
+        this.userId || null,
+        reportName || 'Unknown Report',
+        item.subject_code || item.code || 'N/A',
+        item.section || item.code || 'N/A',
+        item.description || item.subject || 'N/A',
+        item.grade !== undefined ? item.grade : '---',
+        item.units !== undefined ? item.units : '0',
+        item.remarks !== undefined ? item.remarks : 'N/A',
+        now
+      ];
+
       await query(`
         INSERT INTO grades (student_id, report_name, subject_code, section, description, grade, units, remarks, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        this.userId,
-        reportName,
-        item.subject_code || 'N/A',
-        item.code || item.section || 'N/A', // item.code is section based on user note
-        item.description || item.subject, 
-        item.grade, 
-        item.units, 
-        item.remarks, 
-        now
-      ]);
+      `, params);
     }
 
     // Automatically check for badges whenever grades are synced
@@ -135,7 +148,10 @@ export class SyncService {
         due_today = excluded.due_today,
         details = excluded.details
     `, [
-      this.userId, financials.total, financials.balance, financials.dueToday || "₱0.00",
+      this.userId, 
+      financials.total || "₱0.00", 
+      financials.balance || "₱0.00", 
+      financials.dueToday || "₱0.00",
       JSON.stringify(details)
     ]);
   }

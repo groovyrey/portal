@@ -2,8 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import Ably from 'ably';
 import { decrypt } from '@/lib/auth';
 
+let ablyRest: Ably.Rest | null = null;
+
+function getAblyRest() {
+  if (!process.env.ABLY_API_KEY) return null;
+  if (!ablyRest) {
+    ablyRest = new Ably.Rest(process.env.ABLY_API_KEY);
+  }
+  return ablyRest;
+}
+
 export async function GET(req: NextRequest) {
-  if (!process.env.ABLY_API_KEY) {
+  const client = getAblyRest();
+  if (!client) {
     return NextResponse.json({ error: 'Ably API key not configured' }, { status: 500 });
   }
 
@@ -23,7 +34,6 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const client = new Ably.Realtime(process.env.ABLY_API_KEY);
     const tokenRequestData = await client.auth.createTokenRequest({ clientId });
     return NextResponse.json(tokenRequestData);
   } catch (error: any) {

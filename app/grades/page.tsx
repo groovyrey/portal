@@ -194,7 +194,10 @@ export default function GradesPage() {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold tracking-tight">Performance Summary</h3>
             </div>
-            <GradeStats allGrades={allGrades} />
+            <GradeStats 
+              allGrades={allGrades} 
+              enrolledUnits={student.schedule?.reduce((acc, curr) => acc + (parseFloat(curr.units) || 0), 0) || 0}
+            />
           </div>
         )}
 

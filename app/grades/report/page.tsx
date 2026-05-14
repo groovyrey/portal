@@ -3,18 +3,30 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { FileText, ChevronLeft, CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
 import { SubjectGrade } from '@/types';
 import Skeleton from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
 function isPassedSubject(sub: SubjectGrade) {
   const gradeNum = parseFloat(sub.grade);
-  return sub.remarks.toLowerCase().includes('pass') || (gradeNum <= 3.0 && gradeNum > 0);
+  const remarks = sub.remarks.toLowerCase();
+  
+  if (remarks.includes('pass')) return true;
+  if (remarks.includes('fail')) return false;
+  if (isNaN(gradeNum) || gradeNum <= 0) return false;
+
+  // LCC uses two scales:
+  // 1. Decimal: 1.0 (Best) to 3.0 (Passing), 5.0 (Fail)
+  // 2. Percentage: 75-100 (Passing)
+  if (gradeNum > 5.0) {
+    return gradeNum >= 75;
+  }
+  return gradeNum <= 3.0;
 }
 
 export default function GradeReportPage() {

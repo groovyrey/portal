@@ -72,11 +72,28 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
     if (!ablyRef.current) {
       ablyRef.current = new Ably.Realtime({ 
         authUrl: '/api/ably/auth',
-        closeOnUnload: true
+        closeOnUnload: true,
+        recover: (lastConnectionDetails, cb) => {
+            // Optional recovery logic
+            cb(true);
+        }
       });
     }
 
     const ably = ablyRef.current;
+
+    // Connectivity Monitoring
+    const handleStateChange = (stateChange: Ably.ConnectionStateChange) => {
+      console.log(`[Ably] Connection state: ${stateChange.current}`);
+      if (stateChange.current === 'failed' || stateChange.current === 'disconnected') {
+        if (stateChange.reason?.code === 40140 || stateChange.reason?.code === 40141) {
+             console.warn('[Ably] Token expired, re-authenticating...');
+             ably.auth.authorize();
+        }
+      }
+    };
+
+    ably.connection.on(handleStateChange);
     const communityChannel = ably.channels.get('community');
     const studentChannel = studentId ? ably.channels.get(`student-${studentId}`) : null;
 
@@ -257,6 +274,7 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
         studentChannel.unsubscribe('new-grade', onNewGrade);
       }
       communityChannel.presence.unsubscribe(['enter', 'leave', 'present', 'update'], updatePresenceData);
+      ably.connection.off(handleStateChange);
       ably.connection.off('connected', enterPresence);
       if (studentId) communityChannel.presence.leave();
     };

@@ -63,10 +63,30 @@ ${prompt}
     ]);
     console.log(`[AI-Scraper] Model responded for ${task}`);
 
-    responseContent = response.content.toString();
-    const content = responseContent.replace(/```json/g, '').replace(/```/g, '').trim();
+    // Handle case where response might be an object already (LangChain sometimes does this)
+    if (typeof response.content === 'object' && !Array.isArray(response.content)) {
+        console.log(`[AI-Scraper] Response is already an object.`);
+        return response.content;
+    }
+
+    responseContent = Array.isArray(response.content) 
+        ? JSON.stringify(response.content) 
+        : response.content.toString();
+
+    // More robust Markdown code block removal
+    const content = responseContent
+        .replace(/```json/g, '')
+        .replace(/```/g, '')
+        .trim();
     
-    const parsed = JSON.parse(content);
+    // Attempt to find JSON if there's surrounding text
+    let jsonToParse = content;
+    const jsonMatch = content.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+    if (jsonMatch) {
+        jsonToParse = jsonMatch[0];
+    }
+    
+    const parsed = JSON.parse(jsonToParse);
     console.log(`[AI-Scraper] Successfully parsed JSON for ${task}`);
 
     // Log this successful repair as a warning-level incident

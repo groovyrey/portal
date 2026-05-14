@@ -37,6 +37,10 @@ export default function MonitoringTab() {
   const [onlineUsers, setOnlineUsers] = useState<Student[]>([]);
   const [isFetchingOnline, setIsFetchingOnline] = useState(false);
 
+  // Activity Modal State
+  const [selectedActivity, setSelectedActivity] = useState<any>(null);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+
   const fetchOnlineDetails = async () => {
     setShowOnlineModal(true);
     if (onlineMembers.size === 0) {
@@ -118,7 +122,8 @@ export default function MonitoringTab() {
       time: run.lastRun,
       label: run.jobId.split('-')[0],
       detail: run.tasks?.join(', ') || 'Processing',
-      status: 'SUCCESS'
+      status: 'SUCCESS',
+      rawData: run
     })),
     ...(adminLogsData?.logs || []).map((log: any) => ({
       type: 'admin',
@@ -126,9 +131,15 @@ export default function MonitoringTab() {
       time: log.timestamp?.seconds ? log.timestamp.seconds * 1000 : log.timestamp,
       label: 'ADMIN',
       detail: `${log.adminName}: ${log.action} ${log.targetName || ''}`,
-      status: 'LOGGED'
+      status: 'LOGGED',
+      rawData: log
     }))
   ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 15);
+
+  const handleActivityClick = (event: any) => {
+    setSelectedActivity(event);
+    setShowActivityModal(true);
+  };
 
   return (
     <div className="space-y-4">
@@ -228,7 +239,11 @@ export default function MonitoringTab() {
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               ) : combinedActivity.map((event, i) => (
-                <div key={i} className="flex gap-4 p-1 hover:bg-muted/50 rounded transition-colors group">
+                <div 
+                  key={i} 
+                  onClick={() => handleActivityClick(event)}
+                  className="flex gap-4 p-1 hover:bg-muted/80 rounded transition-colors group cursor-pointer border border-transparent hover:border-border/50 min-w-0"
+                >
                   <span className="text-muted-foreground w-12 shrink-0">{new Date(event.time).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}</span>
                   <span className={cn("w-14 font-bold shrink-0", event.type === 'admin' ? "text-blue-500" : "text-amber-500")}>{event.label}</span>
                   <span className="flex-1 text-muted-foreground/80 group-hover:text-foreground truncate">{event.detail}</span>
@@ -261,6 +276,112 @@ export default function MonitoringTab() {
               )}
             </div>
           </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showActivityModal} onOpenChange={setShowActivityModal}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-1">
+              {selectedActivity?.type === 'admin' ? (
+                <Badge variant="outline" className="text-blue-500 border-blue-500/20 bg-blue-500/5 text-[10px] uppercase font-bold px-1.5 h-5">Admin Action</Badge>
+              ) : (
+                <Badge variant="outline" className="text-amber-500 border-amber-500/20 bg-amber-500/5 text-[10px] uppercase font-bold px-1.5 h-5">System Job</Badge>
+              )}
+              <span className="text-[10px] font-mono text-muted-foreground">
+                {selectedActivity?.time && new Date(selectedActivity.time).toLocaleString()}
+              </span>
+            </div>
+            <DialogTitle className="text-lg font-bold tracking-tight">
+              {selectedActivity?.type === 'admin' ? 'Administrative Log' : 'Automated Task Execution'}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Detailed system record for ID: <span className="font-mono">{selectedActivity?.id}</span>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-4 space-y-4">
+            {selectedActivity?.type === 'admin' ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Administrator</p>
+                    <p className="text-sm font-semibold">{selectedActivity.rawData?.adminName}</p>
+                    <p className="text-[10px] text-muted-foreground font-mono">{selectedActivity.rawData?.adminId}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Action Type</p>
+                    <p className="text-sm font-semibold text-blue-600">{selectedActivity.rawData?.action}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Target Entity</p>
+                  <div className="p-2 bg-muted rounded border flex items-center justify-between">
+                    <span className="text-xs font-medium">{selectedActivity.rawData?.targetName || 'System-Wide'}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground">{selectedActivity.rawData?.targetId}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Modification Details</p>
+                  <ScrollArea className="h-[120px] w-full rounded-md border bg-black/5 p-3">
+                    <p className="text-xs font-mono leading-relaxed whitespace-pre-wrap">{selectedActivity.rawData?.details}</p>
+                  </ScrollArea>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Job Identifier</p>
+                    <p className="text-sm font-semibold font-mono">{selectedActivity?.rawData?.jobId}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Execution Status</p>
+                    <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10 border-emerald-500/20 text-[10px] font-bold px-2 py-0 h-5">
+                      {selectedActivity?.rawData?.status?.toUpperCase()}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Completed Tasks</p>
+                  <div className="flex flex-wrap gap-1.5 p-2 bg-muted rounded border">
+                    {selectedActivity?.rawData?.tasks?.map((task: string, idx: number) => (
+                      <Badge key={idx} variant="secondary" className="text-[9px] font-medium h-5 bg-background border">{task}</Badge>
+                    ))}
+                    {!selectedActivity?.rawData?.tasks?.length && <p className="text-[10px] text-muted-foreground italic">No specific tasks listed</p>}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Execution Results</p>
+                  <ScrollArea className="h-[150px] w-full rounded-md border bg-black/5 p-3">
+                    <div className="space-y-2">
+                      {selectedActivity?.rawData?.results ? (
+                        Object.entries(selectedActivity.rawData.results).map(([key, val]: [string, any], idx) => (
+                          <div key={idx} className="space-y-1">
+                            <p className="text-[10px] font-bold text-muted-foreground/70">{key}</p>
+                            <p className="text-xs font-mono break-all">{typeof val === 'object' ? JSON.stringify(val) : String(val)}</p>
+                            {idx < Object.entries(selectedActivity.rawData.results).length - 1 && <Separator className="opacity-50" />}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic">No raw execution results stored</p>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-4 flex justify-end">
+            <Button variant="outline" size="sm" onClick={() => setShowActivityModal(false)} className="text-[10px] font-bold uppercase tracking-widest h-8 px-4">
+              Close Record
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
