@@ -43,8 +43,8 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
       const lastAttempt = data.last_attempt_at ? new Date(data.last_attempt_at) : new Date(0);
       const consecutiveFailures = data.consecutive_failures || 0;
       
-      // Trust the session if it was verified in the last 30 minutes (Local Trust)
-      const isRecentlyVerified = (Date.now() - lastUpdate.getTime()) < 30 * 60 * 1000;
+      // Trust the session if it was verified in the last 5 minutes (Local Trust)
+      const isRecentlyVerified = (Date.now() - lastUpdate.getTime()) < 5 * 60 * 1000;
 
       const cooldownMs = Math.min(consecutiveFailures * 2 * 60 * 1000, 30 * 60 * 1000); 
       if (consecutiveFailures >= 3 && (Date.now() - lastAttempt.getTime()) < cooldownMs) {

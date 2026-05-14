@@ -11,6 +11,50 @@ import { initDatabase } from '@/lib/db-init';
 
 import { decrypt } from '@/lib/auth';
 
+/**
+ * Helper to perform the actual login POST to the school portal.
+ */
+async function performPortalLogin(client: any, jar: any, userId: string, password: string, baseUrl: string) {
+  // Acquire refresh lock to ensure no other process (like background sync) tries to log in simultaneously
+  await import('@/lib/session-proxy').then(m => m.acquireRefreshLock(userId));
+
+  const initRes = await client.get(baseUrl);
+  const finalInitUrl = initRes.request.res.responseUrl || baseUrl;
+  const $init = cheerio.load(initRes.data);
+
+  const formData: any = {};
+  $init('input[type="hidden"]').each((_, el: any) => {
+    const name = $init(el).attr('name');
+    if (name) formData[name] = $init(el).val() || '';
+  });
+
+  formData.otbUserID = userId;
+  formData.otbPassword = password;
+  formData.obtnLogin = 'LOGIN';
+
+  let loginForm = $init('#Login');
+  if (loginForm.length === 0) loginForm = $init('form').first();
+  
+  const loginAction = loginForm.attr('action') || './LCC.Login.aspx';
+  const loginUrl = new URL(loginAction, finalInitUrl).toString();
+
+  const loginRes = await client.post(loginUrl, qs.stringify(formData), {
+    headers: { 
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Referer': finalInitUrl,
+      'Origin': 'https://premium.schoolista.com'
+    },
+  });
+
+  const $dashboard = cheerio.load(loginRes.data);
+  const hasLoginButton = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
+  
+  // Save session with success/failure status
+  await saveSession(userId, jar, !hasLoginButton);
+
+  return loginRes;
+}
+
 export async function POST(req: NextRequest) {
   // Ensure database is initialized
   await initDatabase().catch(e => console.error('DB Init Error:', e));
@@ -62,72 +106,25 @@ export async function POST(req: NextRequest) {
 
     const baseUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}`;
     let loginRes;
+    let $dashboard;
 
+    // --- SESSION EXECUTION ---
     if (!isNew && !isLocked) {
       loginRes = await client.get(baseUrl);
+      $dashboard = cheerio.load(loginRes.data);
+      
+      // If we got the login page instead of the dashboard, our "trusted" session is actually stale
+      const isStale = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
+      if (isStale) {
+        console.log(`[Login] Session for ${userId} is stale, attempting re-login...`);
+        loginRes = await performPortalLogin(client, jar, userId, password, baseUrl);
+        $dashboard = cheerio.load(loginRes.data);
+      }
     } else {
-      // Acquire refresh lock to ensure no other process (like background sync) tries to log in simultaneously
-      await import('@/lib/session-proxy').then(m => m.acquireRefreshLock(userId));
-
-      const initRes = await client.get(baseUrl);
-      const finalInitUrl = initRes.request.res.responseUrl || baseUrl;
-      const $init = cheerio.load(initRes.data);
-
-      const formData: any = {};
-      $init('input[type="hidden"]').each((_, el) => {
-        const name = $init(el).attr('name');
-        if (name) formData[name] = $init(el).val() || '';
-      });
-
-      formData.otbUserID = userId;
-      formData.otbPassword = password;
-      formData.obtnLogin = 'LOGIN';
-
-      let loginForm = $init('#Login');
-      if (loginForm.length === 0) loginForm = $init('form').first();
-      
-      const loginAction = loginForm.attr('action') || './LCC.Login.aspx';
-      const loginUrl = new URL(loginAction, finalInitUrl).toString();
-
-      loginRes = await client.post(loginUrl, qs.stringify(formData), {
-        headers: { 
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Referer': finalInitUrl,
-          'Origin': 'https://premium.schoolista.com'
-        },
-      });
-
-      const finalUrl = loginRes.request?.res?.responseUrl || "";
-      if (finalUrl.toLowerCase().includes('changepassword.aspx')) {
-        return NextResponse.json({
-          success: false,
-          requiresPasswordChange: true,
-          portalUrl: 'https://premium.schoolista.com/LCC/User/ChangePassword.aspx',
-          error: 'Security update required: You must change your default portal password on the official portal before continuing.'
-        }, { status: 403 });
-      }
-
-      const $dashboard = cheerio.load(loginRes.data);
-      const hasLoginButton = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
-      
-      // Save session with success/failure status
-      await saveSession(userId, jar, !hasLoginButton);
-      
-      if (hasLoginButton) {
-        const portalError = 
-          $dashboard('#lblError').text().trim() || 
-          $dashboard('#lblMessage').text().trim() || 
-          $dashboard('.error-message').text().trim() ||
-          $dashboard('.text-danger').text().trim();
-        
-        return NextResponse.json({ 
-          success: false, 
-          error: portalError || 'Invalid Student ID or Password.' 
-        }, { status: 401 });
-      }
+      loginRes = await performPortalLogin(client, jar, userId, password, baseUrl);
+      $dashboard = cheerio.load(loginRes.data);
     }
 
-    const $dashboard = cheerio.load(loginRes.data);
     const scraper = new ScraperService(client, userId);
     const syncer = new SyncService(userId);
 
