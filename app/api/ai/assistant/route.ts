@@ -122,33 +122,43 @@ export async function POST(req: NextRequest) {
     const modelId = "gemma-4-26b-a4b-it";
     console.log(`[Assistant] Initializing model: ${modelId}`);
 
-    const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const now = new Date();
+    const today = now.toLocaleString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        timeZone: 'Asia/Manila',
+        hour12: true
+    }) + ' (Philippine Standard Time)';
 
     const model = genAI.getGenerativeModel({
         model: modelId,
         systemInstruction: `You are the "LCCian Companion" for ${SCHOOL_INFO.name}. 
 Today's date is ${today}.
 Address user as ${student.name.split(' ')[0]}. 
-Be concise and helpful. Avoid repeating yourself.
-Use Markdown Tables for structured data.
-Base answers ONLY on tool data or provided context.
 
-STRICT REASONING PROTOCOL: 
+STRICT RELIABILITY RULES:
+- You MUST rely ONLY on data returned by tools, provided in the context, or what you can see in attached images.
+- NEVER make up student data, grades, balances, or schedules.
+- If a tool returns an error or no data, state clearly that you cannot find the information.
+- DO NOT assume or "hallucinate" information that isn't explicitly in the tool output or visual data.
+
+STRICT REASONING PROTOCOL:
 1. You MUST always start your response with a <thought> block.
-2. Inside <thought>...</thought>, you MUST analyze the user's intent, plan your tools calls, and draft your final response.
-3. Everything outside the <thought> tags MUST be the final, student-facing answer only.
-4. DO NOT repeat your reasoning, intent, or plan in the final answer.
-5. If you do not need to call tools, still use <thought> to plan your reply.
-
-Example:
-<thought>The user wants to know their balance. I will use get_financials.</thought>Your current balance is...
+2. Inside <thought>...</thought>, keep your planning and analysis CONCISE. Focus on tool selection, math verification, and visual analysis.
+3. Everything outside the <thought> tags MUST be the final, student-facing answer. This is where you should be DETAILED and EXPLANATORY based on ACTUAL data.
+4. DO NOT repeat your planning steps in the final answer.
 
 Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
         generationConfig: {
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 8192
         }
     });
 
@@ -178,7 +188,7 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
       ]
     }];
 
-    // Helper to map messages to Gemini parts with strict turn alternation
+    // Helper to map messages to Gemini parts with support for multimodal content
     const mapMessagesToContents = (msgs: any[]) => {
       const contents: any[] = [];
       msgs.forEach((m: any) => {
@@ -191,10 +201,28 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
         if (m.role === 'tool' || m.role === 'function') {
           parts.push({ functionResponse: { name: m.name || m.tool_call_id, response: { content: m.content } } });
         } else {
-          if (role === 'model' && content) {
+          // SANITIZATION: Remove reasoning/thought tags from history
+          if (role === 'model' && typeof content === 'string') {
             content = content.replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, '').trim();
           }
-          if (content) parts.push({ text: content });
+          
+          if (content && typeof content === 'string') {
+            parts.push({ text: content });
+          }
+
+          // Handle Image Attachments (provided as Base64 strings)
+          if (m.attachments && Array.isArray(m.attachments)) {
+            m.attachments.forEach((att: any) => {
+              if (att.data && att.mimeType) {
+                parts.push({
+                  inlineData: {
+                    data: att.data,
+                    mimeType: att.mimeType
+                  }
+                });
+              }
+            });
+          }
 
           if (m.tool_calls) {
             m.tool_calls.forEach((tc: any) => {
@@ -218,14 +246,24 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
       return new Response('No messages provided', { status: 400 });
     }
 
-    const userMessage = messages[messages.length - 1].content;
+    const lastMessage = messages[messages.length - 1];
     const contents = mapMessagesToContents(messages.slice(0, -1));
-    const lastPart = { text: userMessage };
     
+    // Construct parts for the current message (including possible images)
+    const currentParts: any[] = [];
+    if (lastMessage.content) currentParts.push({ text: lastMessage.content });
+    if (lastMessage.attachments && Array.isArray(lastMessage.attachments)) {
+      lastMessage.attachments.forEach((att: any) => {
+        if (att.data && att.mimeType) {
+          currentParts.push({ inlineData: { data: att.data, mimeType: att.mimeType } });
+        }
+      });
+    }
+
     if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
-      contents[contents.length - 1].parts.push(lastPart);
+      contents[contents.length - 1].parts.push(...currentParts);
     } else {
-      contents.push({ role: 'user', parts: [lastPart] });
+      contents.push({ role: 'user', parts: currentParts });
     }
 
     const encoder = new TextEncoder();
@@ -250,7 +288,6 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
 
         while (turnCount < maxTurns) {
           turnCount++;
-          console.log(`[Assistant] Turn ${turnCount}: Sending ${contents.length} messages to model`);
           
           const responseStream = await model.generateContentStream({
             contents,
@@ -258,15 +295,41 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
           });
 
           let modelText = "";
+          let turnThoughts = "";
           let toolCalls: any[] = [];
+          let statusSentForTurn = false;
 
           try {
             for await (const chunk of responseStream.stream) {
               const parts = chunk.candidates?.[0]?.content?.parts || [];
               for (const part of parts) {
+                if ((part as any).thought) {
+                  const thoughtText = (part as any).text || (part as any).thought;
+                  if (thoughtText && typeof thoughtText === 'string') {
+                    turnThoughts += thoughtText;
+                    
+                    // Extract first sentence as dynamic status
+                    if (!statusSentForTurn && turnThoughts.includes('.')) {
+                      const firstSentence = turnThoughts.split('.')[0].trim();
+                      if (firstSentence.length > 5) {
+                        await safeWrite(`STATUS:${firstSentence}...\n`);
+                        statusSentForTurn = true;
+                      }
+                    }
+                  }
+                  continue;
+                }
+                
                 if (part.text) {
                   modelText += part.text;
-                  await safeWrite(part.text);
+                  // If model didn't use official thought part, check if it's currently writing <thought>
+                  if (!statusSentForTurn && modelText.includes('<thought>') && modelText.includes('.')) {
+                     const match = /<thought>([^.]+)\./i.exec(modelText);
+                     if (match && match[1]) {
+                        await safeWrite(`STATUS:${match[1].trim()}...\n`);
+                        statusSentForTurn = true;
+                     }
+                  }
                 }
                 if (part.functionCall) {
                   toolCalls.push(part.functionCall);
@@ -274,27 +337,41 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
               }
             }
           } catch (chunkErr: any) {
-            console.error(`[Assistant] Chunk processing error:`, chunkErr);
-            // If we already have some text, we might be able to stop gracefully
-            if (!modelText && toolCalls.length === 0) throw chunkErr;
-            break; 
+            console.error(`[Assistant] Stream Turn Error:`, chunkErr);
           }
 
+          // Merge thoughts into modelText once at the end of the turn
+          if (turnThoughts) {
+            modelText = `<thought>${turnThoughts}</thought>` + modelText;
+          }
+
+          if (modelText) {
+             await safeWrite(modelText);
+          }
+
+          // Log the full aggregated response object for debugging
+          try {
+            const fullResponse = await responseStream.response;
+            console.log(`[Assistant] FULL RAW RESPONSE:\n${JSON.stringify(fullResponse, null, 2)}\n---`);
+          } catch (e) {
+            console.warn("[Assistant] Could not log full response (already consumed or failed)");
+          }
+
+          if (toolCalls.length === 0 && !modelText) {
+             break;
+          }
+
+          // For contents (next turns/history), only use the cleaned text without reasoning
+          const cleanText = modelText.replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, '').trim();
           const modelTurn: any = { role: 'model', parts: [] };
-          if (modelText) modelTurn.parts.push({ text: modelText });
+          if (cleanText) modelTurn.parts.push({ text: cleanText });
+          
           if (toolCalls.length > 0) {
             toolCalls.forEach(tc => modelTurn.parts.push({ functionCall: tc }));
-          }
-          
-          if (modelTurn.parts.length > 0) {
             contents.push(modelTurn);
-          }
 
-          if (toolCalls.length > 0) {
-            console.log(`[Assistant] Model requested ${toolCalls.length} tools`);
             const toolResults = await Promise.all(toolCalls.map(async (tc) => {
               const { name, args } = tc;
-              await safeWrite(`\nSTATUS:PROCESSING\nTOOL_USED: ${name}\n`);
               try {
                 const toolResult = await toolMap[name](args);
                 return { functionResponse: { name, response: { content: toolResult } } };
@@ -308,6 +385,7 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
             continue; 
           }
 
+          contents.push(modelTurn);
           break; 
         }
       } catch (err: any) {

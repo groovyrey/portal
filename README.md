@@ -1,144 +1,106 @@
-<div align="center">
-  <h1>LCCian Hub</h1>
-  <h3>The Intelligent Student Companion (Unofficial)</h3>
-  <p>
-    An unofficial student-led academic workspace for La Concepcion College. <br />
-    Refining the student experience with AI, Realtime Sync, and Modern Design.
-  </p>
+# LCC Hub - Student Portal
 
-  <p>
-    <img src="https://img.shields.io/badge/Status-Beta-blue?style=for-the-badge" alt="Status" />
-    <img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js" alt="Framework" />
-    <img src="https://img.shields.io/badge/AI-Gemma_3_&_Nemotron_3-orange?style=for-the-badge&logo=google-gemini" alt="AI" />
-    <img src="https://img.shields.io/badge/Realtime-Ably-green?style=for-the-badge&logo=ably" alt="Realtime" />
-  </p>
-</div>
+LCC Hub is a modern, AI-enhanced academic workspace designed for students of La Concepcion College (LCC). It acts as a sophisticated wrapper around the legacy "Schoolista" portal, scraping academic data and enhancing it with local caching, realtime notifications, and a Gemini-powered study assistant.
 
-<br />
-
-> **LCCian Hub** is an unofficial, student-made academic workspace that re-imagines the LCC experience. It wraps the legacy ASP.NET "Schoolista" portal in a modern, responsive, and AI-enhanced interface. It is an independent project and is NOT affiliated with, authorized, or endorsed by La Concepcion College.
-
----
+> [!IMPORTANT]
+> **LCC Hub** is an unofficial, student-led project. It is not affiliated with, authorized, or endorsed by La Concepcion College.
 
 ## 🚀 Key Features
 
-| Feature | Description |
-| :--- | :--- |
-| **🎓 Student Dashboard** | Instant access to grades, schedules, and financials in a unified, **mobile-first** interface built with Tailwind CSS v4. Widgets include **Grade Stats**, **Financial Summary**, **Schedule Table**, and **Upcoming Holidays**. |
-| **🤖 Portal Assistant** | A specialized ReAct agent powered by **Gemma 3 27B**. It possesses a deep understanding of student records and can perform complex math, web searches, and YouTube lookups. |
-| **🎨 AI Architect** | A secondary agent powered by **Nvidia Nemotron 3 120B**. It generates interactive **2D visualizations**, **Dynamic Charts**, and **GSAP animations** on demand to visualize academic concepts. |
-| **⚡ Realtime Sync** | Powered by **Ably**, providing instant notifications for grades and announcements. The **Local-First** strategy with **Turso (LibSQL)** ensures data is always available, even when the legacy portal is offline. |
-| **🏆 Badge System** | Gamified academic tracking. The system automatically awards badges (e.g., **'Perfect Grade'** for 1.00 GPAs) during data synchronization. |
-| **🛡️ Secure & Private** | **AES-256-CBC** encryption for session data. No passwords are ever stored. Granular privacy controls for AI data access. |
+- **🎓 Unified Dashboard:** Mobile-first interface built with Tailwind CSS v4, providing instant access to grades, schedules, and financials.
+- **🤖 Gemini-Powered Assistant:** A specialized ReAct agent with access to student records, capable of performing complex math (Python), web searches, and research.
+- **⚡ Realtime Synchronization:** Powered by **Ably**, ensuring instant updates for grades and school announcements.
+- **💾 Offline Resilience:** A "Local-First" strategy using **Turso (LibSQL)** allows access to academic records even when the official portal is offline.
+- **🏆 Academic Gamification:** A badge system that automatically tracks and awards achievements based on academic performance.
+- **🛡️ Secure Session Management:** AES-256-CBC encryption for session tokens with no permanent storage of user passwords.
+
+## 🛠️ Technical Architecture
+
+### Frontend
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router, React 19)
+- **State Management:** [TanStack Query v5](https://tanstack.com/query/latest) for server state; [Zustand](https://zustand-demo.pmnd.rs/) for global UI state.
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/), and [Lucide React](https://lucide.dev/).
+- **Charts:** [Recharts](https://recharts.org/) for academic data visualization.
+
+### Backend
+- **Runtime:** Next.js Server Actions & API Routes (Node.js).
+- **Database:** [Turso (LibSQL)](https://turso.tech/) for edge-optimized data storage.
+- **Realtime:** [Ably](https://ably.com/) for pub/sub messaging and notifications.
+- **Scraping:** [Cheerio](https://cheerio.js.org/) and [Axios](https://axios-http.com/) with cookie jar support for legacy portal integration.
+
+### AI & Intelligence
+- **Orchestration:** [LangChain](https://js.langchain.com/) for agentic workflows.
+- **Main Model:** [Google Gemini](https://aistudio.google.com/) (`gemma-4-26b-a4b-it`).
+- **Code Execution:** [Vercel Sandbox](https://vercel.com/docs/functions/serverless-functions/runtime#sandbox) for secure Python 3.13 math execution.
+- **Speech:** [Deepgram](https://www.deepgram.com/) for low-latency Speech-to-Text (STT) and Text-to-Speech (TTS).
+
+## 📂 Project Structure
+
+```
+/
+├── app/                    # Next.js App Router (Pages & API)
+│   ├── api/                # Backend API endpoints (AI, Student, Auth)
+│   └── (routes)/           # UI Pages (Dashboard, Grades, Settings)
+├── components/             # React Components
+│   ├── dashboard/          # Academic widgets (Grades, Schedule, etc.)
+│   ├── layout/             # App shell (Navbar, Sidebar)
+│   └── shared/             # Reusable UI primitives
+├── lib/                    # Business Logic & Core Services
+│   ├── scraper-service.ts  # Legacy portal scraping logic
+│   ├── sync-service.ts     # Data synchronization engine
+│   ├── turso.ts            # LibSQL client configuration
+│   └── auth.ts             # Encryption & Session management
+├── public/                 # Static assets & documentation
+└── types/                  # TypeScript interface definitions
+```
+
+## ⚙️ Development Setup
+
+### Prerequisites
+- Node.js 20+
+- Turso CLI (for local DB testing)
+- API Keys for: Gemini, Ably, Deepgram, and Vercel Sandbox.
+
+### Environment Configuration
+Create a `.env.local` file based on `.env.example`:
+
+```bash
+# Core
+SESSION_SECRET=your_32_byte_hex_string
+TURSO_DATABASE_URL=your_turso_url
+TURSO_AUTH_TOKEN=your_turso_token
+
+# AI & Services
+GEMINI_API_KEY=your_gemini_key
+ABLY_API_KEY=your_ably_key
+DEEPGRAM_API_KEY=your_deepgram_key
+VERCEL_PROJECT_ID=your_vercel_project_id
+```
+
+### Installation
+```bash
+npm install
+npm run dev
+```
+
+## 📜 Technical Implementation Notes
+
+### Authentication & Scraping
+The system uses a custom session proxy (`lib/session-proxy.ts`) to manage persistent connections to the Schoolista portal. It extracts `__VIEWSTATE` and `__EVENTVALIDATION` tokens to simulate a browser session, allowing for secure data extraction without storing passwords in plain text.
+
+### AI Tool Suite
+The Portal Assistant is equipped with several tools:
+- `execute_math`: Runs Python code in a secure sandbox with support for `numpy`, `pandas`, and `sympy`.
+- `get_grades` / `get_schedule`: Direct access to the cached Turso data.
+- `web_search` / `youtube_search`: Real-time external research capabilities.
+
+### Data Strategy
+LCC Hub uses a "Stale-While-Revalidate" approach. Data is immediately served from the local Turso cache for sub-second load times, while a background sync (`SyncService`) fetches fresh data from the legacy portal and updates the cache.
 
 ---
-
-## 🗺️ Portal Guide
-
-### 📚 Academic Core
-
-<details>
-<summary><strong>Dashboard & Grades</strong></summary>
-
-*   **Unified Dashboard:** View your next class, recent grades, and financial summary at a glance. Includes a **Dashboard Insights** widget for AI-driven academic advice.
-*   **Smart Gradebook:** View grades from all semesters with automatic **Weighted GPA Calculation**.
-*   **Downloadable Reports:** Access official report cards and academic records directly from the system.
-</details>
-
-<details>
-<summary><strong>Schedule</strong></summary>
-
-*   **Interactive Schedule:** Weekly calendar view with conflict detection and room/instructor details. Supports daily and weekly views via AI.
-*   **EAF Access:** View and download your official Enrollment Assessment Form (EAF).
-</details>
-
-### 💼 Financial & Admin
-
-<details>
-<summary><strong>Accounts & Ledger</strong></summary>
-
-*   **Realtime Ledger:** View outstanding balance, payment history, and official receipts.
-*   **Assessment Breakdown:** Detailed view of tuition, miscellaneous, and lab fees.
-*   **Installment Tracker:** Track payments for Prelims, Midterms, and Finals with "Due Today" alerts.
-</details>
-
-<details>
-<summary><strong>Settings & Profile</strong></summary>
-
-*   **Security:** Manage active sessions and security settings.
-*   **Privacy Controls:** Toggle "Academic Context Awareness" to control AI access to your personal records.
-*   **Assistant Preferences:** Customize AI behavior, including "Save History" and "Auto-Speak" features.
-</details>
-
----
-
-## 🧠 Schoolista AI Deep Dive
-
-The **Portal Assistant** is a multi-agent system designed to act as a proactive academic advisor.
-
-### 1. The Orchestrator (Google Gemma 3 27B)
-The main persona handles conversation flow, context understanding, and tool delegation.
-*   **Strict Operational Rules:** Mandates **LaTeX** for math, structured narrative responses, and forbids hallucinations.
-*   **Context Injection:** Securely accesses student profile, grades, and schedule if "Context Awareness" is enabled.
-
-### 2. The Computational Engine (Python Sandbox)
-For math and data analysis, the assistant executes **Python 3.13** code in a secure **Vercel Sandbox**.
-*   **Libraries:** `numpy`, `pandas`, `scipy`, `sympy`, `scikit-learn`, `networkx`, `statsmodels`, `matplotlib`.
-*   **Capabilities:** Symbolic math, statistical analysis of grades, and complex model simulations.
-
-### 3. The Visualization Architect (Cloudflare Workers AI)
-Delegates to a specialized **"Visualizer"** agent (powered by `Nvidia Nemotron 3 120B`) to generate raw HTML/JS payloads.
-*   **Interactive Demos:** 2D Visualizations, Interactive Charts (`Chart.js`), and SVG Animations.
-
-*   **Responsiveness:** All generated visualizations are designed to be fully responsive and mobile-friendly.
-
-### 4. Knowledge & Voice
-*   **Real-time Tools:** Web search, YouTube lookup, and direct URL fetching for research.
-*   **LCC Knowledge Base:** Deep knowledge of LCC's Vision, Mission, Grading System, and Procedures.
-*   **Voice Suite:** Powered by **Deepgram Nova-3** (STT) and **Aura** (TTS) for natural, low-latency voice interactions.
-
----
-
-## 🔄 Synchronization & Data Strategy
-
-LCC Hub uses a robust **"Stale-While-Revalidate"** strategy to ensure offline resilience.
-
-1.  **Turso Database Architecture:**
-    *   **Turso (LibSQL):** Edge-optimized SQL store for student profiles, grades, schedules, settings, and logs.
-2.  **Smart Sync:**
-    *   **Trigger:** Runs on login, manual refresh, or background interval.
-    *   **Scope:** Synchronizes Student Info, Schedule, Financials, and Grades from the legacy portal.
-    *   **Offline-First:** Immediate rendering from `localStorage` followed by background freshness updates via React Query.
-
----
-
-## 🏗️ Technical Stack
-
-| Layer | Technology | Usage |
-| :--- | :--- | :--- |
-| **Frontend** | [Next.js 16](https://nextjs.org/) | App Router, React 19, Tailwind CSS v4 |
-| **State** | **React Query** | Server state management and background syncing |
-| **Database** | **Turso (LibSQL)** | Edge-optimized relational data strategy |
-| **Realtime** | **Ably** | Global Pub/Sub for instant notifications |
-| **AI Core** | **Gemma 3 27B** | LLM orchestration via LangChain |
-| **Sandbox** | **Vercel Sandbox** | Secure Python 3.13 code execution |
-| **Speech** | **Deepgram** | STT (Nova-3) and TTS (Aura) |
-
----
-
-## 📜 Documentation & Manual
-
-The **LCC Hub Manual** is a modernized documentation system built directly into the portal.
-*   **Interactive TOC:** Automatically generated from markdown headers.
-*   **Glassmorphism Design:** Aligned with the overall application aesthetic.
-*   **Proactive Search:** Built-in table of contents for quick navigation.
-*   **Rich Content:** Support for Markdown, LaTeX, and custom notification callouts.
-
----
-
 <div align="center">
   <p>
-    <sub>© 2026 LCC Hub Project. Created for the La Concepcion College Community.</sub><br />
-    <sub>Not officially affiliated with the LCC IT Department's legacy system providers.</sub>
+    <sub>© 2026 LCC Hub Project.</sub><br />
+    <sub>Built for the La Concepcion College Community.</sub>
   </p>
 </div>
