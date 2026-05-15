@@ -147,6 +147,7 @@ export interface Student {
   address?: string;
   mobile?: string;
   enrollment_date?: string;
+  schoolYear?: string;
   yearLevel?: string;
   semester?: string;
   section?: string;

@@ -157,11 +157,15 @@ export default function DailyGreeting({ student }: { student: Student }) {
                   Good {timeOfDay},
                 </p>
                 <h2 className="text-2xl font-bold tracking-tight mt-1">{firstName}</h2>
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5 line-clamp-1">
+                  {student.course}
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
               <span className="px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground">Year {student.yearLevel || '?'}</span>
               <span className="px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground">{student.semester || '?'}</span>
+              <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">{student.schoolYear || '?'}</span>
             </div>
           </div>
 

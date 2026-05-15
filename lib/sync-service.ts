@@ -29,11 +29,12 @@ export class SyncService {
 
     const now = new Date().toISOString();
     await query(`
-      INSERT INTO students (id, name, course, email, year_level, semester, available_reports, address, mobile, enrollment_date, settings, badges, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO students (id, name, course, school_year, email, year_level, semester, available_reports, address, mobile, enrollment_date, settings, badges, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         course = excluded.course,
+        school_year = excluded.school_year,
         email = excluded.email,
         year_level = excluded.year_level,
         semester = excluded.semester,
@@ -48,6 +49,7 @@ export class SyncService {
       this.userId, 
       info.name || null, 
       info.course || null, 
+      info.schoolYear || null,
       info.email || null, 
       info.yearLevel || null, 
       info.semester || null,
@@ -157,14 +159,14 @@ export class SyncService {
   }
 
   async syncSchedule(items: ScrapedScheduleItem[]) {
-    if (items && items.length > 0) {
-      await query(`
-        INSERT INTO schedules (id, student_id, items)
-        VALUES (?, ?, ?)
-        ON CONFLICT(id) DO UPDATE SET
-          items = excluded.items
-      `, [this.userId, this.userId, JSON.stringify(items)]);
-    }
+    // We always update, even if empty, to ensure the local cache
+    // reflects the portal's current state (e.g. if a student drops a course)
+    await query(`
+      INSERT INTO schedules (id, student_id, items)
+      VALUES (?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        items = excluded.items
+    `, [this.userId, this.userId, JSON.stringify(items || [])]);
   }
 
   async performFullSync(scraper: ScraperService, dashboard$: cheerio.CheerioAPI, periodCode: string, dashboardUrl: string, rawDashboardHtml?: string) {

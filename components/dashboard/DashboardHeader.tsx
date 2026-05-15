@@ -62,6 +62,11 @@ export default function DashboardHeader({ student }: DashboardHeaderProps) {
 
             <div className="flex flex-wrap items-center justify-center sm:justify-start lg:justify-end gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 border-border">
               <StatItem 
+                label="School Year" 
+                value={student.schoolYear || '?'} 
+                icon={<Calendar className="h-4 w-4" />} 
+              />
+              <StatItem 
                 label="Year Level" 
                 value={student.yearLevel || '?'} 
                 icon={<Calendar className="h-4 w-4" />} 

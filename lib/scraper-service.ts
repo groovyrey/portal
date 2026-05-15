@@ -2,12 +2,12 @@ import * as cheerio from 'cheerio';
 import { AxiosInstance } from 'axios';
 import qs from 'querystring';
 import { PORTAL_BASE, ORIGIN } from './constants';
-import { aiExtract } from './ai-scraper';
 
 export interface ScrapedStudentInfo {
   name: string;
   studentId?: string;
   course: string;
+  schoolYear: string;
   yearLevel: string;
   section?: string;
   status?: string;
@@ -233,13 +233,6 @@ export class ScraperService {
   async parseStudentInfo($dashboard: cheerio.CheerioAPI, $eaf: cheerio.CheerioAPI, rawDashboardHtml?: string, rawEafHtml?: string): Promise<ScrapedStudentInfo> {
     if (!$dashboard || !$eaf) {
        console.error('[Scraper] Missing Cheerio instances for student info parsing.');
-       if (rawDashboardHtml || rawEafHtml) {
-           if (this.isLoginPage(rawDashboardHtml || "") || this.isLoginPage(rawEafHtml || "")) {
-               throw new Error('Could not parse student info: Session expired');
-           }
-           const aiData = await aiExtract((rawDashboardHtml || "") + (rawEafHtml || ""), 'student_info', this.userId);
-           if (aiData) return { ...aiData, periodCode: "", dashboardUrl: "" };
-       }
        throw new Error('Could not parse student info: Missing data');
     }
     const pageText = $dashboard('body').text().replace(/\s+/g, ' ');
@@ -251,11 +244,7 @@ export class ScraperService {
       $dashboard('#lblName').text().trim();
 
     if (!studentName && (rawDashboardHtml || rawEafHtml)) {
-        const aiData = await aiExtract((rawDashboardHtml || "") + (rawEafHtml || ""), 'student_info', this.userId);
-        if (aiData && aiData.name) {
-            console.log(`[Scraper] AI Repair: Successfully recovered student info.`);
-            return { ...aiData, periodCode: "", dashboardUrl: "" };
-        }
+        console.warn(`[Scraper] Student name not found in dashboard or EAF.`);
     }
 
     if (!studentName || studentName.length < 3) {
@@ -279,16 +268,20 @@ export class ScraperService {
     
     const email = $eaf('#fldEMail').text().trim() || pageText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i)?.[0] || "";
     const address = `${$eaf('#fldAddress').text().trim()}, ${$eaf('#fldBrgy').text().trim()}, ${$eaf('#fldCity').text().trim()}`;
-    const mobile = $eaf('#fldMobile').text().trim();
     const enrollmentDate = $eaf('#fldEnrolDate').text().trim();
 
+    const periodText = $eaf('#fldPrdDesc').text().trim();
+    const schoolYearMatch = periodText.match(/School Year (\d{4}-\d{4})/i) || periodText.match(/(\d{4}-\d{4})/);
+    const schoolYear = schoolYearMatch ? schoolYearMatch[1] : (periodText.split(',')[1]?.trim() || "Not specified");
+
     const yearLevel = $eaf('#fldLevelDesc').text().trim() || "Not specified";
-    const semester = $eaf('#fldPrdDesc').text().trim().split(',')[0].trim() || "Not specified";
+    const semester = periodText.split(',')[0].trim() || "Not specified";
 
     return {
       name: studentName,
       studentId: $eaf('#fldStuID').text().trim() || this.userId,
       course,
+      schoolYear,
       yearLevel,
       section: $eaf('#fldSecCode').text().trim(),
       status: $eaf('#fldPrdStat').text().trim(),
@@ -300,7 +293,7 @@ export class ScraperService {
       nationality: $eaf('#fldNationality').text().trim(),
       civilStatus: $eaf('#fldMStat').text().trim(),
       totalUnits: $eaf('#fldTUnits').text().trim(),
-      period: $eaf('#fldPrdDesc').text().trim(),
+      period: periodText,
       semester,
       periodCode: "",
       dashboardUrl: ""
@@ -331,12 +324,7 @@ export class ScraperService {
 
     if (schedule.length === 0 && rawHtml) {
         if (this.isLoginPage(rawHtml)) return [];
-        console.log(`[Scraper] parseSchedule: Manual extraction found 0 items. Triggering AI fallback...`);
-        const aiData = await aiExtract(rawHtml, 'schedule', this.userId);
-        if (Array.isArray(aiData) && aiData.length > 0) {
-            console.log(`[Scraper] parseSchedule: AI fallback successfully recovered ${aiData.length} items.`);
-            return aiData;
-        }
+        console.log(`[Scraper] parseSchedule: Manual extraction found 0 items.`);
     }
     return schedule;
   }
@@ -380,12 +368,7 @@ export class ScraperService {
 
     if ((totalBalance === "---" || totalBalance === "₱") && rawHtml) {
         if (this.isLoginPage(rawHtml)) return { total: "---", balance: "---", installments: [], assessment: [] } as any;
-        console.log(`[Scraper] parseFinancials: Manual extraction failed (Balance: ${totalBalance}). Triggering AI fallback...`);
-        const aiData = await aiExtract(rawHtml, 'financials', this.userId);
-        if (aiData && aiData.balance && aiData.balance !== "---") {
-            console.log(`[Scraper] parseFinancials: AI fallback successfully recovered financial data.`);
-            return aiData;
-        }
+        console.log(`[Scraper] parseFinancials: Manual extraction failed (Balance: ${totalBalance}).`);
     }
 
     return { 
@@ -608,7 +591,7 @@ export class ScraperService {
 
     if (subjects.length === 0 && rawHtml) {
         if (this.isLoginPage(rawHtml)) {
-            console.warn(`[Scraper] parseReportCard: Session expired, skipping AI repair.`);
+            console.warn(`[Scraper] parseReportCard: Session expired, skipping repair.`);
             return [];
         }
 
@@ -621,12 +604,7 @@ export class ScraperService {
             return [];
         }
 
-        console.log(`[Scraper] parseReportCard: Manual extraction found 0 items (sCount: ${sCountText}). Triggering AI fallback...`);
-        const aiData = await aiExtract(rawHtml, 'grades', this.userId);
-        if (Array.isArray(aiData) && aiData.length > 0) {
-            console.log(`[Scraper] parseReportCard: AI fallback successfully recovered ${aiData.length} grades.`);
-            return aiData;
-        }
+        console.log(`[Scraper] parseReportCard: Manual extraction found 0 items (sCount: ${sCountText}).`);
     }
 
     const seen = new Set();

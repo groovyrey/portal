@@ -36,6 +36,7 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
   const details = [
     { label: 'Full Name', value: student.name, icon: User, visible: true },
     { label: 'Degree / Course', value: student.course, icon: GraduationCap, visible: showAcademic },
+    { label: 'School Year', value: student.schoolYear, icon: Calendar, visible: showAcademic },
     { label: 'Year & Semester', value: student.yearLevel && student.semester ? `${student.yearLevel} / ${student.semester}` : null, icon: Calendar, visible: showAcademic },
     { label: 'Email Address', value: student.email, icon: Mail, visible: !isPublic },
     { label: 'Mobile Number', value: student.mobile, icon: Phone, visible: !isPublic },

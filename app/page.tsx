@@ -128,7 +128,8 @@ export default function Home() {
       sidebarFooter={
         <div className="p-4 rounded-xl bg-background border border-border">
           <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Signed in as</p>
-          <p className="text-sm font-semibold break-words text-foreground">{student.name}</p>
+          <p className="text-sm font-semibold break-words text-foreground mb-1">{student.name}</p>
+          <p className="text-[10px] font-medium text-muted-foreground line-clamp-2">{student.course}</p>
         </div>
       }
     >
