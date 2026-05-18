@@ -9,8 +9,6 @@ import {
   Lock,
   MessageSquare,
   Trash2,
-  BrainCircuit,
-  Circle,
   XCircle,
   ShieldCheck
 } from 'lucide-react';
@@ -42,7 +40,6 @@ function ProfileContent() {
 
   const memberStatus = profileId ? onlineMembers.get(profileId) : null;
   const isOnline = !!memberStatus;
-  const isStudying = !!memberStatus?.isStudying;
 
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
@@ -242,11 +239,6 @@ function ProfileContent() {
                     <span className={cn("h-1.5 w-1.5 rounded-full", isOnline ? "bg-emerald-500" : "bg-muted-foreground/30")} />
                     {isOnline ? 'Online' : 'Offline'}
                   </div>
-                  {isStudying && (
-                    <Badge variant="default" className="bg-primary animate-pulse text-[8px] h-4">
-                      Studying
-                    </Badge>
-                  )}
                 </div>
               </div>
 

@@ -1,17 +1,15 @@
 'use client';
 
+import React, { useState } from 'react';
 import { Student } from '@/types';
 import { 
-  Mail, 
-  ShieldCheck,
-  Hash,
+  User,
   GraduationCap,
   Calendar,
+  Mail,
   Phone,
   MapPin,
-  User,
-  BookOpen,
-  BrainCircuit
+  ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
@@ -28,7 +26,6 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
   const showAcademic = !isPublic || (student.settings?.showAcademicInfo ?? true);
 
   const memberStatus = onlineMembers.get(student.id);
-  const isStudying = memberStatus?.isStudying;
 
   // Use DiceBear lorelei avatar based on student ID (clean and modern)
   const avatarUrl = `https://api.dicebear.com/7.x/lorelei/svg?seed=${student.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`;
@@ -43,17 +40,8 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
     { label: 'Address', value: student.address, icon: MapPin, visible: !isPublic },
   ].filter(d => d.visible && d.value);
 
-  const initials = student.parsedName 
-    ? (student.parsedName.firstName[0] + (student.parsedName.lastName[0] || '')).toUpperCase()
-    : student.name
-        .split(' ')
-        .map(n => n[0])
-        .join('')
-        .substring(0, 2)
-        .toUpperCase();
-
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm"
@@ -61,76 +49,57 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
       <div className="p-6">
         <div className="flex items-center gap-4 mb-8">
           <div className="relative h-14 w-14 rounded-2xl bg-secondary/50 overflow-hidden border border-primary/20 shadow-sm flex items-center justify-center">
-            <Image 
-              src={avatarUrl} 
+            <Image
+              src={avatarUrl}
               alt={`${student.name}'s avatar`}
               width={56}
               height={56}
               className="object-cover"
               unoptimized
             />
-            {isStudying && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="absolute inset-0 bg-primary/20 backdrop-blur-[1px] flex items-center justify-center"
-              >
-                <BrainCircuit className="h-6 w-6 text-primary animate-pulse" />
-              </motion.div>
-            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
               <h3 className="text-base font-black text-foreground uppercase tracking-tight truncate">Academic Profile</h3>
-              <AnimatePresence>
-                {isStudying && (
-                  <motion.span
-                    initial={{ opacity: 0, x: -5 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 5 }}
-                    className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-[8px] font-black text-primary uppercase tracking-widest animate-pulse border border-primary/20"
-                  >
-                    Studying
-                  </motion.span>
-                )}
-              </AnimatePresence>
             </div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">{student.course}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-5">
+        <div className="grid gap-6">
           {details.map((detail, idx) => (
-            <div key={idx} className="flex items-start gap-4 group">
-              <div className="mt-0.5 p-2 rounded-lg bg-accent text-muted-foreground group-hover:text-primary group-hover:bg-primary/5 transition-all border border-border">
-                <detail.icon className="h-3.5 w-3.5" />
+            <div key={idx} className="flex items-start gap-4">
+              <div className="p-2 rounded-xl bg-muted/50 text-muted-foreground shrink-0 border border-border/50">
+                <detail.icon className="h-4 w-4" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.15em] mb-1">{detail.label}</p>
-                <p className="text-sm font-bold text-foreground break-words leading-tight">{detail.value}</p>
+              <div className="space-y-1 min-w-0">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{detail.label}</p>
+                <p className="text-sm font-semibold text-foreground truncate break-words">
+                  {detail.value}
+                </p>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-8 pt-6 border-t border-border/50">
-          <div className="flex items-center justify-between p-3 bg-accent/30 rounded-xl border border-border/50">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-card flex items-center justify-center border border-border shadow-sm">
-                <Hash className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-[8px] font-black text-blue-500/70 dark:text-blue-400/80 uppercase tracking-[0.2em] leading-none mb-1">Student Identifier</p>
-                <p className="text-sm font-mono font-bold text-foreground leading-none">{student.id}</p>
-              </div>
+        {student.badges && student.badges.length > 0 && (
+          <div className="mt-8 pt-8 border-t border-border/50">
+            <div className="flex items-center gap-2 mb-4 px-1">
+              <ShieldCheck className="h-3 w-3 text-primary" />
+              <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Digital Credentials</h4>
             </div>
-            {student.settings?.isPublic && (
-              <div className="p-1.5 bg-emerald-500/10 rounded-lg" title="Profile is public">
-                <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              </div>
-            )}
+            <div className="flex flex-wrap gap-2">
+              {student.badges.map((badgeId) => (
+                <div 
+                  key={badgeId}
+                  className="px-2.5 py-1 rounded-lg bg-muted border border-border text-[10px] font-bold text-foreground"
+                >
+                  {badgeId.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </motion.div>
   );

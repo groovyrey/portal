@@ -231,60 +231,6 @@ export async function migrateActivityLogs() {
   }
 }
 
-export async function migrateStudentStats() {
-  try {
-    await migratePortalTables();
-
-    await query(`
-      CREATE TABLE IF NOT EXISTS student_stats (
-        user_id TEXT PRIMARY KEY REFERENCES students(id) ON DELETE CASCADE,
-        level INTEGER DEFAULT 1,
-        exp INTEGER DEFAULT 0,
-        total_quests INTEGER DEFAULT 0,
-        total_score INTEGER DEFAULT 0,
-        last_quest_at TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    await query(`CREATE INDEX IF NOT EXISTS idx_stats_exp ON student_stats(exp DESC);`);
-  } catch (error) {
-    console.error("Migration Error (Student Stats):", error);
-    throw error;
-  }
-}
-
-export async function migrateDailyQuests() {
-  try {
-    await migratePortalTables();
-
-    await query(`
-      CREATE TABLE IF NOT EXISTS daily_quests (
-        user_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-        quest_date TEXT NOT NULL,
-        category TEXT NOT NULL,
-        questions TEXT NOT NULL, -- JSON string of questions
-        difficulty TEXT DEFAULT 'medium',
-        current_index INTEGER DEFAULT 0,
-        score INTEGER DEFAULT 0,
-        is_completed INTEGER DEFAULT 0,
-        stats_updated INTEGER DEFAULT 0,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (user_id, category)
-      );
-    `);
-
-    try {
-      await query(`ALTER TABLE daily_quests ADD COLUMN difficulty TEXT DEFAULT 'medium';`);
-    } catch (e) {}
-
-    await query(`CREATE INDEX IF NOT EXISTS idx_daily_quests_user_cat ON daily_quests(user_id, category);`);   
-  } catch (error) {
-    console.error("Migration Error (Daily Quests):", error);
-    throw error;
-  }
-}
-
 export async function migrateIncidentReports() {
   try {
     await query(`

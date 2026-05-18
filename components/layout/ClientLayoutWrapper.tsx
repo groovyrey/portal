@@ -10,8 +10,6 @@ export default function ClientLayoutWrapper({ children }: { children: React.Reac
   const [isRestricted, setIsRestricted] = useState(false);
   const pathname = usePathname();
 
-  const isStudyMode = pathname === '/study-mode';
-
   useEffect(() => {
     // Check if the restricted cookie exists
     const checkRestricted = () => {
@@ -25,14 +23,6 @@ export default function ClientLayoutWrapper({ children }: { children: React.Reac
     const interval = setInterval(checkRestricted, 60000);
     return () => clearInterval(interval);
   }, [pathname]);
-
-  if (isStudyMode) {
-    return (
-      <main className="flex-1">
-        {children}
-      </main>
-    );
-  }
 
   return (
     <>

@@ -3,8 +3,6 @@ import {
   migrateCommunity, 
   migrateNotifications, 
   migrateActivityLogs,
-  migrateStudentStats,
-  migrateDailyQuests,
   migrateIncidentReports
 } from '@/lib/db-migrate';
 
@@ -19,8 +17,6 @@ export async function GET(req: NextRequest) {
     await migrateCommunity();
     await migrateNotifications();
     await migrateActivityLogs();
-    await migrateStudentStats();
-    await migrateDailyQuests();
     await migrateIncidentReports();
 
     return NextResponse.json({ message: 'Migrations completed successfully' });

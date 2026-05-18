@@ -3,8 +3,6 @@ import {
   migrateCommunity, 
   migrateNotifications, 
   migrateActivityLogs, 
-  migrateStudentStats, 
-  migrateDailyQuests,
   migrateIncidentReports,
   migrateAdminLogs,
   migrateCronRuns
@@ -22,8 +20,6 @@ export async function initDatabase() {
       await migrateCommunity();
       await migrateNotifications();
       await migrateActivityLogs();
-      await migrateStudentStats();
-      await migrateDailyQuests();
       await migrateIncidentReports();
       await migrateAdminLogs();
       await migrateCronRuns();

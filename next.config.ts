@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['react-icons'],
   allowedDevOrigins: ['192.168.100.81'],
   images: {
     remotePatterns: [

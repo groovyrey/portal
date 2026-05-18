@@ -18,7 +18,7 @@ LCC Hub is a modern, AI-enhanced academic workspace designed for students of La 
 
 ### Frontend
 - **Framework:** [Next.js 16](https://nextjs.org/) (App Router, React 19)
-- **State Management:** [TanStack Query v5](https://tanstack.com/query/latest) for server state; [Zustand](https://zustand-demo.pmnd.rs/) for global UI state.
+- **State Management:** [TanStack Query v5](https://tanstack.com/query/latest) for server state; Context API for global UI state.
 - **Styling:** [Tailwind CSS v4](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/), and [Lucide React](https://lucide.dev/).
 - **Charts:** [Recharts](https://recharts.org/) for academic data visualization.
 

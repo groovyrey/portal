@@ -22,13 +22,10 @@ import {
   Settings,
   Info,
   BrainCircuit,
-  DatabaseZap,
   RefreshCw,
   Bell,
   LayoutGrid,
-  ShieldCheck,
-  Monitor,
-  Trophy
+  ShieldCheck
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ThemeToggle } from '../shared/ThemeToggle';
@@ -67,11 +64,9 @@ export default function Navbar() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isPortalOpen, setIsPortalOpen] = useState(false);
-  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const [isSocialOpen, setIsSocialOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isPortalExpanded, setIsPortalExpanded] = useState(true);
-  const [isWorkspaceExpanded, setIsWorkspaceExpanded] = useState(true);
   const [isSocialExpanded, setIsSocialExpanded] = useState(true);
   const [isAdminExpanded, setIsAdminExpanded] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -195,15 +190,14 @@ export default function Navbar() {
     const handleClickOutside = () => {
       setIsMoreOpen(false);
       setIsPortalOpen(false);
-      setIsWorkspaceOpen(false);
       setIsSocialOpen(false);
       setIsAdminOpen(false);
     };
-    if (isMoreOpen || isPortalOpen || isWorkspaceOpen || isSocialOpen || isAdminOpen) {
+    if (isMoreOpen || isPortalOpen || isSocialOpen || isAdminOpen) {
       window.addEventListener('click', handleClickOutside);
     }
     return () => window.removeEventListener('click', handleClickOutside);
-  }, [isMoreOpen, isPortalOpen, isWorkspaceOpen, isSocialOpen, isAdminOpen]);
+  }, [isMoreOpen, isPortalOpen, isSocialOpen, isAdminOpen]);
 
   // Disable body scroll when mobile menu is open
   useEffect(() => {
@@ -229,11 +223,6 @@ export default function Navbar() {
     { name: 'EAF', href: '/eaf', icon: FileText },
   ];
 
-  const workspaceLinks: NavLeaf[] = [
-    { name: 'Study Mode', href: '/study-mode', icon: Monitor, desc: 'Study Room' },
-    { name: 'Quests', href: '/quests', icon: Trophy, desc: 'Daily Tasks' },
-  ];
-
   const socialLinks: NavLeaf[] = [
     { name: 'Profile', href: studentId ? `/student/${studentId}` : '/student', icon: UserIcon },
     { name: 'Community', href: '/community', icon: MessageSquare },
@@ -249,7 +238,6 @@ export default function Navbar() {
 
   const authLinks: NavItem[] = [
     { name: 'Portal', icon: LayoutDashboard, children: portalLinks },
-    { name: 'Workspace', icon: Monitor, children: workspaceLinks },
     { name: 'Social', icon: Users, children: socialLinks },
     ...staffAdminGroup,
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
@@ -260,7 +248,6 @@ export default function Navbar() {
   // For desktop view: show a few primary links and the rest in "More"
   const desktopPrimary: NavGroup[] = isLoggedIn ? [
     { name: 'Portal', icon: LayoutDashboard, children: portalLinks },
-    { name: 'Workspace', icon: DatabaseZap, children: workspaceLinks },
     { name: 'Social', icon: Users, children: socialLinks },
     ...staffAdminGroup,
   ] : [];
@@ -303,7 +290,7 @@ export default function Navbar() {
                 const Icon = link.icon;
                 
                 if (isNavGroup(link)) {
-                  const isDropdownOpen = link.name === 'Portal' ? isPortalOpen : link.name === 'Workspace' ? isWorkspaceOpen : link.name === 'Social' ? isSocialOpen : isAdminOpen;
+                  const isDropdownOpen = link.name === 'Portal' ? isPortalOpen : link.name === 'Social' ? isSocialOpen : isAdminOpen;
                   
                   return (
                     <div key={link.name} className="relative">
@@ -312,23 +299,15 @@ export default function Navbar() {
                           e.stopPropagation();
                           if (link.name === 'Portal') {
                             setIsPortalOpen(!isPortalOpen);
-                            setIsWorkspaceOpen(false);
-                            setIsSocialOpen(false);
-                            setIsAdminOpen(false);
-                          } else if (link.name === 'Workspace') {
-                            setIsWorkspaceOpen(!isWorkspaceOpen);
-                            setIsPortalOpen(false);
                             setIsSocialOpen(false);
                             setIsAdminOpen(false);
                           } else if (link.name === 'Social') {
                             setIsSocialOpen(!isSocialOpen);
                             setIsPortalOpen(false);
-                            setIsWorkspaceOpen(false);
                             setIsAdminOpen(false);
                           } else if (link.name === 'Admin') {
                             setIsAdminOpen(!isAdminOpen);
                             setIsPortalOpen(false);
-                            setIsWorkspaceOpen(false);
                             setIsSocialOpen(false);
                           }
                           setIsMoreOpen(false);
@@ -534,8 +513,8 @@ export default function Navbar() {
               const Icon = link.icon;
               
               if (isNavGroup(link)) {
-                const isExpanded = link.name === 'Portal' ? isPortalExpanded : link.name === 'Workspace' ? isWorkspaceExpanded : link.name === 'Social' ? isSocialExpanded : isAdminExpanded;
-                const setIsExpanded = link.name === 'Portal' ? setIsPortalExpanded : link.name === 'Workspace' ? setIsWorkspaceExpanded : link.name === 'Social' ? setIsSocialExpanded : setIsAdminExpanded;
+                const isExpanded = link.name === 'Portal' ? isPortalExpanded : link.name === 'Social' ? isSocialExpanded : isAdminExpanded;
+                const setIsExpanded = link.name === 'Portal' ? setIsPortalExpanded : link.name === 'Social' ? setIsSocialExpanded : setIsAdminExpanded;
                 
                 return (
                   <div key={link.name} className="py-1">

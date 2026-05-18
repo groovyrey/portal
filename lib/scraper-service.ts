@@ -267,6 +267,7 @@ export class ScraperService {
                    pageText.match(/Bachelor of [^ ]+ in [^ ]+ [^ ]+/i)?.[0] || "Not specified";
     
     const email = $eaf('#fldEMail').text().trim() || pageText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i)?.[0] || "";
+    const mobile = $eaf('#fldMobile').text().trim() || pageText.match(/09\d{9}/)?.[0] || "";
     const address = `${$eaf('#fldAddress').text().trim()}, ${$eaf('#fldBrgy').text().trim()}, ${$eaf('#fldCity').text().trim()}`;
     const enrollmentDate = $eaf('#fldEnrolDate').text().trim();
 

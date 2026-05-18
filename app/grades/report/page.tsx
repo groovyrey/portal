@@ -1,9 +1,10 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { FileText, CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { FileText, CheckCircle2, XCircle, ArrowLeft, RefreshCcw } from 'lucide-react';
 import { SubjectGrade } from '@/types';
 import Skeleton from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 function isPassedSubject(sub: SubjectGrade) {
   const gradeNum = parseFloat(sub.grade);
@@ -31,8 +33,11 @@ function isPassedSubject(sub: SubjectGrade) {
 
 export default function GradeReportPage() {
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const href = searchParams.get('href');
   const title = searchParams.get('title');
+
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   const { data: grades, isLoading } = useQuery({
     queryKey: ['grade-report', href, title],
@@ -56,15 +61,60 @@ export default function GradeReportPage() {
 
   const semesterTitle = (title || 'Grades').replace('Grades of ', '');
 
+  const handleRefresh = async () => {
+    if (!href || isRefreshing) return;
+    
+    setIsRefreshing(true);
+    const toastId = 'refreshing-grades';
+    toast.loading('Refreshing grades from portal...', { id: toastId });
+
+    try {
+      const response = await fetch('/api/student/grades', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          href,
+          reportName: title || undefined,
+          refresh: true
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        queryClient.setQueryData(['grade-report', href, title], result.subjects);
+        toast.success('Grades updated successfully', { id: toastId });
+      } else {
+        throw new Error(result.error || 'Failed to refresh');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Refresh failed', { id: toastId });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 pb-20">
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="hidden lg:flex items-center">
-          <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 text-muted-foreground">
-            <Link href="/grades">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Grades
-            </Link>
+        <div className="flex items-center justify-between">
+          <div className="hidden lg:flex items-center">
+            <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 text-muted-foreground">
+              <Link href="/grades">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Grades
+              </Link>
+            </Button>
+          </div>
+
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2" 
+            onClick={handleRefresh}
+            disabled={isRefreshing || isLoading}
+          >
+            <RefreshCcw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+            {isRefreshing ? 'Refreshing...' : 'Force Refresh'}
           </Button>
         </div>
 
@@ -88,7 +138,7 @@ export default function GradeReportPage() {
               <p className="text-sm font-medium">Missing report link. Please return to the grades overview.</p>
             </CardContent>
           </Card>
-        ) : isLoading ? (
+        ) : (isLoading && !grades) ? (
           <div className="space-y-4">
             <Skeleton className="h-12 w-full rounded-md" />
             <div className="space-y-3">

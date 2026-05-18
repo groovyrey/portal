@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   let debugLog = "";
   try {
     const body = await req.json();
-    const { href } = body;
+    const { href, refresh } = body;
     let { userId, password } = body;
 
     const sessionCookie = req.cookies.get('session_token');
@@ -41,46 +41,48 @@ export async function POST(req: NextRequest) {
         if (match) reportName = decodeURIComponent(match[1].replace(/\+/g, ' '));
     }
 
-    try {
-        // In Turso, we check for existing grades for this student and SPECIFIC report.
-        const res = await query(
-          'SELECT * FROM grades WHERE student_id = ? AND report_name = ? ORDER BY updated_at DESC', 
-          [userId, reportName]
-        );
-        
-        if (res.rowCount > 0) {
-            const lastUpdate = res.rows[0].updated_at ? new Date(res.rows[0].updated_at) : new Date(0);
-            const isFresh = (Date.now() - lastUpdate.getTime()) < 1000 * 60 * 60 * 24; // 24 hours fresh
+    if (!refresh) {
+      try {
+          // In Turso, we check for existing grades for this student and SPECIFIC report.
+          const res = await query(
+            'SELECT * FROM grades WHERE student_id = ? AND report_name = ? ORDER BY updated_at DESC', 
+            [userId, reportName]
+          );
+          
+          if (res.rowCount > 0) {
+              const lastUpdate = res.rows[0].updated_at ? new Date(res.rows[0].updated_at) : new Date(0);
+              const isFresh = (Date.now() - lastUpdate.getTime()) < 1000 * 60 * 60 * 24; // 24 hours fresh
 
-            if (isFresh) {
-                // Return deduplicated grades
-                const subjectsMap = new Map<string, any>();
-                res.rows.forEach((item: any) => {
-                  const section = item.section || item.code || 'N/A';
-                  const subjectCode = item.subject_code || 'N/A';
-                  const key = `${section}-${item.description}`.toLowerCase();
-                  if (!subjectsMap.has(key)) {
-                    subjectsMap.set(key, {
-                      code: subjectCode,
-                      section: section,
-                      description: item.description,
-                      grade: item.grade,
-                      units: item.units,
-                      remarks: item.remarks
-                    });
-                  }
-                });
+              if (isFresh) {
+                  // Return deduplicated grades
+                  const subjectsMap = new Map<string, any>();
+                  res.rows.forEach((item: any) => {
+                    const section = item.section || item.code || 'N/A';
+                    const subjectCode = item.subject_code || 'N/A';
+                    const key = `${section}-${item.description}`.toLowerCase();
+                    if (!subjectsMap.has(key)) {
+                      subjectsMap.set(key, {
+                        code: subjectCode,
+                        section: section,
+                        description: item.description,
+                        grade: item.grade,
+                        units: item.units,
+                        remarks: item.remarks
+                      });
+                    }
+                  });
 
-                console.log(`[Grades] Serving cached report "${reportName}" for ${userId}`);
-                return NextResponse.json({ 
-                    success: true, 
-                    subjects: Array.from(subjectsMap.values()),
-                    is_cached: true
-                });
-            }
-        }
-    } catch (e) {
-        console.warn('[Grades] Cache lookup failed:', e);
+                  console.log(`[Grades] Serving cached report "${reportName}" for ${userId}`);
+                  return NextResponse.json({ 
+                      success: true, 
+                      subjects: Array.from(subjectsMap.values()),
+                      is_cached: true
+                  });
+              }
+          }
+      } catch (e) {
+          console.warn('[Grades] Cache lookup failed:', e);
+      }
     }
 
     const { client, jar, isNew, isLocked, consecutiveFailures } = await getSessionClient(userId);
