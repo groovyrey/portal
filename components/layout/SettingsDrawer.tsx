@@ -266,8 +266,8 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
 
       case 'activity':
         const filteredLogs = logs.filter(log => 
-          log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          log.details.toLowerCase().includes(searchQuery.toLowerCase())
+          (log.action?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+          (log.details?.toLowerCase() || '').includes(searchQuery.toLowerCase())
         );
 
         return (
@@ -340,7 +340,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                       let iconBg = "bg-accent";
                       let iconColor = "text-muted-foreground";
 
-                      const action = log.action.toLowerCase();
+                      const action = log.action?.toLowerCase() || '';
                       if (action.includes('login')) { Icon = Lock; iconBg = "bg-blue-50 dark:bg-blue-950/30"; iconColor = "text-blue-500"; }
                       else if (action.includes('security') || action.includes('password')) { Icon = Shield; iconBg = "bg-amber-50 dark:bg-amber-950/30"; iconColor = "text-amber-500"; }
                       else if (action.includes('settings')) { Icon = Info; iconBg = "bg-purple-50"; iconColor = "text-purple-500"; }

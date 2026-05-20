@@ -45,7 +45,7 @@ export default function ActivityTab() {
   };
 
   const filteredLogs = logs.filter(log => 
-    log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (log.action?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
     (typeof log.details === 'string' && log.details.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
@@ -98,7 +98,7 @@ export default function ActivityTab() {
               const isToday = new Date().toDateString() === date.toDateString();
               
               let Icon = History;
-              const action = log.action.toLowerCase();
+              const action = log.action?.toLowerCase() || '';
               if (action.includes('login')) Icon = Lock;
               else if (action.includes('security') || action.includes('password')) Icon = Shield;
               else if (action.includes('settings')) Icon = Info;

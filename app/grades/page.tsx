@@ -86,8 +86,8 @@ export default function GradesPage() {
           const currentSection = g.section || (looksLikeSection ? g.code : '');
 
           const match = student.offeredSubjects?.find(s => 
-            s.description.trim().toLowerCase() === g.description.trim().toLowerCase() ||
-            s.code.trim().toLowerCase() === g.code.trim().toLowerCase()
+            (s.description?.trim()?.toLowerCase() || '') === (g.description?.trim()?.toLowerCase() || '') ||
+            (s.code?.trim()?.toLowerCase() || '') === (g.code?.trim()?.toLowerCase() || '')
           );
 
           if (match) {

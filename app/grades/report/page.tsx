@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 
 function isPassedSubject(sub: SubjectGrade) {
   const gradeNum = parseFloat(sub.grade);
-  const remarks = sub.remarks.toLowerCase();
+  const remarks = sub.remarks?.toLowerCase() || '';
   
   if (remarks.includes('pass')) return true;
   if (remarks.includes('fail')) return false;

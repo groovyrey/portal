@@ -29,8 +29,8 @@ export async function GET(req: NextRequest) {
     const allStudents = await getAllStudents();
     const students = search 
       ? allStudents.filter(s => 
-          s.name.toLowerCase().includes(search) || 
-          s.id.toLowerCase().includes(search)
+          (s.name?.toLowerCase() || '').includes(search) || 
+          (s.id?.toLowerCase() || '').includes(search)
         )
       : [];
 
