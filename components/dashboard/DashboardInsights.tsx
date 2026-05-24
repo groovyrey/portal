@@ -101,8 +101,8 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
 
   const financialProgress = useMemo(() => {
     if (!student.financials) return 0;
-    const total = parseFloat(student.financials.total.replace(/[^\d.-]/g, '')) || 0;
-    const balance = parseFloat(student.financials.balance.replace(/[^\d.-]/g, '')) || 0;
+    const total = parseFloat(String(student.financials.total).replace(/[^\d.-]/g, '')) || 0;
+    const balance = parseFloat(String(student.financials.balance).replace(/[^\d.-]/g, '')) || 0;
     if (total === 0) return 0;
     return Math.round(((total - balance) / total) * 100);
   }, [student.financials]);
