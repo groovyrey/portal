@@ -2,8 +2,8 @@
 
 import React, { useMemo } from 'react';
 import { Student } from '@/types';
-import { Clock, Calendar, BookOpen, TrendingUp, CreditCard, ChevronRight } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Clock, Calendar, BookOpen, TrendingUp, CreditCard } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface DashboardInsightsProps {
@@ -11,6 +11,10 @@ interface DashboardInsightsProps {
 }
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+const getSubjectCode = (subject: string) => subject.split(' - ')[0].trim();
+const getSubjectTitle = (item: { subject: string; description?: string }) =>
+  item.description?.trim() || item.subject.split(' - ').slice(1).join(' - ').trim() || item.subject;
 
 export default function DashboardInsights({ student }: DashboardInsightsProps) {
   const schedule = useMemo(() => student.schedule || [], [student.schedule]);
@@ -118,8 +122,8 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
           {nextClass ? (
             <div className="space-y-3">
               <div>
-                <h3 className="text-base font-semibold leading-none">{nextClass.subject.split(' - ')[0]}</h3>
-                <p className="mt-1.5 text-xs text-muted-foreground line-clamp-1">{nextClass.subject.split(' - ')[1] || 'Class'}</p>
+                <h3 className="text-base font-semibold leading-none">{getSubjectCode(nextClass.subject)}</h3>
+                <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">{getSubjectTitle(nextClass)}</p>
               </div>
               <div className="flex flex-col gap-1.5 pt-1">
                 <div className="flex items-center text-xs text-muted-foreground">
@@ -130,6 +134,12 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
                   <BookOpen className="mr-2 h-3.5 w-3.5" />
                   {nextClass.room || 'TBA'}
                 </div>
+                {nextClass.instructor && (
+                  <div className="flex items-center text-xs text-muted-foreground">
+                    <Clock className="mr-2 h-3.5 w-3.5" />
+                    {nextClass.instructor}
+                  </div>
+                )}
               </div>
             </div>
           ) : (

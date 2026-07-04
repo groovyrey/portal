@@ -1,34 +1,24 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, 
   Bot, 
-  Sparkles,
-  HelpCircle,
   Globe,
   Search,
   Copy,
   Check,
-  Youtube,
-  Calculator,
-  List,
   Calendar,
-  CalendarDays,
   Wallet,
-  Square,
   VolumeX,
   Volume2,
   Mic,
   StopCircle,
   Settings,
-  Zap,
   Trash2,
   BrainCircuit,
   MessageSquare,
   Loader2,
-  Image as ImageIcon,
   X,
   Paperclip
 } from 'lucide-react';
@@ -50,6 +40,7 @@ import {
 } from '@/components/ui/dialog';
 import TabbedPageLayout from '@/components/layout/TabbedPageLayout';
 import { cn } from '@/lib/utils';
+import { filterProfanity, normalizeTextForSpeech } from '@/lib/sanitization';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 type Message = {
@@ -72,9 +63,18 @@ const TypingIndicator = ({ status }: { status?: string }) => (
   </div>
 );
 
-const ActionButtons = ({ content, messageId, currentlySpeakingId, onSpeak, onShowReasoning, hasReasoning }: any) => {
+type ActionButtonsProps = {
+  content: string;
+  messageId: string;
+  currentlySpeakingId: string | null;
+  onSpeak: (messageId: string, content: string) => void;
+  onShowReasoning: () => void;
+  hasReasoning: boolean;
+};
+
+const ActionButtons = ({ content, messageId, currentlySpeakingId, onSpeak, onShowReasoning, hasReasoning }: ActionButtonsProps) => {
   const [copied, setCopied] = useState(false);
-  const handleCopy = async (e: any) => {
+  const handleCopy = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     try {
       if (navigator.clipboard) {
@@ -82,7 +82,7 @@ const ActionButtons = ({ content, messageId, currentlySpeakingId, onSpeak, onSho
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }
-    } catch (err) {}
+    } catch {}
   };
 
   return (
@@ -102,7 +102,15 @@ const ActionButtons = ({ content, messageId, currentlySpeakingId, onSpeak, onSho
   );
 };
 
-const ChatInput = React.memo(({ onSend, onStop, isLoading, onClear, hasMessages }: any) => {
+type ChatInputProps = {
+  onSend: (content: string, attachments?: { data: string; mimeType: string }[]) => void;
+  onStop: () => void;
+  isLoading: boolean;
+  onClear: () => void;
+  hasMessages: boolean;
+};
+
+const ChatInput = React.memo(({ onSend, onStop, isLoading, onClear, hasMessages }: ChatInputProps) => {
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [attachments, setAttachments] = useState<{ file: File; preview: string; base64: string }[]>([]);
@@ -175,7 +183,10 @@ const ChatInput = React.memo(({ onSend, onStop, isLoading, onClear, hasMessages 
           const response = await fetch('/api/deepgram', { method: 'POST', body: formData });
           const data = await response.json();
           if (data && data.transcript) {
-            setInput((prev) => prev ? `${prev} ${data.transcript}` : data.transcript);
+            const filteredTranscript = filterProfanity(data.transcript).trim();
+            if (filteredTranscript) {
+              setInput((prev) => prev ? `${prev} ${filteredTranscript}` : filteredTranscript);
+            }
             toast.success("Done", { id: toastId });
           }
         } catch (error) {
@@ -184,7 +195,7 @@ const ChatInput = React.memo(({ onSend, onStop, isLoading, onClear, hasMessages 
       };
       mediaRecorder.start();
       setIsRecording(true);
-    } catch (err) { toast.error("Mic error"); }
+    } catch { toast.error("Mic error"); }
   };
 
   const handleSubmit = (e?: React.FormEvent) => {
@@ -312,9 +323,10 @@ export default function AssistantPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [currentlySpeakingId, setCurrentlySpeakingId] = useState<string | null>(null);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const lastAutoSpokenMessageId = useRef<string | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [modalQuestion, setModalQuestion] = useState('');
@@ -368,17 +380,12 @@ export default function AssistantPage() {
     if (currentlySpeakingId === messageId && currentAudio) { currentAudio.pause(); setCurrentlySpeakingId(null); return; }
     if (currentAudio) currentAudio.pause();
     
-    // Clean text for TTS: Remove reasoning tags, code blocks, and markdown symbols
-    const cleanedText = content
-      .replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, '') // Remove reasoning
-      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-      .replace(/[*#~>|]/g, '') // Remove markdown formatting chars
-      .trim();
+    const speechText = filterProfanity(normalizeTextForSpeech(content)).trim();
 
-    if (!cleanedText) return;
+    if (!speechText) return;
     try {
       setCurrentlySpeakingId(messageId);
-      const response = await fetch('/api/deepgram', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: cleanedText, model: student?.settings?.assistant?.voiceModel || 'aura-helios-en' }) });
+      const response = await fetch('/api/deepgram', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: speechText, model: student?.settings?.assistant?.voiceModel || 'aura-helios-en' }) });
       if (!response.ok) throw new Error();
       const blob = await response.blob();
       const audio = new Audio(URL.createObjectURL(blob));
@@ -490,18 +497,29 @@ export default function AssistantPage() {
   }, [messages, isLoading, student?.settings?.assistant?.showThinkingProcess]);
 
   useEffect(() => {
-    if (scrollContainerRef.current) {
-      const { scrollHeight } = scrollContainerRef.current;
-      scrollContainerRef.current.scrollTo({ top: scrollHeight, behavior: 'smooth' });
-    }
-  }, [messages, isLoading]);
+    if (activeTab !== 'chat') return;
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [messages, isLoading, activeTab]);
+
+  useEffect(() => {
+    if (!student?.settings?.assistant?.autoSpeak) return;
+    if (isLoading) return;
+    if (currentlySpeakingId) return;
+
+    const lastMessage = [...messages].reverse().find((message) => message.role === 'assistant' && message.content.trim());
+    if (!lastMessage) return;
+    if (lastAutoSpokenMessageId.current === lastMessage.id) return;
+
+    lastAutoSpokenMessageId.current = lastMessage.id;
+    void handleSpeak(lastMessage.id, lastMessage.content);
+  }, [messages, isLoading, student?.settings?.assistant?.autoSpeak, currentlySpeakingId]);
 
   return (
     <TabbedPageLayout title="Assistant" icon={BrainCircuit} subtitle="AI Study Companion" tabs={[{ id: 'chat', name: 'Chat', icon: MessageSquare }, { id: 'settings', name: 'Settings', icon: Settings }]} activeTab={activeTab} onTabChange={(id) => handleTabChange(id as any)}>
       <div className="flex flex-col h-[calc(100vh-14rem)] w-full overflow-hidden">
         {activeTab === 'chat' && (
           <Card className="flex-1 flex flex-col shadow-none overflow-hidden border-border bg-background w-full rounded-xl">
-            <ScrollArea ref={scrollContainerRef} className="flex-1 w-full">
+            <ScrollArea className="flex-1 w-full">
               <div className="flex flex-col min-h-full w-full max-w-4xl mx-auto px-4 py-8 md:px-6 relative">
                 {messages.length === 0 && (
                   <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 py-12 w-full">
@@ -566,6 +584,7 @@ export default function AssistantPage() {
                       </div>
                     </div>
                   ))}
+                  <div ref={bottomRef} />
                 </div>
               </div>
             </ScrollArea>

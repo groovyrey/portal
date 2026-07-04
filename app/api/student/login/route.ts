@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import qs from 'querystring';
 import * as cheerio from 'cheerio';
-import { encrypt } from '@/lib/auth';
+import { encrypt, decrypt } from '@/lib/auth';
 import { parseStudentName } from '@/lib/utils';
 import { getSessionClient, saveSession } from '@/lib/session-proxy';
 import { ScraperService } from '@/lib/scraper-service';
 import { SyncService } from '@/lib/sync-service';
 import { logActivity } from '@/lib/activity-service';
 import { initDatabase } from '@/lib/db-init';
-
-import { decrypt } from '@/lib/auth';
+import { ApiResponse } from '@/lib/api-response';
+import { LoginSchema } from '@/lib/schemas';
+import { logger } from '@/lib/logger';
+import { getStudentSchedule } from '@/lib/data-service';
 
 /**
  * Helper to perform the actual login POST to the school portal.
@@ -57,40 +59,47 @@ async function performPortalLogin(client: any, jar: any, userId: string, passwor
 
 export async function POST(req: NextRequest) {
   // Ensure database is initialized
-  await initDatabase().catch(e => console.error('DB Init Error:', e));
+  await initDatabase().catch(e => logger.error('[LoginAPI]', 'DB Init failed', { error: String(e) }));
 
-  let { userId, password } = await req.json().catch(() => ({}));
-  
   try {
-    // If credentials are not in the body, try to get them from the session cookie
-    if (!userId || !password) {
-      const sessionCookie = req.cookies.get('session_token');
-      if (sessionCookie?.value) {
-        try {
-          const decrypted = decrypt(sessionCookie.value);
-          const sessionData = JSON.parse(decrypted);
-          userId = sessionData.userId;
-          password = sessionData.password;
-        } catch (e) {
-          return NextResponse.json({ error: 'Session expired. Please log in again.' }, { status: 401 });
-        }
-      }
-    }
+    const body = await req.json().catch(() => ({}));
+    const sessionCookie = req.cookies.get('session_token');
+    const hasLoginCredentials = typeof body.userId === 'string' || typeof body.password === 'string';
+    let userId: string;
+    let password: string;
 
-    if (!userId || !password) {
-      return NextResponse.json({ error: 'UserID and Password are required' }, { status: 400 });
+    if (hasLoginCredentials) {
+      const validation = LoginSchema.safeParse(body);
+      if (!validation.success) {
+        return ApiResponse.validation(validation.error);
+      }
+
+      userId = validation.data.userId;
+      password = validation.data.password;
+    } else if (sessionCookie?.value) {
+      try {
+        const decrypted = decrypt(sessionCookie.value);
+        const sessionData = JSON.parse(decrypted);
+        userId = sessionData.userId;
+        password = sessionData.password;
+      } catch (error) {
+        return ApiResponse.unauthorized('Invalid session');
+      }
+    } else {
+      return ApiResponse.validation({
+        userId: ['Student ID is required'],
+        password: ['Password is required'],
+      });
     }
 
     // --- INITIAL PASSWORD SECURITY CHECK ---
     // If Student ID and Password are identical, the portal will force a change.
-    // We block this early to provide a better UX and prevent session issues.
     if (userId.trim().toLowerCase() === password.trim().toLowerCase()) {
-      return NextResponse.json({
-        success: false,
-        requiresPasswordChange: true,
-        portalUrl: 'https://premium.schoolista.com/LCC/User/ChangePassword.aspx',
-        error: 'Security update required: You are still using your default portal password. Please update it on the official portal first.'
-      }, { status: 403 });
+      return ApiResponse.error(
+        'Security update required: You are still using your default portal password. Please update it on the official portal first.',
+        403,
+        'PASSWORD_CHANGE_REQUIRED'
+      );
     }
 
     // --- SESSION MANAGEMENT ---
@@ -98,10 +107,9 @@ export async function POST(req: NextRequest) {
 
     // Stop if account is in cooldown to prevent further lockout risk
     if (isLocked && (consecutiveFailures || 0) >= 3) {
-      return NextResponse.json({ 
-        success: false, 
-        error: `Login is temporarily disabled due to multiple failed attempts. Please wait 15-30 minutes and try again.` 
-      }, { status: 429 });
+      return ApiResponse.rateLimited(
+        'Login is temporarily disabled due to multiple failed attempts. Please wait 15-30 minutes and try again.'
+      );
     }
 
     const baseUrl = `https://premium.schoolista.com/LCC/Student/Main.aspx?_sid=${userId}`;
@@ -153,6 +161,7 @@ export async function POST(req: NextRequest) {
     logActivity(userId, 'Login', 'Logged into student portal').catch(e => {});
 
     if (syncResult.studentInfo.name && syncResult.studentInfo.name.length > 2) {
+      const persistedSchedule = await getStudentSchedule(userId);
       const encryptedSession = encrypt(JSON.stringify({ userId, password }));
       const response = NextResponse.json({
         success: true,
@@ -161,7 +170,7 @@ export async function POST(req: NextRequest) {
           ...syncResult.studentInfo,
           parsedName: parseStudentName(syncResult.studentInfo.name),
           id: userId, 
-          schedule: syncResult.schedule,
+          schedule: persistedSchedule,
           offeredSubjects: [], // DISABLED
           availableReports: syncResult.reportLinks,
           settings: syncResult.settings,

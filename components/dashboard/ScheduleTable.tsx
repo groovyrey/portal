@@ -4,7 +4,7 @@ import { ScheduleItem } from '@/types';
 import React, { useState, useMemo, useRef } from 'react';
 import { MapPin, Clock, Hash, BookOpen, Info, Calendar, ArrowRight, Download, Camera, List, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
@@ -35,26 +35,6 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
       timeZone: 'Asia/Manila' 
     });
   }, []);
-
-  const weekHolidays = useMemo(() => {
-    if (!holidays.length) return {};
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    const dayOfWeek = now.getDay();
-    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-    startOfWeek.setDate(diff);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const mapped: Record<string, any> = {};
-    holidays.forEach(h => {
-      const hDate = new Date(h.date);
-      if (hDate >= startOfWeek) {
-        const dayName = hDate.toLocaleDateString('en-US', { weekday: 'long' });
-        mapped[dayName] = h;
-      }
-    });
-    return mapped;
-  }, [holidays]);
 
   const downloadImage = async () => {
     if (!tableRef.current) return;
@@ -98,6 +78,7 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
     const parts = subject.split(' - ');
     return parts.length > 1 ? parts.slice(1).join(' - ').trim() : subject;
   };
+  const getDisplayTitle = (item: ScheduleItem) => item.description?.trim() || getSubjectName(item.subject);
 
   const parseTimeRange = (timeStr: string) => {
     const timePart = timeStr.match(/(\d+:\d+\s*(?:AM|PM))\s*-\s*(\d+:\d+\s*(?:AM|PM))/i);
@@ -257,7 +238,10 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
                                   <span className="text-[10px] font-semibold leading-tight line-clamp-2">
                                     {getSubjectCode(classToRender.subject)}
                                   </span>
-                                  <span className="text-[9px] text-muted-foreground mt-1 font-medium">
+                                  <span className="text-[9px] text-muted-foreground mt-1 font-medium line-clamp-2">
+                                    {getDisplayTitle(classToRender)}
+                                  </span>
+                                  <span className="text-[9px] text-muted-foreground/80 mt-1">
                                     {classToRender.room || 'TBA'}
                                   </span>
                                 </button>
@@ -317,7 +301,7 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
                             {getSubjectCode(item.subject)}
                           </div>
                           <h4 className="text-sm font-medium line-clamp-1">
-                            {getSubjectName(item.subject)}
+                            {getDisplayTitle(item)}
                           </h4>
                           <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
@@ -328,6 +312,12 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
                               <MapPin className="h-3 w-3" />
                               {item.room || 'TBA'}
                             </div>
+                            {item.instructor && (
+                              <div className="flex items-center gap-1">
+                                <BookOpen className="h-3 w-3" />
+                                {item.instructor}
+                              </div>
+                            )}
                           </div>
                         </div>
                         
@@ -374,6 +364,28 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
                   <p className="text-sm font-semibold leading-tight">{selectedItem.room || 'TBA'}</p>
                 </div>
               </div>
+
+              <div className="flex items-start gap-4 group">
+                <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
+                  <BookOpen className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="grid gap-0.5">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Subject Name</p>
+                  <p className="text-sm font-semibold leading-tight">{getDisplayTitle(selectedItem)}</p>
+                </div>
+              </div>
+
+              {selectedItem.instructor && (
+                <div className="flex items-start gap-4 group">
+                  <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
+                    <Info className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="grid gap-0.5">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Instructor</p>
+                    <p className="text-sm font-semibold leading-tight">{selectedItem.instructor}</p>
+                  </div>
+                </div>
+              )}
 
               <Separator className="opacity-50" />
 

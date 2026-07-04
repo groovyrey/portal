@@ -1,5 +1,6 @@
 import { DeepgramClient, ListenV1Response } from "@deepgram/sdk";
 import { NextResponse } from "next/server";
+import { filterProfanity } from '@/lib/sanitization';
 
 export async function GET() {
   const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
@@ -81,7 +82,9 @@ export async function POST(request: Request) {
 
     // Deepgram v5 response structure handling for synchronous file transcription
     if ('results' in result) {
-        const transcript = (result as ListenV1Response).results?.channels?.[0]?.alternatives?.[0]?.transcript || "";
+        const transcript = filterProfanity(
+          (result as ListenV1Response).results?.channels?.[0]?.alternatives?.[0]?.transcript || ""
+        );
         return NextResponse.json({ transcript });
     } else {
         throw new Error("Asynchronous transcription response received, but synchronous was expected.");

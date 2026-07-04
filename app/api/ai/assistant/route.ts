@@ -5,6 +5,14 @@ import * as cheerio from 'cheerio';
 
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
+import { sanitizeStudentName } from '@/lib/sanitization';
+import { logger } from '@/lib/logger';
+import { 
+  retryWithBackoff, 
+  parseGeminiError, 
+  getUserFriendlyErrorMessage,
+  FALLBACK_RESPONSE 
+} from '@/lib/ai-service';
 import { 
   getStudentProfile, 
   getStudentSchedule, 
@@ -119,7 +127,9 @@ export async function POST(req: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "");
-    const modelId = "gemma-4-26b-a4b-it";
+    
+    // Default to Gemma 4 31B; override with AI_MODEL when needed.
+    const modelId = process.env.AI_MODEL || "gemma-4-26b-a4b-it";
     console.log(`[Assistant] Initializing model: ${modelId}`);
 
     const now = new Date();
@@ -139,7 +149,7 @@ export async function POST(req: NextRequest) {
         model: modelId,
         systemInstruction: `You are the "LCCian Companion" for ${SCHOOL_INFO.name}. 
 Today's date is ${today}.
-Address user as ${student.name.split(' ')[0]}. 
+Address user as ${sanitizeStudentName(student.name)}. 
 
 STRICT RELIABILITY RULES:
 - You MUST rely ONLY on data returned by tools, provided in the context, or what you can see in attached images.
@@ -289,10 +299,16 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
         while (turnCount < maxTurns) {
           turnCount++;
           
-          const responseStream = await model.generateContentStream({
-            contents,
-            tools: tools as any
-          });
+          try {
+            // Retry with exponential backoff for flaky Gemini API
+            const responseStream = await retryWithBackoff(
+              () => model.generateContentStream({
+                contents,
+                tools: tools as any
+              }),
+              '[AssistantAPI] generateContentStream',
+              { maxRetries: 2, initialDelayMs: 1000, maxDelayMs: 5000 }
+            );
 
           let modelText = "";
           let turnThoughts = "";
@@ -337,7 +353,7 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
               }
             }
           } catch (chunkErr: any) {
-            console.error(`[Assistant] Stream Turn Error:`, chunkErr);
+            logger.error(`[AssistantAPI] Stream processing error`, chunkErr);
           }
 
           // Merge thoughts into modelText once at the end of the turn
@@ -352,9 +368,9 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
           // Log the full aggregated response object for debugging
           try {
             const fullResponse = await responseStream.response;
-            console.log(`[Assistant] FULL RAW RESPONSE:\n${JSON.stringify(fullResponse, null, 2)}\n---`);
+            logger.debug('[AssistantAPI]', 'Raw response received', { hasContent: !!modelText, toolCalls: toolCalls.length });
           } catch (e) {
-            console.warn("[Assistant] Could not log full response (already consumed or failed)");
+            logger.warn('[AssistantAPI]', 'Could not log full response');
           }
 
           if (toolCalls.length === 0 && !modelText) {
@@ -376,7 +392,7 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
                 const toolResult = await toolMap[name](args);
                 return { functionResponse: { name, response: { content: toolResult } } };
               } catch (toolErr: any) {
-                console.error(`[Assistant] Tool ${name} failed:`, toolErr);
+                logger.error(`[AssistantAPI] Tool ${name} failed`, toolErr);
                 return { functionResponse: { name, response: { content: `Error: ${toolErr.message}` } } };
               }
             }));
@@ -386,11 +402,36 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
           }
 
           contents.push(modelTurn);
-          break; 
+          break;
+          } catch (turnErr: any) {
+            const { code, isRetryable } = parseGeminiError(turnErr);
+            
+            if (isRetryable && turnCount < maxTurns) {
+              logger.warn(
+                '[AssistantAPI]',
+                `Turn ${turnCount} failed with retryable error, will retry`,
+                { code, turnCount }
+              );
+              // Loop will continue to next turn
+              continue;
+            } else {
+              // Non-retryable error or max retries exceeded
+              logger.error('[AssistantAPI]', 'Turn failed with non-retryable error', { code, turnCount });
+              throw turnErr;
+            }
+          }
         }
       } catch (err: any) {
-        console.error("[Assistant] Final Stream Error:", err);
-        await safeWrite(`\n\n[System Error: ${err.message}]`);
+        const { code, message, statusCode } = parseGeminiError(err);
+        const requestId = logger.error('[AssistantAPI] Fatal error', err, { code, statusCode });
+        
+        const userMessage = getUserFriendlyErrorMessage(code);
+        await safeWrite(`\n\n[System] ${userMessage}\n\n${FALLBACK_RESPONSE}`);
+        
+        // Send error tracking info in dev
+        if (process.env.NODE_ENV === 'development') {
+          await safeWrite(`\n\n[Debug Info - Req: ${requestId}]\nError: ${code}\nStatus: ${statusCode || 'unknown'}`);
+        }
       } finally {
         try {
           await writer.close();

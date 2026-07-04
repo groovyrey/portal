@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ['192.168.100.81'],
+  allowedDevOrigins: ['192.168.100.81', '74.226.97.25'],
   images: {
     remotePatterns: [
       {
@@ -45,7 +45,7 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',
-      allowedOrigins: ['192.168.100.81:3000', 'localhost:3000'],
+      allowedOrigins: ['192.168.100.81:3000', '74.226.97.25:3000', 'localhost:3000'],
     },
   },
   /* config options here */

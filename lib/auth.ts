@@ -4,13 +4,26 @@ import { query } from './turso';
 const ALGORITHM = 'aes-256-cbc';
 const SECRET_KEY = process.env.SESSION_SECRET;
 
-if (!SECRET_KEY && process.env.NODE_ENV === 'production') {
-  throw new Error('SESSION_SECRET environment variable is not set in production.');
+// Enforce SESSION_SECRET in all environments
+if (!SECRET_KEY) {
+  const error = new Error(
+    'SESSION_SECRET environment variable is required. ' +
+    'Generate a 64-character hex string: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"'
+  );
+  if (process.env.NODE_ENV === 'production') {
+    throw error;
+  }
+  // In development, log warning but allow startup with random secret
+  if (typeof window === 'undefined') {
+    console.warn('⚠️  SESSION_SECRET not set. Using temporary random secret. Sessions will not persist across restarts.');
+    console.warn('⚠️  Set SESSION_SECRET in .env.local for development persistence.');
+  }
 }
 
-// Fallback for development only if SESSION_SECRET is not provided
-const DEV_SECRET = '4a2c918e7b1f3d5c6e8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e';
-const KEY = Buffer.from(SECRET_KEY || DEV_SECRET, 'hex');
+// Use provided secret or generate random one for development
+const KEY = SECRET_KEY 
+  ? Buffer.from(SECRET_KEY, 'hex')
+  : crypto.randomBytes(32);
 
 export function encrypt(text: string): string {
   const iv = crypto.randomBytes(16);

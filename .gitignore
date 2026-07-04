@@ -34,3 +34,4 @@ list_models.js
 *.tsbuildinfo
 next-env.d.ts
 GEMINI.md
+.env*
