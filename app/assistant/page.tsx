@@ -544,7 +544,7 @@ export default function AssistantPage() {
                               messageId={m.id} 
                               currentlySpeakingId={currentlySpeakingId} 
                               onSpeak={handleSpeak}
-                              hasReasoning={student?.settings?.assistant?.showThinkingProcess && /<(thought|think|reasoning)>[\s\S]*?<\/\1>/gi.test(m.content)}
+                              hasReasoning={Boolean(student?.settings?.assistant?.showThinkingProcess && /<(thought|think|reasoning)>[\s\S]*?<\/\1>/gi.test(m.content))}
                               onShowReasoning={() => {
                                 const matches = Array.from(m.content.matchAll(/<(thought|think|reasoning)>([\s\S]*?)<\/\1>/gi));
                                 if (matches.length > 0) {
