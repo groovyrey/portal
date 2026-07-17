@@ -23,7 +23,7 @@ export async function migratePortalTables() {
     `);
 
     // Ensure columns exist for older tables if any
-    const studentCols = ['address', 'mobile', 'enrollment_date', 'available_reports', 'settings', 'badges', 'school_year'];
+    const studentCols = ['address', 'mobile', 'enrollment_date', 'available_reports', 'settings', 'badges', 'school_year', 'section'];
     for (const col of studentCols) {
       try {
         await query(`ALTER TABLE students ADD COLUMN ${col} TEXT;`);

@@ -31,6 +31,7 @@ export async function getStudentProfile(userId: string): Promise<Student | null>
       schoolYear: data.school_year,
       yearLevel: data.year_level,
       semester: data.semester,
+      section: data.section || null,
       availableReports: data.available_reports || [],
       updated_at: data.updated_at,
       settings: data.settings || {},
@@ -57,6 +58,7 @@ export async function getAllStudents(): Promise<Student[]> {
       schoolYear: data.school_year,
       yearLevel: data.year_level,
       semester: data.semester,
+      section: data.section || null,
       availableReports: data.available_reports || [],
       updated_at: data.updated_at,
       settings: data.settings || {},
@@ -86,6 +88,7 @@ export async function getStaffMembers(): Promise<Student[]> {
       schoolYear: data.school_year,
       yearLevel: data.year_level,
       semester: data.semester,
+      section: data.section || null,
       availableReports: data.available_reports || [],
       updated_at: data.updated_at,
       settings: data.settings || {},
@@ -224,7 +227,7 @@ export async function getFullStudentData(userId: string): Promise<AggregatedStud
     ...profile,
     schedule,
     financials: financials || undefined,
-    allGrades: grades,
+    grades,
     offeredSubjects: [],
     gpa
   };

@@ -29,8 +29,8 @@ export class SyncService {
 
     const now = new Date().toISOString();
     await query(`
-      INSERT INTO students (id, name, course, school_year, email, year_level, semester, available_reports, address, mobile, enrollment_date, settings, badges, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO students (id, name, course, school_year, email, year_level, semester, available_reports, address, mobile, enrollment_date, settings, badges, section, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         course = excluded.course,
@@ -44,6 +44,7 @@ export class SyncService {
         enrollment_date = excluded.enrollment_date,
         settings = excluded.settings,
         badges = excluded.badges,
+        section = excluded.section,
         updated_at = excluded.updated_at
     `, [
       this.userId, 
@@ -59,6 +60,7 @@ export class SyncService {
       info.enrollmentDate || null,
       JSON.stringify(settings), 
       JSON.stringify(badges), 
+      info.section || null,
       now
     ]);
 
