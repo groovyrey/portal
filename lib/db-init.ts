@@ -5,7 +5,8 @@ import {
   migrateActivityLogs, 
   migrateIncidentReports,
   migrateAdminLogs,
-  migrateCronRuns
+  migrateCronRuns,
+  migrateDeviceTokens
 } from './db-migrate';
 
 let initializationPromise: Promise<void> | null = null;
@@ -23,6 +24,7 @@ export async function initDatabase() {
       await migrateIncidentReports();
       await migrateAdminLogs();
       await migrateCronRuns();
+      await migrateDeviceTokens();
       
       console.log('[DB-Init] Turso migrations completed.');
     } catch (error) {

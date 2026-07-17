@@ -2,14 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/turso';
 import { decrypt } from '@/lib/auth';
 
-export async function GET(req: NextRequest) {
+function getUserId(req: NextRequest): string | null {
+  const sessionCookie = req.cookies.get('session_token');
+  if (!sessionCookie) return null;
   try {
-    const sessionCookie = req.cookies.get('session_token');
-    if (!sessionCookie) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
     const decrypted = decrypt(sessionCookie.value);
     const sessionData = JSON.parse(decrypted);
-    const userId = sessionData.userId;
+    return sessionData.userId;
+  } catch { return null; }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const userId = getUserId(req);
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const notifsRes = await query(`
       SELECT * FROM notifications 
@@ -36,18 +42,68 @@ export async function GET(req: NextRequest) {
   }
 }
 
+export async function POST(req: NextRequest) {
+  try {
+    const userId = getUserId(req);
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const body = await req.json();
+    const { action, token } = body;
+
+    if (action === 'registerDevice') {
+      const existing = await query(`SELECT id FROM device_tokens WHERE user_id = $1 AND token = $2`, [userId, token]);
+      if (existing.rows.length === 0) {
+        await query(`INSERT INTO device_tokens (user_id, token) VALUES ($1, $2)`, [userId, token]);
+      }
+      // Send a test push on register
+      await sendPush(token, {
+        title: '🔔 LCC Hub',
+        body: 'Push notifications are working! You\'ll get alerts for grade updates and announcements.',
+      });
+
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+  } catch (error) {
+    console.error('Notifications POST error:', error);
+    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+  }
+}
+
+async function sendPush(token: string, payload: { title: string; body: string }) {
+  const serverKey = process.env.FCM_SERVER_KEY;
+  if (!serverKey) {
+    console.log('[Push] No FCM_SERVER_KEY set, skipping push');
+    return;
+  }
+
+  try {
+    const res = await fetch('https://fcm.googleapis.com/fcm/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `key=${serverKey}`,
+      },
+      body: JSON.stringify({
+        to: token,
+        notification: payload,
+      }),
+    });
+    if (!res.ok) console.error('[Push] FCM send failed:', await res.text());
+  } catch (e) {
+    console.error('[Push] FCM error:', e);
+  }
+}
+
 export async function PATCH(req: NextRequest) {
   try {
     const { id, action } = await req.json();
     if (!action) return NextResponse.json({ error: 'Action required' }, { status: 400 });
     if (action === 'markRead' && !id) return NextResponse.json({ error: 'ID required for markRead' }, { status: 400 });
 
-    const sessionCookie = req.cookies.get('session_token');
-    if (!sessionCookie) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const decrypted = decrypt(sessionCookie.value);
-    const sessionData = JSON.parse(decrypted);
-    const userId = sessionData.userId;
+    const userId = getUserId(req);
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     if (action === 'markRead') {
       await query(`
@@ -75,12 +131,8 @@ export async function DELETE(req: NextRequest) {
     const { id, action } = await req.json();
     if (!action) return NextResponse.json({ error: 'Action required' }, { status: 400 });
 
-    const sessionCookie = req.cookies.get('session_token');
-    if (!sessionCookie) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const decrypted = decrypt(sessionCookie.value);
-    const sessionData = JSON.parse(decrypted);
-    const userId = sessionData.userId;
+    const userId = getUserId(req);
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     if (action === 'delete') {
       if (!id) return NextResponse.json({ error: 'ID required for delete' }, { status: 400 });

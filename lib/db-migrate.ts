@@ -291,3 +291,20 @@ export async function migrateCronRuns() {
     throw error;
   }
 }
+
+export async function migrateDeviceTokens() {
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS device_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        token TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(user_id, token)
+      );
+    `);
+  } catch (error) {
+    console.error("Migration Error (Device Tokens):", error);
+    throw error;
+  }
+}
