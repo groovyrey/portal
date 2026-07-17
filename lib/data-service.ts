@@ -227,7 +227,7 @@ export async function getFullStudentData(userId: string): Promise<AggregatedStud
     ...profile,
     schedule,
     financials: financials || undefined,
-    grades,
+    allGrades: grades,
     offeredSubjects: [],
     gpa
   };
