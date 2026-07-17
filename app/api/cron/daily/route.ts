@@ -3,6 +3,7 @@ import { query } from '@/lib/turso';
 import { getStudentSchedule } from '@/lib/data-service';
 import { createNotification } from '@/lib/notification-service';
 import { sendEmail, getScheduleEmailTemplate, getPaymentReminderEmailTemplate } from '@/lib/email-service';
+import { sendPushToUser } from '@/lib/push-service';
 import { parseStudentName } from '@/lib/utils';
 import { logAdminAction } from '@/lib/admin-logs';
 
@@ -33,6 +34,7 @@ async function runScheduleReminders(phTime: Date, baseUrl: string) {
   const res = await query('SELECT * FROM students');
   let count = 0;
   let emailCount = 0;
+  let pushCount = 0;
 
   for (const studentData of res.rows) {
     try {
@@ -60,6 +62,8 @@ async function runScheduleReminders(phTime: Date, baseUrl: string) {
           : `You have ${todaysClasses.length} classes today starting with ${first.description} at ${first.time.split(' ').slice(1).join(' ')}.`;
 
         await createNotification({ userId, title: "Today's Schedule 📚", message, type: 'info', link: '/grades' });
+        const p = await sendPushToUser(userId, "Today's Schedule 📚", message);
+        if (p > 0) pushCount++;
         count++;
 
         const recipientEmail = studentData.email || (userId.includes('@') ? userId : null);
@@ -74,7 +78,7 @@ async function runScheduleReminders(phTime: Date, baseUrl: string) {
       }
     } catch (err) {}
   }
-  return { notified: count, emailed: emailCount };
+  return { notified: count, emailed: emailCount, pushed: pushCount };
 }
 
 async function runPaymentReminders(phTime: Date, baseUrl: string) {
@@ -85,6 +89,7 @@ async function runPaymentReminders(phTime: Date, baseUrl: string) {
   const res = await query('SELECT * FROM students');
   let count = 0;
   let emailCount = 0;
+  let pushCount = 0;
 
   for (const studentData of res.rows) {
     try {
@@ -103,6 +108,8 @@ async function runPaymentReminders(phTime: Date, baseUrl: string) {
       if (due) {
         const message = `Friendly reminder: Your ${due.description} of ₱${due.outstanding} is due in 5 days (${due.dueDate}).`;
         await createNotification({ userId, title: "Payment Reminder 💳", message, type: 'warning', link: '/accounts' });
+        const p = await sendPushToUser(userId, "Payment Reminder 💳", message);
+        if (p > 0) pushCount++;
         count++;
 
         if (studentData.email && studentData.settings?.notifications !== false) {
@@ -116,7 +123,7 @@ async function runPaymentReminders(phTime: Date, baseUrl: string) {
       }
     } catch (err) {}
   }
-  return { notified: count, emailed: emailCount };
+  return { notified: count, emailed: emailCount, pushed: pushCount };
 }
 
 export async function GET(req: NextRequest) {
@@ -150,7 +157,7 @@ export async function GET(req: NextRequest) {
         targetId: 'notifications',
         targetName: 'Schedule Reminders',
         action: 'CRON_SCHEDULE_DISPATCHED',
-        details: `Dispatched ${results.data.schedule.notified} push notifications and ${results.data.schedule.emailed} emails for today's classes.`
+        details: `Dispatched ${results.data.schedule.notified} notifications, ${results.data.schedule.pushed} pushes, and ${results.data.schedule.emailed} emails for today's classes.`
       });
     }
     if (activeTasks.includes('paymentReminders')) {
@@ -161,7 +168,7 @@ export async function GET(req: NextRequest) {
         targetId: 'notifications',
         targetName: 'Payment Reminders',
         action: 'CRON_PAYMENTS_DISPATCHED',
-        details: `Dispatched ${results.data.payments.notified} push notifications and ${results.data.payments.emailed} emails for upcoming payment deadlines.`
+        details: `Dispatched ${results.data.payments.notified} notifications, ${results.data.payments.pushed} pushes, and ${results.data.payments.emailed} emails for upcoming payment deadlines.`
       });
     }
 
