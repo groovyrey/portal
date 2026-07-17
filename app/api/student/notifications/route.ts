@@ -55,11 +55,6 @@ export async function POST(req: NextRequest) {
       if (existing.rows.length === 0) {
         await query(`INSERT INTO device_tokens (user_id, token) VALUES ($1, $2)`, [userId, token]);
       }
-      // Send a test push on register
-      await sendPush(token, {
-        title: '🔔 LCC Hub',
-        body: 'Push notifications are working! You\'ll get alerts for grade updates and announcements.',
-      });
 
       return NextResponse.json({ success: true });
     }
