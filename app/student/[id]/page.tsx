@@ -307,9 +307,6 @@ function ProfileContent() {
                 onLike={handleLike}
                 onVote={handleVote}
                 onOpen={(p) => router.push(`/post/${p.id}`)}
-                onReport={handleReport}
-                onDelete={setPostToDelete}
-                isProfileView={true}
               />
             ))}
           </div>
