@@ -149,10 +149,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       subjects,
-      raw_snippet: debugLog
     });
   } catch (error: any) {
     console.error('Grades fetch error:', error.message);
-    return NextResponse.json({ success: false, error: error.message, raw_snippet: debugLog });
+    return NextResponse.json({ success: false, error: error.message });
   }
 }

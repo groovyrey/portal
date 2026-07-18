@@ -35,22 +35,6 @@ export function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (char) => htmlEscapeMap[char] ?? char);
 }
 
-/**
- * Sanitize user input for database queries
- * Note: Use parameterized queries instead of string concatenation
- */
-export function sanitizeForDB(text: string): string {
-  if (!text) return '';
-
-  // Remove potential SQL injection characters
-  return text
-    .replace(/';/g, '')
-    .replace(/--/g, '')
-    .replace(/\/\*/g, '')
-    .replace(/\*\//g, '')
-    .trim();
-}
-
 const PROFANE_WORDS = new Set([
   'ass',
   'asshole',

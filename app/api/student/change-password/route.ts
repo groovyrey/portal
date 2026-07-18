@@ -102,7 +102,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ 
             success: false, 
             error: errorText || 'Failed to change password. Please verify your current password.',
-            _debug_html: rawHtml
         }, { status: 400 });
 
     } catch (error: any) {

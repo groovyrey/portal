@@ -22,6 +22,27 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const sessionCookie = req.cookies.get('session_token');
+    if (!sessionCookie?.value) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    let userId = "";
+    try {
+      const { decrypt } = await import('@/lib/auth');
+      const decrypted = decrypt(sessionCookie.value);
+      const sessionData = JSON.parse(decrypted);
+      userId = sessionData.userId;
+    } catch {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
+    const { isStaff } = await import('@/lib/auth');
+    const staff = await isStaff(userId);
+    if (!staff) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const { id } = await req.json();
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
 

@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const ALLOWED_DOMAINS = [
+  'soundhelix.com',
+  'www.soundhelix.com',
+  'upload.wikimedia.org',
+  'commons.wikimedia.org',
+];
+
+function isAllowedUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return ALLOWED_DOMAINS.some(domain => parsed.hostname === domain);
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const audioUrl = searchParams.get('url');
@@ -8,21 +24,23 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'URL is required' }, { status: 400 });
   }
 
+  if (!isAllowedUrl(audioUrl)) {
+    return NextResponse.json({ error: 'URL not allowed' }, { status: 403 });
+  }
+
   try {
     const range = req.headers.get('range');
     const headers: Record<string, string> = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
     };
 
-    // Very important: don't let Wikimedia know we're a proxy if they are 429ing
-    // But for SoundHelix/others, just forward normally
     if (range) {
       headers['Range'] = range;
     }
 
     const response = await fetch(audioUrl, { 
       headers,
-      cache: 'no-store' // Avoid caching partial responses incorrectly
+      cache: 'no-store'
     });
 
     if (response.status === 429) {
@@ -43,14 +61,15 @@ export async function GET(req: NextRequest) {
       if (value) responseHeaders.set(header, value);
     });
 
-    // Note: Fallback content type
     if (!responseHeaders.has('content-type')) {
       responseHeaders.set('content-type', 'audio/mpeg');
     }
 
-    responseHeaders.set('Access-Control-Allow-Origin', '*');
-    // Ensure we don't send transfer-encoding: chunked if we have a stream from fetch
-    // Response constructor handles this usually
+    const origin = req.headers.get('origin') || '';
+    const allowedOrigin = origin.includes('lcchub.vercel.app') || origin.includes('localhost')
+      ? origin
+      : 'https://lcchub.vercel.app';
+    responseHeaders.set('Access-Control-Allow-Origin', allowedOrigin);
 
     return new Response(response.body, {
       status: response.status,

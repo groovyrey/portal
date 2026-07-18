@@ -176,8 +176,6 @@ export async function POST(req: NextRequest) {
           settings: syncResult.settings,
           badges: syncResult.badges,
           financials: syncResult.mergedFinancials,
-          // Diagnostic raw data (if still needed)
-          _debug_accounts_html: "Synced via centralized service"
         }
       });
 

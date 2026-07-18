@@ -8,10 +8,10 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
-    // Basic auth check for admin (you can add more robust checks)
     const authHeader = req.headers.get('authorization');
-    if (process.env.ADMIN_SECRET && authHeader !== `Bearer ${process.env.ADMIN_SECRET}`) {
-      // return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const adminSecret = process.env.ADMIN_SECRET || process.env.MIGRATION_SECRET;
+    if (adminSecret && authHeader !== `Bearer ${adminSecret}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await migrateCommunity();

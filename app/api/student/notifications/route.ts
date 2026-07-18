@@ -66,31 +66,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function sendPush(token: string, payload: { title: string; body: string }) {
-  const serverKey = process.env.FCM_SERVER_KEY;
-  if (!serverKey) {
-    console.log('[Push] No FCM_SERVER_KEY set, skipping push');
-    return;
-  }
-
-  try {
-    const res = await fetch('https://fcm.googleapis.com/fcm/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `key=${serverKey}`,
-      },
-      body: JSON.stringify({
-        to: token,
-        notification: payload,
-      }),
-    });
-    if (!res.ok) console.error('[Push] FCM send failed:', await res.text());
-  } catch (e) {
-    console.error('[Push] FCM error:', e);
-  }
-}
-
 export async function PATCH(req: NextRequest) {
   try {
     const { id, action } = await req.json();
