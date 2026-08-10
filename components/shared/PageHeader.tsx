@@ -10,7 +10,6 @@ export default function PageHeader() {
 
   const getPageTitle = (path: string) => {
     if (path === '/') return 'Dashboard';
-    if (path === '/assistant') return 'Assistant';
     if (path === '/g-space') return 'G-Space';
     if (path === '/grades') return 'Grades';
     if (path === '/grades/report') return 'Grade Record';
