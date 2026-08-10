@@ -4,11 +4,43 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2, Send, Trash2, ArrowLeft, Heart, MessageSquare } from 'lucide-react';
+import { Loader2, Send, Trash2, ArrowLeft, Heart, MessageSquare, Ghost, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { CommunityPost, Student, CommunityComment } from '@/types';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+
+const TOPIC_COLORS: Record<string, string> = {
+  Academics: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30',
+  'Campus Life': 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30',
+  Career: 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30',
+  'Well-being': 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30',
+  General: 'bg-muted text-muted-foreground border-border',
+};
+
+const getInitials = (name: string) =>
+  name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(p => p[0])
+    .join('')
+    .toUpperCase();
+
+const getTimeAgo = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const diff = Date.now() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+};
 
 export default function PostPage() {
   const params = useParams();
@@ -140,44 +172,62 @@ export default function PostPage() {
   return (
     <div className="flex-1 p-4 md:p-8 pt-6 pb-20">
       <div className="max-w-2xl mx-auto space-y-6">
-        <Button variant="ghost" size="sm" onClick={() => router.push('/community')} className="gap-2 -ml-2 text-muted-foreground">
+        <Button variant="ghost" size="sm" onClick={() => router.push('/community')} className="gap-2 -ml-2 text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
 
         {loadingPost ? (
-          <div className="text-center py-20 text-muted-foreground">Loading...</div>
+          <div className="flex items-center justify-center py-24 text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            Loading...
+          </div>
         ) : post && (
           <>
-              <div className="bg-card border rounded-lg p-4 space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    {post.isAnonymous ? (
-                      <span className="font-bold text-sm">Anonymous</span>
-                    ) : (
-                      <Link href={`/student/${post.userId}`} className="font-bold text-sm hover:text-primary">
-                        {post.userName}
-                      </Link>
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(post.createdAt).toLocaleDateString()}
-                    </span>
+              <div className="bg-card border border-border rounded-xl shadow-sm p-5 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={cn(
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold",
+                    post.isAnonymous
+                      ? "bg-muted text-muted-foreground"
+                      : "bg-primary/10 text-primary"
+                  )}>
+                    {post.isAnonymous ? <Ghost className="h-4 w-4" /> : getInitials(post.isAnonymous ? 'Anonymous' : post.userName)}
                   </div>
-                  <span className="text-xs text-muted-foreground">{post.topic || 'General'}</span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      {post.isAnonymous ? (
+                        <span className="text-sm font-semibold text-foreground">Anonymous</span>
+                      ) : (
+                        <Link href={`/student/${post.userId}`} className="text-sm font-semibold text-foreground hover:text-primary transition-colors truncate">
+                          {post.userName}
+                        </Link>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                      <Clock className="h-3 w-3" />
+                      {getTimeAgo(post.createdAt)}
+                    </div>
+                  </div>
                 </div>
-                {student?.id === post.userId && (
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={handleDeletePost}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant="outline" className={cn("text-[10px] uppercase tracking-wide font-semibold border", TOPIC_COLORS[post.topic || 'General'] || TOPIC_COLORS.General)}>
+                    {post.topic || 'General'}
+                  </Badge>
+                  {student?.id === post.userId && (
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDeletePost}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
 
-              <div className="text-sm whitespace-pre-wrap break-words">{post.content}</div>
+              <div className="text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed">{post.content}</div>
 
               {post.poll && (
-                <div className="border rounded p-3 space-y-2 bg-muted/20">
-                  <p className="font-bold text-sm">{post.poll.question}</p>
+                <div className="border border-border rounded-xl p-4 space-y-2 bg-muted/30">
+                  <p className="font-semibold text-sm">{post.poll.question}</p>
                   {post.poll.options.map((option, idx) => {
                     const totalVotes = post.poll!.options.reduce((a, c) => a + c.votes.length, 0);
                     const percentage = totalVotes > 0 ? Math.round((option.votes.length / totalVotes) * 100) : 0;
@@ -188,14 +238,14 @@ export default function PostPage() {
                         key={idx}
                         disabled={!student || hasVoted}
                         onClick={() => handleVote(idx)}
-                        className="w-full text-left relative border rounded px-3 py-2 text-sm hover:bg-accent disabled:cursor-default"
+                        className="w-full text-left relative overflow-hidden border border-border rounded-lg px-3 py-2 text-sm bg-card hover:border-primary/40 disabled:cursor-default disabled:hover:border-border transition-colors"
                       >
                         {hasVoted && (
-                          <div className="absolute inset-y-0 left-0 bg-primary/10 rounded" style={{ width: `${percentage}%` }} />
+                          <div className="absolute inset-y-0 left-0 bg-primary/10" style={{ width: `${percentage}%` }} />
                         )}
-                        <div className="relative flex justify-between">
-                          <span className={isSelected ? 'font-bold text-primary' : ''}>{option.text}</span>
-                          {hasVoted && <span className="text-xs text-muted-foreground">{percentage}%</span>}
+                        <div className="relative flex justify-between gap-2">
+                          <span className={cn(isSelected && 'font-semibold text-primary')}>{option.text}</span>
+                          {hasVoted && <span className="text-xs text-muted-foreground tabular-nums">{percentage}%</span>}
                         </div>
                       </button>
                     );
@@ -203,12 +253,17 @@ export default function PostPage() {
                 </div>
               )}
 
-              <div className="flex gap-4 text-sm">
-                <button onClick={handleLike} disabled={!student} className="flex items-center gap-1 text-muted-foreground hover:text-rose-600 disabled:cursor-default">
-                  <Heart className={`h-4 w-4 ${isLiked ? 'fill-current text-rose-600' : ''}`} />
+              <div className="flex items-center gap-2 pt-1">
+                <button onClick={handleLike} disabled={!student} className={cn(
+                  "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-default",
+                  isLiked
+                    ? "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                )}>
+                  <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
                   <span>{(post.likes || []).length}</span>
                 </button>
-                <span className="flex items-center gap-1 text-muted-foreground">
+                <span className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground">
                   <MessageSquare className="h-4 w-4" />
                   <span>{comments.length}</span>
                 </span>
@@ -217,34 +272,43 @@ export default function PostPage() {
 
             <div className="space-y-4">
               {student && (
-                <div className="flex gap-2">
+                <div className="bg-card border border-border rounded-xl shadow-sm p-4">
                   <textarea
                     placeholder="Write a comment..."
-                    className="flex-1 min-h-[80px] p-3 border rounded text-sm resize-none outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full min-h-[80px] bg-transparent text-sm resize-none outline-none placeholder:text-muted-foreground"
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                   />
-                  <Button size="sm" disabled={!newComment.trim() || commenting} onClick={handleComment} className="self-end">
-                    {commenting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-                  </Button>
+                  <div className="flex justify-end pt-2">
+                    <Button size="sm" disabled={!newComment.trim() || commenting} onClick={handleComment} className="gap-1.5 rounded-full">
+                      {commenting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                      Comment
+                    </Button>
+                  </div>
                 </div>
               )}
 
               {loadingComments ? (
-                <p className="text-sm text-muted-foreground">Loading comments...</p>
+                <div className="flex items-center justify-center py-10 text-sm text-muted-foreground gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading comments...
+                </div>
               ) : comments.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-8 text-center border border-dashed rounded">No comments yet.</p>
+                <div className="text-sm text-muted-foreground py-8 text-center border border-dashed border-border rounded-xl bg-muted/20">No comments yet. Be the first to reply!</div>
               ) : (
-                <div className="space-y-4">
+                <div className="bg-card border border-border rounded-xl shadow-sm divide-y divide-border">
                   {comments.map((comment) => (
-                    <div key={comment.id} className="border-b pb-3 text-sm">
+                    <div key={comment.id} className="p-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold">{comment.userName}</span>
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                          {getInitials(comment.userName)}
+                        </div>
+                        <span className="font-semibold">{comment.userName}</span>
                         <span className="text-xs text-muted-foreground">
                           {new Date(comment.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                      <p className="mt-1 text-muted-foreground whitespace-pre-wrap">{comment.content}</p>
+                      <p className="mt-2 text-muted-foreground whitespace-pre-wrap leading-relaxed">{comment.content}</p>
                     </div>
                   ))}
                 </div>
