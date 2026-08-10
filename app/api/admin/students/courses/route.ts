@@ -18,37 +18,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    // Note: Server-side authorization check
     if (!(await isStaff(userId))) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const { searchParams } = new URL(req.url);
-    const search = searchParams.get('search')?.toLowerCase();
-    const course = searchParams.get('course')?.trim();
-
     const allStudents = await getAllStudents();
-    let students = allStudents;
+    const courses = [...new Set(allStudents.map(s => s.course).filter((c): c is string => !!c))].sort();
 
-    if (search) {
-      students = students.filter(s =>
-        (s.name?.toLowerCase() || '').includes(search) ||
-        (s.id?.toLowerCase() || '').includes(search)
-      );
-    }
-
-    if (course) {
-      students = students.filter(s => (s.course || '') === course);
-    }
-
-    if (!search && !course) {
-      students = [];
-    }
-
-    return NextResponse.json({ success: true, students });
+    return NextResponse.json({ success: true, courses });
 
   } catch (error: any) {
-    console.error('Admin students fetch error:', error);
+    console.error('Admin courses fetch error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

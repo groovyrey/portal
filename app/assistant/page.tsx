@@ -217,7 +217,7 @@ const ChatInput = React.memo(({ onSend, onStop, isLoading, onClear, hasMessages 
   };
 
   return (
-    <div className="p-4 md:p-6 bg-background">
+    <div className="p-4 md:p-6 bg-card border-t border-border">
       <div className="max-w-4xl mx-auto space-y-4">
           {attachments.length > 0 && (
             <div className="flex flex-wrap gap-2 px-2">
@@ -516,18 +516,18 @@ export default function AssistantPage() {
 
   return (
     <TabbedPageLayout title="Assistant" icon={BrainCircuit} subtitle="AI Study Companion" tabs={[{ id: 'chat', name: 'Chat', icon: MessageSquare }, { id: 'settings', name: 'Settings', icon: Settings }]} activeTab={activeTab} onTabChange={(id) => handleTabChange(id as any)}>
-      <div className="flex flex-col h-[calc(100vh-14rem)] w-full overflow-hidden">
+      <div className="flex flex-col h-[calc(100dvh-12rem)] min-h-[480px] w-full overflow-hidden">
         {activeTab === 'chat' && (
-          <Card className="flex-1 flex flex-col shadow-none overflow-hidden border-border bg-background w-full rounded-xl">
+          <Card className="flex-1 flex flex-col shadow-sm overflow-hidden border-border bg-card w-full rounded-2xl">
             <ScrollArea className="flex-1 w-full">
               <div className="flex flex-col min-h-full w-full max-w-4xl mx-auto px-4 py-8 md:px-6 relative">
                 {messages.length === 0 && (
                   <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 py-12 w-full">
-                    <div className="h-12 w-12 rounded-xl bg-primary/5 flex items-center justify-center text-primary border border-primary/10"><Bot className="h-6 w-6" /></div>
-                    <div className="space-y-1"><h2 className="text-xl font-bold">How can I help?</h2><p className="text-muted-foreground text-sm">Ask about your academic records.</p></div>
+                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-sm"><Bot className="h-7 w-7" /></div>
+                    <div className="space-y-1.5"><h2 className="text-2xl font-bold tracking-tight">How can I help?</h2><p className="text-muted-foreground text-sm">Ask about your academic records.</p></div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-xl px-4">
                       {suggestions.map((s, i) => (
-                        <button key={i} onClick={() => sendMessage(s.text)} className="flex items-center gap-3 p-3 bg-card border border-border hover:bg-accent rounded-lg transition-all text-left text-sm font-medium active:scale-[0.98] w-full"><div className={cn("p-1.5 rounded-md", s.bg, s.color)}><s.icon className="h-4 w-4" /></div><span>{s.text}</span></button>
+                        <button key={i} onClick={() => sendMessage(s.text)} className="flex items-center gap-3 p-3 bg-card border border-border hover:border-primary/40 hover:shadow-sm rounded-xl transition-all text-left text-sm font-medium active:scale-[0.98] w-full"><div className={cn("p-2 rounded-lg", s.bg, s.color)}><s.icon className="h-4 w-4" /></div><span>{s.text}</span></button>
                       ))}
                     </div>
                   </div>
@@ -556,7 +556,7 @@ export default function AssistantPage() {
                             />
                           )}
                         </div>
-                        <div className={cn("rounded-2xl px-4 py-2.5 border transition-all duration-200 min-w-0 w-fit max-w-full overflow-hidden shadow-sm", m.role === 'assistant' ? "bg-muted/30 border-border text-foreground rounded-tl-none" : "bg-primary text-primary-foreground border-primary rounded-tr-none")}>
+                        <div className={cn("rounded-2xl px-4 py-2.5 border transition-all duration-200 min-w-0 w-fit max-w-full overflow-hidden shadow-sm", m.role === 'assistant' ? "bg-muted/40 border-border text-foreground rounded-tl-none" : "bg-primary text-primary-foreground border-primary rounded-tr-none shadow-md")}>
                           {m.role === 'assistant' ? (
                             <div className="min-w-0 w-full overflow-hidden flex flex-col">
                               {(() => {
@@ -591,7 +591,7 @@ export default function AssistantPage() {
             <ChatInput onSend={sendMessage} onStop={() => { abortControllerRef.current?.abort(); setIsLoading(false); }} isLoading={isLoading} onClear={() => { setMessages([]); toast.success("Cleared"); }} hasMessages={messages.length > 0} />
           </Card>
         )}
-        {activeTab === 'settings' && <Card className="flex-1 overflow-y-auto bg-background border-border shadow-none rounded-xl m-4"><CardContent className="p-6 md:p-8">{student && <AssistantTab student={student} updateSettings={updateSettings} />}</CardContent></Card>}
+        {activeTab === 'settings' && <Card className="flex-1 overflow-y-auto bg-card border-border shadow-sm rounded-2xl"><CardContent className="p-6 md:p-8">{student && <AssistantTab student={student} updateSettings={updateSettings} />}</CardContent></Card>}
         
         <Dialog open={isQuestionModalOpen} onOpenChange={setIsQuestionModalOpen}>
           <DialogContent className="sm:max-w-md"><DialogHeader><DialogTitle>Assistant Question</DialogTitle><DialogDescription>{modalQuestion}</DialogDescription></DialogHeader><div className="py-4"><Input value={modalInput} onChange={(e) => setModalInput(e.target.value)} placeholder={modalPlaceholder} autoFocus onKeyDown={(e) => { if (e.key === 'Enter') { setIsQuestionModalOpen(false); sendMessage(modalInput); setModalInput(''); } }} /></div><DialogFooter><Button variant="ghost" onClick={() => setIsQuestionModalOpen(false)}>Cancel</Button><Button onClick={() => { setIsQuestionModalOpen(false); sendMessage(modalInput); setModalInput(''); }}>Submit</Button></DialogFooter></DialogContent>

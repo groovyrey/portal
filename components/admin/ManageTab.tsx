@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { Check, Loader2, Search, ShieldCheck, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { Check, Loader2, Search, ShieldCheck, User, ChevronLeft, ChevronRight, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { BADGE_LIST } from '@/lib/badges';
 import BadgeDisplay from '@/components/shared/BadgeDisplay';
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
@@ -19,8 +20,10 @@ const PAGE_SIZE = 10;
 
 export default function ManageTab() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [courses, setCourses] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [courseFilter, setCourseFilter] = useState('all');
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -33,9 +36,24 @@ export default function ManageTab() {
     return students.slice(start, start + PAGE_SIZE);
   }, [students, currentPage]);
 
-  const fetchStudents = async (query: string) => {
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        const response = await fetch('/api/admin/students/courses');
+        const data = await response.json();
+        if (data.success) setCourses(data.courses || []);
+      } catch {
+        // courses list is optional; fall back to search only
+      }
+    };
+    loadCourses();
+  }, []);
+
+  const fetchStudents = useCallback(async (query: string, course: string) => {
     const trimmed = query.trim();
-    if (!trimmed) {
+    const courseParam = course && course !== 'all' ? course : '';
+
+    if (!trimmed && !courseParam) {
       setStudents([]);
       setHasSearched(false);
       setCurrentPage(1);
@@ -47,7 +65,10 @@ export default function ManageTab() {
     setCurrentPage(1);
 
     try {
-      const response = await fetch(`/api/admin/students?search=${encodeURIComponent(trimmed)}`);
+      const params = new URLSearchParams();
+      if (trimmed) params.set('search', trimmed);
+      if (courseParam) params.set('course', courseParam);
+      const response = await fetch(`/api/admin/students?${params.toString()}`);
       const data = (await response.json()) as { success: boolean; students?: Student[]; error?: string };
 
       if (!data.success) {
@@ -61,11 +82,22 @@ export default function ManageTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    fetchStudents(searchTerm);
+    fetchStudents(searchTerm, courseFilter);
+  };
+
+  const handleCourseChange = (value: string) => {
+    setCourseFilter(value);
+    setCurrentPage(1);
+    if (searchTerm.trim() || value !== 'all') {
+      fetchStudents(searchTerm, value);
+    } else {
+      setStudents([]);
+      setHasSearched(false);
+    }
   };
 
   const toggleBadge = async (studentId: string, badgeId: string) => {
@@ -119,6 +151,17 @@ export default function ManageTab() {
                   className="pl-9"
                 />
               </div>
+              <Select value={courseFilter} onValueChange={handleCourseChange}>
+                <SelectTrigger className="sm:w-[220px]">
+                  <SelectValue placeholder="All courses" />
+                </SelectTrigger>
+                <SelectContent position="popper" className="z-[2000] max-h-[280px]">
+                  <SelectItem value="all">All courses</SelectItem>
+                  {courses.map((course) => (
+                    <SelectItem key={course} value={course}>{course}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button type="submit" disabled={loading} className="w-full sm:w-auto">
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Search
@@ -156,7 +199,7 @@ export default function ManageTab() {
                 ) : students.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
-                      <p className="text-sm font-medium">No matches found for "{searchTerm}"</p>
+                      <p className="text-sm font-medium">No matches found for &quot;{searchTerm}&quot;</p>
                     </td>
                   </tr>
                 ) : (
@@ -231,13 +274,29 @@ export default function ManageTab() {
 
           {selectedStudent && (
             <div className="space-y-6 py-2">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
+              <div className="flex items-start gap-4">
+                <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center shrink-0">
                   <User className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-bold">{selectedStudent.name}</p>
                   <p className="text-xs text-muted-foreground font-mono">{selectedStudent.id}</p>
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <Badge variant="outline" className="gap-1 bg-primary/5 text-primary border-primary/20">
+                      <GraduationCap className="h-3 w-3" />
+                      {selectedStudent.course || 'No course'}
+                    </Badge>
+                    {selectedStudent.yearLevel && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        Year {selectedStudent.yearLevel}
+                      </Badge>
+                    )}
+                    {selectedStudent.semester && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        {selectedStudent.semester}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
 

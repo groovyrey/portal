@@ -3,11 +3,13 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { toast } from 'sonner';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Trash2, Plus, RefreshCcw } from 'lucide-react';
+import { Plus, RefreshCcw, MessagesSquare, MessageCircle, BarChart3 } from 'lucide-react';
 import { CommunityPost, Student } from '@/types';
 import PostCard from '@/components/community/PostCard';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import Skeleton from '@/components/ui/Skeleton';
 
 function CommunityContent() {
   const router = useRouter();
@@ -26,7 +28,11 @@ function CommunityContent() {
   const [student, setStudent] = useState<Student | null>(null);
 
   const topics = ['All', 'Academics', 'Campus Life', 'Career', 'Well-being', 'General'];
-  const types = ['all', 'posts', 'polls'];
+  const types = [
+    { id: 'all', label: 'All', icon: MessagesSquare },
+    { id: 'posts', label: 'Posts', icon: MessageCircle },
+    { id: 'polls', label: 'Polls', icon: BarChart3 },
+  ] as const;
   const sorts = ['newest', 'popular', 'commented'];
 
   const updateParams = (updates: Record<string, string | null>) => {
@@ -106,76 +112,116 @@ function CommunityContent() {
     }
   };
 
-  const handleDeletePost = async () => {
-    const id = prompt('Enter post ID to delete:');
-    if (!id) return;
-    try {
-      const res = await fetch('/api/community', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId: id }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success('Deleted');
-        queryClient.invalidateQueries({ queryKey: ['community-posts'] });
-      } else toast.error(data.error || 'Delete failed');
-    } catch {
-      toast.error('Network error');
-    }
-  };
-
   return (
-    <div className="flex-1 p-4 md:p-8 pt-6 pb-20">
-      <div className="max-w-2xl mx-auto space-y-4">
+    <div className="flex-1 p-4 md:p-8 pt-6 pb-24">
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold">Community</h2>
-          <div className="flex gap-2 text-sm">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Community</h1>
+            <p className="text-sm text-muted-foreground mt-1">Connect with your fellow LCCians.</p>
+          </div>
+          <Button onClick={() => router.push('/community/create')}>
+            <Plus className="h-4 w-4" />
+            New Post
+          </Button>
+        </div>
+
+        {/* Sort */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide mr-1">Sort</span>
+          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
             {sorts.map(s => (
-              <button key={s} onClick={() => updateParams({ sort: s })} className={sortBy === s ? 'font-bold' : 'text-muted-foreground'}>
+              <button
+                key={s}
+                onClick={() => updateParams({ sort: s })}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-xs font-medium capitalize transition-colors",
+                  sortBy === s
+                    ? "bg-card text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
                 {s}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="flex gap-2 text-sm">
+        {/* Topics */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
           {topics.map(t => (
             <button
               key={t}
               onClick={() => updateParams({ topic: t })}
-              className={selectedTopic === t ? 'font-bold' : 'text-muted-foreground'}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors",
+                selectedTopic === t
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
+              )}
             >
               {t}
             </button>
           ))}
         </div>
 
-        <div className="flex gap-2 text-xs text-muted-foreground">
-          {types.map(t => (
-            <button
-              key={t}
-              onClick={() => updateParams({ type: t })}
-              className={selectedType === t ? 'font-bold text-foreground' : ''}
-            >
-              {t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
-            </button>
-          ))}
+        {/* Type filter */}
+        <div className="flex items-center gap-2">
+          {types.map(t => {
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.id}
+                onClick={() => updateParams({ type: t.id })}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                  selectedType === t.id
+                    ? "bg-primary/10 text-primary border border-primary/20"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {t.label}
+              </button>
+            );
+          })}
         </div>
 
+        {/* Feed */}
         {isLoading ? (
-          <p className="text-center text-muted-foreground py-8">Loading...</p>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="p-5 rounded-xl border border-border bg-card space-y-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-3 w-1/4" />
+                  </div>
+                </div>
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+            ))}
+          </div>
         ) : isError ? (
-          <div className="text-center py-8 space-y-2">
+          <div className="text-center py-12 space-y-3">
             <p className="text-sm text-muted-foreground">Failed to load posts.</p>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCcw className="mr-2 h-4 w-4" /> Retry
             </Button>
           </div>
         ) : allPosts.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8 text-sm">No posts found.</p>
+          <div className="text-center py-12 space-y-2">
+            <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto mb-2">
+              <MessagesSquare className="h-7 w-7 text-muted-foreground/40" />
+            </div>
+            <p className="text-sm font-medium">No posts found.</p>
+            <p className="text-xs text-muted-foreground">Be the first to start a conversation.</p>
+          </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {allPosts.map(post => (
               <PostCard
                 key={post.id}
@@ -194,9 +240,11 @@ function CommunityContent() {
           </div>
         )}
 
+        {/* Floating action button (mobile) */}
         <button
           onClick={() => router.push('/community/create')}
-          className="fixed bottom-8 right-8 h-12 w-12 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-all"
+          className="lg:hidden fixed bottom-8 right-8 h-12 w-12 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+          aria-label="New post"
         >
           <Plus className="h-5 w-5" />
         </button>

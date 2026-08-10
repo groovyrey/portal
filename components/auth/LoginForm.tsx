@@ -57,7 +57,7 @@ export default function LoginForm({ onLogin, loading, error, requiresPasswordCha
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
                 maxLength={20}
-                placeholder="0000-0000"
+                placeholder="20241322"
               />
             </div>
 
