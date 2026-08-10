@@ -210,6 +210,24 @@ export default function Navbar() {
               );
             })}
           </div>
+
+          {isLoggedIn && studentId && (
+            <div className="pt-3 mt-3 border-t border-border">
+              <Link
+                href={`/student/${studentId}`}
+                onClick={() => setIsOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  isActive(`/student/${studentId}`)
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                )}
+              >
+                <UserIcon className="h-4 w-4" />
+                My Profile
+              </Link>
+            </div>
+          )}
         </div>
       </Drawer>
 

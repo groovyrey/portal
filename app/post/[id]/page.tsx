@@ -172,9 +172,9 @@ export default function PostPage() {
   return (
     <div className="flex-1 p-4 md:p-8 pt-6 pb-20">
       <div className="max-w-2xl mx-auto space-y-6">
-        <Button variant="ghost" size="sm" onClick={() => router.push('/community')} className="gap-2 -ml-2 text-muted-foreground hover:text-foreground">
+        <Button variant="ghost" size="sm" onClick={() => router.push('/community')} className="hidden lg:inline-flex gap-2 -ml-2 text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" />
-          Back
+          Back to Community
         </Button>
 
         {loadingPost ? (
@@ -303,8 +303,10 @@ export default function PostPage() {
                         <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
                           {getInitials(comment.userName)}
                         </div>
-                        <span className="font-semibold">{comment.userName}</span>
-                        <span className="text-xs text-muted-foreground">
+                        <Link href={`/student/${comment.userId}`} className="font-semibold hover:text-primary transition-colors truncate">
+                          {comment.userName}
+                        </Link>
+                        <span className="text-xs text-muted-foreground shrink-0">
                           {new Date(comment.createdAt).toLocaleDateString()}
                         </span>
                       </div>
