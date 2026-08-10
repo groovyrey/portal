@@ -126,6 +126,7 @@ export async function GET(req: NextRequest) {
     if (userIdFilter) {
       whereConditions.push(`p.user_id = $${queryParams.length + 1}`);
       queryParams.push(userIdFilter);
+      whereConditions.push(`p.is_anonymous = 0`);
     }
 
     if (topicFilter && topicFilter !== 'All') {
