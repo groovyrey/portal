@@ -97,7 +97,7 @@ export class SyncService {
     }
   }
 
-  async syncGrades(reportName: string, subjects: any[], reportSlug?: string) {
+  async syncGrades(reportName: string, subjects: any[]) {
     if (!subjects || subjects.length === 0) return;
 
     const now = new Date().toISOString();

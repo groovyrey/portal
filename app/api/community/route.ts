@@ -60,10 +60,13 @@ export async function GET(req: NextRequest) {
       const postRes = await query(`
         SELECT 
           p.*,
+          s.profile_photo_url as userPhoto,
+          s.badges as userBadges,
           (SELECT COUNT(*) FROM community_post_likes WHERE post_id = p.id) as "likeCount",
           (SELECT COUNT(*) FROM community_comments WHERE post_id = p.id) as "commentCount",
           (SELECT json_group_array(user_id) FROM community_post_likes WHERE post_id = p.id) as likes
         FROM community_posts p
+        LEFT JOIN students s ON s.id = p.user_id
         WHERE p.id = $1
       `, [postId]);
 
@@ -103,6 +106,8 @@ export async function GET(req: NextRequest) {
         imageUrl: post.image_url,
         isAnonymous: !!post.is_anonymous,
         isUnreviewed: post.is_unreviewed,
+        isStaff: !post.is_anonymous && parseJsonArray(post.userBadges).includes('staff'),
+        userPhoto: post.is_anonymous ? null : (post.userPhoto || null),
         createdAt: post.created_at.toISOString(),
         likes: parseJsonArray(post.likes),
         commentCount: parseInt(post.commentCount, 10),
@@ -115,10 +120,13 @@ export async function GET(req: NextRequest) {
     let queryStr = `
       SELECT 
         p.*,
+        s.profile_photo_url as userPhoto,
+        s.badges as userBadges,
         (SELECT COUNT(*) FROM community_post_likes WHERE post_id = p.id) as "likeCount",
         (SELECT COUNT(*) FROM community_comments WHERE post_id = p.id) as "commentCount",
         (SELECT json_group_array(user_id) FROM community_post_likes WHERE post_id = p.id) as likes
       FROM community_posts p
+      LEFT JOIN students s ON s.id = p.user_id
     `;
     const queryParams: unknown[] = [];
     const whereConditions: string[] = [];
@@ -204,6 +212,8 @@ export async function GET(req: NextRequest) {
       imageUrl: post.image_url,
       isAnonymous: !!post.is_anonymous,
       isUnreviewed: post.is_unreviewed,
+      isStaff: !post.is_anonymous && parseJsonArray(post.userBadges).includes('staff'),
+      userPhoto: post.is_anonymous ? null : (post.userPhoto || null),
       createdAt: post.created_at.toISOString(),
       likes: parseJsonArray(post.likes),
       commentCount: parseInt(post.commentCount, 10),

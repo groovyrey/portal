@@ -22,7 +22,7 @@ export default function NotFound() {
         {/* Text Content */}
         <h1 className="text-3xl font-bold text-foreground mb-3 tracking-tight">Lost?</h1>
         <p className="text-muted-foreground font-medium text-sm leading-relaxed mb-10">
-          We can't find that page.
+          We can&apos;t find that page.
         </p>
 
         {/* Action Buttons */}

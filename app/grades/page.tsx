@@ -1,25 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SubjectGrade } from '@/types';
 import GradesList from '@/components/dashboard/GradesList';
 import GradeStats from '@/components/dashboard/GradeStats';
+import TabbedPageLayout from '@/components/layout/TabbedPageLayout';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import LottieAnimation from '@/components/ui/LottieAnimation';
 import Skeleton from '@/components/ui/Skeleton';
 import { useStudent } from '@/lib/hooks';
-import { GraduationCap, ArrowLeft, RefreshCcw, Loader2 } from 'lucide-react';
+import { GraduationCap, ArrowLeft, RefreshCcw, Loader2, BarChart3, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 
 type ExtendedGrade = SubjectGrade & { semester: string };
+type GradesTab = 'stats' | 'records';
 
 export default function GradesPage() {
   const { student } = useStudent();
   const [isInitialized, setIsInitialized] = useState(false);
   const [allGrades, setAllGrades] = useState<ExtendedGrade[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [activeTab, setActiveTab] = useState<GradesTab>('stats');
+  const autoSynced = useRef(false);
 
   useEffect(() => {
     const savedAllGrades = localStorage.getItem('all_grades_cache');
@@ -34,10 +37,18 @@ export default function GradesPage() {
     setIsInitialized(true);
   }, []);
 
-  const calculateStats = async () => {
+  // Auto-load stats on page open instead of requiring the sync button.
+  useEffect(() => {
+    if (!isInitialized || autoSynced.current || !student?.availableReports) return;
+    autoSynced.current = true;
+    calculateStats(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInitialized, student]);
+
+  const calculateStats = async (silent = false) => {
     if (!student || !student.availableReports || isCalculating) return;
     setIsCalculating(true);
-    const statsToast = toast.loading('Getting your grades...');
+    const statsToast = silent ? null : toast.loading('Getting your grades...');
     let gathered: ExtendedGrade[] = [];
 
     try {
@@ -66,7 +77,7 @@ export default function GradesPage() {
       });
 
       if (gathered.length === 0) {
-        toast.error('No records found.', { id: statsToast });
+        toast.error('No records found.', { id: statsToast || undefined });
         setIsCalculating(false);
         return;
       }
@@ -104,10 +115,10 @@ export default function GradesPage() {
 
       setAllGrades(unique);
       localStorage.setItem('all_grades_cache', JSON.stringify(unique));
-      toast.success('Grades updated!', { id: statsToast });
+      if (statsToast) toast.success('Grades updated!', { id: statsToast });
     } catch (err) {
       console.error('Failed to aggregate grades', err);
-      toast.error('Failed to get your grades.', { id: statsToast });
+      toast.error('Failed to get your grades.', { id: statsToast || undefined });
     } finally {
       setIsCalculating(false);
     }
@@ -157,57 +168,76 @@ export default function GradesPage() {
     );
   }
 
+  const tabs = [
+    { id: 'stats', name: 'Stats', icon: BarChart3, desc: 'Performance summary' },
+    { id: 'records', name: 'Records', icon: FileText, desc: 'Semester grade reports' },
+  ] as const;
+
   return (
-    <div className="flex-1 space-y-8 p-8 pt-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
-        <div className="hidden lg:block">
-          <h2 className="text-3xl font-bold tracking-tight">Grades</h2>
-          <p className="text-muted-foreground">
-            Official scholastic records and performance history.
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button 
-            onClick={calculateStats}
-            disabled={isCalculating}
-          >
-            {isCalculating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Updating...
-              </>
-            ) : (
-              <>
-                <RefreshCcw className="mr-2 h-4 w-4" />
-                Sync Grades
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      <Separator />
-
-      <div className="space-y-8">
-        {allGrades.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold tracking-tight">Performance Summary</h3>
+    <TabbedPageLayout
+      title="Grades"
+      icon={GraduationCap}
+      subtitle="Official scholastic records and performance history"
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={(tab) => setActiveTab(tab)}
+      headerRight={
+        <Button
+          onClick={() => calculateStats(false)}
+          disabled={isCalculating}
+          variant="outline"
+          size="sm"
+          className="shrink-0"
+        >
+          {isCalculating ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Updating...
+            </>
+          ) : (
+            <>
+              <RefreshCcw className="mr-2 h-4 w-4" />
+              Sync Grades
+            </>
+          )}
+        </Button>
+      }
+    >
+      {activeTab === 'stats' && (
+        allGrades.length > 0 ? (
+          <GradeStats 
+            allGrades={allGrades} 
+            enrolledUnits={student.schedule?.reduce((acc, curr) => acc + (parseFloat(curr.units) || 0), 0) || 0}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+              <BarChart3 className="h-8 w-8 text-muted-foreground/30" />
             </div>
-            <GradeStats 
-              allGrades={allGrades} 
-              enrolledUnits={student.schedule?.reduce((acc, curr) => acc + (parseFloat(curr.units) || 0), 0) || 0}
-            />
+            <h3 className="text-sm font-semibold text-foreground mb-1">No stats yet</h3>
+            <p className="text-xs text-muted-foreground mb-6 max-w-sm">
+              Sync your grades to see your performance summary and averages.
+            </p>
+            <Button onClick={() => calculateStats(false)} disabled={isCalculating} variant="outline" size="sm">
+              {isCalculating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  Sync Grades
+                </>
+              )}
+            </Button>
           </div>
-        )}
+        )
+      )}
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold tracking-tight">Grade Reports</h3>
-          </div>
-          <GradesList reports={student.availableReports} />
-        </div>
-      </div>
-    </div>
+      {activeTab === 'records' && (
+        <GradesList reports={student.availableReports} />
+      )}
+    </TabbedPageLayout>
   );
 }

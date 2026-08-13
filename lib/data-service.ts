@@ -24,6 +24,7 @@ export async function getStudentProfile(userId: string): Promise<Student | null>
       name: data.name,
       parsedName: parseStudentName(data.name),
       course: data.course,
+      profilePhotoUrl: data.profile_photo_url || null,
       email: data.email,
       address: data.address,
       mobile: data.mobile,
@@ -214,11 +215,13 @@ export async function getFullStudentData(userId: string): Promise<AggregatedStud
 
   grades.forEach(g => {
     const grade = parseFloat(g.grade);
-    if (!isNaN(grade) && grade > 0) {
-      const units = g.units ? parseFloat(g.units) : 3.0;
-      totalWeightedGrade += grade * units;
-      totalUnits += units;
-    }
+    const remark = (g.remarks || '').toUpperCase().trim();
+    // Skip non-numeric grades and in-progress/dropped/not-graded remarks.
+    if (isNaN(grade) || grade <= 0) return;
+    if (['INC', 'DRP', 'NG', 'INCOMPLETE', 'DROPPED', 'NO GRADE', 'N/A'].includes(remark)) return;
+    const units = g.units ? parseFloat(g.units) : 3.0;
+    totalWeightedGrade += grade * units;
+    totalUnits += units;
   });
 
   const gpa = totalUnits > 0 ? (totalWeightedGrade / totalUnits).toFixed(2) : 'N/A';

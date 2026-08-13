@@ -50,7 +50,7 @@ export default function SupportTab() {
             icon={<BookOpen className="h-4 w-4" />} 
             title="Help Center" 
             description="Documentation and FAQs"
-            onClick={() => router.push('/docs')}
+            onClick={() => {}}
           />
           <SupportItem 
             icon={<MessageSquare className="h-4 w-4" />} 

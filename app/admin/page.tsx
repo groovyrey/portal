@@ -8,8 +8,7 @@ import {
   ShieldCheck,
   BarChart3,
   Activity,
-  Mail,
-  AlertTriangle
+  Mail
 } from 'lucide-react';
 import { useStudentQuery } from '@/lib/hooks';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
@@ -23,19 +22,18 @@ import ManageTab from '@/components/admin/ManageTab';
 import StatsTab from '@/components/admin/StatsTab';
 import MonitoringTab from '@/components/admin/MonitoringTab';
 import EmailTab from '@/components/admin/EmailTab';
-import IncidentsTab from '@/components/admin/IncidentsTab';
 
 export default function AdminPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<'manage' | 'stats' | 'monitoring' | 'email' | 'incidents'>('manage');
+  const [activeTab, setActiveTab] = useState<'manage' | 'stats' | 'monitoring' | 'email'>('manage');
   const { data: currentUser, isLoading: isUserLoading } = useStudentQuery();
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['manage', 'stats', 'monitoring', 'email', 'incidents'].includes(tab)) {
+    if (tab && ['manage', 'stats', 'monitoring', 'email'].includes(tab)) {
       setActiveTab(tab as any);
     }
   }, [searchParams]);
@@ -80,7 +78,6 @@ export default function AdminPage() {
 
   const tabs = [
     { id: 'manage', name: 'Users', icon: Users, desc: 'Manage profiles and badges' },
-    { id: 'incidents', name: 'Incidents', icon: AlertTriangle, desc: 'View system error reports' },
     { id: 'email', name: 'Email', icon: Mail, desc: 'Send announcements' },
     { id: 'stats', name: 'Stats', icon: BarChart3, desc: 'Growth and usage metrics' },
     { id: 'monitoring', name: 'System', icon: Activity, desc: 'Check health and logs' },
@@ -103,7 +100,6 @@ export default function AdminPage() {
     >
       <div className="space-y-6">
         {activeTab === 'manage' && <ManageTab />}
-        {activeTab === 'incidents' && <IncidentsTab />}
         {activeTab === 'email' && <EmailTab />}
         {activeTab === 'stats' && <StatsTab />}
         {activeTab === 'monitoring' && <MonitoringTab />}

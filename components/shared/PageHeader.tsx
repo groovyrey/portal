@@ -20,7 +20,6 @@ export default function PageHeader() {
     if (path === '/eaf') return 'EAF';
     if (path === '/about') return 'About';
     if (path === '/disclaimer') return 'Disclaimer';
-    if (path === '/docs') return 'Docs';
     if (path === '/school') return 'School';
     if (path.startsWith('/post/')) return 'Post';
     return '';

@@ -18,12 +18,13 @@ export async function migratePortalTables() {
         available_reports TEXT, -- JSON
         settings TEXT, -- JSON
         badges TEXT, -- JSON
+        profile_photo_url TEXT,
         updated_at TEXT
       );
     `);
 
     // Ensure columns exist for older tables if any
-    const studentCols = ['address', 'mobile', 'enrollment_date', 'available_reports', 'settings', 'badges', 'school_year', 'section'];
+    const studentCols = ['address', 'mobile', 'enrollment_date', 'available_reports', 'settings', 'badges', 'school_year', 'section', 'profile_photo_url'];
     for (const col of studentCols) {
       try {
         await query(`ALTER TABLE students ADD COLUMN ${col} TEXT;`);
@@ -82,12 +83,18 @@ export async function migratePortalTables() {
       CREATE TABLE IF NOT EXISTS portal_sessions (
         id TEXT PRIMARY KEY,
         encrypted_jar TEXT,
+        encrypted_password TEXT,
         consecutive_failures INTEGER DEFAULT 0,
         last_attempt_at TEXT,
         updated_at TEXT,
         refresh_lock_until TEXT
       );
     `);
+
+    // Ensure encrypted_password exists for older tables
+    try {
+      await query(`ALTER TABLE portal_sessions ADD COLUMN encrypted_password TEXT;`);
+    } catch (e) {}
 
     // 6. Ratings
     await query(`
@@ -152,9 +159,15 @@ export async function migrateCommunity() {
         user_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
         user_name TEXT NOT NULL,
         content TEXT NOT NULL,
+        parent_id INTEGER REFERENCES community_comments(id) ON DELETE CASCADE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Ensure parent_id exists for older tables (nested comment replies)
+    try {
+      await query(`ALTER TABLE community_comments ADD COLUMN parent_id INTEGER REFERENCES community_comments(id) ON DELETE CASCADE;`);
+    } catch (e) {}
 
     // 4. Create community_post_likes table
     await query(`
@@ -231,25 +244,12 @@ export async function migrateActivityLogs() {
   }
 }
 
-export async function migrateIncidentReports() {
+export async function dropIncidentReports() {
   try {
-    await query(`
-      CREATE TABLE IF NOT EXISTS incident_reports (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        task TEXT NOT NULL,
-        user_id TEXT,
-        error_message TEXT,
-        ai_result TEXT, -- JSON string
-        raw_html TEXT,
-        severity TEXT DEFAULT 'warning', -- 'warning' or 'error'
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-    
-    await query(`CREATE INDEX IF NOT EXISTS idx_incidents_task ON incident_reports(task);`);
-    await query(`CREATE INDEX IF NOT EXISTS idx_incidents_created ON incident_reports(created_at DESC);`);
+    // Incidents feature removed; purge the legacy table and its indexes.
+    await query(`DROP TABLE IF EXISTS incident_reports;`);
   } catch (error) {
-    console.error("Migration Error (Incident Reports):", error);
+    console.error("Migration Error (Drop Incident Reports):", error);
     throw error;
   }
 }

@@ -28,6 +28,7 @@ import {
 import Drawer from './Drawer';
 import SecuritySettings from '@/components/dashboard/SecuritySettings';
 import StarRating from '@/components/ui/StarRating';
+import StudentAvatar from '@/components/shared/StudentAvatar';
 import { useStudent } from '@/lib/hooks';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -127,10 +128,11 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
           <div className="space-y-6">
             <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg border border-border">
                 <div className="w-16 h-16 rounded-full bg-background border border-border shrink-0 overflow-hidden">
-                    <img 
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student!.name)}&background=0f172a&color=f8fafc&size=256&bold=true`}
-                        alt={student!.name}
-                        className="w-full h-full object-cover dark:opacity-80"
+                    <StudentAvatar
+                        name={student!.name}
+                        photoUrl={student!.profilePhotoUrl}
+                        className="h-full w-full"
+                        fallbackClassName="bg-background text-primary text-lg font-bold"
                     />
                 </div>
                 <div className="flex-1 min-w-0">

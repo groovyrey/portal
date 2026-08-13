@@ -138,6 +138,55 @@ export async function saveSession(userId: string, jar: CookieJar, isSuccess: boo
   }
 }
 
+/**
+ * Store the portal password server-side (encrypted) so the client cookie
+ * never needs to carry credentials. Required for background re-login.
+ */
+export async function savePortalPassword(userId: string, password: string) {
+  try {
+    const encrypted = encrypt(password);
+    const now = new Date().toISOString();
+    await query(`
+      INSERT INTO portal_sessions (id, encrypted_password, updated_at, last_attempt_at, consecutive_failures, refresh_lock_until)
+      VALUES (?, ?, ?, ?, 0, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        encrypted_password = ?,
+        updated_at = ?
+    `, [
+      userId, encrypted, now, now, new Date(0).toISOString(),
+      encrypted, now
+    ]);
+  } catch (error) {
+    console.error('Failed to save portal password:', error);
+  }
+}
+
+/**
+ * Retrieve the server-side portal password (decrypted) for background sync.
+ * Returns null when no credential is stored.
+ */
+export async function getPortalPassword(userId: string): Promise<string | null> {
+  try {
+    const res = await query('SELECT encrypted_password FROM portal_sessions WHERE id = ?', [userId]);
+    if (res.rowCount === 0 || !res.rows[0].encrypted_password) return null;
+    return decrypt(res.rows[0].encrypted_password);
+  } catch (error) {
+    console.error('Failed to retrieve portal password:', error);
+    return null;
+  }
+}
+
+/**
+ * Fully revoke the stored portal session and credentials for a user.
+ */
+export async function clearPortalSession(userId: string) {
+  try {
+    await query('DELETE FROM portal_sessions WHERE id = ?', [userId]);
+  } catch (error) {
+    console.error('Failed to clear portal session:', error);
+  }
+}
+
 export async function acquireRefreshLock(userId: string): Promise<boolean> {
     const dbClient = await getClient();
     try {

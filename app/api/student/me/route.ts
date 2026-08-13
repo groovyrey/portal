@@ -19,13 +19,11 @@ export async function GET(req: NextRequest) {
     }
 
     let userId = "";
-    let password = "";
     try {
       const decrypted = decrypt(sessionCookie.value);
       const sessionData = JSON.parse(decrypted);
       userId = sessionData.userId;
-      password = sessionData.password;
-      if (!userId || !password) throw new Error("Incomplete session data");
+      if (!userId) throw new Error("Incomplete session data");
     } catch (e: any) {
       console.error('Session decryption failed:', e.message);
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
@@ -55,7 +53,7 @@ export async function GET(req: NextRequest) {
           } else {
              console.log(`Data for ${userId} is stale. Triggering background sync...`);
              // Trigger background sync (non-blocking) using Vercel waitUntil
-             waitUntil(backgroundSync(userId, password).catch(err => {
+             waitUntil(backgroundSync(userId).catch(err => {
                console.error('Background sync failed:', err);
              }));
           }
@@ -77,7 +75,15 @@ export async function GET(req: NextRequest) {
 /**
  * Background Synchronization Function
  */
-async function backgroundSync(userId: string, password: string) {
+async function backgroundSync(userId: string) {
+  // Credentials are stored server-side only; never in the client cookie.
+  const { getPortalPassword } = await import('@/lib/session-proxy');
+  const password = await getPortalPassword(userId);
+  if (!password) {
+    console.log(`[AutoSync] Skipping for ${userId}: No saved portal credentials.`);
+    return;
+  }
+
   const { client, jar, isLocked, consecutiveFailures } = await getSessionClient(userId);
   
   if (isLocked) {

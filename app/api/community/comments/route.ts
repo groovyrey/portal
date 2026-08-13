@@ -18,6 +18,18 @@ function parseSessionUserId(req: NextRequest): string | null {
   }
 }
 
+function parseJsonArray(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean).map(String);
+  if (typeof value !== 'string') return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter(Boolean).map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
 async function getCanonicalUserName(userId: string): Promise<string> {
   const nameRes = await query('SELECT name FROM students WHERE id = $1', [userId]);
   const name = (nameRes.rows[0]?.name || '').trim();
@@ -37,9 +49,11 @@ export async function GET(req: NextRequest) {
     if (isNaN(postId)) return NextResponse.json({ error: 'Invalid post ID' }, { status: 400 });
 
     const commentsRes = await query(`
-      SELECT * FROM community_comments
-      WHERE post_id = $1
-      ORDER BY created_at ASC
+      SELECT c.*, s.profile_photo_url as userPhoto, s.badges as userBadges
+      FROM community_comments c
+      LEFT JOIN students s ON s.id = c.user_id
+      WHERE c.post_id = $1
+      ORDER BY c.created_at ASC
     `, [postId]);
 
     const comments = commentsRes.rows.map(row => ({
@@ -48,6 +62,9 @@ export async function GET(req: NextRequest) {
       postId: row.post_id.toString(),
       userId: row.user_id,
       userName: row.user_name,
+      parentId: row.parent_id != null ? row.parent_id.toString() : null,
+      userPhoto: row.userPhoto || null,
+      isStaff: parseJsonArray(row.userBadges).includes('staff'),
       createdAt: row.created_at.toISOString()
     }));
 
@@ -60,11 +77,25 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { postId: postIdStr, content } = await req.json();
+    const { postId: postIdStr, content, parentId: parentIdStr } = await req.json();
     if (!postIdStr || !content) return NextResponse.json({ error: 'Post ID and content required' }, { status: 400 });
 
     const postId = parseInt(postIdStr, 10);
     if (isNaN(postId)) return NextResponse.json({ error: 'Invalid post ID' }, { status: 400 });
+
+    let parentId: number | null = null;
+    if (parentIdStr) {
+      parentId = parseInt(parentIdStr, 10);
+      if (isNaN(parentId)) return NextResponse.json({ error: 'Invalid parent comment ID' }, { status: 400 });
+
+      const parentCheck = await query(
+        'SELECT id FROM community_comments WHERE id = $1 AND post_id = $2',
+        [parentId, postId]
+      );
+      if (parentCheck.rows.length === 0) {
+        return NextResponse.json({ error: 'Parent comment not found' }, { status: 400 });
+      }
+    }
 
     const userId = parseSessionUserId(req);
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -78,10 +109,10 @@ export async function POST(req: NextRequest) {
     `, [userId, canonicalUserName]);
 
     const commentRes = await query(`
-      INSERT INTO community_comments (post_id, user_id, user_name, content)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO community_comments (post_id, user_id, user_name, content, parent_id)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING id, created_at
-    `, [postId, userId, canonicalUserName, content]);
+    `, [postId, userId, canonicalUserName, content, parentId]);
 
     const postRes = await query('SELECT user_id, content FROM community_posts WHERE id = $1', [postId]);
     if (postRes.rows.length > 0) {
@@ -99,12 +130,27 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (parentId) {
+      const parentRes = await query('SELECT user_id FROM community_comments WHERE id = $1', [parentId]);
+      const parentOwnerId = parentRes.rows[0]?.user_id;
+      if (parentOwnerId && parentOwnerId !== userId) {
+        createNotification({
+          userId: parentOwnerId,
+          title: 'New Reply',
+          message: `${canonicalUserName} replied to your comment: "${content.substring(0, 50)}..."`,
+          type: 'info',
+          link: `/post/${postId}`
+        }).catch(e => console.error('Reply notification error:', e));
+      }
+    }
+
     const newComment = {
       id: commentRes.rows[0].id.toString(),
       postId: postId.toString(),
       userId,
       userName: canonicalUserName,
       content,
+      parentId: parentId ? parentId.toString() : null,
       createdAt: commentRes.rows[0].created_at.toISOString()
     };
 
@@ -158,7 +204,14 @@ export async function DELETE(req: NextRequest) {
     }
 
     const commentData = commentCheck.rows[0];
-    await query('DELETE FROM community_comments WHERE id = $1', [commentId]);
+    await query(`
+      WITH RECURSIVE subtree AS (
+        SELECT id FROM community_comments WHERE id = $1
+        UNION ALL
+        SELECT c.id FROM community_comments c JOIN subtree s ON c.parent_id = s.id
+      )
+      DELETE FROM community_comments WHERE id IN (SELECT id FROM subtree)
+    `, [commentId]);
 
     await publishUpdate('community', { type: 'COMMENT_DELETED', postId: commentData.post_id });
 

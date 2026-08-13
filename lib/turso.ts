@@ -13,6 +13,29 @@ const client = createClient({
 });
 
 /**
+ * Columns that are known to hold JSON-encoded values. Only these are
+ * auto-parsed from TEXT to objects/arrays. This prevents accidental parsing
+ * of plain string data (e.g. names, encrypted blobs) that happens to start
+ * with '[' or '{'.
+ */
+const JSON_COLUMNS = new Set([
+  'settings',
+  'badges',
+  'available_reports',
+  'items',      // schedules
+  'details',    // financials / activity_logs / admin_logs
+  'data',       // metadata
+  'tasks',      // cron_runs
+  'results',    // cron_runs
+  'likes',      // json_group_array aliases (community)
+  'votes',      // json_group_array aliases (community polls)
+]);
+
+function isJsonColumn(col: string): boolean {
+  return JSON_COLUMNS.has(col.toLowerCase());
+}
+
+/**
  * Compatibility wrapper to match the 'pg' query interface
  */
 export const query = async (text: string, params: any[] = []) => {
@@ -36,8 +59,8 @@ export const query = async (text: string, params: any[] = []) => {
       result.columns.forEach((col, i) => {
         let value: any = row[i];
         
-        // Handle JSON strings
-        if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
+        // Handle JSON strings (only for known JSON columns)
+        if (isJsonColumn(col) && typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
           try {
             value = JSON.parse(value);
           } catch (e) {
@@ -100,8 +123,8 @@ export const getClient = async () => {
           result.columns.forEach((col, i) => {
             let value: any = row[i];
             
-            // Handle JSON strings
-            if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
+            // Handle JSON strings (only for known JSON columns)
+            if (isJsonColumn(col) && typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
               try {
                 value = JSON.parse(value);
               } catch (e) {
@@ -131,11 +154,9 @@ export const getClient = async () => {
       };
     },
     release: () => {
-      // In libSQL, if transaction is not committed or rolled back, it's rolled back on close.
-      // In some implementations, release() is used for connection pooling.
-      // We can't easily close it here if it's already finished.
+      // If the transaction is still open, roll it back to avoid leaked writes.
       if (!transaction.closed) {
-          // transaction.rollback().catch(() => {}); // Safety
+        transaction.rollback().catch(() => {});
       }
     },
     commit: () => transaction.commit(),

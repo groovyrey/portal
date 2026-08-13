@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { decrypt } from '@/lib/auth';
 
 const ALLOWED_DOMAINS = [
   'soundhelix.com',
@@ -16,7 +17,22 @@ function isAllowedUrl(url: string): boolean {
   }
 }
 
+function isAuthenticated(req: NextRequest): boolean {
+  const sessionCookie = req.cookies.get('session_token');
+  if (!sessionCookie?.value) return false;
+  try {
+    decrypt(sessionCookie.value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(req: NextRequest) {
+  if (!isAuthenticated(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const audioUrl = searchParams.get('url');
 

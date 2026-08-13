@@ -104,8 +104,15 @@ COMMENT CONTENT: ${comment.content}
 
     // Note: 4. Handle Decision
     if (result.decision === 'REJECTED') {
-      // Note: Delete the comment
-      await query('DELETE FROM community_comments WHERE id = $1', [commentId]);
+      // Note: Delete the comment and any replies
+      await query(`
+        WITH RECURSIVE subtree AS (
+          SELECT id FROM community_comments WHERE id = $1
+          UNION ALL
+          SELECT c.id FROM community_comments c JOIN subtree s ON c.parent_id = s.id
+        )
+        DELETE FROM community_comments WHERE id IN (SELECT id FROM subtree)
+      `, [commentId]);
 
       // Note: Notify the author
       await createNotification({

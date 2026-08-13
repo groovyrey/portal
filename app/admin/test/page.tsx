@@ -337,7 +337,7 @@ export default function AIAdminLab() {
                         </div>
                       </div>
                       <p className="text-[10px] text-muted-foreground/60 mt-12 italic">
-                        Real-time comparison helps identify DOM drift in the school's legacy system.
+                        Real-time comparison helps identify DOM drift in the school&apos;s legacy system.
                       </p>
                     </div>
                   ) : (
@@ -441,7 +441,7 @@ export default function AIAdminLab() {
                         <div className="space-y-2">
                           <h3 className="text-sm font-bold text-foreground">Aegis Reasoning:</h3>
                           <p className="text-sm text-muted-foreground leading-relaxed italic">
-                            "{modResult.reason}"
+                            &quot;{modResult.reason}&quot;
                           </p>
                         </div>
 

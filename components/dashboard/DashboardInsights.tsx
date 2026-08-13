@@ -5,6 +5,7 @@ import { Student } from '@/types';
 import { Clock, Calendar, BookOpen, TrendingUp, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { CARD_THEMES } from '@/lib/card-themes';
 
 interface DashboardInsightsProps {
   student: Student;
@@ -113,10 +114,12 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <Card>
+      <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.amber.bg)}>
         <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-sm font-medium">Up Next</CardTitle>
-          <Clock className="h-4 w-4 text-muted-foreground" />
+          <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", CARD_THEMES.amber.tile)}>
+            <Clock className={cn("h-4 w-4", CARD_THEMES.amber.icon)} />
+          </div>
         </CardHeader>
         <CardContent>
           {nextClass ? (
@@ -151,10 +154,12 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.emerald.bg)}>
         <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-sm font-medium">Weekly Load</CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", CARD_THEMES.emerald.tile)}>
+            <TrendingUp className={cn("h-4 w-4", CARD_THEMES.emerald.icon)} />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex h-20 items-end gap-1.5">
@@ -167,7 +172,7 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
                     <div
                       className={cn(
                         "absolute bottom-0 left-0 right-0 transition-all",
-                        isToday ? "bg-primary" : "bg-primary/40"
+                        isToday ? CARD_THEMES.emerald.bar : cn(CARD_THEMES.emerald.bar, "opacity-40")
                       )}
                       style={{ height: `${(weeklyLoad[day] / maxLoad) * 100}%` }}
                     />
@@ -183,10 +188,12 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.rose.bg)}>
         <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-sm font-medium">Finances</CardTitle>
-          <CreditCard className="h-4 w-4 text-muted-foreground" />
+          <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", CARD_THEMES.rose.tile)}>
+            <CreditCard className={cn("h-4 w-4", CARD_THEMES.rose.icon)} />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -207,7 +214,7 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
                 <span>{financialProgress}%</span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                <div className="h-full bg-primary transition-all" style={{ width: `${financialProgress}%` }} />
+                <div className={cn("h-full transition-all", CARD_THEMES.rose.bar)} style={{ width: `${financialProgress}%` }} />
               </div>
             </div>
           </div>

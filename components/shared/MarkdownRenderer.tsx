@@ -48,7 +48,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
         <div className="p-4 bg-accent/30 rounded-2xl border border-border/50">
           <h4 className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Pro Tip</h4>
           <p className="text-[10px] text-muted-foreground font-bold leading-relaxed uppercase tracking-tight">
-            Use the "Ask Assistant" feature for any question about your school records. It's the fastest way to get data.
+            Use the &quot;Ask Assistant&quot; feature for any question about your school records. It&apos;s the fastest way to get data.
           </p>
         </div>
       </aside>

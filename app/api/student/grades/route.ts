@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/turso';
 import { decrypt } from '@/lib/auth';
-import { getSessionClient, saveSession } from '@/lib/session-proxy';
+import { getSessionClient, saveSession, getPortalPassword } from '@/lib/session-proxy';
 import { ScraperService } from '@/lib/scraper-service';
 import { SyncService } from '@/lib/sync-service';
 import { initDatabase } from '@/lib/db-init';
@@ -21,17 +21,24 @@ export async function POST(req: NextRequest) {
       try {
         const decrypted = decrypt(sessionCookie.value);
         const sessionData = JSON.parse(decrypted);
-        if (sessionData.userId && sessionData.password) {
+        if (sessionData.userId) {
           userId = sessionData.userId;
-          password = sessionData.password;
         }
       } catch (e) {
         console.error('Failed to decrypt session cookie');
       }
     }
 
-    if (!userId || !password || !href) {
+    if (!userId || !href) {
       return NextResponse.json({ error: 'Missing required parameters or valid session' }, { status: 401 });
+    }
+
+    // The password is never stored in the cookie; fetch it server-side if not supplied.
+    if (!password) {
+      password = await getPortalPassword(userId);
+      if (!password) {
+        return NextResponse.json({ error: 'Missing required parameters or valid session' }, { status: 401 });
+      }
     }
 
     // --- OPTIMIZATION: CACHE-FIRST CHECK ---
@@ -133,14 +140,8 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        let reportSlug = undefined;
-        if (reportName === 'Unknown Report') {
-          const hash = href.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
-          reportSlug = `unknown_${Math.abs(hash)}`;
-        }
-        
         const syncer = new SyncService(userId);
-        await syncer.syncGrades(reportName, subjects, reportSlug);
+        await syncer.syncGrades(reportName, subjects);
       }
     } catch (dbError) {
       console.error('Database sync error (grades):', dbError);

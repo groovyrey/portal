@@ -17,12 +17,12 @@ function parseTimeValue(timeStr: string): number {
   try {
     const match = timeStr.match(/(\d{1,2}):(\d{2})\s*([AP]M)/i);
     if (!match) return 9999; 
-    let [_, hoursStr, minsStr, meridiem] = match;
+    const [_, hoursStr, minsStr, meridiem] = match;
     let hours = parseInt(hoursStr, 10);
     const mins = parseInt(minsStr, 10);
-    meridiem = meridiem.toUpperCase();
-    if (meridiem === 'PM' && hours !== 12) hours += 12;
-    else if (meridiem === 'AM' && hours === 12) hours = 0;
+    const upperMeridiem = meridiem.toUpperCase();
+    if (upperMeridiem === 'PM' && hours !== 12) hours += 12;
+    else if (upperMeridiem === 'AM' && hours === 12) hours = 0;
     return hours * 60 + mins;
   } catch (e) { return 9999; }
 }

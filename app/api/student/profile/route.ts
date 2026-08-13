@@ -31,6 +31,7 @@ function buildPublicProfile(profile: Student) {
     id: profile.id,
     name: profile.name,
     parsedName: profile.parsedName,
+    profilePhotoUrl: profile.profilePhotoUrl,
     badges: profile.badges || [],
     settings: {
       isPublic: settings.isPublic,
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest) {
 
     if (!profile) {
       const studentRes = await query(`
-        SELECT id, name, course, year_level, semester, email
+        SELECT id, name, course, year_level, semester, email, profile_photo_url
         FROM students
         WHERE id = $1
       `, [studentId]);
@@ -85,6 +86,7 @@ export async function GET(req: NextRequest) {
         name: student.name,
         parsedName: parseStudentName(student.name || ''),
         course: student.course,
+        profilePhotoUrl: student.profile_photo_url || null,
         yearLevel: student.year_level,
         semester: student.semester,
         email: student.email,
@@ -124,5 +126,44 @@ export async function GET(req: NextRequest) {
   } catch (error: unknown) {
     console.error('Fetch profile error:', error);
     return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const userId = getSessionUserId(req);
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
+    const { profilePhotoUrl } = await req.json();
+    if (profilePhotoUrl === undefined) {
+      return NextResponse.json({ error: 'profilePhotoUrl is required' }, { status: 400 });
+    }
+
+    if (profilePhotoUrl !== null) {
+      let parsed: URL;
+      try {
+        parsed = new URL(profilePhotoUrl);
+      } catch {
+        return NextResponse.json({ error: 'Invalid photo URL' }, { status: 400 });
+      }
+      if (parsed.protocol !== 'https:') {
+        return NextResponse.json({ error: 'Photo URL must be HTTPS' }, { status: 400 });
+      }
+      if (profilePhotoUrl.length > 1000) {
+        return NextResponse.json({ error: 'Photo URL is too long' }, { status: 400 });
+      }
+    }
+
+    await query(
+      'UPDATE students SET profile_photo_url = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [profilePhotoUrl, userId]
+    );
+
+    return NextResponse.json({ success: true, profilePhotoUrl });
+  } catch (error: unknown) {
+    console.error('Update profile photo error:', error);
+    return NextResponse.json({ error: 'Failed to update profile photo' }, { status: 500 });
   }
 }

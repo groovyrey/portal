@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -66,6 +69,10 @@
   @keyframes spin-reverse {
     from { opacity: 0.5; }
     to { opacity: 1; }
+  }
+
+  @keyframes staff-gradient-move {
+    to { background-position: 200% center; }
   }
 }
 
@@ -257,5 +264,14 @@
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: var(--foreground);
+  }
+
+  .staff-gradient-text {
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: staff-gradient-move 3s linear infinite;
   }
 }

@@ -3,7 +3,7 @@ import {
   migrateCommunity, 
   migrateNotifications, 
   migrateActivityLogs, 
-  migrateIncidentReports,
+  dropIncidentReports,
   migrateAdminLogs,
   migrateCronRuns,
   migrateDeviceTokens
@@ -21,7 +21,7 @@ export async function initDatabase() {
       await migrateCommunity();
       await migrateNotifications();
       await migrateActivityLogs();
-      await migrateIncidentReports();
+      await dropIncidentReports();
       await migrateAdminLogs();
       await migrateCronRuns();
       await migrateDeviceTokens();

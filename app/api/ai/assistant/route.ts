@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { Sandbox } from '@vercel/sandbox';
 import * as cheerio from 'cheerio';
+import dns from 'node:dns/promises';
 
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
@@ -96,11 +97,92 @@ async function performMathExecution(code: string) {
   finally { if (sandbox) await sandbox.stop().catch(() => {}); }
 }
 
+/**
+ * SSRF protection for web_fetch: rejects private, link-local, reserved and
+ * cloud-metadata IPs so the tool cannot reach internal infrastructure.
+ */
+function isPrivateIp(ip: string): boolean {
+  const normalized = ip.toLowerCase();
+  if (normalized.includes(':')) {
+    // IPv6
+    return (
+      normalized === '::1' ||
+      normalized === '::' ||
+      normalized.startsWith('fe80') ||
+      normalized.startsWith('fc') ||
+      normalized.startsWith('fd')
+    );
+  }
+  const parts = normalized.split('.').map(Number);
+  if (parts.length !== 4 || parts.some(p => Number.isNaN(p))) return true;
+  const [a, b] = parts;
+  return (
+    a === 0 ||
+    a === 10 ||
+    a === 127 ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168) ||
+    a >= 224
+  );
+}
+
+function isBlockedHostname(hostname: string): boolean {
+  const h = hostname.toLowerCase().replace(/\.$/, '');
+  return (
+    h === 'localhost' ||
+    h.endsWith('.localhost') ||
+    h === 'metadata' ||
+    h === 'metadata.google.internal' ||
+    h.endsWith('.metadata.google.internal') ||
+    h.endsWith('.internal') ||
+    h.endsWith('.local')
+  );
+}
+
+async function isSafeFetchUrl(rawUrl: string): Promise<boolean> {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl.trim());
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+  const hostname = parsed.hostname;
+  if (!hostname || isBlockedHostname(hostname)) return false;
+  try {
+    const addresses = await dns.lookup(hostname, { all: true });
+    if (addresses.length === 0) return false;
+    return addresses.every(a => !isPrivateIp(a.address));
+  } catch {
+    return false;
+  }
+}
+
+async function safeFetchWithRedirects(targetUrl: string): Promise<Response> {
+  let current = targetUrl;
+  for (let i = 0; i < 5; i++) {
+    if (!(await isSafeFetchUrl(current))) throw new Error('URL is not allowed');
+    const res = await fetch(current, {
+      redirect: 'manual',
+      signal: AbortSignal.timeout(15000),
+    });
+    if (res.status >= 300 && res.status < 400) {
+      const location = res.headers.get('location');
+      if (!location) return res;
+      current = new URL(location, current).toString();
+      continue;
+    }
+    return res;
+  }
+  throw new Error('Too many redirects');
+}
+
 async function performWebFetch(url: string) {
   try {
     let targetUrl = url.trim();
     if (!/^https?:\/\//i.test(targetUrl)) targetUrl = 'https://' + targetUrl;
-    const response = await fetch(targetUrl);
+    const response = await safeFetchWithRedirects(targetUrl);
     const html = await response.text();
     const $ = cheerio.load(html);
     $('script, style, nav, footer, header').remove();
@@ -312,7 +394,7 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
 
           let modelText = "";
           let turnThoughts = "";
-          let toolCalls: any[] = [];
+          const toolCalls: any[] = [];
           let statusSentForTurn = false;
 
           try {

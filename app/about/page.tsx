@@ -118,12 +118,6 @@ export default function AboutPage() {
                 Launch Hub
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link 
-                href="/docs" 
-                className="px-8 py-4 bg-card border border-border text-foreground rounded-lg font-bold text-[10px] tracking-tight hover:bg-accent transition-all active:scale-95"
-              >
-                View Features
-              </Link>
             </div>
           </motion.div>
 
@@ -202,7 +196,7 @@ export default function AboutPage() {
             <div className="bg-foreground text-background dark:bg-card dark:text-foreground border border-border rounded-lg p-10 relative overflow-hidden shadow-2xl">
               <Quote className="text-primary h-8 w-8 mb-8 opacity-50" />
               <p className="text-lg font-bold leading-relaxed mb-10 relative z-10 italic">
-                "Education is the most powerful weapon which you can use to change the world."
+                &quot;Education is the most powerful weapon which you can use to change the world.&quot;
               </p>
               <div className="flex items-center gap-4 relative z-10">
                 <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center font-bold text-[10px] text-primary-foreground">
@@ -271,12 +265,6 @@ export default function AboutPage() {
                 className="px-10 py-4 bg-background text-foreground rounded-lg font-bold text-[10px] tracking-tight transition-all active:scale-95 shadow-xl"
               >
                 Access Hub
-              </Link>
-              <Link 
-                href="/docs" 
-                className="px-10 py-4 bg-primary-foreground/10 text-primary-foreground rounded-lg font-bold text-[10px] tracking-tight hover:bg-primary-foreground/20 transition-all active:scale-95 border border-primary-foreground/20"
-              >
-                Read Docs
               </Link>
             </div>
           </div>

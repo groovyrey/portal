@@ -1,9 +1,9 @@
 'use client';
 
+import { ComponentType, ReactNode } from 'react';
 import FinancialSummary from '@/components/dashboard/FinancialSummary';
 import { useStudentQuery } from '@/lib/hooks';
 import { 
-  CreditCard, 
   History, 
   FileText, 
   Calendar,
@@ -12,14 +12,30 @@ import {
   TrendingDown,
   AlertCircle
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import Skeleton from '@/components/ui/Skeleton';
 import LottieAnimation from '@/components/ui/LottieAnimation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import { CARD_THEMES, CardThemeKey } from '@/lib/card-themes';
+
+function ThemedCardHeader({ icon: Icon, title, theme, right }: { icon: ComponentType<{ className?: string }>, title: string, theme: CardThemeKey, right?: ReactNode }) {
+  const t = CARD_THEMES[theme];
+  return (
+    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+      <div className="flex items-center gap-2.5">
+        <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", t.tile)}>
+          <Icon className={cn("h-4 w-4", t.icon)} />
+        </div>
+        <CardTitle className="text-base">{title}</CardTitle>
+      </div>
+      {right}
+    </CardHeader>
+  );
+}
 
 export default function AccountsPage() {
   const { data: student, isLoading: loadingQuery, isFetching, refetch } = useStudentQuery();
@@ -50,17 +66,19 @@ export default function AccountsPage() {
 
   if (loadingQuery && !student) {
     return (
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-9 w-[150px]" />
-          <Skeleton className="h-9 w-[100px]" />
+      <div className="flex-1 p-6 sm:p-8 pt-6">
+        <div className="max-w-6xl mx-auto space-y-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-9 w-[150px]" />
+            <Skeleton className="h-9 w-[100px]" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+          <Skeleton className="h-[400px] w-full rounded-md" />
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
-        </div>
-        <Skeleton className="h-[400px] w-full rounded-md" />
       </div>
     );
   }
@@ -92,7 +110,8 @@ export default function AccountsPage() {
   const { financials } = student;
 
   return (
-    <div className="flex-1 space-y-8 p-8 pt-6">
+    <div className="flex-1 p-6 sm:p-8 pt-6">
+      <div className="max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
         <div className="hidden lg:block">
           <h2 className="text-3xl font-bold tracking-tight">Accounts</h2>
@@ -123,16 +142,17 @@ export default function AccountsPage() {
 
         {/* Payment Schedule */}
         {financials.dueAccounts && financials.dueAccounts.length > 0 && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <CardTitle className="text-base">Payment Schedule</CardTitle>
-              </div>
-              {financials.dueToday && financials.dueToday !== '₱0.00' && (
-                <Badge variant="destructive" className="text-[10px]">Due Today</Badge>
-              )}
-            </CardHeader>
+          <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.sky.bg)}>
+            <ThemedCardHeader
+              icon={Calendar}
+              title="Payment Schedule"
+              theme="sky"
+              right={
+                financials.dueToday && financials.dueToday !== '₱0.00' ? (
+                  <Badge variant="destructive" className="text-[10px]">Due Today</Badge>
+                ) : undefined
+              }
+            />
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -170,11 +190,8 @@ export default function AccountsPage() {
 
         {/* Transaction History */}
         {financials.payments && financials.payments.length > 0 && (
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-2 space-y-0">
-              <History className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Transactions</CardTitle>
-            </CardHeader>
+          <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.emerald.bg)}>
+            <ThemedCardHeader icon={History} title="Transactions" theme="emerald" />
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -207,11 +224,8 @@ export default function AccountsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Fee Breakdown */}
           {financials.assessment && financials.assessment.length > 0 && (
-            <Card>
-              <CardHeader className="flex flex-row items-center gap-2 space-y-0 bg-muted/30">
-                <FileText className="h-4 w-4 text-muted-foreground" />
-                <CardTitle className="text-sm">Fee Breakdown</CardTitle>
-              </CardHeader>
+            <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.violet.bg)}>
+              <ThemedCardHeader icon={FileText} title="Fee Breakdown" theme="violet" />
               <CardContent className="p-0">
                 <table className="w-full text-xs">
                   <tbody className="divide-y">
@@ -230,11 +244,8 @@ export default function AccountsPage() {
           <div className="space-y-6">
             {/* Installments */}
             {financials.installments && financials.installments.length > 0 && (
-              <Card>
-                <CardHeader className="flex flex-row items-center gap-2 space-y-0 bg-muted/30">
-                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
-                  <CardTitle className="text-sm">Installments</CardTitle>
-                </CardHeader>
+              <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.amber.bg)}>
+                <ThemedCardHeader icon={TrendingDown} title="Installments" theme="amber" />
                 <CardContent className="p-0">
                   <table className="w-full text-xs">
                     <tbody className="divide-y">
@@ -261,11 +272,8 @@ export default function AccountsPage() {
 
             {/* Adjustments */}
             {financials.adjustments && financials.adjustments.length > 0 && (
-              <Card>
-                <CardHeader className="flex flex-row items-center gap-2 space-y-0 bg-muted/30">
-                  <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                  <CardTitle className="text-sm">Adjustments</CardTitle>
-                </CardHeader>
+              <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.rose.bg)}>
+                <ThemedCardHeader icon={AlertCircle} title="Adjustments" theme="rose" />
                 <CardContent className="p-0">
                   <table className="w-full text-xs">
                     <tbody className="divide-y">
@@ -287,6 +295,7 @@ export default function AccountsPage() {
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

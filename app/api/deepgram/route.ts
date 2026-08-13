@@ -1,8 +1,30 @@
 import { DeepgramClient, ListenV1Response } from "@deepgram/sdk";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { filterProfanity } from '@/lib/sanitization';
+import { decrypt } from '@/lib/auth';
 
-export async function GET() {
+/**
+ * Require a valid session cookie. Deepgram usage is metered (and costs money),
+ * so every handler must be authenticated.
+ */
+function isAuthenticated(req: NextRequest): boolean {
+  const sessionCookie = req.cookies.get('session_token');
+  if (!sessionCookie?.value) return false;
+  try {
+    decrypt(sessionCookie.value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function unauthorized() {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+
+export async function GET(req: NextRequest) {
+  if (!isAuthenticated(req)) return unauthorized();
+
   const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
   const DEEPGRAM_PROJECT_ID = process.env.DEEPGRAM_PROJECT_ID;
 
@@ -21,12 +43,12 @@ export async function GET() {
       {
         comment: "Temporary key for live transcription",
         scopes: ["usage:write"],
-        time_to_live_in_seconds: 14400, 
+        time_to_live_in_seconds: 14400,
       }
     );
 
     console.log("Deepgram: Key creation result:", result ? "Success (Key present)" : "Failed (No result)");
-    
+
     if (!result.key) {
       console.error("Deepgram: Key property missing in response:", result);
       throw new Error("Key creation failed: No key in response");
@@ -45,7 +67,9 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
+  if (!isAuthenticated(req)) return unauthorized();
+
   const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
 
   if (!DEEPGRAM_API_KEY) {
@@ -56,7 +80,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const formData = await request.formData();
+    const formData = await req.formData();
     const audioFile = formData.get("audio") as Blob;
     const language = (formData.get("language") as string) || "tl";
 
@@ -98,7 +122,9 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(req: NextRequest) {
+  if (!isAuthenticated(req)) return unauthorized();
+
   const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
 
   if (!DEEPGRAM_API_KEY) {
@@ -109,7 +135,7 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const { text, model } = await request.json();
+    const { text, model } = await req.json();
 
     if (!text) {
       return NextResponse.json(
@@ -119,9 +145,9 @@ export async function PATCH(request: Request) {
     }
 
     const deepgram = new DeepgramClient({ apiKey: DEEPGRAM_API_KEY });
-    
+
     const response = await deepgram.speak.v1.audio.generate(
-      { 
+      {
         text,
         model: (model as any) || "aura-helios-en",
         encoding: "linear16",
@@ -136,7 +162,7 @@ export async function PATCH(request: Request) {
 
     const reader = stream.getReader();
     const chunks = [];
-    
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;

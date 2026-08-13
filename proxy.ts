@@ -39,12 +39,15 @@ export async function proxy(req: NextRequest) {
   const rateProtectedRoutes = [
     '/api/ai',
     '/api/student/login',
+    '/api/deepgram',
     '/api/community/report',
     '/api/community/comments/report'
   ];
 
   if (rateProtectedRoutes.some(route => pathname.startsWith(route))) {
-    const identifier = (req as any).ip ?? "127.0.0.1"
+    // On Vercel the real client IP is the first entry of X-Forwarded-For.
+    const forwardedFor = req.headers.get('x-forwarded-for') || '';
+    const identifier = (forwardedFor.split(',')[0].trim() || (req as any).ip || '127.0.0.1');
     try {
       const { success, limit, reset, remaining } = await ratelimit.limit(identifier)
       if (!success) {

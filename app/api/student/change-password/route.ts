@@ -14,14 +14,18 @@ export async function POST(req: NextRequest) {
         }
 
         let userId = "";
-        let savedPassword = "";
         try {
             const decrypted = decrypt(sessionCookie.value);
             const sessionData = JSON.parse(decrypted);
             userId = sessionData.userId;
-            savedPassword = sessionData.password;
         } catch (e) {
             return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+        }
+
+        const { getPortalPassword } = await import('@/lib/session-proxy');
+        const savedPassword = await getPortalPassword(userId);
+        if (!savedPassword) {
+            return NextResponse.json({ error: 'Session expired. Please log in again.' }, { status: 401 });
         }
 
         const { client, jar, isNew, isLocked, consecutiveFailures } = await getSessionClient(userId);
@@ -82,6 +86,10 @@ export async function POST(req: NextRequest) {
         if (hasSuccessText || (redirectedToLogin && formIsGone) || (redirectedToMain && formIsGone)) {
             // Log successful password change
             logActivity(userId, 'Security', 'Changed portal password').catch(e => {});
+
+            // Update the stored credential so background sync keeps working.
+            const { savePortalPassword } = await import('@/lib/session-proxy');
+            await savePortalPassword(userId, newPassword);
 
             const response = NextResponse.json({ 
                 success: true, 

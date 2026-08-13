@@ -5,6 +5,15 @@ import { sendEmail } from '@/lib/email-service';
 
 export const maxDuration = 300; // Allow up to 5 minutes for mass mailing
 
+function escapeHtml(value: string): string {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export async function POST(req: NextRequest) {
   try {
     const sessionCookie = req.cookies.get('session_token');
@@ -78,11 +87,11 @@ export async function POST(req: NextRequest) {
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
             <div style="background-color: #2563eb; color: white; padding: 24px; text-align: center;">
               <h1 style="margin: 0; font-size: 20px;">Announcement</h1>
-              <p style="margin: 4px 0 0; opacity: 0.8; font-size: 14px;">Hello, ${recipient.name}!</p>
+              <p style="margin: 4px 0 0; opacity: 0.8; font-size: 14px;">Hello, ${escapeHtml(recipient.name)}!</p>
             </div>
             <div style="padding: 24px; color: #1a202c; line-height: 1.6;">
-              <h2 style="margin-top: 0; color: #2d3748;">${subject}</h2>
-              <div style="white-space: pre-wrap;">${body}</div>
+              <h2 style="margin-top: 0; color: #2d3748;">${escapeHtml(subject)}</h2>
+              <div style="white-space: pre-wrap;">${escapeHtml(body)}</div>
             </div>
             <div style="background-color: #f7fafc; padding: 20px; text-align: center; font-size: 11px; color: #a0aec0; border-top: 1px solid #edf2f7;">
               Sent via LCCian Hub Official Portal Admin System.<br>

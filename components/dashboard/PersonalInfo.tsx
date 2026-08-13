@@ -13,8 +13,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
-
-import Image from 'next/image';
+import StudentAvatar from '@/components/shared/StudentAvatar';
 
 interface PersonalInfoProps {
   student: Student;
@@ -26,9 +25,6 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
   const showAcademic = !isPublic || (student.settings?.showAcademicInfo ?? true);
 
   const memberStatus = onlineMembers.get(student.id);
-
-  // Use DiceBear lorelei avatar based on student ID (clean and modern)
-  const avatarUrl = `https://api.dicebear.com/7.x/lorelei/svg?seed=${student.id || 'default'}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffeb99`;
 
   const details = [
     { label: 'Full Name', value: student.name, icon: User, visible: true },
@@ -49,13 +45,11 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
       <div className="p-6">
         <div className="flex items-center gap-4 mb-8">
           <div className="relative h-14 w-14 rounded-2xl bg-secondary/50 overflow-hidden border border-primary/20 shadow-sm flex items-center justify-center">
-            <Image
-              src={avatarUrl}
-              alt={`${student.name}'s avatar`}
-              width={56}
-              height={56}
-              className="object-cover"
-              unoptimized
+            <StudentAvatar
+              name={student.name}
+              photoUrl={student.profilePhotoUrl}
+              className="h-full w-full rounded-2xl"
+              fallbackClassName="bg-transparent text-primary font-black text-lg"
             />
           </div>
           <div className="flex-1 min-w-0">

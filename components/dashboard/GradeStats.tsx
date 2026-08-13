@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 import { Eye, EyeOff, TrendingUp, BookOpen, Zap } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { CARD_THEMES } from '@/lib/card-themes';
 
 type ExtendedGrade = SubjectGrade & { semester?: string };
 
@@ -167,13 +169,13 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* GWA Card */}
-        <Card>
+        <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.violet.bg)}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average</CardTitle>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 text-muted-foreground"
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("h-8 w-8 rounded-lg shrink-0", CARD_THEMES.violet.tile, CARD_THEMES.violet.icon)}
               onClick={toggleGwa}
             >
               {showGwa ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -184,14 +186,19 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
             <p className="text-xs text-muted-foreground mt-1">
               Grade Average
             </p>
+            <p className="text-[10px] text-muted-foreground/70 mt-1 leading-snug">
+              Approximate — subject units aren&apos;t included, so the system assumes 3 units per subject.
+            </p>
           </CardContent>
         </Card>
 
         {/* Units Card */}
-        <Card>
+        <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.sky.bg)}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Units</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", CARD_THEMES.sky.tile)}>
+              <BookOpen className={cn("h-4 w-4", CARD_THEMES.sky.icon)} />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold tracking-tight">
@@ -204,24 +211,28 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
         </Card>
 
         {/* Best Grade */}
-        <Card>
+        <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.emerald.bg)}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Highest</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", CARD_THEMES.emerald.tile)}>
+              <TrendingUp className={cn("h-4 w-4", CARD_THEMES.emerald.icon)} />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tracking-tight text-primary">{bestGrade}</div>
+            <div className={cn("text-2xl font-bold tracking-tight", CARD_THEMES.emerald.icon)}>{bestGrade}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Best grade
             </p>
           </CardContent>
         </Card>
 
-        {/* Lowest Grade */}
-        <Card>
+        {/* Pass Rate */}
+        <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.amber.bg)}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pass Rate</CardTitle>
-            <Zap className="h-4 w-4 text-muted-foreground" />
+            <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", CARD_THEMES.amber.tile)}>
+              <Zap className={cn("h-4 w-4", CARD_THEMES.amber.icon)} />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold tracking-tight">{passRate}%</div>
@@ -234,7 +245,7 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         {/* Trend Chart */}
-        <Card className="col-span-4">
+        <Card className="md:col-span-4">
           <CardHeader>
             <CardTitle>History</CardTitle>
             <CardDescription>Grades over time</CardDescription>
@@ -245,16 +256,16 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
                 <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorGwa" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      <stop offset="5%" style={{ stopColor: 'var(--color-primary)' }} stopOpacity={0.1}/>
+                      <stop offset="95%" style={{ stopColor: 'var(--color-primary)' }} stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
                   <XAxis 
                     dataKey="semester" 
                     axisLine={false} 
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
+                    tick={{ fontSize: 12, className: 'fill-muted-foreground' }}
                     dy={10}
                   />
                   <YAxis 
@@ -262,7 +273,7 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
                     reversed={!isPercentageScale}
                     axisLine={false} 
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
+                    tick={{ fontSize: 12, className: 'fill-muted-foreground' }}
                   />
                   <Tooltip
                     contentStyle={{ 
@@ -276,7 +287,7 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
                   <Area 
                     type="monotone" 
                     dataKey="gwa" 
-                    stroke="hsl(var(--primary))" 
+                    className="stroke-primary" 
                     fillOpacity={1} 
                     fill="url(#colorGwa)" 
                     strokeWidth={2}
@@ -288,7 +299,7 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
         </Card>
 
         {/* Distribution Chart */}
-        <Card className="col-span-3">
+        <Card className="md:col-span-3">
           <CardHeader>
             <CardTitle>Breakdown</CardTitle>
             <CardDescription>Grades count</CardDescription>
@@ -297,21 +308,21 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={distData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                   <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
                   <XAxis 
                     dataKey="grade" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
+                    tick={{ fontSize: 12, className: 'fill-muted-foreground' }}
                     dy={10}
                   />
                   <YAxis 
                     axisLine={false} 
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
+                    tick={{ fontSize: 12, className: 'fill-muted-foreground' }}
                   />
                   <Tooltip 
-                    cursor={{ fill: 'var(--accent)', opacity: 0.4 }}
+                    cursor={{ className: 'fill-accent', opacity: 0.4 }}
                     contentStyle={{ 
                       backgroundColor: 'var(--card)',
                       borderRadius: 'var(--radius)', 
@@ -319,7 +330,7 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
                       fontSize: '12px',
                     }}
                   />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" className="fill-primary" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

@@ -3,7 +3,7 @@ import qs from 'querystring';
 import * as cheerio from 'cheerio';
 import { encrypt, decrypt } from '@/lib/auth';
 import { parseStudentName } from '@/lib/utils';
-import { getSessionClient, saveSession } from '@/lib/session-proxy';
+import { getSessionClient, saveSession, getPortalPassword, savePortalPassword } from '@/lib/session-proxy';
 import { ScraperService } from '@/lib/scraper-service';
 import { SyncService } from '@/lib/sync-service';
 import { logActivity } from '@/lib/activity-service';
@@ -11,7 +11,7 @@ import { initDatabase } from '@/lib/db-init';
 import { ApiResponse } from '@/lib/api-response';
 import { LoginSchema } from '@/lib/schemas';
 import { logger } from '@/lib/logger';
-import { getStudentSchedule } from '@/lib/data-service';
+import { getStudentSchedule, getStudentProfile } from '@/lib/data-service';
 
 /**
  * Helper to perform the actual login POST to the school portal.
@@ -81,10 +81,20 @@ export async function POST(req: NextRequest) {
         const decrypted = decrypt(sessionCookie.value);
         const sessionData = JSON.parse(decrypted);
         userId = sessionData.userId;
-        password = sessionData.password;
       } catch (error) {
         return ApiResponse.unauthorized('Invalid session');
       }
+
+      if (!userId) {
+        return ApiResponse.unauthorized('Session is missing a student ID');
+      }
+
+      // The password is never stored in the cookie; fetch it server-side.
+      const savedPassword = await getPortalPassword(userId);
+      if (!savedPassword) {
+        return ApiResponse.unauthorized('Session expired. Please log in again.');
+      }
+      password = savedPassword;
     } else {
       return ApiResponse.validation({
         userId: ['Student ID is required'],
@@ -162,7 +172,10 @@ export async function POST(req: NextRequest) {
 
     if (syncResult.studentInfo.name && syncResult.studentInfo.name.length > 2) {
       const persistedSchedule = await getStudentSchedule(userId);
-      const encryptedSession = encrypt(JSON.stringify({ userId, password }));
+      // Persist the portal password server-side (encrypted), keeping it out of the client cookie.
+      await savePortalPassword(userId, password);
+      const encryptedSession = encrypt(JSON.stringify({ userId }));
+      const existingProfile = await getStudentProfile(userId);
       const response = NextResponse.json({
         success: true,
         isNewUser: syncResult.isNewUser,
@@ -170,6 +183,7 @@ export async function POST(req: NextRequest) {
           ...syncResult.studentInfo,
           parsedName: parseStudentName(syncResult.studentInfo.name),
           id: userId, 
+          profilePhotoUrl: existingProfile?.profilePhotoUrl || null,
           schedule: persistedSchedule,
           offeredSubjects: [], // DISABLED
           availableReports: syncResult.reportLinks,

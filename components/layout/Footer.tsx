@@ -49,9 +49,6 @@ export default function Footer() {
                 <Link href="/school" className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">School Info</Link>
               </li>
               <li>
-                <Link href="/docs" className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">System Docs</Link>
-              </li>
-              <li>
                 <Link href="/disclaimer" className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">Legal Notice</Link>
               </li>
             </ul>

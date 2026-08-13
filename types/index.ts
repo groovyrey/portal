@@ -84,6 +84,8 @@ export interface CommunityPost {
   imageUrl?: string;
   isAnonymous?: boolean;
   isUnreviewed?: boolean;
+  isStaff?: boolean;
+  userPhoto?: string | null;
   createdAt: any;
   likes?: string[];
   commentCount?: number;
@@ -103,6 +105,9 @@ export interface CommunityComment {
   userId: string;
   userName: string;
   content: string;
+  parentId?: string | null;
+  userPhoto?: string | null;
+  isStaff?: boolean;
   createdAt: any;
 }
 
@@ -143,6 +148,7 @@ export interface Student {
   parsedName?: ParsedName;
   id: string;
   course: string;
+  profilePhotoUrl?: string | null;
   email?: string;
   address?: string;
   mobile?: string;
