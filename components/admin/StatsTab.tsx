@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { CARD_THEMES, CardThemeKey } from '@/lib/card-themes';
 
 interface CourseYearLevel {
   level: string;
@@ -99,9 +100,9 @@ export default function StatsTab() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
-        <StatSummaryCard icon={<Users className="h-4 w-4" />} label="Total Students" value={stats.totalStudents.toString()} />
-        <StatSummaryCard icon={<GraduationCap className="h-4 w-4" />} label="Active Programs" value={stats.courses.length.toString()} />
-        <StatSummaryCard icon={<BarChart3 className="h-4 w-4" />} label="Top Program" value={topCourse ? topCourse.name : 'N/A'} isLargeValue={false} />
+        <StatSummaryCard theme="violet" icon={<Users className="h-4 w-4" />} label="Total Students" value={stats.totalStudents.toString()} />
+        <StatSummaryCard theme="emerald" icon={<GraduationCap className="h-4 w-4" />} label="Active Programs" value={stats.courses.length.toString()} />
+        <StatSummaryCard theme="amber" icon={<BarChart3 className="h-4 w-4" />} label="Top Program" value={topCourse ? topCourse.name : 'N/A'} isLargeValue={false} />
       </div>
 
       <Card>
@@ -137,7 +138,7 @@ export default function StatsTab() {
                   }}
                   cursor={{ fill: 'var(--accent)', opacity: 0.4 }}
                 />
-                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="count" fill="var(--primary)" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -183,12 +184,15 @@ export default function StatsTab() {
   );
 }
 
-function StatSummaryCard({ icon, label, value, isLargeValue = true }: { icon: React.ReactNode, label: string, value: string, isLargeValue?: boolean }) {
+function StatSummaryCard({ icon, label, value, isLargeValue = true, theme }: { icon: React.ReactNode, label: string, value: string, isLargeValue?: boolean, theme: CardThemeKey }) {
+    const t = CARD_THEMES[theme];
     return (
-      <Card className="overflow-hidden">
+      <Card className={cn("overflow-hidden bg-gradient-to-br border-border", t.bg)}>
         <CardContent className="p-6 space-y-2">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            {icon}
+          <div className={cn("flex items-center gap-2", t.icon)}>
+            <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", t.tile)}>
+              {icon}
+            </div>
             <span className="text-[10px] uppercase font-bold tracking-wider truncate">{label}</span>
           </div>
           <p className={cn(

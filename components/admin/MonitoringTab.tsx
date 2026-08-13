@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { CARD_THEMES, CardThemeKey } from '@/lib/card-themes';
 
 export default function MonitoringTab() {
   const { onlineMembers } = useRealtime();
@@ -69,15 +70,16 @@ export default function MonitoringTab() {
     refetchStatus();
   };
 
-  const stats = [
-    { icon: <Activity className="h-3.5 w-3.5" />, label: 'Version', value: APP_VERSION },
-    { icon: <Timer className="h-3.5 w-3.5" />, label: 'Latency', value: latency ? `${latency}ms` : '--' },
-    { icon: <Server className="h-3.5 w-3.5" />, label: 'Environment', value: process.env.NODE_ENV === 'production' ? 'PROD' : 'DEV' },
+  const stats: { icon: React.ReactNode, label: string, value: string, valueClass?: string, theme: CardThemeKey }[] = [
+    { icon: <Activity className="h-3.5 w-3.5" />, label: 'Version', value: APP_VERSION, theme: 'sky' },
+    { icon: <Timer className="h-3.5 w-3.5" />, label: 'Latency', value: latency ? `${latency}ms` : '--', theme: 'amber' },
+    { icon: <Server className="h-3.5 w-3.5" />, label: 'Environment', value: process.env.NODE_ENV === 'production' ? 'PROD' : 'DEV', theme: 'violet' },
     {
-      icon: <HeartPulse className={cn("h-3.5 w-3.5", !statusData ? "text-destructive" : "text-emerald-500")} />,
+      icon: <HeartPulse className={cn("h-3.5 w-3.5", !statusData ? "text-destructive" : "text-emerald-500 dark:text-emerald-400")} />,
       label: 'Status',
       value: !statusData ? 'DOWN' : (latency && latency > 1000 ? 'SLOW' : 'OK'),
-      valueClass: !statusData ? "text-destructive" : "text-emerald-600"
+      valueClass: !statusData ? "text-destructive" : "text-emerald-600 dark:text-emerald-400",
+      theme: 'emerald',
     },
   ];
 
@@ -90,7 +92,7 @@ export default function MonitoringTab() {
             variant="outline"
             size="sm"
             onClick={fetchOnlineDetails}
-            className="h-8 rounded-full gap-2 px-3 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
+            className="h-8 rounded-full gap-2 px-3 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
           >
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[10px] font-bold uppercase tracking-wider">
@@ -110,17 +112,22 @@ export default function MonitoringTab() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardContent className="p-3 space-y-1 min-w-0">
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                {stat.icon}
-                <span className="text-[10px] font-bold uppercase tracking-tight truncate">{stat.label}</span>
-              </div>
-              <p className={cn("text-sm font-bold font-mono truncate", stat.valueClass)}>{stat.value}</p>
-            </CardContent>
-          </Card>
-        ))}
+        {stats.map((stat) => {
+          const t = CARD_THEMES[stat.theme];
+          return (
+            <Card key={stat.label} className={cn("bg-gradient-to-br border-border", t.bg)}>
+              <CardContent className="p-3 space-y-1 min-w-0">
+                <div className={cn("flex items-center gap-1.5", t.icon)}>
+                  <div className={cn("h-6 w-6 rounded-md flex items-center justify-center shrink-0", t.tile)}>
+                    {stat.icon}
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-tight truncate">{stat.label}</span>
+                </div>
+                <p className={cn("text-sm font-bold font-mono truncate", stat.valueClass)}>{stat.value}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <Dialog open={showOnlineModal} onOpenChange={setShowOnlineModal}>

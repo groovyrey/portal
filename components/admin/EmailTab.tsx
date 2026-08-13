@@ -351,15 +351,17 @@ export default function EmailTab() {
               {results && (
                 <div className={cn(
                   "p-4 rounded-md border",
-                  results.failure === 0 ? "bg-emerald-50 border-emerald-200" : "bg-warning-50 border-warning-200"
+                  results.failure === 0
+                    ? "bg-emerald-500/10 border-emerald-500/20 dark:bg-emerald-500/15 dark:border-emerald-500/30"
+                    : "bg-amber-500/10 border-amber-500/20 dark:bg-amber-500/15 dark:border-amber-500/30"
                 )}>
                   <div className="flex items-center gap-2 mb-3">
-                    {results.failure === 0 ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <AlertCircle className="h-4 w-4 text-warning-600" />}
+                    {results.failure === 0 ? <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />}
                     <p className="text-xs font-bold uppercase">Transmission Report</p>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <ReportStat label="Target" value={results.total} />
-                    <ReportStat label="Sent" value={results.success} color="text-emerald-600" />
+                    <ReportStat label="Sent" value={results.success} color="text-emerald-600 dark:text-emerald-400" />
                     <ReportStat label="Failed" value={results.failure} color="text-destructive" />
                   </div>
                 </div>
