@@ -22,6 +22,7 @@ import {
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import Marquee from '@/components/shared/Marquee';
+import { FALLBACK_ANDROID_APP_URL, FALLBACK_ANDROID_APP_VERSION } from '@/lib/app-release';
 
 const FAQItem = ({ question, answer }: { question: string, answer: string }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -57,6 +58,7 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
 
 export default function AboutPage() {
   const [stats, setStats] = useState({ count: 0, average: '0.0' });
+  const [appRelease, setAppRelease] = useState({ version: FALLBACK_ANDROID_APP_VERSION, downloadUrl: FALLBACK_ANDROID_APP_URL });
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -72,6 +74,17 @@ export default function AboutPage() {
       } catch (e) {}
     };
     fetchStats();
+
+    const fetchAppRelease = async () => {
+      try {
+        const res = await fetch('/api/app-release');
+        const data = await res.json();
+        if (data.downloadUrl) {
+          setAppRelease({ version: data.version, downloadUrl: data.downloadUrl });
+        }
+      } catch (e) {}
+    };
+    fetchAppRelease();
   }, []);
 
   const fadeIn = {
@@ -249,7 +262,7 @@ export default function AboutPage() {
                 ))}
               </ul>
               <a
-                href="https://github.com/groovyrey/lcchub/releases/latest/download/lcc-hub-1.2.1.apk"
+                href={appRelease.downloadUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-lg font-bold text-[10px] tracking-tight transition-all shadow-xl hover:opacity-90 active:scale-95"
@@ -258,7 +271,7 @@ export default function AboutPage() {
                 Download for Android
               </a>
               <p className="text-[10px] text-muted-foreground font-bold tracking-tight mt-3">
-                Latest version v1.2.1 • Android APK
+                Latest version v{appRelease.version} • Android APK
               </p>
             </div>
             <div className="hidden md:flex items-center justify-center">
