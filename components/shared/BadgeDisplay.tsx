@@ -96,7 +96,7 @@ export default function BadgeDisplay({ badgeIds, size = 'md', showName = false, 
         <div className="flex -space-x-2">
           {displayBadges.map((badge) => {
             const Icon = ICON_MAP[badge.icon || 'Award'] || Award;
-            const scheme = COLOR_SCHEMES[badge.color] || DEFAULT_SCHEME;
+            const scheme = COLOR_SCHEMES[badge.color || 'slate'] || DEFAULT_SCHEME;
 
             return (
               <button
@@ -148,7 +148,7 @@ export default function BadgeDisplay({ badgeIds, size = 'md', showName = false, 
           <DialogHeader className="items-center text-center">
             {activeBadge && (() => {
               const Icon = ICON_MAP[activeBadge.icon || 'Award'] || Award;
-              const scheme = COLOR_SCHEMES[activeBadge.color] || DEFAULT_SCHEME;
+              const scheme = COLOR_SCHEMES[activeBadge.color || 'slate'] || DEFAULT_SCHEME;
               return (
                 <div className="flex flex-col items-center gap-3">
                   <div className={cn(
