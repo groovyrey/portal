@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Github, Mail } from 'lucide-react';
 import { APP_VERSION } from '@/lib/version';
 
 export default function Footer() {
@@ -46,6 +47,9 @@ export default function Footer() {
             <h3 className="text-[10px] font-bold text-foreground uppercase tracking-tight mb-4">Resources</h3>
             <ul className="space-y-2">
               <li>
+                <Link href="/about" className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">About</Link>
+              </li>
+              <li>
                 <Link href="/school" className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">School Info</Link>
               </li>
               <li>
@@ -68,10 +72,30 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-border text-center md:text-left">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
-            &copy; {currentYear} LCCian Hub • v{APP_VERSION}
-          </p>
+        <div className="pt-8 border-t border-border">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
+              &copy; {currentYear} LCCian Hub • v{APP_VERSION}
+            </p>
+            <div className="flex items-center gap-5">
+              <a
+                href="https://github.com/groovyrey"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="GitHub"
+              >
+                <Github className="h-4 w-4" />
+              </a>
+              <a
+                href="mailto:reymartcenteno03@gmail.com"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="Email"
+              >
+                <Mail className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

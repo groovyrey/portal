@@ -14,7 +14,10 @@ import {
   LayoutGrid,
   Calendar,
   Wallet,
-  Globe
+  Globe,
+  Smartphone,
+  Download,
+  CheckCircle2
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -222,6 +225,63 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* Android App Section */}
+      <section className="py-24 bg-card/30 border-y border-border">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-xs font-bold text-primary tracking-tight mb-4 italic">Android App</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-8 tracking-tight">LCC Hub on Your Phone</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed font-medium mb-8">
+                Take the Hub anywhere with the native Android app. Instant access to grades, schedules, financials, and the assistant, wrapped in a fast, lightweight build designed for daily use.
+              </p>
+              <ul className="space-y-3 mb-8">
+                {[
+                  'Native Android experience',
+                  'Instant grade & schedule access',
+                  'Real-time announcements',
+                  'Fast, lightweight build'
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 text-sm font-bold text-foreground">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="https://github.com/groovyrey/lcchub/releases/latest/download/lcc-hub-1.2.1.apk"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-lg font-bold text-[10px] tracking-tight transition-all shadow-xl hover:opacity-90 active:scale-95"
+              >
+                <Download className="h-4 w-4" />
+                Download for Android
+              </a>
+              <p className="text-[10px] text-muted-foreground font-bold tracking-tight mt-3">
+                Latest version v1.2.1 • Android APK
+              </p>
+            </div>
+            <div className="hidden md:flex items-center justify-center">
+              <div className="w-52 h-[420px] rounded-[2rem] border-4 border-border bg-card shadow-2xl p-5 flex flex-col items-center gap-5">
+                <div className="h-8 w-16 rounded-full bg-border/60 flex items-center justify-center">
+                  <div className="h-2 w-8 rounded-full bg-card" />
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Smartphone className="h-5 w-5" />
+                </div>
+                <div className="space-y-3 w-full">
+                  {['Grades', 'Schedules', 'Financials', 'Assistant'].map((f) => (
+                    <div key={f} className="p-3 rounded-lg bg-muted/40 border border-border text-[10px] font-bold text-center">
+                      {f}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ Section */}
       <section className="py-24 bg-muted/10 border-y border-border">
         <div className="max-w-3xl mx-auto px-4">
@@ -245,7 +305,7 @@ export default function AboutPage() {
             />
             <FAQItem 
               question="Is there an official app?" 
-              answer="LCC Hub is designed to work like an app on your phone. You can 'Add to Home Screen' from your mobile browser for a full-screen, app-like experience." 
+              answer="Yes! LCC Hub now has a native Android app. Download the latest APK from the 'Android App' section above. The web version also works great — you can 'Add to Home Screen' from your mobile browser for a full-screen, app-like experience." 
             />
           </div>
         </div>
@@ -271,9 +331,6 @@ export default function AboutPage() {
           {/* Subtle background graphic */}
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-foreground/10 to-transparent pointer-events-none" />
         </div>
-        <p className="text-[9px] text-muted-foreground font-bold tracking-tight text-center mt-12">
-          &copy; {new Date().getFullYear()} LCC Hub • Built for the LCC Community
-        </p>
       </section>
     </div>
   );
