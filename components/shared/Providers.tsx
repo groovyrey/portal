@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode, useState } from 'react';
 
 import { ThemeProvider } from './ThemeProvider';
+import AccentApplier from './AccentApplier';
 
 export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -20,6 +21,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
+        <AccentApplier />
         {children}
       </QueryClientProvider>
     </ThemeProvider>

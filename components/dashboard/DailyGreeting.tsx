@@ -29,21 +29,21 @@ export default function DailyGreeting({ student }: { student: Student }) {
   const themes = {
     morning: {
       icon: Sun,
-      iconColor: 'text-amber-500',
-      gradient: 'from-amber-200/50 via-orange-100/30 to-background dark:from-amber-500/20 dark:via-orange-500/10 dark:to-background',
-      glow: 'bg-amber-400/20 dark:bg-amber-500/10',
+      iconColor: 'text-primary',
+      gradient: 'from-primary/10 via-primary/5 to-background dark:from-primary/25 dark:via-primary/10 dark:to-background',
+      glow: 'bg-primary/20 dark:bg-primary/10',
     },
     afternoon: {
       icon: Cloud,
-      iconColor: 'text-blue-500',
-      gradient: 'from-sky-200/50 via-blue-100/30 to-background dark:from-sky-500/20 dark:via-blue-500/10 dark:to-background',
-      glow: 'bg-sky-400/20 dark:bg-sky-500/10',
+      iconColor: 'text-primary',
+      gradient: 'from-primary/10 via-primary/5 to-background dark:from-primary/25 dark:via-primary/10 dark:to-background',
+      glow: 'bg-primary/20 dark:bg-primary/10',
     },
     evening: {
       icon: Moon,
-      iconColor: 'text-indigo-500',
-      gradient: 'from-indigo-200/50 via-violet-100/30 to-background dark:from-indigo-500/20 dark:via-violet-500/10 dark:to-background',
-      glow: 'bg-indigo-400/20 dark:bg-indigo-500/10',
+      iconColor: 'text-primary',
+      gradient: 'from-primary/10 via-primary/5 to-background dark:from-primary/25 dark:via-primary/10 dark:to-background',
+      glow: 'bg-primary/20 dark:bg-primary/10',
     },
   }[timeOfDay];
 

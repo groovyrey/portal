@@ -11,7 +11,8 @@ import {
   Settings, 
   LogOut,
   Loader2,
-  ChevronRight
+  ChevronRight,
+  Palette,
 } from 'lucide-react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
@@ -25,13 +26,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Student } from '@/types';
 // Tab Components
 import ProfileTab from '@/components/settings/ProfileTab';
+import AppearanceTab from '@/components/settings/AppearanceTab';
 import SecurityTab from '@/components/settings/SecurityTab';
 import NotificationsTab from '@/components/settings/NotificationsTab';
 import PrivacyTab from '@/components/settings/PrivacyTab';
 import ActivityTab from '@/components/settings/ActivityTab';
 import SupportTab from '@/components/settings/SupportTab';
 
-type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy' | 'activity' | 'support';
+type SettingsTab = 'profile' | 'appearance' | 'security' | 'notifications' | 'privacy' | 'activity' | 'support';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -46,7 +48,7 @@ export default function SettingsPage() {
   // Sync tab with URL
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['profile', 'security', 'notifications', 'privacy', 'activity', 'support'].includes(tab)) {
+    if (tab && ['profile', 'appearance', 'security', 'notifications', 'privacy', 'activity', 'support'].includes(tab)) {
       setActiveTab(tab as SettingsTab);
     }
   }, [searchParams]);
@@ -117,6 +119,7 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: 'profile', name: 'Profile', icon: User, desc: 'Personal info' },
+    { id: 'appearance', name: 'Appearance', icon: Palette, desc: 'Theme colors' },
     { id: 'security', name: 'Security', icon: Lock, desc: 'Login safety' },
     { id: 'notifications', name: 'Alerts', icon: Bell, desc: 'Update settings' },
     { id: 'privacy', name: 'Privacy', icon: Eye, desc: 'App visibility' },
@@ -165,6 +168,7 @@ export default function SettingsPage() {
       <Card className="min-h-[500px]">
         <CardContent className="p-6 md:p-8">
           {activeTab === 'profile' && <ProfileTab student={student} updateSettings={updateSettings} />}
+          {activeTab === 'appearance' && <AppearanceTab student={student} updateSettings={updateSettings} />}
           {activeTab === 'security' && <SecurityTab />}
           {activeTab === 'notifications' && <NotificationsTab student={student} updateSettings={updateSettings} />}
           {activeTab === 'privacy' && <PrivacyTab student={student} updateSettings={updateSettings} />}

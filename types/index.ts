@@ -172,6 +172,7 @@ export interface Student {
     classReminders?: boolean;
     paymentReminders?: boolean;
     campus?: string;
+    accent?: string;
     assistant?: {
       autoSpeak: boolean;
       voiceModel: string;

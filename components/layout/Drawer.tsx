@@ -15,9 +15,11 @@ interface DrawerProps {
   title: string;
   children: React.ReactNode;
   side?: 'right' | 'left' | 'bottom' | 'top';
+  header?: React.ReactNode;
+  contentClassName?: string;
 }
 
-export default function Drawer({ isOpen, onClose, title, children, side = 'right' }: DrawerProps) {
+export default function Drawer({ isOpen, onClose, title, children, side = 'right', header, contentClassName }: DrawerProps) {
   const isBottom = side === 'bottom';
 
   return (
@@ -29,10 +31,17 @@ export default function Drawer({ isOpen, onClose, title, children, side = 'right
         {isBottom && (
           <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto mt-3 mb-1 shrink-0" />
         )}
-        <SheetHeader className="p-4 border-b border-border space-y-0">
-          <SheetTitle className="text-base font-semibold text-foreground">{title}</SheetTitle>
-        </SheetHeader>
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+        {header ? (
+          <div className="shrink-0">
+            <SheetTitle className="sr-only">{title}</SheetTitle>
+            {header}
+          </div>
+        ) : (
+          <SheetHeader className="p-4 border-b border-border space-y-0 shrink-0">
+            <SheetTitle className="text-base font-semibold text-foreground">{title}</SheetTitle>
+          </SheetHeader>
+        )}
+        <div className={cn("flex-1 overflow-y-auto custom-scrollbar", contentClassName ?? "p-4")}>
           <div className={isBottom ? 'max-w-2xl mx-auto' : ''}>
             {children}
           </div>

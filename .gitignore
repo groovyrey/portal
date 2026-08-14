@@ -35,3 +35,8 @@ list_models.js
 next-env.d.ts
 GEMINI.md
 .env*
+
+# opencode / agent skills tooling
+.opencode/
+.agents/
+skills-lock.json
