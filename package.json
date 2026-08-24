@@ -35,7 +35,7 @@
     "@vercel/sandbox": "^1.8.0",
     "ably": "^2.17.1",
     "axios": "^1.13.5",
-    "axios-cookiejar-support": "^6.0.5",
+    "http-cookie-agent": "^7.0.4",
     "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.9.0",

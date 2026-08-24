@@ -1,8 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
-import { wrapper } from 'axios-cookiejar-support';
+import { HttpCookieAgent, HttpsCookieAgent } from 'http-cookie-agent/http';
 import { CookieJar } from 'tough-cookie';
-import * as http from 'http';
-import * as https from 'https';
 import { query, getClient } from './turso';
 import { decrypt, encrypt } from './auth';
 import { PORTAL_BASE } from './constants';
@@ -12,13 +10,17 @@ import { PORTAL_BASE } from './constants';
  * Maintains a persistent, encrypted session for the school portal locally.
  */
 
-// Shared keep-alive agents: reuse TCP/TLS connections to the legacy portal
-// across requests AND across warm serverless invocations instead of paying
-// a full handshake (~2-3 RTTs) per request.
-const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 64 });
-const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 64 });
-
-const AGENT_CONFIG = { httpAgent, httpsAgent };
+// Cookie-aware keep-alive agents bound to the session jar. Unlike
+// axios-cookiejar-support (which builds a fresh agent per request), these are
+// created once per session client so TCP/TLS connections to the legacy portal
+// are reused across every request in a sync operation.
+function makeCookieAgents(jar: CookieJar) {
+  const agentOptions = { cookies: { jar }, keepAlive: true, maxSockets: 64, timeout: 60000 };
+  return {
+    httpAgent: new HttpCookieAgent(agentOptions),
+    httpsAgent: new HttpsCookieAgent(agentOptions),
+  };
+}
 
 export interface SessionResult {
   client: AxiosInstance;
@@ -38,13 +40,13 @@ const DEFAULT_HEADERS = {
 export async function getSessionClient(userId: string): Promise<SessionResult> {
   // Initialize local jar and client
   const jar = new CookieJar();
-  const localClient = wrapper(axios.create({
-    jar,
+  const agents = makeCookieAgents(jar);
+  const localClient = axios.create({
     withCredentials: true,
     headers: DEFAULT_HEADERS,
     timeout: 20000,
-    ...AGENT_CONFIG
-  }));
+    ...agents
+  });
 
   try {
     const res = await query('SELECT * FROM portal_sessions WHERE id = ?', [userId]);
@@ -74,13 +76,12 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
           const jarData = JSON.parse(decrypted);
           const newJar = CookieJar.fromJSON(jarData);
           
-          const hydratedLocalClient = wrapper(axios.create({
-            jar: newJar,
+          const hydratedLocalClient = axios.create({
             withCredentials: true,
             headers: DEFAULT_HEADERS,
             timeout: 20000,
-            ...AGENT_CONFIG
-          }));
+            ...makeCookieAgents(newJar)
+          });
 
           // Local re-verification
           if (isRecentlyVerified) {
