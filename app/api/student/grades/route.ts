@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const { client, jar, isNew, isLocked, consecutiveFailures } = await getSessionClient(userId);
+    const { client, jar, isNew, isLocked, consecutiveFailures, dashboardUrl: cachedDashboardUrl } = await getSessionClient(userId);
     
     if (isLocked) {
       return NextResponse.json({ 
@@ -101,7 +101,9 @@ export async function POST(req: NextRequest) {
     }
 
     const scraper = new ScraperService(client, userId);
-    const { dashboardUrl } = await scraper.fetchDashboard();
+
+    // Only pay for a dashboard round trip when we have no cached URL
+    let { dashboardUrl } = cachedDashboardUrl ? { dashboardUrl: cachedDashboardUrl } : await scraper.fetchDashboard();
 
     if (isNew) {
       if ((consecutiveFailures || 0) >= 3) {
@@ -115,7 +117,7 @@ export async function POST(req: NextRequest) {
       const loginRes = await scraper.forceLogin(password);
       const hasLoginButton = loginRes.$('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
       
-      await saveSession(userId, jar, !hasLoginButton);
+      await saveSession(userId, jar, !hasLoginButton, dashboardUrl);
       
       if (hasLoginButton) {
         return NextResponse.json({ error: 'Portal session expired and auto-login failed.' }, { status: 401 });

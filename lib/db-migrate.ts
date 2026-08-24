@@ -96,6 +96,11 @@ export async function migratePortalTables() {
       await query(`ALTER TABLE portal_sessions ADD COLUMN encrypted_password TEXT;`);
     } catch (e) {}
 
+    // Cache of the last known dashboard URL (saves a round trip per scrape)
+    try {
+      await query(`ALTER TABLE portal_sessions ADD COLUMN dashboard_url TEXT;`);
+    } catch (e) {}
+
     // 6. Ratings
     await query(`
       CREATE TABLE IF NOT EXISTS ratings (

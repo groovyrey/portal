@@ -129,6 +129,10 @@ async function backgroundSync(userId: string) {
   }
 
   const { periodCode, dashboardUrl } = await scraper.fetchDashboard();
+
+  // Persist dashboard URL so future scrapes can skip this round trip
+  const { saveSession: persistSession } = await import('@/lib/session-proxy');
+  await persistSession(userId, jar, true, dashboardUrl);
   
   // Use centralized sync logic
   await syncer.performFullSync(scraper, $dashboard, periodCode, dashboardUrl, rawHtml);

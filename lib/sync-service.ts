@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { query } from './turso';
+import { query, batch } from './turso';
 import { ScraperService, ScrapedStudentInfo, ScrapedScheduleItem, ScrapedFinancials } from './scraper-service';
 
 export class SyncService {
@@ -109,9 +109,13 @@ export class SyncService {
       console.warn(`[SyncService] Failed to clear old grades for ${reportName}:`, e);
     }
 
-    for (const item of subjects) {
-      // Ensure no undefined values are passed to Turso (LibSQL), as it throws "Unsupported type of value"
-      const params = [
+    // Single round trip for all subjects instead of one INSERT per row
+    await batch(subjects.map((item: any) => ({
+      sql: `
+        INSERT INTO grades (student_id, report_name, subject_code, section, description, grade, units, remarks, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      args: [
         this.userId || null,
         reportName || 'Unknown Report',
         item.subject_code || item.code || 'N/A',
@@ -121,13 +125,8 @@ export class SyncService {
         item.units !== undefined ? item.units : '0',
         item.remarks !== undefined ? item.remarks : 'N/A',
         now
-      ];
-
-      await query(`
-        INSERT INTO grades (student_id, report_name, subject_code, section, description, grade, units, remarks, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, params);
-    }
+      ]
+    })));
 
     // Automatically check for badges whenever grades are synced
     await this.checkAndGrantBadges(subjects);

@@ -91,6 +91,22 @@ export const query = async (text: string, params: any[] = []) => {
 };
 
 /**
+ * Execute multiple statements in a single network round trip.
+ * Dramatically faster than sequential `query()` calls for bulk inserts
+ * (e.g. syncing a full report card of subjects).
+ */
+export const batch = async (stmts: { sql: string; args?: any[] }[]) => {
+  if (stmts.length === 0) return;
+  return client.batch(
+    stmts.map(s => ({
+      sql: s.sql.replace(/ILIKE/g, 'LIKE'),
+      args: (s.args || []).map(p => p === undefined ? null : p),
+    })),
+    'write'
+  );
+};
+
+/**
  * Compatibility wrapper for transactions
  */
 export const getClient = async () => {

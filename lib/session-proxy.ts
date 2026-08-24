@@ -1,6 +1,8 @@
 import axios, { AxiosInstance } from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
+import * as http from 'http';
+import * as https from 'https';
 import { query, getClient } from './turso';
 import { decrypt, encrypt } from './auth';
 import { PORTAL_BASE } from './constants';
@@ -10,6 +12,14 @@ import { PORTAL_BASE } from './constants';
  * Maintains a persistent, encrypted session for the school portal locally.
  */
 
+// Shared keep-alive agents: reuse TCP/TLS connections to the legacy portal
+// across requests AND across warm serverless invocations instead of paying
+// a full handshake (~2-3 RTTs) per request.
+const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 64 });
+const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 64 });
+
+const AGENT_CONFIG = { httpAgent, httpsAgent };
+
 export interface SessionResult {
   client: AxiosInstance;
   jar: CookieJar;
@@ -17,6 +27,7 @@ export interface SessionResult {
   userId: string;
   isLocked?: boolean;
   consecutiveFailures?: number;
+  dashboardUrl?: string | null;
 }
 
 const DEFAULT_HEADERS = {
@@ -27,11 +38,12 @@ const DEFAULT_HEADERS = {
 export async function getSessionClient(userId: string): Promise<SessionResult> {
   // Initialize local jar and client
   const jar = new CookieJar();
-  const localClient = wrapper(axios.create({ 
-    jar, 
+  const localClient = wrapper(axios.create({
+    jar,
     withCredentials: true,
     headers: DEFAULT_HEADERS,
-    timeout: 20000 
+    timeout: 20000,
+    ...AGENT_CONFIG
   }));
 
   try {
@@ -62,16 +74,17 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
           const jarData = JSON.parse(decrypted);
           const newJar = CookieJar.fromJSON(jarData);
           
-          const hydratedLocalClient = wrapper(axios.create({ 
-            jar: newJar, 
+          const hydratedLocalClient = wrapper(axios.create({
+            jar: newJar,
             withCredentials: true,
             headers: DEFAULT_HEADERS,
-            timeout: 20000
+            timeout: 20000,
+            ...AGENT_CONFIG
           }));
 
           // Local re-verification
           if (isRecentlyVerified) {
-              return { client: hydratedLocalClient, jar: newJar, isNew: false, userId };
+              return { client: hydratedLocalClient, jar: newJar, isNew: false, userId, dashboardUrl: data.dashboard_url || null };
           }
 
           const testRes = await hydratedLocalClient.get(`${PORTAL_BASE}/Student/Main.aspx?_sid=${userId}`);
@@ -79,7 +92,7 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
             if (consecutiveFailures > 0) {
                 await query('UPDATE portal_sessions SET consecutive_failures = 0 WHERE id = ?', [userId]);
             }
-            return { client: hydratedLocalClient, jar: newJar, isNew: false, userId };
+            return { client: hydratedLocalClient, jar: newJar, isNew: false, userId, dashboardUrl: data.dashboard_url || null };
           }
         } catch (e) {
           console.warn('Failed to rehydrate session, starting fresh:', e);
@@ -94,20 +107,20 @@ export async function getSessionClient(userId: string): Promise<SessionResult> {
   return { client: localClient, jar, isNew: true, userId };
 }
 
-export async function saveSession(userId: string, jar: CookieJar, isSuccess: boolean = true) {
+export async function saveSession(userId: string, jar: CookieJar, isSuccess: boolean = true, dashboardUrl?: string) {
   try {
     const now = new Date().toISOString();
-    
+
     if (!isSuccess) {
         const res = await query('SELECT consecutive_failures FROM portal_sessions WHERE id = ?', [userId]);
         const currentFailures = res.rowCount > 0 ? (res.rows[0].consecutive_failures || 0) : 0;
-        
+
         await query(`
-          INSERT INTO portal_sessions (id, consecutive_failures, last_attempt_at, refresh_lock_until) 
+          INSERT INTO portal_sessions (id, consecutive_failures, last_attempt_at, refresh_lock_until)
           VALUES (?, ?, ?, ?)
-          ON CONFLICT(id) DO UPDATE SET 
-            consecutive_failures = ?, 
-            last_attempt_at = ?, 
+          ON CONFLICT(id) DO UPDATE SET
+            consecutive_failures = ?,
+            last_attempt_at = ?,
             refresh_lock_until = ?
         `, [
           userId, currentFailures + 1, now, new Date(0).toISOString(),
@@ -118,19 +131,20 @@ export async function saveSession(userId: string, jar: CookieJar, isSuccess: boo
 
     const jarJson = JSON.stringify(jar.toJSON());
     const encrypted = encrypt(jarJson);
-    
+
     await query(`
-      INSERT INTO portal_sessions (id, encrypted_jar, updated_at, last_attempt_at, consecutive_failures, refresh_lock_until)
-      VALUES (?, ?, ?, ?, 0, ?)
+      INSERT INTO portal_sessions (id, encrypted_jar, updated_at, last_attempt_at, consecutive_failures, refresh_lock_until, dashboard_url)
+      VALUES (?, ?, ?, ?, 0, ?, COALESCE(?, dashboard_url))
       ON CONFLICT(id) DO UPDATE SET
         encrypted_jar = ?,
         updated_at = ?,
         last_attempt_at = ?,
         consecutive_failures = 0,
-        refresh_lock_until = ?
+        refresh_lock_until = ?,
+        dashboard_url = COALESCE(?, dashboard_url)
     `, [
-      userId, encrypted, now, now, new Date(0).toISOString(),
-      encrypted, now, now, new Date(0).toISOString()
+      userId, encrypted, now, now, new Date(0).toISOString(), dashboardUrl ?? null,
+      encrypted, now, now, new Date(0).toISOString(), dashboardUrl ?? null
     ]);
 
   } catch (error) {

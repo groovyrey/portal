@@ -163,7 +163,10 @@ export async function POST(req: NextRequest) {
 
     // --- SCRAPING & SYNC ---
     const { periodCode, dashboardUrl } = await scraper.fetchDashboard();
-    
+
+    // Cache the dashboard URL for future scrapes (saves a round trip later)
+    saveSession(userId, jar, true, dashboardUrl).catch(e => console.warn('Dashboard URL cache failed:', e));
+
     // Centralized Sync Logic
     const syncResult = await syncer.performFullSync(scraper, $dashboard, periodCode, dashboardUrl, loginRes.data);
 
