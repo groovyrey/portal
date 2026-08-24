@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@deepgram/sdk": "^5.0.0",
+    "@google/generative-ai": "^0.24.1",
     "@huggingface/inference": "^4.13.11",
     "@langchain/core": "^1.1.28",
     "@langchain/openai": "^1.2.10",
@@ -42,6 +43,7 @@
     "dotenv": "^16.4.5",
     "framer-motion": "^12.31.0",
     "google-auth-library": "^10.9.0",
+    "highlight.js": "^11.11.1",
     "katex": "^0.16.28",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.564.0",
