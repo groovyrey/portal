@@ -109,6 +109,15 @@ export function normalizeTextForSpeech(text: string): string {
     .replace(/&#39;|&apos;/gi, "'")
     .replace(/&hellip;/gi, '...');
 
+  // Speak the peso sign as a word. TTS engines misread the '₱' character
+  // (they output the peso sign as "P" + a garbled segment, e.g. "P.0"), so
+  // expand it (and common PHP/Php/Peso alternatives) to "pesos".
+  out = out
+    .replace(/\u20b1\s*/g, 'pesos ')
+    .replace(/\bphp\.?\s*(?=\d)/gi, 'pesos ')
+    .replace(/\bPeso\b/g, 'peso')
+    .replace(/\bPesos\b/g, 'pesos');
+
   // Keep code fences, reading their content as a sentence.
   out = out.replace(/```(?:\w+)?\s*([\s\S]*?)```/g, (_, code: string) => {
     return ' ' + code.replace(/[|\n]/g, ' ').trim() + ' ';

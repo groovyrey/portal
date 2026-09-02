@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { useStudent } from '@/lib/hooks';
 import AssistantTab from '@/components/settings/AssistantTab';
 import AssistantMarkdown from '@/components/community/AssistantMarkdown';
+import TypewriterText from '@/components/community/TypewriterText';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -565,7 +566,11 @@ export default function AssistantPage() {
                                   const hasThought = /<(thought|think|reasoning)>/.test(m.content);
                                   return <TypingIndicator status={m.status || (hasThought ? 'THINKING' : 'PROCESSING')} />;
                                 }
-                                return <AssistantMarkdown content={m.content} isLoading={isLoading && idx === messages.length - 1} showThinking={student?.settings?.assistant?.showThinkingProcess} />;
+                                const isStreaming = isLoading && idx === messages.length - 1;
+                                if (isStreaming) {
+                                  return <TypewriterText content={m.content} isStreaming />;
+                                }
+                                return <AssistantMarkdown content={m.content} isLoading={false} showThinking={student?.settings?.assistant?.showThinkingProcess} />;
                               })()}
                             </div>
                           ) : (
