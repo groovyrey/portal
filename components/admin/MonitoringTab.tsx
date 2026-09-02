@@ -92,10 +92,10 @@ export default function MonitoringTab() {
             variant="outline"
             size="sm"
             onClick={fetchOnlineDetails}
-            className="h-8 rounded-full gap-2 px-3 border-emerald-500/20 bg-emerald-500/5 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+            className="h-8 gap-2 px-3"
           >
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-bold uppercase tracking-wider">
+            <span className="text-xs font-medium">
               {onlineMembers.size} Online
             </span>
           </Button>
@@ -115,13 +115,13 @@ export default function MonitoringTab() {
         {stats.map((stat) => {
           const t = CARD_THEMES[stat.theme];
           return (
-            <Card key={stat.label} className={cn("bg-gradient-to-br border-border", t.bg)}>
+            <Card key={stat.label} className={cn("border-border", t.bg)}>
               <CardContent className="p-3 space-y-1 min-w-0">
                 <div className={cn("flex items-center gap-1.5", t.icon)}>
                   <div className={cn("h-6 w-6 rounded-md flex items-center justify-center shrink-0", t.tile)}>
                     {stat.icon}
                   </div>
-                  <span className="text-[10px] font-bold uppercase tracking-tight truncate">{stat.label}</span>
+                  <span className="text-xs font-medium truncate">{stat.label}</span>
                 </div>
                 <p className={cn("text-sm font-bold font-mono truncate", stat.valueClass)}>{stat.value}</p>
               </CardContent>
@@ -148,7 +148,7 @@ export default function MonitoringTab() {
                   </div>
                 ))
               ) : (
-                <p className="text-center py-10 text-xs text-muted-foreground uppercase font-bold tracking-widest">No active users</p>
+                <p className="text-center py-10 text-xs text-muted-foreground">No active users</p>
               )}
             </div>
           </ScrollArea>

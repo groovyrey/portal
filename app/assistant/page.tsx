@@ -222,12 +222,12 @@ const ChatInput = React.memo(({ onSend, onStop, isLoading, onClear, hasMessages 
           {attachments.length > 0 && (
             <div className="flex flex-wrap gap-2 px-2">
               {attachments.map((att, i) => (
-                <div key={i} className="relative group/att h-20 w-20 rounded-xl border border-border overflow-hidden bg-muted shadow-sm">
+                <div key={i} className="relative group/att h-20 w-20 rounded-lg border border-border overflow-hidden bg-muted">
                   <img src={att.preview} alt="preview" className="h-full w-full object-cover" />
                   <button 
                     type="button"
                     onClick={() => removeAttachment(i)}
-                    className="absolute top-1 right-1 bg-background/90 rounded-full p-1 opacity-0 group-hover/att:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground shadow-sm"
+                    className="absolute top-1 right-1 bg-background/90 rounded-md p-1 opacity-0 group-hover/att:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -237,7 +237,7 @@ const ChatInput = React.memo(({ onSend, onStop, isLoading, onClear, hasMessages 
           )}
 
           <div className={cn(
-            "relative flex flex-col transition-all duration-300 rounded-[1.5rem] border border-border bg-muted/30 focus-within:bg-muted/50 focus-within:ring-1 focus-within:ring-primary/20 focus-within:border-primary/30 shadow-sm overflow-hidden",
+            "relative flex flex-col rounded-lg border border-border bg-muted/30 focus-within:bg-muted/50 focus-within:ring-1 focus-within:ring-primary/20 focus-within:border-primary/30 overflow-hidden",
             isLoading && "opacity-80 pointer-events-none"
           )}>
             <textarea
@@ -257,7 +257,7 @@ const ChatInput = React.memo(({ onSend, onStop, isLoading, onClear, hasMessages 
                     variant="ghost" 
                     size="icon" 
                     onClick={() => fileInputRef.current?.click()} 
-                    className="h-9 w-9 rounded-full text-muted-foreground hover:bg-muted"
+                    className="h-9 w-9 rounded-md text-muted-foreground hover:bg-muted"
                   >
                     <Paperclip className="h-4.5 w-4.5" />
                   </Button>
@@ -268,7 +268,7 @@ const ChatInput = React.memo(({ onSend, onStop, isLoading, onClear, hasMessages 
                     size="icon" 
                     onClick={() => isRecording ? mediaRecorderRef.current?.stop() : startRecording()} 
                     className={cn(
-                      "h-9 w-9 rounded-full transition-all", 
+                      "h-9 w-9 rounded-md transition-all", 
                       isRecording ? "text-destructive bg-destructive/10 animate-pulse" : "text-muted-foreground hover:bg-muted"
                     )}
                   >
@@ -281,7 +281,7 @@ const ChatInput = React.memo(({ onSend, onStop, isLoading, onClear, hasMessages 
                       variant="ghost" 
                       size="icon" 
                       onClick={onClear} 
-                      className="h-9 w-9 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      className="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="h-4.5 w-4.5" />
                     </Button>
@@ -294,7 +294,7 @@ const ChatInput = React.memo(({ onSend, onStop, isLoading, onClear, hasMessages 
                   disabled={(!input.trim() && attachments.length === 0) || isLoading}
                   variant={isLoading ? "ghost" : "default"}
                   className={cn(
-                    "h-9 w-9 rounded-full shadow-md transition-all active:scale-90",
+                    "h-9 w-9 rounded-md transition-all active:scale-90",
                     !input.trim() && attachments.length === 0 ? "bg-muted text-muted-foreground shadow-none" : "bg-primary text-primary-foreground"
                   )}
                 >
@@ -341,10 +341,10 @@ export default function AssistantPage() {
   const [reasoningContent, setReasoningContent] = useState('');
 
   const [suggestions] = useState([
-    { text: "My balance?", icon: Wallet, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { text: "Today's schedule", icon: Calendar, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { text: "AI news", icon: Search, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { text: "Summarize site", icon: Globe, color: "text-amber-500", bg: "bg-amber-500/10" }
+    { text: "My balance?", icon: Wallet },
+    { text: "Today's schedule", icon: Calendar },
+    { text: "AI news", icon: Search },
+    { text: "Summarize site", icon: Globe }
   ]);
 
   useEffect(() => {
@@ -518,16 +518,16 @@ export default function AssistantPage() {
     <TabbedPageLayout title="Assistant" icon={BrainCircuit} subtitle="AI Study Companion" tabs={[{ id: 'chat', name: 'Chat', icon: MessageSquare }, { id: 'settings', name: 'Settings', icon: Settings }]} activeTab={activeTab} onTabChange={(id) => handleTabChange(id as any)}>
       <div className="flex flex-col h-[calc(100dvh-12rem)] min-h-[480px] w-full overflow-hidden">
         {activeTab === 'chat' && (
-          <Card className="flex-1 flex flex-col shadow-sm overflow-hidden border-border bg-card w-full rounded-2xl">
+          <Card className="flex-1 flex flex-col overflow-hidden border-border bg-card w-full rounded-lg">
             <ScrollArea className="flex-1 w-full">
               <div className="flex flex-col min-h-full w-full max-w-4xl mx-auto px-4 py-8 md:px-6 relative">
                 {messages.length === 0 && (
                   <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 py-12 w-full">
-                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-sm"><Bot className="h-7 w-7" /></div>
-                    <div className="space-y-1.5"><h2 className="text-2xl font-bold tracking-tight">How can I help?</h2><p className="text-muted-foreground text-sm">Ask about your academic records.</p></div>
+                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><Bot className="h-6 w-6" /></div>
+                    <div className="space-y-1"><h2 className="text-lg font-bold tracking-tight">How can I help?</h2><p className="text-muted-foreground text-sm">Ask about your academic records.</p></div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-xl px-4">
                       {suggestions.map((s, i) => (
-                        <button key={i} onClick={() => sendMessage(s.text)} className="flex items-center gap-3 p-3 bg-card border border-border hover:border-primary/40 hover:shadow-sm rounded-xl transition-all text-left text-sm font-medium active:scale-[0.98] w-full"><div className={cn("p-2 rounded-lg", s.bg, s.color)}><s.icon className="h-4 w-4" /></div><span>{s.text}</span></button>
+                        <button key={i} onClick={() => sendMessage(s.text)} className="flex items-center gap-3 p-2.5 bg-card border border-border hover:border-primary/40 hover:bg-muted transition-colors rounded-lg text-left text-sm font-medium active:scale-[0.98] w-full"><div className="p-1.5 rounded-md bg-muted text-muted-foreground"><s.icon className="h-4 w-4" /></div><span>{s.text}</span></button>
                       ))}
                     </div>
                   </div>
@@ -556,7 +556,7 @@ export default function AssistantPage() {
                             />
                           )}
                         </div>
-                        <div className={cn("rounded-2xl px-4 py-2.5 border transition-all duration-200 min-w-0 w-fit max-w-full overflow-hidden shadow-sm", m.role === 'assistant' ? "bg-muted/40 border-border text-foreground rounded-tl-none" : "bg-primary text-primary-foreground border-primary rounded-tr-none shadow-md")}>
+                        <div className={cn('rounded-lg px-4 py-2.5 border min-w-0 w-fit max-w-full overflow-hidden', m.role === 'assistant' ? 'bg-muted/40 border-border text-foreground' : 'bg-primary text-primary-foreground border-primary')}>
                           {m.role === 'assistant' ? (
                             <div className="min-w-0 w-full overflow-hidden flex flex-col">
                               {(() => {
@@ -573,7 +573,7 @@ export default function AssistantPage() {
                                {m.attachments && m.attachments.length > 0 && (
                                  <div className="flex flex-wrap gap-2 mb-1">
                                     {m.attachments.map((att, i) => (
-                                      <img key={i} src={`data:${att.mimeType};base64,${att.data}`} alt="upload" className="h-32 w-32 object-cover rounded-lg border border-primary/20 shadow-md" />
+                                      <img key={i} src={`data:${att.mimeType};base64,${att.data}`} alt="upload" className="h-32 w-32 object-cover rounded-lg border border-primary/20" />
                                     ))}
                                  </div>
                                )}
@@ -591,7 +591,7 @@ export default function AssistantPage() {
             <ChatInput onSend={sendMessage} onStop={() => { abortControllerRef.current?.abort(); setIsLoading(false); }} isLoading={isLoading} onClear={() => { setMessages([]); toast.success("Cleared"); }} hasMessages={messages.length > 0} />
           </Card>
         )}
-        {activeTab === 'settings' && <Card className="flex-1 overflow-y-auto bg-card border-border shadow-sm rounded-2xl"><CardContent className="p-6 md:p-8">{student && <AssistantTab student={student} updateSettings={updateSettings} />}</CardContent></Card>}
+        {activeTab === 'settings' && <Card className="flex-1 overflow-y-auto bg-card border-border rounded-lg"><CardContent className="p-6 md:p-8">{student && <AssistantTab student={student} updateSettings={updateSettings} />}</CardContent></Card>}
         
         <Dialog open={isQuestionModalOpen} onOpenChange={setIsQuestionModalOpen}>
           <DialogContent className="sm:max-w-md"><DialogHeader><DialogTitle>Assistant Question</DialogTitle><DialogDescription>{modalQuestion}</DialogDescription></DialogHeader><div className="py-4"><Input value={modalInput} onChange={(e) => setModalInput(e.target.value)} placeholder={modalPlaceholder} autoFocus onKeyDown={(e) => { if (e.key === 'Enter') { setIsQuestionModalOpen(false); sendMessage(modalInput); setModalInput(''); } }} /></div><DialogFooter><Button variant="ghost" onClick={() => setIsQuestionModalOpen(false)}>Cancel</Button><Button onClick={() => { setIsQuestionModalOpen(false); sendMessage(modalInput); setModalInput(''); }}>Submit</Button></DialogFooter></DialogContent>

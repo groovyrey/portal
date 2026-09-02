@@ -238,6 +238,30 @@ export async function POST(req: NextRequest) {
     const { content, poll, isUnreviewed, topic, imageUrl, isAnonymous } = await req.json();
     if (!content && !poll && !imageUrl) return NextResponse.json({ error: 'Content, Poll, or Image required' }, { status: 400 });
 
+    // Validate and cap all user-supplied content before persistence.
+    const trimmedContent = (typeof content === 'string' ? content.trim() : '').substring(0, 5000);
+    const safeTopic = (typeof topic === 'string' ? topic.trim() : '').substring(0, 100) || 'General';
+    if (typeof imageUrl === 'string') {
+      if (imageUrl.length > 2000 || !/^https?:\/\//i.test(imageUrl)) {
+        return NextResponse.json({ error: 'Invalid image URL' }, { status: 400 });
+      }
+    }
+    let safePoll: { question: string; options?: string[] } | null = null;
+    if (poll) {
+      if (typeof poll !== 'object' || poll === null || Array.isArray(poll)) {
+        return NextResponse.json({ error: 'Invalid poll' }, { status: 400 });
+      }
+      const question = typeof poll.question === 'string' ? poll.question.trim().substring(0, 500) : '';
+      const options = Array.isArray(poll.options)
+        ? poll.options.map(String).map((o: string) => o.substring(0, 200)).filter((o: string) => o.length > 0).slice(0, 10)
+        : [];
+      if (!question || options.length < 2) {
+        return NextResponse.json({ error: 'Invalid poll: question and at least 2 options required' }, { status: 400 });
+      }
+      safePoll = { question, options };
+    }
+    const safeImageUrl = typeof imageUrl === 'string' ? imageUrl : null;
+
     const userId = parseSessionUserId(req);
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -258,18 +282,18 @@ export async function POST(req: NextRequest) {
     `, [
       userId,
       canonicalUserName,
-      content || '',
-      topic || 'General',
-      imageUrl || null,
+      trimmedContent,
+      safeTopic,
+      safeImageUrl,
       isAnonymous ? 1 : 0,
       isUnreviewed || false,
-      poll?.question || null
+      safePoll?.question || null
     ]);
 
     const postId = postRes.rows[0].id;
 
-    if (poll && poll.options) {
-      for (const optText of poll.options) {
+    if (safePoll?.options) {
+      for (const optText of safePoll.options) {
         await client.query(`
           INSERT INTO community_poll_options (post_id, option_text)
           VALUES ($1, $2)
@@ -283,9 +307,9 @@ export async function POST(req: NextRequest) {
       userId,
       'Community',
       {
-        message: poll ? 'Created a poll' : 'Shared a post',
-        content: poll ? poll.question : content,
-        topic: topic || 'General',
+        message: safePoll ? 'Created a poll' : 'Shared a post',
+        content: safePoll ? safePoll.question : trimmedContent,
+        topic: safeTopic,
         postId: postId
       },
       `/post/${postId}`

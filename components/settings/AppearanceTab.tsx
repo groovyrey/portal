@@ -30,20 +30,20 @@ export default function AppearanceTab({ student, updateSettings }: AppearanceTab
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h4 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Appearance</h4>
+        <h4 className="text-sm font-medium text-muted-foreground">Appearance</h4>
         <p className="text-sm text-muted-foreground">
           Personalize the portal's accent colors. Saved to your account.
         </p>
       </div>
 
       {/* Live preview */}
-      <div className="rounded-2xl border border-border overflow-hidden">
+      <div className="rounded-lg border border-border overflow-hidden">
         <div
           className="relative h-24 flex items-center justify-center"
           style={{ background: `linear-gradient(120deg, ${activeTheme.from}, ${activeTheme.to})` }}
         >
           <Sparkles className="h-7 w-7 text-white/85" />
-          <span className="absolute bottom-2 right-3 text-[10px] font-bold uppercase tracking-widest text-white/70">
+          <span className="absolute bottom-2 right-3 text-xs font-medium text-white/70">
             Live preview
           </span>
         </div>
@@ -54,7 +54,7 @@ export default function AppearanceTab({ student, updateSettings }: AppearanceTab
               <p className="text-xs text-muted-foreground">{activeTheme.description}</p>
             </div>
             <div className="flex gap-2 shrink-0">
-              <button className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-semibold shadow-sm">
+              <button className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-semibold">
                 Button
               </button>
               <button className="h-8 px-3 rounded-md border border-border text-xs font-medium text-muted-foreground">
@@ -89,7 +89,7 @@ export default function AppearanceTab({ student, updateSettings }: AppearanceTab
                 onClick={() => selectAccent(theme.id)}
                 disabled={saving}
                 className={cn(
-                  "group text-left rounded-2xl border p-2 transition-all active:scale-[0.98]",
+                  "group text-left rounded-lg border p-2 transition-all active:scale-[0.98]",
                   active
                     ? "border-primary ring-2 ring-primary/25 bg-accent/50"
                     : "border-border hover:border-primary/40 hover:bg-accent/30"
@@ -101,7 +101,7 @@ export default function AppearanceTab({ student, updateSettings }: AppearanceTab
                 >
                   {active && (
                     <span className="absolute inset-0 flex items-center justify-center">
-                      <span className="h-6 w-6 rounded-full bg-white/90 shadow flex items-center justify-center">
+                      <span className="h-6 w-6 rounded-md bg-white/90 flex items-center justify-center">
                         <Check className="h-4 w-4 text-foreground" />
                       </span>
                     </span>

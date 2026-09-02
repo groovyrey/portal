@@ -8,6 +8,8 @@ const ALLOWED_DOMAINS = [
   'commons.wikimedia.org',
 ];
 
+const ALLOWED_ORIGIN_HOSTS = ['lcchub.vercel.app', 'localhost', '127.0.0.1'];
+
 function isAllowedUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
@@ -54,13 +56,21 @@ export async function GET(req: NextRequest) {
       headers['Range'] = range;
     }
 
-    const response = await fetch(audioUrl, { 
+    // redirect:'manual' prevents following redirects, which could otherwise
+    // lead the server-side fetch from an allowlisted host to a private/internal
+    // URL (SSRF). Only direct 2xx/206 audio responses are streamed back.
+    const response = await fetch(audioUrl, {
       headers,
-      cache: 'no-store'
+      cache: 'no-store',
+      redirect: 'manual',
     });
 
     if (response.status === 429) {
        return NextResponse.json({ error: 'Source is busy' }, { status: 429 });
+    }
+
+    if (response.status >= 300 || response.status < 200) {
+       return NextResponse.json({ error: 'Upstream returned an unexpected status' }, { status: 502 });
     }
 
     const responseHeaders = new Headers();
@@ -81,8 +91,12 @@ export async function GET(req: NextRequest) {
       responseHeaders.set('content-type', 'audio/mpeg');
     }
 
+    // Reflect the request origin only on an exact host match; never a
+    // substring match (which would allow spoofed origins like evil.lcchub.vercel.app.evil.com).
     const origin = req.headers.get('origin') || '';
-    const allowedOrigin = origin.includes('lcchub.vercel.app') || origin.includes('localhost')
+    let originHost = '';
+    try { originHost = new URL(origin).hostname; } catch { originHost = ''; }
+    const allowedOrigin = ALLOWED_ORIGIN_HOSTS.includes(originHost)
       ? origin
       : 'https://lcchub.vercel.app';
     responseHeaders.set('Access-Control-Allow-Origin', allowedOrigin);

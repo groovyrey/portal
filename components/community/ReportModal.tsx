@@ -90,10 +90,10 @@ export default function ReportModal({
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <User className="h-3 w-3 text-muted-foreground" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Reported Content</span>
+              <span className="text-xs font-medium text-muted-foreground">Reported Content</span>
             </div>
             
-            <div className="p-4 rounded-2xl bg-muted/30 border border-border space-y-3">
+            <div className="p-4 rounded-lg bg-muted border border-border space-y-3">
               <div className="flex items-center gap-2">
                 <Avatar className="h-6 w-6 border">
                   <AvatarFallback className="text-[10px]">{authorName.substring(0, 2).toUpperCase()}</AvatarFallback>
@@ -113,7 +113,7 @@ export default function ReportModal({
           <div className="flex flex-col gap-2 pt-2">
             <Button 
               variant="destructive" 
-              className="w-full h-11 font-bold uppercase tracking-widest text-xs"
+              className="w-full h-11 font-medium text-sm"
               onClick={handleReport}
             >
               <Flag className="mr-2 h-4 w-4" />
@@ -121,7 +121,7 @@ export default function ReportModal({
             </Button>
             <Button 
               variant="ghost" 
-              className="w-full h-11 font-bold uppercase tracking-widest text-xs"
+              className="w-full h-11 font-medium text-sm"
               onClick={handleClose}
             >
               Cancel
@@ -166,7 +166,7 @@ export default function ReportModal({
           )}
         </div>
 
-        <h2 className="text-xl font-bold text-foreground mb-2">
+        <h2 className="text-lg font-semibold text-foreground mb-2">
           {isRejected ? 'Content Removed' : 'Report Reviewed'}
         </h2>
         
@@ -176,10 +176,10 @@ export default function ReportModal({
             : "Aegis has reviewed the content and determined it follows our community guidelines. However, it will be monitored for further reports."}
         </p>
 
-        <div className="w-full bg-accent/50 dark:bg-accent/20 rounded-2xl p-5 mb-8 text-left border border-border">
+        <div className="w-full bg-muted rounded-lg p-5 mb-6 text-left border border-border">
           <div className="flex items-center gap-2 mb-2">
             <ShieldAlert className="h-4 w-4 text-primary" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Aegis Decision Reason</span>
+            <span className="text-xs font-medium text-muted-foreground">Aegis Decision Reason</span>
           </div>
           <p className="text-xs text-muted-foreground font-bold leading-relaxed italic">
             &quot;{result?.reason}&quot;
@@ -188,8 +188,8 @@ export default function ReportModal({
 
         <button
           onClick={handleClose}
-          className={`w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg ${
-            isRejected ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20' : 'bg-primary text-primary-foreground hover:opacity-90 shadow-primary/20'
+          className={`w-full py-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2 ${
+            isRejected ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-primary text-primary-foreground hover:bg-primary/90'
           }`}
         >
           {isRejected ? 'I understand' : 'Got it, thanks!'}

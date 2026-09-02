@@ -162,11 +162,10 @@ export default function EmailTab() {
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-0.5">
-          <h2 className="text-xl font-bold tracking-tight">Announcement Center</h2>
+          <h2 className="text-lg font-bold tracking-tight">Announcement Center</h2>
           <p className="text-xs text-muted-foreground">Broadcast official messages to students.</p>
         </div>
-      ...
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="flex items-center bg-muted rounded-md p-1">
           <Button
             variant={targetType === 'specific' ? 'secondary' : 'ghost'}
             size="sm"
@@ -198,7 +197,7 @@ export default function EmailTab() {
         {/* Recipient Selection */}
         <Card className="lg:col-span-2 flex flex-col h-[600px]">
           <CardHeader className="py-3 border-b">
-            <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Users className="h-3.5 w-3.5" />
               Recipients
             </CardTitle>
@@ -206,12 +205,12 @@ export default function EmailTab() {
 
           <CardContent className="p-3 flex-1 flex flex-col overflow-hidden">
             {targetType === 'all' ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4 bg-muted/20 border-dashed border-2 rounded-md">
-                <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                  <Mail className="h-6 w-6" />
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4 bg-muted/20 border border-dashed rounded-md">
+                <div className="h-10 w-10 bg-primary/10 rounded-md flex items-center justify-center text-primary">
+                  <Mail className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="font-bold">Global Broadcast</p>
+                  <p className="text-sm font-medium">Global Broadcast</p>
                   <p className="text-xs text-muted-foreground">Message will reach every registered student.</p>
                 </div>
               </div>
@@ -223,17 +222,17 @@ export default function EmailTab() {
                       key={badge.id}
                       onClick={() => toggleBadge(badge.id)}
                       className={cn(
-                        "w-full flex items-center justify-between p-3 rounded-md border text-left transition-all",
+                        "w-full flex items-center justify-between p-3 rounded-md border text-left",
                         selectedBadges.includes(badge.id) 
-                          ? "border-primary/50 bg-primary/5 shadow-sm" 
+                          ? "border-primary/50 bg-primary/5" 
                           : "hover:bg-muted/50"
                       )}
                     >
                       <div className="flex items-center gap-3">
                         <Award className={cn("h-4 w-4", selectedBadges.includes(badge.id) ? "text-primary" : "text-muted-foreground")} />
                         <div>
-                          <p className="text-xs font-bold uppercase">{badge.name}</p>
-                          <p className="text-[10px] text-muted-foreground line-clamp-1">{badge.description}</p>
+                          <p className="text-sm font-medium">{badge.name}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{badge.description}</p>
                         </div>
                       </div>
                       {selectedBadges.includes(badge.id) && <CheckCircle2 className="h-4 w-4 text-primary" />}
@@ -284,7 +283,7 @@ export default function EmailTab() {
                     {selectedStudents.length === 0 ? (
                       <div className="py-20 text-center text-muted-foreground opacity-50">
                         <User className="h-10 w-10 mx-auto mb-2" />
-                        <p className="text-xs font-medium uppercase tracking-widest">No recipients</p>
+                        <p className="text-sm font-medium">No recipients</p>
                       </div>
                     ) : (
                       selectedStudents.map((s) => (
@@ -319,7 +318,7 @@ export default function EmailTab() {
         {/* Message Content */}
         <Card className="lg:col-span-3 flex flex-col h-[600px]">
           <CardHeader className="py-3 border-b">
-             <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+             <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Info className="h-3.5 w-3.5" />
                 Composition
              </CardTitle>
@@ -372,7 +371,7 @@ export default function EmailTab() {
               onClick={handleSendEmails}
               disabled={isSending || !subject.trim() || !body.trim() || (targetType === 'specific' && selectedStudents.length === 0) || (targetType === 'badges' && selectedBadges.length === 0)}
               size="lg"
-              className="w-full h-11 uppercase font-bold tracking-widest text-xs"
+              className="w-full h-11"
             >
               {isSending ? (
                 <>

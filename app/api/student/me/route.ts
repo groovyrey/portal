@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { initDatabase } from '@/lib/db-init';
 import { decrypt } from '@/lib/auth';
 import { getFullStudentData } from '@/lib/data-service';
+import { cache } from '@/lib/cache';
 import { getSessionClient } from '@/lib/session-proxy';
 import { ScraperService } from '@/lib/scraper-service';
 import { SyncService } from '@/lib/sync-service';
@@ -10,6 +11,7 @@ import * as cheerio from 'cheerio';
 import { waitUntil } from '@vercel/functions';
 
 const AUTO_SYNC_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
+const ME_CACHE_TTL_MS = 30 * 1000; // 30 seconds
 
 export async function GET(req: NextRequest) {
   try {
@@ -31,40 +33,42 @@ export async function GET(req: NextRequest) {
 
     await initDatabase();
 
-    // Use Centralized Data Service
-    try {
-        const studentData = await getFullStudentData(userId);
-        
-        if (!studentData) {
-          console.warn(`Student document for ${userId} not found via Data Service`);
-          return NextResponse.json({ error: 'Student not found' }, { status: 404 });
-        }
+    const cacheKey = `me:${userId}`;
+    const cached = cache.get<any>(cacheKey);
 
-        // --- AUTO-SYNC LOGIC ---
-        // Check if data is stale
-        const lastUpdateStr = studentData.updated_at || "0";
-        const lastUpdate = new Date(lastUpdateStr);
-        const isStale = (Date.now() - lastUpdate.getTime()) > AUTO_SYNC_THRESHOLD_MS;
-        const host = req.headers.get('host') || '';
-
-        if (isStale) {
-          if (host.includes('localhost')) {
-             console.log(`[AutoSync] Skipped for ${userId}: Running on localhost.`);
-          } else {
-             console.log(`Data for ${userId} is stale. Triggering background sync...`);
-             // Trigger background sync (non-blocking) using Vercel waitUntil
-             waitUntil(backgroundSync(userId).catch(err => {
-               console.error('Background sync failed:', err);
-             }));
-          }
-        }
-
-        return NextResponse.json({ success: true, data: studentData });
-
-    } catch (fetchError: any) {
-        console.error('Data Service fetch error in /api/student/me:', fetchError.message);
-        return NextResponse.json({ error: 'Failed to retrieve student data' }, { status: 500 });
+    let studentData = cached;
+    if (!studentData) {
+      studentData = await getFullStudentData(userId);
+      if (studentData) {
+        cache.set(cacheKey, studentData, ME_CACHE_TTL_MS);
+      }
     }
+
+    if (!studentData) {
+      console.warn(`Student document for ${userId} not found via Data Service`);
+      return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+    }
+
+    // --- AUTO-SYNC LOGIC ---
+    // Check if data is stale
+    const lastUpdateStr = studentData.updated_at || "0";
+    const lastUpdate = new Date(lastUpdateStr);
+    const isStale = (Date.now() - lastUpdate.getTime()) > AUTO_SYNC_THRESHOLD_MS;
+    const host = req.headers.get('host') || '';
+
+    if (isStale) {
+      if (host.includes('localhost')) {
+         console.log(`[AutoSync] Skipped for ${userId}: Running on localhost.`);
+      } else {
+         console.log(`Data for ${userId} is stale. Triggering background sync...`);
+         // Trigger background sync (non-blocking) using Vercel waitUntil
+         waitUntil(backgroundSync(userId).catch(err => {
+           console.error('Background sync failed:', err);
+         }));
+      }
+    }
+
+    return NextResponse.json({ success: true, data: studentData });
 
   } catch (error: any) {
     console.error('Session restore error:', error);

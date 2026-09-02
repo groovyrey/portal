@@ -32,19 +32,19 @@ interface BadgeDisplayProps {
 
 const COLOR_SCHEMES: Record<string, { bg: string; text: string; ring: string }> = {
   blue: {
-    bg: 'bg-gradient-to-br from-blue-500/25 via-blue-500/10 to-indigo-500/15',
-    text: 'text-blue-600 dark:text-blue-400',
-    ring: 'ring-blue-500/25',
+    bg: 'bg-primary/10',
+    text: 'text-primary',
+    ring: 'ring-primary/20',
   },
   amber: {
-    bg: 'bg-gradient-to-br from-amber-400/25 via-amber-400/10 to-orange-500/15',
-    text: 'text-amber-600 dark:text-amber-400',
-    ring: 'ring-amber-500/25',
+    bg: 'bg-primary/10',
+    text: 'text-primary',
+    ring: 'ring-primary/20',
   },
   slate: {
-    bg: 'bg-gradient-to-br from-slate-400/25 via-slate-400/10 to-slate-500/15',
-    text: 'text-slate-600 dark:text-slate-300',
-    ring: 'ring-slate-400/25',
+    bg: 'bg-muted',
+    text: 'text-muted-foreground',
+    ring: 'ring-border',
   },
 };
 
@@ -130,7 +130,7 @@ export default function BadgeDisplay({ badgeIds, size = 'md', showName = false, 
           })}
 
           {remainingCount > 0 && (
-            <div className={`${sizeClasses[size]} rounded-full flex items-center justify-center ring-2 ring-background bg-gradient-to-br from-muted to-muted/60 text-muted-foreground font-bold shadow-md`}>
+            <div className={`${sizeClasses[size]} rounded-full flex items-center justify-center ring-2 ring-background bg-muted text-muted-foreground font-bold shadow-md`}>
               +{remainingCount}
             </div>
           )}

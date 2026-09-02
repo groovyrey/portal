@@ -118,7 +118,7 @@ function CommunityContent() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Community</h1>
+            <h1 className="text-xl font-bold tracking-tight">Community</h1>
             <p className="text-sm text-muted-foreground mt-1">Connect with your fellow LCCians.</p>
           </div>
           <Button onClick={() => router.push('/community/create')}>
@@ -129,7 +129,7 @@ function CommunityContent() {
 
         {/* Sort */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide mr-1">Sort</span>
+          <span className="text-xs font-medium text-muted-foreground mr-1">Sort</span>
           <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
             {sorts.map(s => (
               <button
@@ -138,7 +138,7 @@ function CommunityContent() {
                 className={cn(
                   "px-3 py-1.5 rounded-md text-xs font-medium capitalize transition-colors",
                   sortBy === s
-                    ? "bg-card text-primary shadow-sm"
+                    ? "bg-card text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -155,9 +155,9 @@ function CommunityContent() {
               key={t}
               onClick={() => updateParams({ topic: t })}
               className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors",
+                "px-3.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap border transition-colors",
                 selectedTopic === t
-                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  ? "bg-primary text-primary-foreground border-primary"
                   : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
               )}
             >
@@ -214,7 +214,7 @@ function CommunityContent() {
           </div>
         ) : allPosts.length === 0 ? (
           <div className="text-center py-12 space-y-2">
-            <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto mb-2">
+            <div className="w-14 h-14 bg-muted rounded-md flex items-center justify-center mx-auto mb-2">
               <MessagesSquare className="h-7 w-7 text-muted-foreground/40" />
             </div>
             <p className="text-sm font-medium">No posts found.</p>
@@ -243,7 +243,7 @@ function CommunityContent() {
         {/* Floating action button (mobile) */}
         <button
           onClick={() => router.push('/community/create')}
-          className="lg:hidden fixed bottom-8 right-8 h-12 w-12 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+          className="lg:hidden fixed bottom-8 right-8 h-12 w-12 bg-primary text-primary-foreground rounded-md flex items-center justify-center active:scale-95 transition-all"
           aria-label="New post"
         >
           <Plus className="h-5 w-5" />

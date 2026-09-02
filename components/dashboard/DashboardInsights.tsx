@@ -114,7 +114,7 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.amber.bg)}>
+      <Card className={cn("border-border", CARD_THEMES.amber.bg)}>
         <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-sm font-medium">Up Next</CardTitle>
           <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", CARD_THEMES.amber.tile)}>
@@ -154,7 +154,7 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
         </CardContent>
       </Card>
 
-      <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.emerald.bg)}>
+      <Card className={cn("border-border", CARD_THEMES.emerald.bg)}>
         <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-sm font-medium">Weekly Load</CardTitle>
           <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", CARD_THEMES.emerald.tile)}>
@@ -188,7 +188,7 @@ export default function DashboardInsights({ student }: DashboardInsightsProps) {
         </CardContent>
       </Card>
 
-      <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.rose.bg)}>
+      <Card className={cn("border-border", CARD_THEMES.rose.bg)}>
         <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-sm font-medium">Finances</CardTitle>
           <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", CARD_THEMES.rose.tile)}>

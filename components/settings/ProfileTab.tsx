@@ -143,14 +143,14 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-primary text-primary-foreground shadow-md flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-60"
+            className="absolute -bottom-1 -right-1 h-7 w-7 rounded-md bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-60"
             aria-label="Change profile photo"
           >
             {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
           </button>
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-xl font-bold tracking-tight truncate">{student.name}</h3>
+          <h3 className="text-lg font-semibold tracking-tight truncate">{student.name}</h3>
           <p className="text-xs text-muted-foreground font-mono">ID: {student.id}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Button
@@ -190,7 +190,7 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
 
       <div className="grid gap-6">
         <section className="space-y-3">
-          <h4 className="text-[11px] font-bold tracking-tight uppercase text-muted-foreground">Personal Details</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">Personal Details</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <InfoItem icon={<User className="h-3.5 w-3.5" />} label="First Name" value={student.parsedName?.firstName} />
             <InfoItem icon={<User className="h-3.5 w-3.5" />} label="Middle Name" value={student.parsedName?.middleName} />
@@ -199,7 +199,7 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
         </section>
 
         <section className="space-y-3">
-          <h4 className="text-[11px] font-bold tracking-tight uppercase text-muted-foreground">Contact</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">Contact</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InfoItem icon={<Mail className="h-3.5 w-3.5" />} label="Email" value={student.email} />
             <InfoItem icon={<Phone className="h-3.5 w-3.5" />} label="Mobile" value={student.mobile} />
@@ -210,7 +210,7 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
         </section>
 
         <section className="space-y-3">
-          <h4 className="text-[11px] font-bold tracking-tight uppercase text-muted-foreground">Academic</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">Academic</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InfoItem icon={<GraduationCap className="h-3.5 w-3.5" />} label="Program" value={student.course} />
             <InfoItem icon={<Calendar className="h-3.5 w-3.5" />} label="Level / Semester" value={`${student.yearLevel} / ${student.semester}`} />
@@ -257,7 +257,7 @@ export default function ProfileTab({ student, updateSettings }: ProfileTabProps)
 function InfoItem({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string }) {
   return (
     <div className="space-y-0.5">
-      <Label className="text-[9px] uppercase text-muted-foreground font-bold tracking-wider">{label}</Label>
+      <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
       <div className="flex items-center gap-1.5">
         <div className="text-muted-foreground/70">{icon}</div>
         <p className="text-sm font-semibold">{value || 'None'}</p>

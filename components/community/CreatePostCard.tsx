@@ -92,7 +92,7 @@ export default function CreatePostCard({ student, onSuccess }: CreatePostCardPro
     return (
       <Card className="border-dashed bg-muted/20">
         <CardContent className="p-12 text-center space-y-4">
-          <div className="h-12 w-12 bg-background rounded-full flex items-center justify-center mx-auto border shadow-sm text-muted-foreground">
+          <div className="h-12 w-12 bg-background rounded-md flex items-center justify-center mx-auto border text-muted-foreground">
             <User className="h-6 w-6" />
           </div>
           <div className="space-y-1">
@@ -116,7 +116,7 @@ export default function CreatePostCard({ student, onSuccess }: CreatePostCardPro
               <Badge
                 key={t}
                 variant={topic === t ? "default" : "outline"}
-                className="cursor-pointer px-3 py-1 rounded-full uppercase text-[9px] font-bold"
+                className="cursor-pointer px-3 py-1 rounded-md text-xs font-medium"
                 onClick={() => setTopic(t)}
               >
                 {t}
@@ -128,8 +128,8 @@ export default function CreatePostCard({ student, onSuccess }: CreatePostCardPro
         <Tabs value={activeView} onValueChange={setActiveView} className="w-full">
            <div className="px-4 py-2 border-b flex items-center justify-between">
               <TabsList className="h-8 p-1 bg-muted/50">
-                 <TabsTrigger value="write" className="text-[10px] uppercase font-bold px-4 h-6">Write</TabsTrigger>
-                 <TabsTrigger value="preview" className="text-[10px] uppercase font-bold px-4 h-6">Preview</TabsTrigger>
+                 <TabsTrigger value="write" className="text-xs font-medium px-4 h-6">Write</TabsTrigger>
+                 <TabsTrigger value="preview" className="text-xs font-medium px-4 h-6">Preview</TabsTrigger>
               </TabsList>
               <div className="flex gap-2">
                  <Button 
@@ -145,7 +145,7 @@ export default function CreatePostCard({ student, onSuccess }: CreatePostCardPro
                    type="button" 
                    variant={isAnonymous ? "secondary" : "outline"} 
                    size="sm" 
-                   className="h-8 gap-2 text-[10px] uppercase font-bold"
+                   className="h-8 gap-2 text-xs font-medium"
                    onClick={() => setIsAnonymous(!isAnonymous)}
                  >
                    <Ghost className="h-3.5 w-3.5" />
@@ -166,7 +166,7 @@ export default function CreatePostCard({ student, onSuccess }: CreatePostCardPro
                 {showPollEditor && (
                   <div className="p-4 rounded-md border bg-muted/20 space-y-4 animate-in fade-in zoom-in-95 duration-200">
                     <div className="flex items-center justify-between">
-                      <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
+                      <Label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
                         <BarChart2 className="h-3 w-3" /> Poll Options
                       </Label>
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowPollEditor(false)}>
@@ -197,7 +197,7 @@ export default function CreatePostCard({ student, onSuccess }: CreatePostCardPro
                             </div>
                           ))}
                           {pollOptions.length < 5 && (
-                            <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px] uppercase gap-1 w-fit" onClick={() => setPollOptions([...pollOptions, ''])}>
+                            <Button type="button" variant="ghost" size="sm" className="h-7 text-xs gap-1 w-fit" onClick={() => setPollOptions([...pollOptions, ''])}>
                                <Plus className="h-3 w-3" /> Add Option
                             </Button>
                           )}
@@ -217,7 +217,7 @@ export default function CreatePostCard({ student, onSuccess }: CreatePostCardPro
         </Tabs>
 
         <CardFooter className="p-4 border-t flex items-center justify-between bg-muted/5">
-           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+           <p className="text-xs text-muted-foreground">
               {content.length}/2000 characters
            </p>
            <Button 

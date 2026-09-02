@@ -2,11 +2,10 @@
 
 import { ScheduleItem } from '@/types';
 import React, { useState, useMemo, useRef } from 'react';
-import { MapPin, Clock, Hash, BookOpen, Info, Calendar, ArrowRight, Download, Camera, List, LayoutGrid } from 'lucide-react';
+import { MapPin, Clock, BookOpen, Calendar, ArrowRight, Download, Camera, List, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import Modal from '@/components/ui/Modal';
@@ -338,85 +337,48 @@ export default function ScheduleTable({ schedule, holidays = [] }: ScheduleTable
         title={selectedItem ? getSubjectName(selectedItem.subject) : undefined}
       >
         {selectedItem && (
-          <div className="space-y-6 -mt-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="font-mono text-[10px] py-0">{getSubjectCode(selectedItem.subject)}</Badge>
-              <Badge variant="outline" className="text-[10px] py-0 border-primary/20 text-primary bg-primary/5">Section {selectedItem.section || 'TBA'}</Badge>
-            </div>
-
-            <div className="grid gap-5">
-              <div className="flex items-start gap-4 group">
-                <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
-                  <Clock className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div className="grid gap-0.5">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Time Schedule</p>
-                  <p className="text-sm font-semibold leading-tight">{selectedItem.time}</p>
-                </div>
+          <div className="space-y-5">
+            <div className="divide-y divide-border">
+              <div className="py-3">
+                <p className="text-[11px] font-medium text-muted-foreground">Time Schedule</p>
+                <p className="text-sm font-semibold mt-0.5">{selectedItem.time}</p>
               </div>
 
-              <div className="flex items-start gap-4 group">
-                <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
-                  <MapPin className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div className="grid gap-0.5">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Location / Room</p>
-                  <p className="text-sm font-semibold leading-tight">{selectedItem.room || 'TBA'}</p>
-                </div>
+              <div className="py-3">
+                <p className="text-[11px] font-medium text-muted-foreground">Location / Room</p>
+                <p className="text-sm font-semibold mt-0.5">{selectedItem.room || 'TBA'}</p>
               </div>
 
-              <div className="flex items-start gap-4 group">
-                <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
-                  <BookOpen className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div className="grid gap-0.5">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Subject Name</p>
-                  <p className="text-sm font-semibold leading-tight">{getDisplayTitle(selectedItem)}</p>
-                </div>
+              <div className="py-3">
+                <p className="text-[11px] font-medium text-muted-foreground">Subject Name</p>
+                <p className="text-sm font-semibold mt-0.5">{getDisplayTitle(selectedItem)}</p>
               </div>
 
               {selectedItem.instructor && (
-                <div className="flex items-start gap-4 group">
-                  <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
-                    <Info className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="grid gap-0.5">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Instructor</p>
-                    <p className="text-sm font-semibold leading-tight">{selectedItem.instructor}</p>
-                  </div>
+                <div className="py-3">
+                  <p className="text-[11px] font-medium text-muted-foreground">Instructor</p>
+                  <p className="text-sm font-semibold mt-0.5">{selectedItem.instructor}</p>
                 </div>
               )}
 
-              <Separator className="opacity-50" />
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="flex items-start gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                    <Hash className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="grid gap-0.5">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Units</p>
-                    <p className="text-sm font-bold">{selectedItem.units || '0'}</p>
-                  </div>
+              <div className="py-3 grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-[11px] font-medium text-muted-foreground">Units</p>
+                  <p className="text-sm font-bold mt-0.5">{selectedItem.units || '0'}</p>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                    <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="grid gap-0.5">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Section</p>
-                    <p className="text-sm font-bold">{selectedItem.section || 'TBA'}</p>
-                  </div>
+                <div>
+                  <p className="text-[11px] font-medium text-muted-foreground">Section</p>
+                  <p className="text-sm font-bold mt-0.5">{selectedItem.section || 'TBA'}</p>
                 </div>
               </div>
             </div>
 
-            <Button 
-              variant="outline" 
-              onClick={() => setSelectedItem(null)} 
-              className="w-full mt-2 rounded-xl h-11 font-bold text-[10px] uppercase tracking-[0.2em] shadow-sm hover:bg-accent"
+            <Button
+              variant="outline"
+              onClick={() => setSelectedItem(null)}
+              className="w-full h-10 text-sm font-medium"
             >
-              Dismiss
+              Close
             </Button>
           </div>
         )}

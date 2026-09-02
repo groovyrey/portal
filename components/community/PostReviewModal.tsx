@@ -21,15 +21,15 @@ export default function PostReviewModal({ isOpen }: PostReviewModalProps) {
         {/* Animated Icon */}
         <div className="relative mb-8 flex items-center justify-center">
           <div className="absolute inset-0 bg-primary/10 rounded-full animate-pulse" />
-          <div className="relative bg-card p-6 rounded-3xl border border-border shadow-xl">
+          <div className="relative bg-card p-6 rounded-lg border border-border">
             <ShieldCheck className="h-10 w-10 text-primary" />
           </div>
         </div>
 
-        <h2 className="text-xl font-black text-foreground uppercase tracking-tight mb-3">Post Review</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-3">Post Review</h2>
         
         <div className="space-y-4">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-relaxed">
+          <p className="text-xs font-medium text-muted-foreground leading-relaxed">
             AI is analyzing your content to ensure it follows our community guidelines.
           </p>
           
@@ -51,7 +51,7 @@ export default function PostReviewModal({ isOpen }: PostReviewModalProps) {
           </div>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-border w-full text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">
+        <div className="mt-12 pt-6 border-t border-border w-full text-xs text-muted-foreground/50">
           Community Safety First
         </div>
       </div>

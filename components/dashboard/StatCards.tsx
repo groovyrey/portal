@@ -33,13 +33,13 @@ export default function StatCards({ student }: { student: Student }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
       {stats.map((stat, idx) => {
         const theme = CARD_THEMES[stat.theme];
         return (
           <Link key={idx} href={stat.href} className="group">
             <Card className={cn(
-              "h-full border-border transition-all hover:shadow-md hover:border-primary/30 bg-gradient-to-br",
+              "h-full border-border transition-all hover:shadow-md hover:border-primary/30",
               theme.bg
             )}>
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -49,7 +49,7 @@ export default function StatCards({ student }: { student: Student }) {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold tracking-tight tabular-nums">{stat.value}</div>
+                <div className="text-xl font-bold tracking-tight tabular-nums">{stat.value}</div>
                 <div className="mt-4 flex items-center text-xs text-muted-foreground">
                   Details
                   <ChevronRight className="ml-1 h-3 w-3" />

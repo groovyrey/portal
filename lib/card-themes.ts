@@ -8,9 +8,9 @@ export interface CardTheme {
 }
 
 export const ACCENT_CARD: CardTheme = {
-  bg: 'from-primary/10 via-primary/5 to-background dark:from-primary/25 dark:via-primary/10 dark:to-background',
+  bg: 'bg-card',
   icon: 'text-primary',
-  tile: 'bg-primary/10 dark:bg-primary/25',
+  tile: 'bg-primary/10',
   bar: 'bg-primary',
 };
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { decrypt } from '@/lib/auth';
+import { decrypt, isStaff } from '@/lib/auth';
 import { getSessionClient } from '@/lib/session-proxy';
 import { ScraperService } from '@/lib/scraper-service';
 
@@ -22,6 +22,12 @@ export async function POST(req: NextRequest) {
       userId = sessionData.userId;
     } catch (e) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
+    // Admin-only endpoint: verify elevated privileges server-side.
+    const staff = await isStaff(userId);
+    if (!staff) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // 2. Get Session Client
@@ -55,10 +61,17 @@ export async function POST(req: NextRequest) {
         const reports = scraper.parseReportCardLinks(gradesPage.$);
         
         if (reports.length > 0) {
-            const report = await scraper.fetchReportCard(reports[0].href, dashboard.dashboardUrl);
-            url = reports[0].href;
-            html = report.data;
-            traditionalData = await scraper.parseReportCard(report.$);
+            try {
+                const report = await scraper.fetchReportCard(reports[0].href, dashboard.dashboardUrl);
+                url = reports[0].href;
+                html = report.data;
+                traditionalData = await scraper.parseReportCard(report.$);
+            } catch (e: any) {
+                if (e.message === 'SESSION_EXPIRED') {
+                    return NextResponse.json({ error: 'Session expired during report fetch.' }, { status: 401 });
+                }
+                throw e;
+            }
         } else {
             return NextResponse.json({ error: 'No report cards found.' }, { status: 404 });
         }
@@ -76,6 +89,6 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('[Test-Scraper] Fatal Error:', error);
-    return NextResponse.json({ error: 'Extraction failed: ' + error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Extraction failed.' }, { status: 500 });
   }
 }

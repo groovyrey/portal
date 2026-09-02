@@ -148,6 +148,6 @@ COMMENT CONTENT: ${comment.content}
 
   } catch (error: any) {
     console.error('Comment Report API Error:', error);
-    return NextResponse.json({ error: 'Failed to process report: ' + error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to process report.' }, { status: 500 });
   }
 }

@@ -40,7 +40,7 @@ export default function PostReviewResultModal({ isOpen, onClose, result, isError
           )}
         </div>
 
-        <h2 className="text-xl font-bold text-foreground mb-2">
+        <h2 className="text-lg font-semibold text-foreground mb-2">
           {isError ? 'Review Skipped' : isApproved ? 'Post Approved' : 'Post Rejected'}
         </h2>
         
@@ -52,10 +52,10 @@ export default function PostReviewResultModal({ isOpen, onClose, result, isError
 
         {/* Growth Tip Box */}
         {!isError && result?.growth_tip && (
-          <div className="w-full bg-accent/50 dark:bg-accent/20 rounded-2xl p-5 mb-8 text-left border border-border">
+          <div className="w-full bg-muted rounded-lg p-5 mb-6 text-left border border-border">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="h-4 w-4 text-amber-500" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Growth Tip</span>
+              <span className="text-xs font-medium text-muted-foreground">Growth Tip</span>
             </div>
             <p className="text-xs text-muted-foreground font-bold leading-relaxed italic">
               &quot;{result.growth_tip}&quot;
@@ -82,10 +82,10 @@ export default function PostReviewResultModal({ isOpen, onClose, result, isError
         {/* Action Button */}
         <button
           onClick={onClose}
-          className={`w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg ${
-            isError ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/20' :
-            isApproved ? 'bg-primary text-primary-foreground hover:opacity-90 shadow-primary/20' : 
-            'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20'
+          className={`w-full py-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2 ${
+            isError ? 'bg-amber-600 hover:bg-amber-700 text-white' :
+            isApproved ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 
+            'bg-rose-600 hover:bg-rose-700 text-white'
           }`}
         >
           {isApproved || isError ? 'Got it, thanks!' : 'I understand'}

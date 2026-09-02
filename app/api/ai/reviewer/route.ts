@@ -97,6 +97,6 @@ POLL OPTIONS: ${poll.options.join(', ')}` : ''}
 
   } catch (error: any) {
     console.error('Moderation API Error:', error);
-    return NextResponse.json({ error: 'Failed to review post: ' + error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to review post.' }, { status: 500 });
   }
 }

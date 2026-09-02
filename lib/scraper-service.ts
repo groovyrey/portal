@@ -121,6 +121,10 @@ export class ScraperService {
         res = await this.client.get(reportCardUrl, {
             headers: { 'Referer': dashboardUrl }
         });
+
+        if (this.isLoginPage(res.data)) {
+            throw new Error('SESSION_EXPIRED');
+        }
     }
 
     let $rc = cheerio.load(res.data);

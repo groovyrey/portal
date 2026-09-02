@@ -132,34 +132,22 @@ export default function Navbar() {
     }
   };
 
-  const mobileNavItemClass = (active: boolean) =>
-    cn(
-      "group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors",
-      active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"
-    );
-
-  const mobileNavIconClass = (active: boolean) =>
-    cn(
-      "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors",
-      active ? "bg-primary/15 text-primary" : "bg-muted/50 text-muted-foreground group-hover:bg-accent group-hover:text-foreground"
-    );
-
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-[100] border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+      <nav className="fixed top-0 left-0 right-0 z-[100] border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center gap-2 active:scale-95 transition-all shrink-0">
-              <div className="relative h-8 w-8">
-                <Image src="/logo.png" alt="LCCian Hub Logo" fill className="object-contain" priority />
+          <div className="flex justify-between items-center h-14">
+            <Link href="/" className="flex items-center gap-2.5 shrink-0">
+              <div className="relative h-7 w-7">
+                <Image src="/logo.png" alt="LCCian Hub" fill className="object-contain" priority />
               </div>
-              <span className="font-bold text-lg tracking-tight text-foreground hidden sm:inline">
+              <span className="font-semibold text-sm tracking-tight text-foreground hidden sm:inline">
                 LCCian Hub
               </span>
             </Link>
 
             {/* Desktop navigation */}
-            <div className="hidden lg:flex items-center gap-0.5 overflow-x-auto no-scrollbar">
+            <div className="hidden lg:flex items-center gap-0.5">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 return (
@@ -167,13 +155,13 @@ export default function Navbar() {
                     key={link.name}
                     href={link.href}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium whitespace-nowrap transition-colors",
                       isActive(link.href)
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-3.5 w-3.5" />
                     {link.name}
                   </Link>
                 );
@@ -181,17 +169,17 @@ export default function Navbar() {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <ThemeToggle />
               {isLoggedIn && (
                 <button
                   onClick={() => setIsNotifOpen(true)}
-                  className="relative h-9 w-9 flex items-center justify-center rounded-md border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                  className="relative h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                   aria-label="Notifications"
                 >
-                  <Bell className="h-5 w-5" />
+                  <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground ring-2 ring-background">
+                    <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                   )}
@@ -200,18 +188,18 @@ export default function Navbar() {
               {isLoggedIn && studentId && (
                 <Link
                   href={`/student/${studentId}`}
-                  className="hidden lg:flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                  className="hidden lg:flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                   aria-label="Profile"
                 >
-                  <UserIcon className="h-5 w-5" />
+                  <UserIcon className="h-4 w-4" />
                 </Link>
               )}
               <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="lg:hidden inline-flex items-center justify-center p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                className="lg:hidden inline-flex items-center justify-center p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 aria-label="Menu"
               >
-                {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             </div>
           </div>
@@ -229,7 +217,7 @@ export default function Navbar() {
         side="right"
         contentClassName="p-0 flex flex-col"
         header={
-          <div className="px-4 pt-4 pb-5 border-b border-border bg-gradient-to-b from-primary/[0.08] via-primary/[0.03] to-transparent">
+          <div className="px-4 pt-4 pb-4 border-b border-border">
             {isLoggedIn && currentUser && studentId ? (
               <Link
                 href={`/student/${studentId}`}
@@ -239,14 +227,14 @@ export default function Navbar() {
                 <StudentAvatar
                   name={currentUser.name}
                   photoUrl={currentUser.profilePhotoUrl}
-                  className="h-11 w-11 shrink-0 ring-1 ring-border"
-                  fallbackClassName="text-base"
+                  className="h-10 w-10 shrink-0"
+                  fallbackClassName="text-sm"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-bold tracking-tight text-foreground truncate">{currentUser.name}</p>
-                  <p className="text-xs font-medium text-muted-foreground truncate">
+                  <p className="text-sm font-semibold text-foreground truncate">{currentUser.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
                     {currentUser.yearLevel
-                      ? `${currentUser.yearLevel}${currentUser.section ? ` – ${currentUser.section}` : ''}`
+                      ? `${currentUser.yearLevel}${currentUser.section ? ` - ${currentUser.section}` : ''}`
                       : currentUser.course || 'Student'}
                   </p>
                 </div>
@@ -254,12 +242,12 @@ export default function Navbar() {
               </Link>
             ) : (
               <div className="flex items-center gap-3 pr-12">
-                <div className="relative h-10 w-10 shrink-0 rounded-xl bg-primary/10 ring-1 ring-primary/15 flex items-center justify-center overflow-hidden">
+                <div className="relative h-9 w-9 shrink-0 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
                   <Image src="/logo.png" alt="" fill className="object-contain p-1.5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-base font-bold tracking-tight text-foreground truncate">LCCian Hub</p>
-                  <p className="text-xs font-medium text-muted-foreground">Student Portal</p>
+                  <p className="text-sm font-semibold text-foreground truncate">LCCian Hub</p>
+                  <p className="text-xs text-muted-foreground">Student Portal</p>
                 </div>
               </div>
             )}
@@ -267,13 +255,13 @@ export default function Navbar() {
         }
       >
         <div className="flex flex-col h-full">
-          <div className="px-4 pt-5 pb-2 shrink-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-              {isLoggedIn ? 'Menu' : 'Explore'}
+          <div className="px-4 pt-4 pb-2 shrink-0">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              {isLoggedIn ? 'Navigation' : 'Explore'}
             </p>
           </div>
 
-          <div className="flex-1 px-3 pb-4 space-y-1 overflow-y-auto custom-scrollbar">
+          <div className="flex-1 px-3 pb-4 space-y-0.5 overflow-y-auto custom-scrollbar">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const active = isActive(link.href);
@@ -282,11 +270,12 @@ export default function Navbar() {
                   key={link.name}
                   href={link.href}
                   onClick={() => setIsOpen(false)}
-                  className={mobileNavItemClass(active)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                    active ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
                 >
-                  <span className={mobileNavIconClass(active)}>
-                    <Icon className="h-5 w-5" />
-                  </span>
+                  <Icon className="h-4 w-4" />
                   {link.name}
                 </Link>
               );
@@ -297,15 +286,13 @@ export default function Navbar() {
             {isLoggedIn ? (
               <button
                 onClick={handleLogout}
-                className="group flex w-full items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                className="group flex w-full items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground transition-colors group-hover:bg-destructive/10 group-hover:text-destructive">
-                  <LogOut className="h-5 w-5" />
-                </span>
+                <LogOut className="h-4 w-4" />
                 Log Out
               </button>
             ) : (
-              <p className="px-3 pt-1 text-[11px] text-muted-foreground/60">
+              <p className="px-3 pt-1 text-xs text-muted-foreground">
                 Sign in to access the full student portal.
               </p>
             )}
@@ -314,7 +301,7 @@ export default function Navbar() {
       </Drawer>
 
       {/* Spacer to push content below fixed navbar */}
-      <div className="h-16 w-full" />
+      <div className="h-14 w-full" />
     </>
   );
 }

@@ -52,7 +52,7 @@ export default function NotificationsTab({ student, updateSettings }: Notificati
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h4 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Notifications</h4>
+        <h4 className="text-sm font-medium text-muted-foreground">Notifications</h4>
         <p className="text-sm text-muted-foreground">
           Manage how you receive updates and reminders.
         </p>

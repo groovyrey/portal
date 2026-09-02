@@ -154,7 +154,7 @@ export default function GradesPage() {
           animationPath="/animations/error-404.json"
           className="w-56 h-56 mb-4"
         />
-        <h2 className="text-2xl font-bold tracking-tight">Access Restricted</h2>
+        <h2 className="text-lg font-bold tracking-tight">Access Restricted</h2>
         <p className="text-muted-foreground mb-8 max-w-sm">
           Please sync your portal data from the dashboard to view your grades.
         </p>
@@ -211,7 +211,7 @@ export default function GradesPage() {
           />
         ) : (
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+            <div className="w-14 h-14 bg-muted rounded-md flex items-center justify-center mb-4">
               <BarChart3 className="h-8 w-8 text-muted-foreground/30" />
             </div>
             <h3 className="text-sm font-semibold text-foreground mb-1">No stats yet</h3>

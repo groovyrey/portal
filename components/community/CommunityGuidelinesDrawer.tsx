@@ -75,7 +75,7 @@ export default function CommunityGuidelinesDrawer({ isOpen, onClose }: Community
         <Separator />
 
         <div className="pt-2">
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest text-center">
+          <p className="text-xs font-medium text-muted-foreground text-center">
             Let&apos;s build a better LCC together
           </p>
         </div>

@@ -147,7 +147,7 @@ export default function StatsTab() {
 
       <section className="space-y-4">
         <div className="px-1">
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Detailed Breakdown</h3>
+          <h3 className="text-sm font-semibold text-muted-foreground">Detailed Breakdown</h3>
         </div>
         
         <div className="grid gap-4">
@@ -169,7 +169,7 @@ export default function StatsTab() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {course.yearLevels.map((item) => (
                       <div key={`${course.name}-${item.level}`} className="p-3 rounded-md bg-muted/30 border border-border/50 text-center">
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">{item.level}</p>
+                        <p className="text-xs text-muted-foreground font-medium mb-1">{item.level}</p>
                         <p className="text-base font-bold">{item.count}</p>
                       </div>
                     ))}
@@ -187,17 +187,17 @@ export default function StatsTab() {
 function StatSummaryCard({ icon, label, value, isLargeValue = true, theme }: { icon: React.ReactNode, label: string, value: string, isLargeValue?: boolean, theme: CardThemeKey }) {
     const t = CARD_THEMES[theme];
     return (
-      <Card className={cn("overflow-hidden bg-gradient-to-br border-border", t.bg)}>
-        <CardContent className="p-6 space-y-2">
+      <Card className={cn("border-border", t.bg)}>
+        <CardContent className="p-5 space-y-2">
           <div className={cn("flex items-center gap-2", t.icon)}>
             <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", t.tile)}>
               {icon}
             </div>
-            <span className="text-[10px] uppercase font-bold tracking-wider truncate">{label}</span>
+            <span className="text-sm font-medium truncate">{label}</span>
           </div>
           <p className={cn(
               "font-bold truncate",
-              isLargeValue ? "text-2xl sm:text-3xl tabular-nums" : "text-sm sm:text-base leading-tight"
+              isLargeValue ? "text-xl tabular-nums" : "text-sm sm:text-base leading-tight"
           )} title={value}>{value}</p>
         </CardContent>
       </Card>

@@ -21,7 +21,7 @@ export default function PrivacyTab({ student, updateSettings }: PrivacyTabProps)
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h4 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Privacy</h4>
+        <h4 className="text-sm font-medium text-muted-foreground">Privacy</h4>
         <p className="text-sm text-muted-foreground">
           Control what others can see on your profile.
         </p>

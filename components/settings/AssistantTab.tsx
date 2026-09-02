@@ -108,7 +108,7 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h4 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Assistant</h4>
+        <h4 className="text-sm font-medium text-muted-foreground">Assistant</h4>
         <p className="text-sm text-muted-foreground">
           Configure your AI academic companion.
         </p>
@@ -180,7 +180,7 @@ export default function AssistantTab({ student, updateSettings }: AssistantTabPr
           {micPermission === 'granted' ? (
             <Badge variant="secondary" className="text-[10px]">Enabled</Badge>
           ) : (
-            <Button size="sm" onClick={requestMicPermission} variant="outline" className="h-8 text-[10px] uppercase font-bold tracking-wider">
+            <Button size="sm" onClick={requestMicPermission} variant="outline" className="h-8 border-border">
               Grant Access
             </Button>
           )}

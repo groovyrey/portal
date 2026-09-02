@@ -119,7 +119,7 @@ export default function AdminManagePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-16 lg:pb-0">
-      <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 sticky top-16 z-30">
+      <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 sticky top-14 z-30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-3 min-w-0">
@@ -130,7 +130,7 @@ export default function AdminManagePage() {
               >
                 <ArrowLeft className="h-4 w-4" />
               </Link>
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <div className="h-9 w-9 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0">
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div className="min-w-0">
@@ -153,10 +153,10 @@ export default function AdminManagePage() {
         <div className="max-w-3xl mx-auto">
           {!studentId && !selectedStudent ? (
             <div className="py-16 flex flex-col items-center text-center">
-              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                <UserSearch className="h-8 w-8 text-muted-foreground" />
+              <div className="h-14 w-14 rounded-md bg-muted flex items-center justify-center mb-4">
+                <UserSearch className="h-6 w-6 text-muted-foreground" />
               </div>
-              <h2 className="text-lg font-semibold tracking-tight">No student selected</h2>
+              <h2 className="text-base font-semibold tracking-tight">No student selected</h2>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm">
                 Head to the Users tab in the Admin panel and click Manage on a student to edit their access here.
               </p>
@@ -170,7 +170,7 @@ export default function AdminManagePage() {
           ) : (
             <div className="space-y-6">
               <div className="flex items-start gap-4">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <div className="h-12 w-12 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
                   <User className="h-6 w-6 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -216,7 +216,7 @@ export default function AdminManagePage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Academic Status</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">Academic Status</Label>
                   <div className="grid gap-2">
                     {BADGE_LIST.map((badge) => {
                       const isActive = selectedStudent?.badges?.includes(badge.id);
@@ -235,8 +235,8 @@ export default function AdminManagePage() {
                           <div className="flex items-center gap-3">
                             <ShieldCheck className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")} />
                             <div>
-                              <p className="text-xs font-bold uppercase">{badge.name}</p>
-                              <p className="text-[10px] text-muted-foreground line-clamp-1">{badge.description}</p>
+                              <p className="text-sm font-medium">{badge.name}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-1">{badge.description}</p>
                             </div>
                           </div>
                           {isUpdating ? (

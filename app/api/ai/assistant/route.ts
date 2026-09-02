@@ -525,6 +525,7 @@ Context: Vision: ${SCHOOL_INFO.vision}, Grading: ${GRADING_SYSTEM}.`,
       headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Transfer-Encoding': 'chunked' },
     });
   } catch (error: any) {
-    return new Response('Error: ' + error.message, { status: 500 });
+    console.error('[Assistant] Stream error:', error);
+    return new Response('Error: Request failed.', { status: 500 });
   }
 }

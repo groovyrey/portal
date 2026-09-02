@@ -21,7 +21,7 @@ export default function SupportTab() {
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h4 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Support</h4>
+        <h4 className="text-sm font-medium text-muted-foreground">Support</h4>
         <p className="text-sm text-muted-foreground">
           Get help and share your feedback with us.
         </p>
@@ -30,7 +30,7 @@ export default function SupportTab() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="flex flex-col h-full">
           <CardHeader className="text-center items-center">
-            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-2">
+            <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center mb-2">
               <Star className="h-6 w-6 text-primary" />
             </div>
             <CardTitle>Rate Experience</CardTitle>

@@ -200,14 +200,17 @@ export async function getOfferedSubjects(): Promise<ProspectusSubject[]> {
 }
 
 export async function getFullStudentData(userId: string): Promise<AggregatedStudentData | null> {
-  const profile = await getStudentProfile(userId);
-  if (!profile) return null;
-
-  const [schedule, financials, grades] = await Promise.all([
+  // Run all four reads concurrently: there is no need to fetch the profile
+  // before the other tables. This removes a sequential round-trip from the
+  // hot read path.
+  const [profile, schedule, financials, grades] = await Promise.all([
+    getStudentProfile(userId),
     getStudentSchedule(userId),
     getStudentFinancials(userId),
-    getStudentGrades(userId)
+    getStudentGrades(userId),
   ]);
+
+  if (!profile) return null;
 
   // Calculate Weighted GPA
   let totalWeightedGrade = 0;

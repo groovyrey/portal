@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Ratings GET error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -42,8 +42,12 @@ export async function POST(req: NextRequest) {
   try {
     const { rating, feedback } = await req.json();
     
-    if (!rating || rating < 1 || rating > 5) {
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       return NextResponse.json({ error: 'Invalid rating' }, { status: 400 });
+    }
+
+    if (feedback !== undefined && (typeof feedback !== 'string' || feedback.length > 500)) {
+      return NextResponse.json({ error: 'Invalid feedback' }, { status: 400 });
     }
 
     const sessionCookie = req.cookies.get('session_token');
@@ -73,6 +77,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Ratings POST error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

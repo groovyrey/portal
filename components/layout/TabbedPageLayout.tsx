@@ -36,34 +36,32 @@ export default function TabbedPageLayout<T extends string>({
 }: TabbedPageLayoutProps<T>) {
   return (
     <div className="min-h-screen bg-background text-foreground pb-16 lg:pb-0">
-      <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 sticky top-16 z-30">
+      <div className="border-b border-border bg-background sticky top-14 z-30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <Icon className="h-5 w-5" />
-              </div>
+          <div className="flex items-center justify-between h-12">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
               <div className="min-w-0">
-                <h1 className="text-base font-bold tracking-tight truncate">{title}</h1>
+                <h1 className="text-sm font-semibold tracking-tight truncate">{title}</h1>
                 {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
               </div>
             </div>
             {headerRight}
           </div>
 
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-2">
+          <div className="flex items-center gap-0 -mb-px overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
+                  "flex items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium whitespace-nowrap transition-colors border-b-2 -mb-px",
                   activeTab === tab.id
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                    ? 'border-primary text-foreground'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
                 )}
               >
-                <tab.icon className="h-4 w-4" />
+                <tab.icon className="h-3.5 w-3.5" />
                 {tab.name}
               </button>
             ))}
@@ -76,10 +74,10 @@ export default function TabbedPageLayout<T extends string>({
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.15 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
               className="min-w-0 w-full"
             >
               {children}

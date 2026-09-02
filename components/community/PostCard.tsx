@@ -47,7 +47,7 @@ export default function PostCard({ post, student, onLike, onVote, onOpen }: Post
   return (
     <div
       onClick={() => onOpen(post)}
-      className="group bg-card border border-border rounded-xl shadow-sm hover:shadow-md hover:border-primary/30 transition-all p-4 space-y-3 cursor-pointer"
+      className="group bg-card border border-border rounded-lg transition-colors hover:border-primary/30 p-4 space-y-3 cursor-pointer"
     >
       {/* Header */}
       <div className="flex items-center gap-2.5">
@@ -89,7 +89,7 @@ export default function PostCard({ post, student, onLike, onVote, onOpen }: Post
 
       {/* Poll */}
       {post.poll && (
-        <div className="border border-border rounded-xl p-3.5 space-y-2 bg-muted/30">
+        <div className="border border-border rounded-lg p-3.5 space-y-2 bg-muted">
           <p className="font-semibold text-sm">{post.poll.question}</p>
           {post.poll.options.map((option, idx) => {
             const totalVotes = post.poll!.options.reduce((a, c) => a + c.votes.length, 0);

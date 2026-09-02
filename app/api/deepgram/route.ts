@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
       raw: err
     });
     return NextResponse.json(
-      { error: err.message || "Failed to generate key", details: err.toString() },
+      { error: "Failed to generate key" },
       { status: 500 }
     );
   }
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error("Transcription error:", err);
     return NextResponse.json(
-      { error: err.message || "Transcription failed" },
+      { error: "Transcription failed" },
       { status: 500 }
     );
   }
@@ -179,7 +179,7 @@ export async function PATCH(req: NextRequest) {
   } catch (err: any) {
     console.error("TTS error:", err);
     return NextResponse.json(
-      { error: err.message || "TTS failed" },
+      { error: "TTS failed" },
       { status: 500 }
     );
   }

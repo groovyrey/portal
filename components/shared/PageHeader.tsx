@@ -30,8 +30,18 @@ export default function PageHeader() {
   // Don't show header on main dashboard (it has its own header)
   if (pathname === '/' || !title) return null;
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+    } else if (pathname.startsWith('/post/')) {
+      router.push('/community');
+    } else {
+      router.push('/');
+    }
+  };
+
   return (
-    <div className="lg:hidden bg-background/95 border-b border-border sticky top-16 z-[90] backdrop-blur-xl supports-[backdrop-filter]:bg-background/85">
+    <div className="lg:hidden bg-background/95 border-b border-border sticky top-14 z-[90] backdrop-blur-xl supports-[backdrop-filter]:bg-background/85">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center gap-4">
         <AnimatePresence mode="wait">
           <motion.button
@@ -39,7 +49,7 @@ export default function PageHeader() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => router.back()}
+            onClick={handleBack}
             className="p-1.5 hover:bg-accent rounded-lg transition-all text-muted-foreground hover:text-foreground active:scale-95"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -54,7 +64,7 @@ export default function PageHeader() {
             exit={{ opacity: 0 }}
             className="flex items-center gap-2"
           >
-            <div className="h-1 w-1 rounded-full bg-blue-500" />
+            <div className="h-1 w-1 rounded-full bg-primary" />
             <h1 className="text-sm font-bold text-foreground tracking-tight">{title}</h1>
           </motion.div>
         </AnimatePresence>

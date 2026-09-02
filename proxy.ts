@@ -10,6 +10,29 @@ const ratelimit = new Ratelimit({
   prefix: "@upstash/ratelimit/portal",
 })
 
+/**
+ * Edge-safe check that a session cookie is present and well-formed. Middleware
+ * runs on the Edge runtime, which has no Node `crypto`, so we cannot decrypt
+ * here. Middleware is only a page-routing gate (rewrites to /unauthorized),
+ * NOT a security boundary: every API route independently decrypts and
+ * re-validates the session server-side, so a forged cookie is still rejected.
+ * At minimum this rejects cookies that are absent or grossly malformed
+ * (e.g. arbitrary non-AES values), refusing to serve protected UI.
+ */
+function validSession(req: NextRequest): boolean {
+  const sessionToken = req.cookies.get('session_token');
+  if (!sessionToken || !sessionToken.value) return false;
+  // Encrypted sessions are "16-byte-hex-iv:hex-ciphertext" regardless of
+  // payload, so a format check is safe on every real session.
+  const value = sessionToken.value;
+  const colon = value.indexOf(':');
+  if (colon <= 0) return false;
+  const ivHex = value.slice(0, colon);
+  const body = value.slice(colon + 1);
+  if (ivHex.length !== 32 || !/^[0-9a-f]+$/i.test(ivHex)) return false;
+  return body.length > 0 && /^[0-9a-f]+$/i.test(body);
+}
+
 // Routes that require authentication
 const authProtectedRoutes = [
   '/eaf',
@@ -45,9 +68,15 @@ export async function proxy(req: NextRequest) {
   ];
 
   if (rateProtectedRoutes.some(route => pathname.startsWith(route))) {
-    // On Vercel the real client IP is the first entry of X-Forwarded-For.
-    const forwardedFor = req.headers.get('x-forwarded-for') || '';
-    const identifier = (forwardedFor.split(',')[0].trim() || (req as any).ip || '127.0.0.1');
+    // Vercel overwrites these trusted headers at the edge, so they cannot be
+    // spoofed by the client. Prefer them over x-forwarded-for (spoofable).
+    const identifier =
+      req.headers.get('true-client-ip') ||
+      req.headers.get('x-vercel-forwarded-for') ||
+      req.headers.get('cf-connecting-ip') ||
+      req.headers.get('x-real-ip') ||
+      (req as any).ip ||
+      '127.0.0.1';
     try {
       const { success, limit, reset, remaining } = await ratelimit.limit(identifier)
       if (!success) {
@@ -81,10 +110,11 @@ export async function proxy(req: NextRequest) {
   const isProtected = authProtectedRoutes.some(route => pathname.startsWith(route));
 
   if (isProtected) {
-    const sessionToken = req.cookies.get('session_token');
+    // Only trust a session that decrypts to a valid userId, not mere cookie presence.
+    const isAuthed = validSession(req);
 
-    // If no session token or value is empty, show restriction
-    if (!sessionToken || !sessionToken.value) {
+    // If no valid session, show restriction
+    if (!isAuthed) {
       // For API routes, return 401 instead of redirect
       if (pathname.startsWith('/api/')) {
         return NextResponse.json({ error: 'Unauthorized access' }, { status: 401 });

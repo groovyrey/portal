@@ -29,7 +29,7 @@ const CopyButton = ({ content }: { content: string }) => {
   return (
     <button
       onClick={handleCopy}
-      className="p-1.5 rounded-lg bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-all border border-border/50 shadow-sm active:scale-90"
+      className="p-1.5 rounded-lg bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors border border-border/50"
       title="Copy to clipboard"
     >
       {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
@@ -70,12 +70,12 @@ export default function CommunityMarkdown({ content, className = "" }: Community
           li: ({ ...props }) => (
             <li className="mb-1" {...props} />
           ),
-          h1: ({children}) => <h1 className="text-lg font-black text-foreground mt-6 mb-3 pb-2 border-b border-border/50 uppercase tracking-tight">{children}</h1>,
+          h1: ({children}) => <h1 className="text-lg font-semibold text-foreground mt-6 mb-3 pb-2 border-b border-border/50">{children}</h1>,
           h2: ({children}) => <h2 className="text-base font-bold text-foreground mt-5 mb-2.5 tracking-tight">{children}</h2>,
           h3: ({children}) => <h3 className="text-sm font-bold text-foreground mt-4 mb-2">{children}</h3>,
           p: ({children}) => <p className="mb-4 last:mb-0 last:inline leading-relaxed">{children}</p>,
-          table: ({...props}) => <div className="overflow-x-auto my-6 rounded-xl border border-border/60 shadow-sm bg-card/50"><table className="w-full text-xs text-left" {...props} /></div>,
-          thead: ({...props}) => <thead className="bg-accent/80 text-foreground font-black uppercase tracking-widest text-[9px]" {...props} />,
+          table: ({...props}) => <div className="overflow-x-auto my-6 rounded-lg border border-border bg-card"><table className="w-full text-xs text-left" {...props} /></div>,
+          thead: ({...props}) => <thead className="bg-accent/80 text-foreground font-medium text-xs" {...props} />,
           th: ({...props}) => <th className="px-3 py-2" {...props} />,
           td: ({...props}) => <td className="px-3 py-2 border-t border-border/40" {...props} />,
           code: ({ className, children, ...props }) => {
@@ -83,12 +83,12 @@ export default function CommunityMarkdown({ content, className = "" }: Community
             return match ? (
               <div className="relative group my-4" onClick={(e) => e.stopPropagation()}>
                 <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-                  <div className="px-2 py-1 bg-accent rounded text-[8px] font-black uppercase tracking-widest text-muted-foreground border border-border">
+                  <div className="px-2 py-1 bg-accent rounded text-xs font-medium text-muted-foreground border border-border">
                     {match[1]}
                   </div>
                   <CopyButton content={String(children).replace(/\n$/, '')} />
                 </div>
-                <pre className="bg-muted text-foreground rounded-xl p-4 overflow-x-auto text-xs scroll-smooth custom-scrollbar border border-border shadow-lg">
+                <pre className="bg-muted text-foreground rounded-lg p-4 overflow-x-auto text-xs scroll-smooth custom-scrollbar border border-border">
                   <code className={className} {...props}>
                     {children}
                   </code>

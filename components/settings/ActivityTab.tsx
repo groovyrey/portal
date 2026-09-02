@@ -53,7 +53,7 @@ export default function ActivityTab() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h4 className="text-sm font-semibold tracking-tight uppercase text-muted-foreground">Activity</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">Activity</h4>
           <p className="text-sm text-muted-foreground">
             Recent actions performed on your account.
           </p>

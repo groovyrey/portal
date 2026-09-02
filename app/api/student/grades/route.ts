@@ -14,9 +14,12 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { href, refresh } = body;
-    let { userId, password } = body;
 
+    // Require a valid session. userId is ALWAYS derived from the decrypted
+    // session cookie, never from the request body, so this endpoint cannot be
+    // used as an open proxy with arbitrary credentials.
     const sessionCookie = req.cookies.get('session_token');
+    let userId = '';
     if (sessionCookie && sessionCookie.value) {
       try {
         const decrypted = decrypt(sessionCookie.value);
@@ -33,12 +36,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required parameters or valid session' }, { status: 401 });
     }
 
-    // The password is never stored in the cookie; fetch it server-side if not supplied.
+    // The password is never stored in the cookie; fetch it server-side.
+    const password = await getPortalPassword(userId);
     if (!password) {
-      password = await getPortalPassword(userId);
-      if (!password) {
-        return NextResponse.json({ error: 'Missing required parameters or valid session' }, { status: 401 });
-      }
+      return NextResponse.json({ error: 'Missing required parameters or valid session' }, { status: 401 });
     }
 
     // --- OPTIMIZATION: CACHE-FIRST CHECK ---
@@ -105,21 +106,19 @@ export async function POST(req: NextRequest) {
     // Only pay for a dashboard round trip when we have no cached URL
     let { dashboardUrl } = cachedDashboardUrl ? { dashboardUrl: cachedDashboardUrl } : await scraper.fetchDashboard();
 
-    if (isNew) {
-      if ((consecutiveFailures || 0) >= 3) {
-        return NextResponse.json({ error: 'Too many failed login attempts. Please try manual login.' }, { status: 401 });
-      }
-
-      debugLog += `Ghost Session New: Performing login...\n`;
+    const doLogin = async () => {
+      if ((consecutiveFailures || 0) >= 3) return false;
       const { acquireRefreshLock, saveSession } = await import('@/lib/session-proxy');
       await acquireRefreshLock(userId);
-      
       const loginRes = await scraper.forceLogin(password);
       const hasLoginButton = loginRes.$('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
-      
       await saveSession(userId, jar, !hasLoginButton, dashboardUrl);
-      
-      if (hasLoginButton) {
+      return !hasLoginButton;
+    };
+
+    if (isNew) {
+      debugLog += `Ghost Session New: Performing login...\n`;
+      if (!(await doLogin())) {
         return NextResponse.json({ error: 'Portal session expired and auto-login failed.' }, { status: 401 });
       }
     } else {
@@ -127,7 +126,22 @@ export async function POST(req: NextRequest) {
     }
 
     debugLog += `Step 3: Fetching Report Card: ${href}\n`;
-    const { $: $rc, data: rcHtml } = await scraper.fetchReportCard(href, dashboardUrl);
+    let $rc, rcHtml;
+    try {
+      ({ $: $rc, data: rcHtml } = await scraper.fetchReportCard(href, dashboardUrl));
+    } catch (e: any) {
+      if (e.message === 'SESSION_EXPIRED') {
+        debugLog += `Session expired mid-fetch, forcing re-login...\n`;
+        if (!(await doLogin())) {
+          return NextResponse.json({ error: 'Session expired and re-login failed.' }, { status: 401 });
+        }
+        const refreshed = await scraper.fetchDashboard();
+        dashboardUrl = refreshed.dashboardUrl;
+        ({ $: $rc, data: rcHtml } = await scraper.fetchReportCard(href, dashboardUrl));
+      } else {
+        throw e;
+      }
+    }
     
     // Use the central parser from ScraperService
     const subjects = await scraper.parseReportCard($rc, rcHtml);
@@ -155,6 +169,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Grades fetch error:', error.message);
-    return NextResponse.json({ success: false, error: error.message });
+    return NextResponse.json({ success: false, error: "Failed to fetch grades." });
   }
 }

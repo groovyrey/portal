@@ -12,20 +12,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const decrypted = decrypt(sessionCookie.value);
-    const { userId, password } = JSON.parse(decrypted);
-
-    if (!userId || !password) {
+    let userId = '';
+    try {
+      const decrypted = decrypt(sessionCookie.value);
+      const sessionData = JSON.parse(decrypted);
+      userId = sessionData.userId;
+      if (!userId) throw new Error('Incomplete session data');
+    } catch (e) {
+      console.error('Session decryption failed:', e);
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     }
 
-    const { client } = await getSessionClient(userId);
+    const { client, jar } = await getSessionClient(userId);
     const scraper = new ScraperService(client, userId);
-    
-    // We need the dashboard to get the correct session-based URLs if redirect happens
-    const { periodCode, dashboardUrl } = await scraper.fetchDashboard();
-    
-    // Specifically fetch the Account DM page
+
+    let { periodCode, dashboardUrl, isLoggedOut } = await scraper.fetchDashboard();
+
+    if (isLoggedOut) {
+      const { getPortalPassword } = await import('@/lib/session-proxy');
+      const pw = await getPortalPassword(userId);
+      if (pw) {
+        await scraper.forceLogin(pw);
+        const refreshed = await scraper.fetchDashboard();
+        periodCode = refreshed.periodCode;
+        dashboardUrl = refreshed.dashboardUrl;
+        isLoggedOut = refreshed.isLoggedOut;
+      }
+      if (isLoggedOut) {
+        return NextResponse.json({ error: 'Session expired.' }, { status: 401 });
+      }
+    }
+
     const accountsRes = await scraper.fetchAccounts(periodCode, dashboardUrl);
 
     // Log diagnostic check

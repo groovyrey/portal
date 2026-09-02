@@ -169,7 +169,7 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* GWA Card */}
-        <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.violet.bg)}>
+        <Card className={cn("border-border", CARD_THEMES.violet.bg)}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average</CardTitle>
             <Button
@@ -182,7 +182,7 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tracking-tight">{showGwa ? gwa : '***'}</div>
+            <div className="text-xl font-bold tracking-tight">{showGwa ? gwa : '***'}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Grade Average
             </p>
@@ -193,7 +193,7 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
         </Card>
 
         {/* Units Card */}
-        <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.sky.bg)}>
+        <Card className={cn("border-border", CARD_THEMES.sky.bg)}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Units</CardTitle>
             <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", CARD_THEMES.sky.tile)}>
@@ -201,7 +201,7 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tracking-tight">
+            <div className="text-xl font-bold tracking-tight">
               {enrolledUnits !== undefined && enrolledUnits > 0 ? enrolledUnits.toFixed(1) : earnedUnits.toFixed(1)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -211,7 +211,7 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
         </Card>
 
         {/* Best Grade */}
-        <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.emerald.bg)}>
+        <Card className={cn("border-border", CARD_THEMES.emerald.bg)}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Highest</CardTitle>
             <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", CARD_THEMES.emerald.tile)}>
@@ -219,7 +219,7 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
             </div>
           </CardHeader>
           <CardContent>
-            <div className={cn("text-2xl font-bold tracking-tight", CARD_THEMES.emerald.icon)}>{bestGrade}</div>
+            <div className={cn("text-xl font-bold tracking-tight", CARD_THEMES.emerald.icon)}>{bestGrade}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Best grade
             </p>
@@ -227,7 +227,7 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
         </Card>
 
         {/* Pass Rate */}
-        <Card className={cn("border-border bg-gradient-to-br", CARD_THEMES.amber.bg)}>
+        <Card className={cn("border-border", CARD_THEMES.amber.bg)}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pass Rate</CardTitle>
             <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center shrink-0", CARD_THEMES.amber.tile)}>
@@ -235,7 +235,7 @@ export default function GradeStats({ allGrades, enrolledUnits }: GradeStatsProps
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tracking-tight">{passRate}%</div>
+            <div className="text-xl font-bold tracking-tight">{passRate}%</div>
             <p className="text-xs text-muted-foreground mt-1">
               Subjects passed
             </p>

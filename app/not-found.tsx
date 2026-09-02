@@ -14,14 +14,14 @@ export default function NotFound() {
             animationPath="/animations/girl-relaxing-error.json"
             className="w-64 h-64"
           />
-          <div className="absolute top-0 right-10 bg-card p-2 rounded-xl shadow-sm border border-border">
-             <span className="text-[10px] font-bold text-muted-foreground tracking-tight">Err 404</span>
+          <div className="absolute top-0 right-10 bg-card p-2 rounded-md border border-border">
+             <span className="text-xs font-medium text-muted-foreground">Err 404</span>
           </div>
         </div>
 
         {/* Text Content */}
-        <h1 className="text-3xl font-bold text-foreground mb-3 tracking-tight">Lost?</h1>
-        <p className="text-muted-foreground font-medium text-sm leading-relaxed mb-10">
+        <h1 className="text-xl font-bold text-foreground mb-3 tracking-tight">Lost?</h1>
+        <p className="text-muted-foreground text-sm leading-relaxed mb-10">
           We can&apos;t find that page.
         </p>
 
@@ -29,7 +29,7 @@ export default function NotFound() {
         <div className="grid gap-3">
           <Link 
             href="/"
-            className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs tracking-tight py-4 rounded-2xl transition-all shadow-lg shadow-primary/20 active:opacity-70"
+            className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm py-3 rounded-lg transition-colors active:opacity-70"
           >
             <Home className="h-4 w-4" />
             Go Home
@@ -37,24 +37,24 @@ export default function NotFound() {
           
           <div className="grid grid-cols-2 gap-3">
             <button 
-              onClick={() => window.history.back()}
-              className="flex items-center justify-center gap-2 bg-card border border-border text-muted-foreground font-bold text-[10px] tracking-tight py-3.5 rounded-2xl hover:bg-accent transition-all active:opacity-70"
+              onClick={() => (window.history.length > 1 ? window.history.back() : (window.location.href = '/'))}
+              className="flex items-center justify-center gap-2 bg-card border border-border text-muted-foreground font-medium text-sm py-3 rounded-lg hover:bg-accent transition-colors active:opacity-70"
             >
-              <ArrowLeft className="h-3 w-3" />
+              <ArrowLeft className="h-3.5 w-3.5" />
               Go Back
             </button>
             <Link 
               href="/community"
-              className="flex items-center justify-center gap-2 bg-card border border-border text-muted-foreground font-bold text-[10px] tracking-tight py-3.5 rounded-2xl hover:bg-accent transition-all active:opacity-70"
+              className="flex items-center justify-center gap-2 bg-card border border-border text-muted-foreground font-medium text-sm py-3 rounded-lg hover:bg-accent transition-colors active:opacity-70"
             >
-              <MessageSquare className="h-3 w-3" />
+              <MessageSquare className="h-3.5 w-3.5" />
               Help
             </Link>
           </div>
         </div>
 
         {/* Footer Info */}
-        <p className="mt-12 text-[10px] font-bold text-muted-foreground tracking-tight">
+        <p className="mt-12 text-xs font-medium text-muted-foreground">
           LCC Hub Official Portal
         </p>
       </div>

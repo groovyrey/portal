@@ -123,19 +123,19 @@ export default function AIAdminLab() {
         {/* Header & Mode Switcher */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">AI Intelligence Lab</h1>
+              <h1 className="text-lg font-bold tracking-tight">AI Intelligence Lab</h1>
               <p className="text-sm text-muted-foreground">Internal diagnostics for LCC Hub AI engines.</p>
             </div>
           </div>
 
-          <div className="flex p-1 bg-muted rounded-xl border border-border">
+          <div className="flex p-1 bg-muted rounded-lg border border-border">
             <button
               onClick={() => setMode('scraper')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 mode === 'scraper' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -144,7 +144,7 @@ export default function AIAdminLab() {
             </button>
             <button
               onClick={() => setMode('moderation')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 mode === 'moderation' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -166,22 +166,22 @@ export default function AIAdminLab() {
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 {/* Controls */}
                 <section className="lg:col-span-1 space-y-6">
-                  <div className="surface-neutral p-6 rounded-3xl border border-border/50 space-y-6">
+                  <div className="surface-neutral p-6 rounded-lg border border-border/50 space-y-6">
                     <div className="space-y-4">
-                      <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Select Extraction Task</h2>
+                      <h2 className="text-xs font-semibold text-muted-foreground">Select Extraction Task</h2>
                       <div className="grid grid-cols-1 gap-2">
                         {tasks.map((task) => (
                           <button
                             key={task.id}
                             disabled={scraperLoading}
                             onClick={() => setScraperTask(task.id)}
-                            className={`flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${
+                            className={`flex items-center gap-4 p-4 rounded-lg border transition-all text-left ${
                               scraperTask === task.id
                                 ? 'bg-primary/5 border-primary text-primary shadow-sm'
                                 : 'bg-background border-border text-muted-foreground hover:border-primary/30 hover:text-foreground'
                             } disabled:opacity-50`}
                           >
-                            <div className={`p-2 rounded-xl ${scraperTask === task.id ? 'bg-primary text-white' : 'bg-muted'}`}>
+                            <div className={`p-2 rounded-lg ${scraperTask === task.id ? 'bg-primary text-white' : 'bg-muted'}`}>
                               <task.icon className="h-4 w-4" />
                             </div>
                             <div>
@@ -196,7 +196,7 @@ export default function AIAdminLab() {
                     <button
                       onClick={testScraper}
                       disabled={scraperLoading}
-                      className="w-full h-14 bg-foreground text-background rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+                      className="w-full h-14 bg-foreground text-background rounded-lg font-semibold flex items-center justify-center gap-3 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
                     >
                       {scraperLoading ? (
                         <div className="flex items-center gap-2">
@@ -212,15 +212,15 @@ export default function AIAdminLab() {
                     </button>
 
                     {scraperError && (
-                      <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex gap-3 text-rose-500">
+                      <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-lg flex gap-3 text-rose-500">
                         <XCircle className="h-4 w-4 shrink-0 mt-0.5" />
                         <p className="text-xs font-medium">{scraperError}</p>
                       </div>
                     )}
                   </div>
 
-                  <div className="p-6 bg-blue-500/5 border border-blue-500/20 rounded-3xl space-y-4">
-                    <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-500">
+                  <div className="p-6 bg-blue-500/5 border border-blue-500/20 rounded-lg space-y-4">
+                    <h3 className="flex items-center gap-2 text-[10px] font-semibold text-blue-500">
                       <Sparkles className="h-3.5 w-3.5" />
                       Intelligence Note
                     </h3>
@@ -235,12 +235,12 @@ export default function AIAdminLab() {
                   {scraperResult ? (
                     <div className="space-y-6">
                       {/* HTML Source Preview with Tabs */}
-                      <div className="surface-neutral rounded-3xl border border-border/50 overflow-hidden flex flex-col h-[300px]">
+                      <div className="surface-neutral rounded-lg border border-border/50 overflow-hidden flex flex-col h-[300px]">
                         <div className="px-6 py-4 border-b border-border bg-muted/30 flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
                               <Code className="h-4 w-4 text-muted-foreground" />
-                              <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Source Explorer</h3>
+                              <h3 className="text-[10px] font-semibold text-muted-foreground">Source Explorer</h3>
                             </div>
                             <div className="flex p-0.5 bg-background/50 rounded-lg border border-border">
                               <button
@@ -281,11 +281,11 @@ export default function AIAdminLab() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Traditional Result */}
-                        <div className="surface-neutral rounded-3xl border border-border overflow-hidden flex flex-col h-[500px]">
+                        <div className="surface-neutral rounded-lg border border-border overflow-hidden flex flex-col h-[500px]">
                           <div className="px-6 py-4 border-b border-border bg-blue-500/5 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Search className="h-4 w-4 text-blue-500" />
-                              <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-500">Traditional (Cheerio)</h3>
+                              <h3 className="text-[10px] font-semibold text-blue-500">Traditional (Cheerio)</h3>
                             </div>
                             <span className="text-[8px] font-black px-1.5 py-0.5 bg-blue-500/10 text-blue-600 rounded">Static Parser</span>
                           </div>
@@ -297,11 +297,11 @@ export default function AIAdminLab() {
                         </div>
 
                         {/* AI Result */}
-                        <div className="surface-neutral rounded-3xl border border-border shadow-xl overflow-hidden flex flex-col h-[500px]">
+                        <div className="surface-neutral rounded-lg border border-border shadow-xl overflow-hidden flex flex-col h-[500px]">
                           <div className="px-6 py-4 border-b border-border bg-emerald-500/5 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Cpu className="h-4 w-4 text-emerald-500" />
-                              <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-500">AI (Gemma 3)</h3>
+                              <h3 className="text-[10px] font-semibold text-emerald-500">AI (Gemma 3)</h3>
                             </div>
                             <span className="text-[8px] font-black px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 rounded">LLM Fallback</span>
                           </div>
@@ -314,7 +314,7 @@ export default function AIAdminLab() {
                       </div>
                     </div>
                   ) : scraperLoading ? (
-                    <div className="h-full min-h-[600px] flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-border rounded-3xl bg-muted/10">
+                    <div className="h-full min-h-[600px] flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-border rounded-lg bg-muted/10">
                       <div className="relative h-16 w-16 mb-6">
                         <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
                         <div className="absolute inset-0 bg-primary/10 rounded-full flex items-center justify-center">
@@ -341,7 +341,7 @@ export default function AIAdminLab() {
                       </p>
                     </div>
                   ) : (
-                    <div className="h-full min-h-[600px] flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-border rounded-3xl bg-muted/10">
+                    <div className="h-full min-h-[600px] flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-border rounded-lg bg-muted/10">
                       <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-6">
                         <Database className="h-8 w-8 text-muted-foreground/30" />
                       </div>
@@ -363,24 +363,24 @@ export default function AIAdminLab() {
               className="grid grid-cols-1 lg:grid-cols-2 gap-8"
             >
               <section className="space-y-4">
-                <div className="surface-neutral p-6 rounded-3xl border border-border/50 space-y-4">
+                <div className="surface-neutral p-6 rounded-lg border border-border/50 space-y-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Simulated User</label>
+                    <label className="text-sm font-medium text-muted-foreground ml-1">Simulated User</label>
                     <input
                       type="text"
                       value={userName}
                       onChange={(e) => setUserName(e.target.value)}
-                      className="w-full bg-background border border-border p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                      className="w-full bg-background border border-border p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                       placeholder="Student Name"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Post Content</label>
+                    <label className="text-sm font-medium text-muted-foreground ml-1">Post Content</label>
                     <textarea
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
-                      className="w-full h-40 bg-background border border-border p-4 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none custom-scrollbar"
+                      className="w-full h-40 bg-background border border-border p-4 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none custom-scrollbar"
                       placeholder="Paste a student post here to test moderation rules..."
                     />
                   </div>
@@ -388,7 +388,7 @@ export default function AIAdminLab() {
                   <button
                     onClick={testModeration}
                     disabled={modLoading || !content.trim()}
-                    className="w-full h-12 bg-primary text-primary-foreground rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 shadow-lg shadow-primary/20"
+                    className="w-full h-12 bg-primary text-primary-foreground rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 shadow-lg shadow-primary/20"
                   >
                     {modLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -402,7 +402,7 @@ export default function AIAdminLab() {
                 </div>
 
                 {modError && (
-                  <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-2xl flex gap-3 text-destructive">
+                  <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-lg flex gap-3 text-destructive">
                     <XCircle className="h-4 w-4 shrink-0 mt-0.5" />
                     <p className="text-xs font-medium">{modError}</p>
                   </div>
@@ -417,14 +417,14 @@ export default function AIAdminLab() {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className={`relative overflow-hidden h-full p-6 rounded-3xl border shadow-xl ${
+                      className={`relative overflow-hidden h-full p-6 rounded-lg border shadow-xl ${
                         modResult.decision === 'APPROVED' 
                           ? 'bg-emerald-500/5 border-emerald-500/20' 
                           : 'bg-rose-500/5 border-rose-500/20'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-6">
-                        <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                        <div className={`px-3 py-1 rounded-full text-[10px] font-semibold ${
                           modResult.decision === 'APPROVED' 
                             ? 'bg-emerald-500 text-white' 
                             : 'bg-rose-500 text-white'
@@ -445,7 +445,7 @@ export default function AIAdminLab() {
                           </p>
                         </div>
 
-                        <div className="p-4 bg-background/50 rounded-2xl border border-border/50 space-y-2">
+                        <div className="p-4 bg-background/50 rounded-lg border border-border/50 space-y-2">
                           <h3 className="text-xs font-bold text-primary uppercase tracking-widest">Growth Tip</h3>
                           <p className="text-sm font-medium text-foreground leading-relaxed">
                             {modResult.growth_tip}
@@ -471,7 +471,7 @@ export default function AIAdminLab() {
                       </div>
                     </motion.div>
                   ) : (
-                    <div key="empty" className="h-full min-h-[400px] flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-border rounded-3xl bg-muted/20">
+                    <div key="empty" className="h-full min-h-[400px] flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-border rounded-lg bg-muted/20">
                       <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
                         <Sparkles className="h-8 w-8 text-muted-foreground/30" />
                       </div>
