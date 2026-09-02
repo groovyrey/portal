@@ -37,11 +37,11 @@ export default function SchoolInfoPage() {
         />
         <div className="max-w-6xl mx-auto relative z-20">
           <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
-            <div className="h-20 w-20 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0 border border-primary/20">
+            <div className="h-20 w-20 bg-primary/10 rounded-md flex items-center justify-center shrink-0 border border-primary/20">
               <GraduationCap className="h-10 w-10 text-primary" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold tracking-tight">{SCHOOL_INFO.name}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">{SCHOOL_INFO.name}</h1>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-2">
                 <Badge variant="secondary" className="font-mono">EST. 1998</Badge>
                 <p className="text-muted-foreground text-sm md:text-base font-medium">

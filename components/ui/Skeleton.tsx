@@ -12,7 +12,7 @@ export default function Skeleton({ className, variant = 'rounded' }: SkeletonPro
     text: 'h-3 w-full rounded-md',
     circular: 'rounded-full',
     rectangular: 'rounded-none',
-    rounded: 'rounded-2xl',
+    rounded: 'rounded-md',
   };
 
   return (

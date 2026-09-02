@@ -156,7 +156,7 @@ export default function ReportModal({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} noPadding>
       <div className="p-8 flex flex-col items-center text-center">
-        <div className={`mb-6 p-4 rounded-2xl ${
+        <div className={`mb-6 p-4 rounded-lg ${
           isRejected ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
         }`}>
           {isRejected ? (

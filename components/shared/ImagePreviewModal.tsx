@@ -140,7 +140,7 @@ export default function ImagePreviewModal({
             <div className="absolute top-6 right-6 z-[1010] pointer-events-auto">
               <button
                 onClick={onClose}
-                className="p-3 bg-accent/40 hover:bg-red-500/40 text-foreground rounded-2xl border border-border/50 backdrop-blur-xl transition-all shadow-2xl"
+                className="p-3 bg-accent/40 hover:bg-red-500/40 text-foreground rounded-lg border border-border/50 backdrop-blur-xl transition-all"
               >
                 <X size={24} />
               </button>
@@ -163,7 +163,7 @@ export default function ImagePreviewModal({
                   dragElastic={0.05}
                   dragMomentum={false}
                   decoding="async"
-                  className={`max-w-[90vw] max-h-[85vh] object-contain shadow-2xl rounded-lg transition-shadow will-change-transform ${scale > 1 ? 'cursor-move' : 'cursor-default'}`}
+                  className={`max-w-[90vw] max-h-[85vh] object-contain rounded-lg transition-shadow will-change-transform ${scale > 1 ? 'cursor-move' : 'cursor-default'}`}
                   transition={{ type: 'spring', stiffness: 400, damping: 40 }}
                 />
               </div>
@@ -171,7 +171,7 @@ export default function ImagePreviewModal({
 
             {/* Toolbar - Bottom Center */}
             {(scale !== 1 || onDownload) && (
-              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-accent/40 backdrop-blur-xl p-2 rounded-[2rem] border border-border/50 pointer-events-auto z-[1010] shadow-2xl">
+              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-accent/40 backdrop-blur-xl p-2 rounded-lg border border-border/50 pointer-events-auto z-[1010]">
                 <div className="px-4 py-1.5 min-w-[60px] text-center border-r border-border/50">
                   <span className="text-[10px] font-black text-foreground/90 tracking-widest uppercase">
                     {Math.round(scale * 100)}%

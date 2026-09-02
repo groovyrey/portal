@@ -402,7 +402,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
         return (
           <div className="space-y-6">
             <p className="text-xs font-medium text-muted-foreground text-center leading-relaxed">How is your experience with LCC Hub?</p>
-            <div className="bg-accent p-6 rounded-2xl border border-border">
+            <div className="bg-accent p-6 rounded-lg border border-border">
               <StarRating onSuccess={() => setTimeout(onClose, 2000)} />
             </div>
           </div>

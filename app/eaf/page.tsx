@@ -42,7 +42,7 @@ export default function EAFPage() {
     <div className="flex-1 space-y-8 p-8 pt-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
         <div className="hidden lg:block">
-          <h2 className="text-3xl font-bold tracking-tight">Registration</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Registration</h2>
           <p className="text-muted-foreground">
             View and print your official Enrollment Form.
           </p>
@@ -99,7 +99,7 @@ export default function EAFPage() {
             </p>
           </div>
 
-          <Card className="overflow-hidden border shadow-lg bg-white">
+          <Card className="overflow-hidden border bg-white">
             <iframe
               srcDoc={rawHtml}
               title="Certificate of Matriculation"

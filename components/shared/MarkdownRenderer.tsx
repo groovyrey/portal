@@ -45,7 +45,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
             ))}
           </nav>
         </div>
-        <div className="p-4 bg-accent/30 rounded-2xl border border-border/50">
+        <div className="p-4 bg-accent/30 rounded-lg border border-border/50">
           <h4 className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Pro Tip</h4>
           <p className="text-[10px] text-muted-foreground font-bold leading-relaxed uppercase tracking-tight">
             Use the &quot;Ask Assistant&quot; feature for any question about your school records. It&apos;s the fastest way to get data.
@@ -75,7 +75,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
                     </div>
                     <CopyButton content={String(children).replace(/\n$/, '')} />
                   </div>
-                  <pre className="bg-muted text-foreground rounded-xl p-5 overflow-x-auto text-sm scroll-smooth custom-scrollbar border border-border shadow-xl">
+                  <pre className="bg-muted text-foreground rounded-xl p-5 overflow-x-auto text-sm scroll-smooth custom-scrollbar border border-border">
                     <code className={className} {...props}>
                       {children}
                     </code>
@@ -88,25 +88,25 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
               );
             },
             a: ({...props}) => <a className="text-primary font-bold hover:opacity-80 transition-all underline decoration-primary/30 underline-offset-4" {...props} />,
-            img: ({...props}) => <img className="rounded-2xl border border-border shadow-lg my-8 max-w-full h-auto" {...props} />,
+            img: ({...props}) => <img className="rounded-lg border border-border my-8 max-w-full h-auto" {...props} />,
             ul: ({...props}) => <ul className="list-disc list-outside ml-6 my-5 space-y-2.5" {...props} />,
             ol: ({...props}) => <ol className="list-decimal list-outside ml-6 my-5 space-y-2.5" {...props} />,
             h1: ({node, ...props}) => {
               const text = props.children?.toString() || '';
               const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-              return <h1 id={id} className="text-3xl font-bold text-foreground mt-12 mb-6 pb-4 border-b border-border/60 uppercase tracking-tight" {...props} />;
+              return <h1 id={id} className="text-xl font-semibold text-foreground mt-12 mb-6 pb-4 border-b border-border/60 uppercase tracking-tight" {...props} />;
             },
             h2: ({node, ...props}) => {
               const text = props.children?.toString() || '';
               const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-              return <h2 id={id} className="text-2xl font-bold text-foreground mt-10 mb-5 tracking-tight flex items-center gap-3" {...props} />;
+              return <h2 id={id} className="text-lg font-semibold text-foreground mt-10 mb-5 tracking-tight flex items-center gap-3" {...props} />;
             },
             h3: ({node, ...props}) => {
               const text = props.children?.toString() || '';
               const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-              return <h3 id={id} className="text-xl font-bold text-foreground mt-8 mb-4" {...props} />;
+              return <h3 id={id} className="text-base font-semibold text-foreground mt-8 mb-4" {...props} />;
             },
-            blockquote: ({...props}) => <blockquote className="border-l-4 border-primary/50 pl-5 py-3 my-8 text-muted-foreground italic bg-primary/5 rounded-r-2xl font-medium" {...props} />,
+            blockquote: ({...props}) => <blockquote className="border-l-4 border-primary/50 pl-5 py-3 my-8 text-muted-foreground italic bg-primary/5 rounded-r-lg font-medium" {...props} />,
             iframe: ({...props}) => <iframe className="max-w-full rounded-xl border border-border shadow-sm my-4" {...props} />,
             video: ({...props}) => <video className="max-w-full rounded-xl border border-border shadow-sm my-4" controls {...props} />,
           }}

@@ -16,7 +16,7 @@ import { APP_VERSION } from '@/lib/version';
 import { Student } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import Modal from '@/components/ui/Modal';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { CARD_THEMES, CardThemeKey } from '@/lib/card-themes';
@@ -130,30 +130,30 @@ export default function MonitoringTab() {
         })}
       </div>
 
-      <Dialog open={showOnlineModal} onOpenChange={setShowOnlineModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Active Sessions</DialogTitle>
-            <DialogDescription>Students currently connected via Ably.</DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="h-[300px] mt-4">
-            <div className="space-y-1 pr-4">
-              {isFetchingOnline ? (
-                <div className="py-10 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>
-              ) : onlineUsers.length > 0 ? (
-                onlineUsers.map(user => (
-                  <div key={user.id} className="flex items-center justify-between p-3 rounded-md hover:bg-muted transition-colors">
-                    <p className="text-sm font-bold">{user.name}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{user.id}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center py-10 text-xs text-muted-foreground">No active users</p>
-              )}
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
+      <Modal
+        isOpen={showOnlineModal}
+        onClose={() => setShowOnlineModal(false)}
+        title="Active Sessions"
+        maxWidth="max-w-md"
+      >
+        <p className="text-sm text-muted-foreground mb-3">Students currently connected via Ably.</p>
+        <ScrollArea className="h-[300px]">
+          <div className="space-y-1 pr-4">
+            {isFetchingOnline ? (
+              <div className="py-10 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>
+            ) : onlineUsers.length > 0 ? (
+              onlineUsers.map(user => (
+                <div key={user.id} className="flex items-center justify-between p-3 rounded-md hover:bg-muted transition-colors">
+                  <p className="text-sm font-bold">{user.name}</p>
+                  <p className="text-xs text-muted-foreground font-mono">{user.id}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-center py-10 text-xs text-muted-foreground">No active users</p>
+            )}
+          </div>
+        </ScrollArea>
+      </Modal>
     </div>
   );
 }

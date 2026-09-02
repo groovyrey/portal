@@ -120,7 +120,7 @@ export default function GradeReportPage() {
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h2 className="text-3xl font-bold tracking-tight">{semesterTitle}</h2>
+            <h2 className="text-xl font-semibold tracking-tight">{semesterTitle}</h2>
             <p className="text-sm text-muted-foreground">Detailed grade report for this semester.</p>
           </div>
           {grades && (

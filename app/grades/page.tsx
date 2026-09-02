@@ -52,29 +52,34 @@ export default function GradesPage() {
     let gathered: ExtendedGrade[] = [];
 
     try {
-      const promises = student.availableReports.map(report => 
-        fetch('/api/student/grades', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
+      // Batch all report cards into a single request. The server performs one
+      // session handshake and fetches every report in parallel, which is far
+      // faster than one sequential request per report.
+      const res = await fetch('/api/student/grades', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reports: student.availableReports.map(report => ({
             href: report.href,
-            reportName: report.text 
-          }),
-        }).then(res => res.json())
-      );
+            reportName: report.text,
+          })),
+        }),
+      }).then(res => res.json());
 
-      const results = await Promise.all(promises);
-
-      results.forEach((res, index) => {
-        if (res.success && res.subjects && student.availableReports) {
-          const semesterName = student.availableReports[index].text;
-          const subjectsWithSemester = res.subjects.map((s: SubjectGrade) => ({
-            ...s,
-            semester: semesterName
-          }));
-          gathered = [...gathered, ...subjectsWithSemester];
-        }
-      });
+      if (res.success) {
+        // Batch response shape: { reports: [{ report, subjects }] }
+        const reports = Array.isArray(res.reports) ? res.reports : [];
+        reports.forEach((entry: { report: string; subjects?: SubjectGrade[] }) => {
+          if (entry && Array.isArray(entry.subjects)) {
+            const semesterName = entry.report;
+            const subjectsWithSemester = entry.subjects.map((s: SubjectGrade) => ({
+              ...s,
+              semester: semesterName,
+            }));
+            gathered = [...gathered, ...subjectsWithSemester];
+          }
+        });
+      }
 
       if (gathered.length === 0) {
         toast.error('No records found.', { id: statsToast || undefined });

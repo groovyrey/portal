@@ -102,7 +102,9 @@ async function backgroundSync(userId: string) {
   const dashboardRes = await scraper.fetchDashboard();
   let $dashboard = dashboardRes.$;
   let rawHtml = dashboardRes.data;
-  
+  let periodCode = dashboardRes.periodCode;
+  let dashboardUrl = dashboardRes.dashboardUrl;
+
   const hasLoginButton = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
   if (hasLoginButton) {
       if ((consecutiveFailures || 0) >= 3) {
@@ -115,24 +117,29 @@ async function backgroundSync(userId: string) {
       await acquireRefreshLock(userId);
 
       const loginRes = await scraper.forceLogin(password);
-      $dashboard = loginRes.$;
-      rawHtml = loginRes.data;
-      const stillHasLogin = $dashboard('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
-      
+      const stillHasLogin = loginRes.$('input[name="obtnLogin"], #obtnLogin, input[value="LOGIN"]').length > 0;
+
       await saveSession(userId, jar, !stillHasLogin);
-      
+
       if (stillHasLogin) {
-          const portalError = 
-            $dashboard('#lblError').text().trim() || 
-            $dashboard('#lblMessage').text().trim() || 
-            $dashboard('.error-message').text().trim() ||
-            $dashboard('.text-danger').text().trim();
+          const portalError =
+            loginRes.$('#lblError').text().trim() ||
+            loginRes.$('#lblMessage').text().trim() ||
+            loginRes.$('.error-message').text().trim() ||
+            loginRes.$('.text-danger').text().trim();
           console.error(`[AutoSync] Re-login failed for ${userId}: ${portalError || "No portal error shown"}. Aborting sync.`);
           return;
       }
-  }
 
-  const { periodCode, dashboardUrl } = await scraper.fetchDashboard();
+      // Only after an actual login do we re-fetch the dashboard, to capture the
+      // fresh periodCode/dashboardUrl. In the common warm path (no login), the
+      // values above are reused, saving one round trip to the portal.
+      const refreshed = await scraper.fetchDashboard();
+      $dashboard = refreshed.$;
+      rawHtml = refreshed.data;
+      periodCode = refreshed.periodCode;
+      dashboardUrl = refreshed.dashboardUrl;
+  }
 
   // Persist dashboard URL so future scrapes can skip this round trip
   const { saveSession: persistSession } = await import('@/lib/session-proxy');

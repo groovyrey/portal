@@ -297,7 +297,7 @@ export default function AIAdminLab() {
                         </div>
 
                         {/* AI Result */}
-                        <div className="surface-neutral rounded-lg border border-border shadow-xl overflow-hidden flex flex-col h-[500px]">
+                        <div className="surface-neutral rounded-lg border border-border overflow-hidden flex flex-col h-[500px]">
                           <div className="px-6 py-4 border-b border-border bg-emerald-500/5 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Cpu className="h-4 w-4 text-emerald-500" />
@@ -388,7 +388,7 @@ export default function AIAdminLab() {
                   <button
                     onClick={testModeration}
                     disabled={modLoading || !content.trim()}
-                    className="w-full h-12 bg-primary text-primary-foreground rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 shadow-lg shadow-primary/20"
+                    className="w-full h-12 bg-primary text-primary-foreground rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
                   >
                     {modLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -417,7 +417,7 @@ export default function AIAdminLab() {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className={`relative overflow-hidden h-full p-6 rounded-lg border shadow-xl ${
+                      className={`relative overflow-hidden h-full p-6 rounded-lg border ${
                         modResult.decision === 'APPROVED' 
                           ? 'bg-emerald-500/5 border-emerald-500/20' 
                           : 'bg-rose-500/5 border-rose-500/20'

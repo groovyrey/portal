@@ -40,15 +40,15 @@ export default function PersonalInfo({ student, isPublic = false }: PersonalInfo
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm"
+      className="bg-card rounded-lg border border-border overflow-hidden"
     >
       <div className="p-6">
         <div className="flex items-center gap-4 mb-8">
-          <div className="relative h-14 w-14 rounded-2xl bg-secondary/50 overflow-hidden border border-primary/20 shadow-sm flex items-center justify-center">
+          <div className="relative h-14 w-14 rounded-md bg-secondary/50 overflow-hidden border border-primary/20 flex items-center justify-center">
             <StudentAvatar
               name={student.name}
               photoUrl={student.profilePhotoUrl}
-              className="h-full w-full rounded-2xl"
+              className="h-full w-full rounded-md"
               fallbackClassName="bg-transparent text-primary font-black text-lg"
             />
           </div>

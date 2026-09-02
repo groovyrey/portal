@@ -114,7 +114,7 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
             onChange={(e) => setFeedback(e.target.value)}
             maxLength={500}
             placeholder="What do you think of LCC Hub? (Optional)"
-            className="w-full bg-accent/50 dark:bg-accent/20 border border-border rounded-2xl p-4 text-sm focus:bg-card focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none min-h-[100px] resize-none text-foreground placeholder:text-muted-foreground/50"
+            className="w-full bg-accent/50 dark:bg-accent/20 border border-border rounded-lg p-4 text-sm focus:bg-card focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none min-h-[100px] resize-none text-foreground placeholder:text-muted-foreground/50"
           />
           <div className="absolute bottom-3 right-4">
             <span className={`text-[9px] font-bold uppercase tracking-widest ${feedback.length >= 450 ? 'text-red-500' : 'text-muted-foreground/30'}`}>
@@ -125,7 +125,7 @@ export default function StarRating({ onSuccess }: StarRatingProps) {
         <button
           onClick={handleSubmit}
           disabled={isSubmitting || rating === 0}
-          className="w-full py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-primary/10 flex items-center justify-center gap-2 active:scale-[0.98]"
+          className="w-full py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-lg hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
         >
           {isSubmitting ? (
             <>

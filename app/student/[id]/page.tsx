@@ -236,7 +236,7 @@ function ProfileContent() {
     <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
       <Card className="overflow-hidden shadow-sm">
         {/* Cover */}
-        <div className="relative h-36 sm:h-44 bg-gradient-to-br from-primary/25 via-primary/10 to-transparent overflow-hidden">
+        <div className="relative h-36 sm:h-44 bg-primary/5 border-b border-border overflow-hidden">
           <div className="absolute -top-10 -right-10 h-44 w-44 rounded-full bg-primary/15 blur-2xl" />
           <div className="absolute -bottom-16 left-1/4 h-36 w-36 rounded-full bg-violet-500/15 blur-2xl" />
         </div>
@@ -248,8 +248,8 @@ function ProfileContent() {
               <StudentAvatar
                 name={student.name}
                 photoUrl={student.profilePhotoUrl}
-                className="h-28 w-28 sm:h-32 sm:w-32 ring-4 ring-background shadow-xl"
-                fallbackClassName="bg-primary/10 text-primary text-3xl sm:text-4xl font-bold"
+                className="h-28 w-28 sm:h-32 sm:w-32 ring-4 ring-background"
+                fallbackClassName="bg-primary/10 text-primary text-xl sm:text-2xl font-bold"
               />
               <span
                 className={cn(
@@ -260,7 +260,7 @@ function ProfileContent() {
             </div>
 
             <div className="flex-1 pt-2 sm:pb-1 text-center sm:text-left min-w-0">
-              <h1 className={cn("text-2xl sm:text-3xl font-bold tracking-tight", isStaff && 'staff-gradient-text')}>{student.name}</h1>
+              <h1 className={cn("text-xl sm:text-2xl font-semibold tracking-tight", isStaff && 'staff-gradient-text')}>{student.name}</h1>
               {canShowStudentId && (
                 <p className="mt-1.5 text-xs font-mono text-muted-foreground">{student.id}</p>
               )}

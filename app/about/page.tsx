@@ -120,7 +120,7 @@ export default function AboutPage() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold tracking-tight mb-6">
               The Ultimate Student Portal
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground leading-tight mb-6 tracking-tight italic">
+            <h1 className="text-2xl md:text-3xl font-semibold text-foreground leading-snug mb-6 tracking-tight">
               Your Campus Life, <span className="text-primary">Simplified.</span>
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-lg font-medium mx-auto lg:mx-0">
@@ -129,7 +129,7 @@ export default function AboutPage() {
             <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
               <Link 
                 href="/" 
-                className="px-8 py-4 bg-foreground text-background rounded-lg font-bold text-[10px] tracking-tight flex items-center gap-3 hover:opacity-90 transition-all shadow-xl active:scale-95"
+                className="px-8 py-3 bg-foreground text-background rounded-lg font-bold text-[10px] tracking-tight flex items-center gap-3 hover:opacity-90 transition-all active:scale-95"
               >
                 Launch Hub
                 <ArrowRight className="h-4 w-4" />
@@ -145,9 +145,9 @@ export default function AboutPage() {
           >
              <div className="grid grid-cols-2 gap-4 w-full relative z-10">
                 {workspaceFeatures.map((f, i) => (
-                    <div key={i} className="p-6 bg-card rounded-lg border border-border shadow-sm group hover:border-primary/30 transition-all">
-                        <f.icon className="h-8 w-8 text-primary mb-4 group-hover:scale-110 transition-transform" />
-                        <h4 className="font-bold text-sm mb-1 tracking-tight italic">{f.title}</h4>
+                    <div key={i} className="p-6 bg-card rounded-lg border border-border group hover:border-primary/30 transition-all">
+                        <f.icon className="h-7 w-7 text-primary mb-4" />
+                        <h4 className="font-semibold text-sm mb-1 tracking-tight">{f.title}</h4>
                         <p className="text-[10px] text-muted-foreground font-bold tracking-tight">{f.desc}</p>
                     </div>
                 ))}
@@ -186,9 +186,9 @@ export default function AboutPage() {
       <section className="py-24 px-4 max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
           <div>
-            <h2 className="text-xs font-bold text-primary tracking-tight mb-4 italic">Core Values</h2>
-            <h2 className="text-3xl font-bold text-foreground mb-8 tracking-tight">Our Mission</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed font-medium mb-10">
+            <h2 className="text-xs font-semibold text-primary tracking-tight mb-4">Core Values</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-6 tracking-tight">Our Mission</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed font-medium mb-8">
               To transform the LCC student experience by providing a modern, efficient, and mobile-friendly interface for academic management. We believe technology should serve students, not complicate their journey.
             </p>
             <div className="space-y-4">
@@ -209,8 +209,8 @@ export default function AboutPage() {
           </div>
 
           <div className="relative">
-            <div className="bg-foreground text-background dark:bg-card dark:text-foreground border border-border rounded-lg p-10 relative overflow-hidden shadow-2xl">
-              <Quote className="text-primary h-8 w-8 mb-8 opacity-50" />
+            <div className="bg-foreground text-background dark:bg-card dark:text-foreground border border-border rounded-lg p-8 relative overflow-hidden">
+              <Quote className="text-primary h-7 w-7 mb-6 opacity-50" />
               <p className="text-lg font-bold leading-relaxed mb-10 relative z-10 italic">
                 &quot;Education is the most powerful weapon which you can use to change the world.&quot;
               </p>
@@ -243,8 +243,8 @@ export default function AboutPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-xs font-bold text-primary tracking-tight mb-4 italic">Android App</h2>
-              <h2 className="text-3xl font-bold text-foreground mb-8 tracking-tight">LCC Hub on Your Phone</h2>
+              <h2 className="text-xs font-semibold text-primary tracking-tight mb-4">Android App</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6 tracking-tight">LCC Hub on Your Phone</h2>
               <p className="text-sm text-muted-foreground leading-relaxed font-medium mb-8">
                 Take the Hub anywhere with the native Android app. Instant access to grades, schedules, financials, and the assistant, wrapped in a fast, lightweight build designed for daily use.
               </p>
@@ -265,7 +265,7 @@ export default function AboutPage() {
                 href={appRelease.downloadUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-lg font-bold text-[10px] tracking-tight transition-all shadow-xl hover:opacity-90 active:scale-95"
+                className="inline-flex items-center gap-3 px-8 py-3 bg-primary text-primary-foreground rounded-lg font-bold text-[10px] tracking-tight transition-all hover:opacity-90 active:scale-95"
               >
                 <Download className="h-4 w-4" />
                 Download for Android
@@ -275,11 +275,11 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="hidden md:flex items-center justify-center">
-              <div className="w-52 h-[420px] rounded-[2rem] border-4 border-border bg-card shadow-2xl p-5 flex flex-col items-center gap-5">
+              <div className="w-52 h-[420px] rounded-lg border border-border bg-card p-5 flex flex-col items-center gap-5">
                 <div className="h-8 w-16 rounded-full bg-border/60 flex items-center justify-center">
                   <div className="h-2 w-8 rounded-full bg-card" />
                 </div>
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center text-primary">
                   <Smartphone className="h-5 w-5" />
                 </div>
                 <div className="space-y-3 w-full">
@@ -299,7 +299,7 @@ export default function AboutPage() {
       <section className="py-24 bg-muted/10 border-y border-border">
         <div className="max-w-3xl mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground italic">Common Questions</h2>
+            <h2 className="text-xl font-semibold tracking-tight text-foreground">Common Questions</h2>
             <p className="text-[10px] font-bold text-muted-foreground tracking-tight mt-2">Everything you need to know</p>
           </div>
 
@@ -326,23 +326,21 @@ export default function AboutPage() {
 
       {/* CTA Section */}
       <section className="py-20 px-4 max-w-5xl mx-auto">
-        <div className="bg-primary rounded-lg p-10 md:p-20 text-primary-foreground text-center shadow-2xl relative overflow-hidden">
+        <div className="bg-primary rounded-lg p-10 md:p-14 text-primary-foreground text-center relative overflow-hidden">
           <div className="relative z-10">
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tighter mb-6 italic leading-none">Experience the Hub.</h2>
-            <p className="text-primary-foreground/70 mb-12 max-w-md mx-auto font-bold text-[10px] tracking-tight">
+            <h2 className="text-lg md:text-2xl font-semibold tracking-tight mb-4 leading-none">Experience the Hub.</h2>
+            <p className="text-primary-foreground/70 mb-8 max-w-md mx-auto font-bold text-[10px] tracking-tight">
               Join the growing community of LCCians using the Hub.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link 
                 href="/" 
-                className="px-10 py-4 bg-background text-foreground rounded-lg font-bold text-[10px] tracking-tight transition-all active:scale-95 shadow-xl"
+                className="px-10 py-3 bg-background text-foreground rounded-lg font-bold text-[10px] tracking-tight transition-all active:scale-95"
               >
                 Access Hub
               </Link>
             </div>
           </div>
-          {/* Subtle background graphic */}
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-foreground/10 to-transparent pointer-events-none" />
         </div>
       </section>
     </div>

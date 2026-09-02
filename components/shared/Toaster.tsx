@@ -14,7 +14,7 @@ export default function Toaster() {
       closeButton={false}
       visibleToasts={3}
       toastOptions={{
-        className: 'group toast !bg-background !border-border !text-foreground rounded-md shadow-lg border px-5 py-4 flex items-center gap-4 w-[min(calc(100vw-2rem),380px)]',
+        className: 'group toast !bg-background !border-border !text-foreground rounded-md border px-5 py-4 flex items-center gap-4 w-[min(calc(100vw-2rem),380px)]',
         classNames: {
           title: 'font-semibold text-[14px] leading-tight text-foreground',
           description: 'text-[12px] text-muted-foreground leading-normal mt-0.5',
