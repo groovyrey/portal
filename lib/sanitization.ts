@@ -89,26 +89,94 @@ export function filterProfanity(text: string): string {
 
 /**
  * Normalize markdown and other formatting into speech-friendly plain text.
+ *
+ * Produces a single run of text with natural sentence/word boundaries so the
+ * TTS model reads the content correctly regardless of the original format
+ * (headings, lists, tables, code, links, emphasis, HTML, hex/emoji, etc.).
  */
 export function normalizeTextForSpeech(text: string): string {
   if (!text) return '';
 
-  return text
-    .replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, ' ')
-    .replace(/```(?:\w+)?\s*([\s\S]*?)```/g, ' $1 ')
-    .replace(/`([^`]+)`/g, ' $1 ')
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, ' $1 ')
+  // Remove hidden reasoning tags and their content entirely.
+  let out = text.replace(/<(thought|think|reasoning)>[\s\S]*?(?:<\/\1>|$)/gi, ' ');
+
+  // Decode common HTML entities so the model doesn't read the literal codes.
+  out = out.replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&hellip;/gi, '...');
+
+  // Keep code fences, reading their content as a sentence.
+  out = out.replace(/```(?:\w+)?\s*([\s\S]*?)```/g, (_, code: string) => {
+    return ' ' + code.replace(/[|\n]/g, ' ').trim() + ' ';
+  });
+
+  // Remove images (keep alt text) and links (keep display text), including
+  // reference-style links like [text][ref] / [text] and footnote markers.
+  out = out.replace(/!\[([^\]]*)\]\([^)]+\)/g, ' $1 ')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, ' $1 ')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/^>\s?/gm, '')
-    .replace(/^(\s*[-*+]\s+)/gm, '')
-    .replace(/^(\s*\d+[.)]\s+)/gm, '')
-    .replace(/\|/g, ' ')
-    .replace(/[*_~]/g, '')
-    .replace(/\s+\n/g, '\n')
-    .replace(/\n{2,}/g, '. ')
-    .replace(/\n/g, ' ')
+    .replace(/\[([^\]]+)\]\[[^\]]*\]/g, ' $1 ')
+    .replace(/^\[\^[^\]]+\]:\s*/gm, ' ')
+    .replace(/\[\^[^\]]+\]/g, ' ');
+
+  // Drop raw URLs so the model doesn't spell them out character by character.
+  out = out.replace(/https?:\/\/[^\s]+/gi, ' link ');
+
+  // Turn math delimiters into plain text.
+  out = out.replace(/\$\$([\s\S]*?)\$\$/g, ' $1 ')
+    .replace(/\$([^$\n]+)\$/g, ' $1 ');
+
+  // Strip any remaining HTML tags (opening, closing, self-closing).
+  out = out.replace(/<\/?[a-zA-Z][^>]*>/g, ' ');
+
+  // Headings: "## Introduction" -> "Introduction. " so each heading reads as a
+  // separate, natural pause instead of running into surrounding text.
+  out = out.replace(/^\s*#{1,6}\s*/gm, '')
+    .replace(/(^|\s)#{1,6}(?=\s)/gm, '$1');
+
+  // Blockquotes: strip the marker but keep the copy.
+  out = out.replace(/^>\s?/gm, '');
+
+  // Task lists / bullet lists / ordered lists: strip markers and place a
+  // separator so items don't run together.
+  out = out.replace(/^\s*[-+*]\s+\[[ xX]\]\s+/gm, '')
+    .replace(/^\s*[-+*]\s+/gm, '')
+    .replace(/^\s*\d{1,4}[.)]\s+/gm, '');
+
+  // Turn single newlines into a space (soft break) and blank lines into a
+  // sentence boundary, in one pass over the full run of text.
+  out = out.replace(/\r\n?/g, '\n')
+    .replace(/\n[ \t]*(?:\n[ \t]*)+/g, '. ')
+    .replace(/\n/g, ' ');
+
+  // Tables: convert cell boundaries (pipes + surrounding spaces) to a pause
+  // and collapse the divider row of dashes.
+  out = out.replace(/^\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)*$/gm, '. ')
+    .replace(/\s*\|\s*/g, ', ');
+
+  // Remove remaining emphasis markers and other formatting characters.
+  out = out.replace(/[*_~`]/g, '');
+
+  // Remove stray horizontal rules and common non-speakable punctuation runs.
+  out = out.replace(/^\s*-{3,}\s*$/gm, '. ')
+    .replace(/\s*[-–—]\s*/g, ' ')
+    .replace(/[(){}\[\]<>]/g, ' ')
+    .replace(/\s*\.{3,}\s*/g, '. ')
+    .replace(/[#*|]+/g, ' ');
+
+  // Strip emoji, symbols, and non-speakable Unicode ranges while preserving
+  // normal punctuation and letters (including Latin-1 accents).
+  out = out.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}\u{FE00}-\u{FE0F}\u{E000}-\u{F8FF}]/gu, ' ');
+
+  // Normalize whitespace and punctuation so the final text is clean.
+  return out
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\s+([.,!?;:])/g, '$1')
     .replace(/\s{2,}/g, ' ')
+    .replace(/[ \t]+$/gm, '')
     .trim();
 }
 

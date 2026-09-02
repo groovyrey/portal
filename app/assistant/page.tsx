@@ -183,9 +183,9 @@ const ChatInput = React.memo(({ onSend, onStop, isLoading, onClear, hasMessages 
           const response = await fetch('/api/deepgram', { method: 'POST', body: formData });
           const data = await response.json();
           if (data && data.transcript) {
-            const filteredTranscript = filterProfanity(data.transcript).trim();
-            if (filteredTranscript) {
-              setInput((prev) => prev ? `${prev} ${filteredTranscript}` : filteredTranscript);
+            const transcript = data.transcript.trim();
+            if (transcript) {
+              setInput((prev) => prev ? `${prev} ${transcript}` : transcript);
             }
             toast.success("Done", { id: toastId });
           }

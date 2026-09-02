@@ -2,19 +2,62 @@ import { DeepgramClient, ListenV1Response } from "@deepgram/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { filterProfanity } from '@/lib/sanitization';
 import { decrypt } from '@/lib/auth';
+import { cache } from '@/lib/cache';
+
+const TTS_MODELS = new Set([
+  'aura-asteria-en',
+  'aura-luna-en',
+  'aura-stella-en',
+  'aura-athena-en',
+  'aura-hera-en',
+  'aura-orion-en',
+  'aura-arcas-en',
+  'aura-perseus-en',
+  'aura-angus-en',
+  'aura-orpheus-en',
+  'aura-helios-en',
+  'aura-zeus-en',
+]);
+
+const DEFAULT_TTS_MODEL = 'aura-helios-en';
+const MAX_AUDIO_BYTES = 15 * 1024 * 1024; // 15 MB
+const MAX_TTS_CHARS = 5000;
+
+// Best-effort in-memory sliding-window rate limiter (per process instance).
+// Works reliably when the serverless function stays warm; mirrors the
+// codebase's existing in-memory cache approach rather than pretending to be
+// globally distributed.
+const RL_WINDOW_MS = 60 * 1000; // 1 minute
+const RL_MAX_REQUESTS = 10;
+
+function allowed(cacheKey: string, max: number): boolean {
+  const now = Date.now();
+  const hits = (cache.get<number[]>(cacheKey) || [])
+    .filter((t) => now - t < RL_WINDOW_MS);
+  if (hits.length >= max) {
+    cache.set(cacheKey, hits, RL_WINDOW_MS);
+    return false;
+  }
+  hits.push(now);
+  cache.set(cacheKey, hits, RL_WINDOW_MS);
+  return true;
+}
 
 /**
  * Require a valid session cookie. Deepgram usage is metered (and costs money),
- * so every handler must be authenticated.
+ * so every handler must be authenticated. The session payload is a JSON
+ * object containing a non-empty `userId`.
  */
-function isAuthenticated(req: NextRequest): boolean {
+function isAuthenticated(req: NextRequest): { ok: boolean; userId?: string } {
   const sessionCookie = req.cookies.get('session_token');
-  if (!sessionCookie?.value) return false;
+  if (!sessionCookie?.value) return { ok: false };
   try {
-    decrypt(sessionCookie.value);
-    return true;
+    const sessionData = JSON.parse(decrypt(sessionCookie.value));
+    const userId = typeof sessionData?.userId === 'string' ? sessionData.userId.trim() : '';
+    if (!userId) return { ok: false };
+    return { ok: true, userId };
   } catch {
-    return false;
+    return { ok: false };
   }
 }
 
@@ -22,53 +65,10 @@ function unauthorized() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }
 
-export async function GET(req: NextRequest) {
-  if (!isAuthenticated(req)) return unauthorized();
-
-  const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
-  const DEEPGRAM_PROJECT_ID = process.env.DEEPGRAM_PROJECT_ID;
-
-  if (!DEEPGRAM_API_KEY || !DEEPGRAM_PROJECT_ID) {
-    return NextResponse.json(
-      { error: "Deepgram configuration is missing" },
-      { status: 500 }
-    );
-  }
-
-  try {
-    console.log("Deepgram: Attempting to create temporary key for project:", DEEPGRAM_PROJECT_ID);
-    const deepgram = new DeepgramClient({ apiKey: DEEPGRAM_API_KEY });
-    const result = await deepgram.manage.v1.projects.keys.create(
-      DEEPGRAM_PROJECT_ID,
-      {
-        comment: "Temporary key for live transcription",
-        scopes: ["usage:write"],
-        time_to_live_in_seconds: 14400,
-      }
-    );
-
-    console.log("Deepgram: Key creation result:", result ? "Success (Key present)" : "Failed (No result)");
-
-    if (!result.key) {
-      console.error("Deepgram: Key property missing in response:", result);
-      throw new Error("Key creation failed: No key in response");
-    }
-    return NextResponse.json({ key: result.key });
-  } catch (err: any) {
-    console.error("Deepgram API Error Details:", {
-      message: err.message,
-      stack: err.stack,
-      raw: err
-    });
-    return NextResponse.json(
-      { error: "Failed to generate key" },
-      { status: 500 }
-    );
-  }
-}
-
 export async function POST(req: NextRequest) {
-  if (!isAuthenticated(req)) return unauthorized();
+  const auth = isAuthenticated(req);
+  if (!auth.ok) return unauthorized();
+  if (!auth.userId) return unauthorized();
 
   const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
 
@@ -79,14 +79,35 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (!allowed(`deepgram:stt:${auth.userId}`, RL_MAX_REQUESTS)) {
+    return NextResponse.json(
+      { error: "Too many transcription requests. Please try again shortly." },
+      { status: 429 }
+    );
+  }
+
   try {
     const formData = await req.formData();
-    const audioFile = formData.get("audio") as Blob;
-    const language = (formData.get("language") as string) || "tl";
+    const audioFile = formData.get("audio") as Blob | null;
 
     if (!audioFile) {
       return NextResponse.json(
         { error: "No audio file provided" },
+        { status: 400 }
+      );
+    }
+
+    if (audioFile.size === 0 || audioFile.size > MAX_AUDIO_BYTES) {
+      return NextResponse.json(
+        { error: "Audio file must be between 1 byte and 15 MB" },
+        { status: 400 }
+      );
+    }
+
+    const contentType = (audioFile.type || '').toLowerCase();
+    if (contentType && !contentType.startsWith('audio/')) {
+      return NextResponse.json(
+        { error: "Invalid audio file type" },
         { status: 400 }
       );
     }
@@ -100,7 +121,7 @@ export async function POST(req: NextRequest) {
       {
         model: "nova-3",
         smart_format: true,
-        language: language,
+        language: "tl",
       }
     );
 
@@ -123,7 +144,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!isAuthenticated(req)) return unauthorized();
+  const auth = isAuthenticated(req);
+  if (!auth.ok) return unauthorized();
+  if (!auth.userId) return unauthorized();
 
   const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
 
@@ -134,22 +157,33 @@ export async function PATCH(req: NextRequest) {
     );
   }
 
+  if (!allowed(`deepgram:tts:${auth.userId}`, RL_MAX_REQUESTS)) {
+    return NextResponse.json(
+      { error: "Too many speech requests. Please try again shortly." },
+      { status: 429 }
+    );
+  }
+
   try {
     const { text, model } = await req.json();
 
-    if (!text) {
+    const cleanedText = typeof text === 'string' ? text.slice(0, MAX_TTS_CHARS).trim() : '';
+
+    if (!cleanedText) {
       return NextResponse.json(
-        { error: "No text provided for TTS" },
+        { error: "No valid text provided for TTS" },
         { status: 400 }
       );
     }
+
+    const ttsModel = TTS_MODELS.has(model) ? model : DEFAULT_TTS_MODEL;
 
     const deepgram = new DeepgramClient({ apiKey: DEEPGRAM_API_KEY });
 
     const response = await deepgram.speak.v1.audio.generate(
       {
-        text,
-        model: (model as any) || "aura-helios-en",
+        text: cleanedText,
+        model: ttsModel,
         encoding: "linear16",
         container: "wav",
       }
@@ -161,7 +195,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const reader = stream.getReader();
-    const chunks = [];
+    const chunks: Uint8Array[] = [];
 
     while (true) {
       const { done, value } = await reader.read();
