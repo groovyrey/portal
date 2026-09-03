@@ -125,7 +125,6 @@ export default function LoginForm({ onLogin, loading, error, requiresPasswordCha
                     type="text"
                     required
                     autoComplete="username"
-                    inputMode="numeric"
                     value={userId}
                     onChange={(e) => setUserId(e.target.value)}
                     onBlur={() => handleBlur('userId')}
