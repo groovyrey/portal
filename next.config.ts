@@ -42,12 +42,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb',
-      allowedOrigins: ['192.168.100.81:3000', '74.226.97.25:3000', '20.53.231.12:3000', '192.168.100.167:3000', 'localhost:3000'],
-    },
-  },
   /* config options here */
 };
 
