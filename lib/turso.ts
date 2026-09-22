@@ -27,8 +27,6 @@ const JSON_COLUMNS = new Set([
   'data',       // metadata
   'tasks',      // cron_runs
   'results',    // cron_runs
-  'likes',      // json_group_array aliases (community)
-  'votes',      // json_group_array aliases (community polls)
 ]);
 
 function isJsonColumn(col: string): boolean {

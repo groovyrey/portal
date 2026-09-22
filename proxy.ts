@@ -41,7 +41,6 @@ const authProtectedRoutes = [
   '/assistant',
   '/accounts',
   '/subjects',
-  '/community',
   '/profile',
   '/admin', // Protect admin UI
   '/api/admin', // Protect admin API
@@ -51,7 +50,6 @@ const authProtectedRoutes = [
   '/api/student/settings',
   '/api/student/change-password',
   '/api/student/logout',
-  '/api/community',
   '/api/ai'
 ];
 
@@ -62,9 +60,7 @@ export async function proxy(req: NextRequest) {
   const rateProtectedRoutes = [
     '/api/ai',
     '/api/student/login',
-    '/api/deepgram',
-    '/api/community/report',
-    '/api/community/comments/report'
+    '/api/deepgram'
   ];
 
   if (rateProtectedRoutes.some(route => pathname.startsWith(route))) {

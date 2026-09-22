@@ -22,7 +22,6 @@ import {
   CreditCard,
   History,
   ExternalLink,
-  MessageSquare,
   Search
 } from 'lucide-react';
 import Drawer from './Drawer';
@@ -228,7 +227,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                 <ShieldCheck className="h-4 w-4 text-emerald-500" />
               </div>
               <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium leading-relaxed">
-                We only send alerts for important school updates, grades, and community activity.
+                We only send alerts for important school updates and grades.
               </p>
             </div>
           </div>
@@ -238,7 +237,7 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
         return (
           <div className="space-y-4">
             <div className="p-3 bg-accent rounded-xl border border-border mb-2">
-              <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">Manage your visibility in the student community.</p>
+              <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">Control what others can see on your profile.</p>
             </div>
             <div className="space-y-3">
                 <SettingsToggle 
@@ -347,7 +346,6 @@ export default function SettingsDrawer({ type, isOpen, onClose, updateSettings }
                       else if (action.includes('security') || action.includes('password')) { Icon = Shield; iconBg = "bg-amber-50 dark:bg-amber-950/30"; iconColor = "text-amber-500"; }
                       else if (action.includes('settings')) { Icon = Info; iconBg = "bg-purple-50"; iconColor = "text-purple-500"; }
                       else if (action.includes('ai') || action.includes('assistant')) { Icon = Sparkles; iconBg = "bg-indigo-50"; iconColor = "text-indigo-500"; }
-                      else if (action.includes('community') || action.includes('post') || action.includes('comment')) { Icon = MessageSquare; iconBg = "bg-emerald-50 dark:bg-emerald-950/30"; iconColor = "text-emerald-500"; }
                       else if (action.includes('system') || action.includes('diagnostic')) { Icon = ShieldCheck; iconBg = "bg-foreground"; iconColor = "text-background"; }
 
                       return (

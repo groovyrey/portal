@@ -1,6 +1,5 @@
 import { 
   migratePortalTables,
-  migrateCommunity, 
   migrateNotifications, 
   migrateActivityLogs, 
   dropIncidentReports,
@@ -18,7 +17,6 @@ export async function initDatabase() {
     try {
       // Run migrations in sequence
       await migratePortalTables();
-      await migrateCommunity();
       await migrateNotifications();
       await migrateActivityLogs();
       await dropIncidentReports();

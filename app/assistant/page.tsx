@@ -25,8 +25,8 @@ import {
 import { toast } from 'sonner';
 import { useStudent } from '@/lib/hooks';
 import AssistantTab from '@/components/settings/AssistantTab';
-import AssistantMarkdown from '@/components/community/AssistantMarkdown';
-import TypewriterText from '@/components/community/TypewriterText';
+import AssistantMarkdown from '@/components/assistant/AssistantMarkdown';
+import TypewriterText from '@/components/assistant/TypewriterText';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

@@ -75,42 +75,6 @@ export interface ParsedName {
   full: string;
 }
 
-export interface CommunityPost {
-  id: string;
-  userId: string;
-  userName: string;
-  content: string;
-  topic?: string;
-  imageUrl?: string;
-  isAnonymous?: boolean;
-  isUnreviewed?: boolean;
-  isStaff?: boolean;
-  userPhoto?: string | null;
-  createdAt: any;
-  likes?: string[];
-  commentCount?: number;
-  poll?: {
-    question: string;
-    options: {
-      text: string;
-      votes: string[]; // array of userIds
-    }[];
-    expiresAt?: any;
-  };
-}
-
-export interface CommunityComment {
-  id: string;
-  postId: string;
-  userId: string;
-  userName: string;
-  content: string;
-  parentId?: string | null;
-  userPhoto?: string | null;
-  isStaff?: boolean;
-  createdAt: any;
-}
-
 export interface Notification {
   id: string;
   userId: string;

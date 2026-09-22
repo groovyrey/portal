@@ -30,7 +30,7 @@ export default function PrivacyTab({ student, updateSettings }: PrivacyTabProps)
       <div className="grid gap-6">
         <SettingsItem 
           title="Public Profile" 
-          description="Allow other students to find you in the community"
+          description="Allow other students to view your profile"
           enabled={student?.settings?.isPublic ?? true}
           onToggle={(val) => updateSettings({ ...student?.settings, isPublic: val })}
         />

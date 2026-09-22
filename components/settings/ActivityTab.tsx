@@ -9,7 +9,6 @@ import {
   Shield, 
   Info, 
   Sparkles, 
-  MessageSquare, 
   ShieldCheck, 
   ChevronRight,
   X
@@ -103,7 +102,6 @@ export default function ActivityTab() {
               else if (action.includes('security') || action.includes('password')) Icon = Shield;
               else if (action.includes('settings')) Icon = Info;
               else if (action.includes('ai') || action.includes('assistant')) Icon = Sparkles;
-              else if (action.includes('community')) Icon = MessageSquare;
               else if (action.includes('system')) Icon = ShieldCheck;
 
               return (

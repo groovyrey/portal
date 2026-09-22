@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { Student, CommunityPost } from '@/types';
+import { Student } from '@/types';
 import {
   BadgeCheck,
   GraduationCap,
@@ -9,25 +9,17 @@ import {
   Layers,
   Loader2,
   Lock,
-  MessageSquare,
-  Trash2,
   XCircle
 } from 'lucide-react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import PostCard from '@/components/community/PostCard';
-import ReportModal from '@/components/community/ReportModal';
-import { toast } from 'sonner';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { useStudent } from '@/lib/hooks';
 import { useRealtime } from '@/components/shared/RealtimeProvider';
 import StudentAvatar from '@/components/shared/StudentAvatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import Skeleton from '@/components/ui/Skeleton';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import BadgeDisplay from '@/components/shared/BadgeDisplay';
 
 function ProfileInfoItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
@@ -45,11 +37,9 @@ function ProfileInfoItem({ icon, label, value }: { icon: React.ReactNode; label:
 }
 
 function ProfileContent() {
-  const queryClient = useQueryClient();
   const { student: currentUserData, isLoading: isUserLoading } = useStudent();
   const { onlineMembers } = useRealtime();
   const params = useParams();
-  const router = useRouter();
   const profileId = params.id as string;
 
   const memberStatus = profileId ? onlineMembers.get(profileId) : null;
@@ -59,19 +49,6 @@ function ProfileContent() {
   const [loading, setLoading] = useState(true);
   const [isPublicView, setIsPublicView] = useState(false);
   const [isPrivateProfile, setIsPrivateProfile] = useState(false);
-  const [postToDelete, setPostToDelete] = useState<string | null>(null);
-  const [reportingPost, setReportingPost] = useState<CommunityPost | null>(null);
-
-  const { data: posts = [], isLoading: loadingPosts } = useQuery({
-    queryKey: ['user-posts', profileId],
-    queryFn: async () => {
-      if (!profileId) return [];
-      const res = await fetch(`/api/community?userId=${profileId}`);
-      const data = await res.json();
-      return data.success ? data.posts : [];
-    },
-    enabled: !!profileId,
-  });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -129,66 +106,6 @@ function ProfileContent() {
     fetchProfile();
   }, [profileId, currentUserData, isUserLoading]);
 
-  const handleLike = async (postId: string, isLiked: boolean) => {
-    if (!currentUserData) return;
-    try {
-      const res = await fetch('/api/community', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId, action: isLiked ? 'unlike' : 'like' }),
-      });
-      if (!res.ok) throw new Error();
-      queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
-      queryClient.invalidateQueries({ queryKey: ['community-posts'] });
-      queryClient.invalidateQueries({ queryKey: ['post', postId] });
-    } catch {
-      toast.error('Reaction failed');
-    }
-  };
-
-  const handleVote = async (postId: string, optionIndex: number) => {
-    if (!currentUserData) return;
-    try {
-      const res = await fetch('/api/community', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId, action: 'vote', optionIndex }),
-      });
-      if (!res.ok) throw new Error();
-      queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
-      queryClient.invalidateQueries({ queryKey: ['community-posts'] });
-      queryClient.invalidateQueries({ queryKey: ['post', postId] });
-    } catch {
-      toast.error('Vote failed');
-    }
-  };
-
-  const handleReport = (postId: string) => {
-    const post = posts.find((p: CommunityPost) => p.id === postId);
-    if (post) setReportingPost(post);
-  };
-
-  const handleDeletePost = async () => {
-    if (!postToDelete) return;
-    const deleteToast = toast.loading('Deleting...');
-    try {
-      const res = await fetch('/api/community', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId: postToDelete })
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success('Post deleted', { id: deleteToast });
-        queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
-      }
-    } catch {
-      toast.error('Error occurred', { id: deleteToast });
-    } finally {
-      setPostToDelete(null);
-    }
-  };
-
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="flex flex-col items-center gap-3">
@@ -210,7 +127,7 @@ function ProfileContent() {
             This student has chosen to keep their profile hidden.
           </CardDescription>
           <Button asChild variant="outline" className="mt-4">
-            <Link href="/community">Return to Community</Link>
+            <Link href="/">Back to Dashboard</Link>
           </Button>
         </CardContent>
       </Card>
@@ -222,7 +139,7 @@ function ProfileContent() {
       <XCircle className="h-12 w-12 text-destructive mb-4" />
       <h2 className="text-xl font-bold">Student not found</h2>
       <Button asChild variant="outline" className="mt-6">
-        <Link href="/community">Return to Community</Link>
+        <Link href="/">Back to Dashboard</Link>
       </Button>
     </div>
   );
@@ -301,80 +218,6 @@ function ProfileContent() {
           )}
         </div>
       </Card>
-
-      <div className="space-y-6">
-        <div className="flex items-center gap-2 px-1">
-          <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Activity Feed</h3>
-        </div>
-
-        {loadingPosts ? (
-          <div className="space-y-4">
-            {[1, 2].map(i => (
-              <Card key={i}>
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <Skeleton className="h-4 w-32" />
-                  </div>
-                  <Skeleton className="h-20 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : posts.length === 0 ? (
-          <Card className="border-dashed bg-muted/10">
-            <CardContent className="p-12 text-center">
-              <p className="text-sm font-medium text-muted-foreground">No recent activity.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4">
-            {posts.map((post: CommunityPost) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                student={currentUserData}
-                onLike={handleLike}
-                onVote={handleVote}
-                onOpen={(p) => router.push(`/post/${p.id}`)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      <Dialog open={!!postToDelete} onOpenChange={(open) => !open && setPostToDelete(null)}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader className="items-center text-center">
-            <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center text-destructive mb-4">
-              <Trash2 className="h-6 w-6" />
-            </div>
-            <DialogTitle>Delete post?</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex flex-col gap-2 sm:flex-col pt-4">
-            <Button variant="destructive" onClick={handleDeletePost} className="w-full">Delete</Button>
-            <Button variant="ghost" onClick={() => setPostToDelete(null)} className="w-full">Cancel</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <ReportModal 
-        isOpen={!!reportingPost}
-        onClose={() => setReportingPost(null)}
-        targetType="post"
-        targetId={reportingPost?.id || ''}
-        content={reportingPost?.content || ''}
-        authorName={reportingPost?.userName || ''}
-        onReportSuccess={(decision) => {
-          if (decision === 'REJECTED') {
-            queryClient.invalidateQueries({ queryKey: ['user-posts', profileId] });
-          }
-        }}
-      />
     </div>
   );
 }

@@ -9,7 +9,6 @@ import {
   GraduationCap,
   WalletCards,
   FileText,
-  MessageSquare,
   BrainCircuit,
   Settings,
   Info,
@@ -96,7 +95,6 @@ export default function Navbar() {
     { name: 'Grades', href: '/grades', icon: GraduationCap },
     { name: 'Accounts', href: '/accounts', icon: WalletCards },
     { name: 'EAF', href: '/eaf', icon: FileText },
-    { name: 'Community', href: '/community', icon: MessageSquare },
     { name: 'Assistant', href: '/assistant', icon: BrainCircuit },
     { name: 'Settings', href: '/settings', icon: Settings },
   ];

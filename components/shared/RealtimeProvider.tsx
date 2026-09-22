@@ -4,19 +4,14 @@ import { useEffect, createContext, useContext, useState, useRef } from 'react';
 import Ably from 'ably';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
-import { usePathname } from 'next/navigation';
 
 interface MemberStatus {
   isOnline: boolean;
 }
 
-const RealtimeContext = createContext<{ 
-  activePostId: string | null; 
-  setActivePostId: (id: string | null) => void;
+const RealtimeContext = createContext<{
   onlineMembers: Map<string, MemberStatus>;
 }>({
-  activePostId: null,
-  setActivePostId: () => {},
   onlineMembers: new Map(),
 });
 
@@ -24,8 +19,6 @@ export const useRealtime = () => useContext(RealtimeContext);
 
 export default function RealtimeProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
-  const pathname = usePathname();
-  const [activePostId, setActivePostId] = useState<string | null>(null);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [onlineMembers, setOnlineMembers] = useState<Map<string, MemberStatus>>(new Map());
   const ablyRef = useRef<Ably.Realtime | null>(null);
@@ -38,7 +31,6 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
         if (parsed.id !== studentId) {
           setStudentId(parsed.id);
           if (!isInitial) {
-            queryClient.invalidateQueries({ queryKey: ['community-posts'] });
             queryClient.invalidateQueries({ queryKey: ['student-data'] });
           }
         }
@@ -93,14 +85,13 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
     };
 
     ably.connection.on(handleStateChange);
-    const communityChannel = ably.channels.get('community');
+    const presenceChannel = ably.channels.get('community');
     const studentChannel = studentId ? ably.channels.get(`student-${studentId}`) : null;
 
     // Presence Logic
-    
     const updatePresenceData = async () => {
       try {
-        const members = await communityChannel.presence.get();
+        const members = await presenceChannel.presence.get();
         const memberMap = new Map<string, MemberStatus>();
         
         members.forEach(m => {
@@ -118,105 +109,16 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
     };
 
     const enterPresence = () => {
-      communityChannel.presence.enter({});
+      presenceChannel.presence.enter({});
     };
 
     // Update presence data
     if (ably.connection.state === 'connected') {
-      communityChannel.presence.update({});
+      presenceChannel.presence.update({});
     }
 
     ably.connection.on('connected', enterPresence);
-    communityChannel.presence.subscribe(['enter', 'leave', 'present', 'update'], updatePresenceData);
-
-    const onUpdate = (message: any) => {
-      const { type, postId, userName, userId, isLiked, optionId } = message.data;
-      
-      if (type === 'LIKE_UPDATE') {
-        const updater = (old: any) => {
-           if (!old || !Array.isArray(old)) return old;
-           return old.map((post: any) => {
-             if (post.id === postId.toString()) {
-               const currentLikes = post.likes || [];
-               const newLikes = isLiked 
-                 ? [...new Set([...currentLikes, userId])]
-                 : currentLikes.filter((id: string) => id !== userId);
-               return { ...post, likes: newLikes };
-             }
-             return post;
-           });
-        };
-
-        queryClient.setQueriesData({ queryKey: ['community-posts'] }, updater);
-        queryClient.setQueriesData({ queryKey: ['user-posts'] }, updater);
-        
-        queryClient.setQueryData(['post', postId.toString()], (old: any) => {
-            if (!old) return undefined;
-             const currentLikes = old.likes || [];
-             const newLikes = isLiked 
-               ? [...new Set([...currentLikes, userId])]
-               : currentLikes.filter((id: string) => id !== userId);
-             return { ...old, likes: newLikes };
-        });
-        return;
-      }
-
-      if (type === 'VOTE_UPDATE') {
-           const updater = (old: any) => {
-             if (!old || !Array.isArray(old)) return old;
-             return old.map((post: any) => {
-               if (post.id === postId.toString() && post.poll) {
-                 const newOptions = post.poll.options.map((opt: any) => {
-                    if (opt.id === optionId) {
-                        return { ...opt, votes: [...new Set([...(opt.votes || []), userId])] };
-                    }
-                    return opt;
-                 });
-                 return { ...post, poll: { ...post.poll, options: newOptions } };
-               }
-               return post;
-             });
-           };
-
-           queryClient.setQueriesData({ queryKey: ['community-posts'] }, updater);
-           queryClient.setQueriesData({ queryKey: ['user-posts'] }, updater);
-           
-            queryClient.setQueryData(['post', postId.toString()], (old: any) => {
-                if (!old || !old.poll) return undefined;
-                 const newOptions = old.poll.options.map((opt: any) => {
-                    if (opt.id === optionId) {
-                        return { ...opt, votes: [...new Set([...(opt.votes || []), userId])] };
-                    }
-                    return opt;
-                 });
-                 return { ...old, poll: { ...old.poll, options: newOptions } };
-            });
-           return;
-      }
-
-      // Default behavior for other events
-      queryClient.invalidateQueries({ queryKey: ['community-posts'] });
-      queryClient.invalidateQueries({ queryKey: ['user-posts'] });
-
-      if (postId && activePostId === postId.toString()) {
-        queryClient.invalidateQueries({ queryKey: ['comments', activePostId] });
-      }
-
-      if (type === 'POST_CREATED' && window.location.pathname !== '/community') {
-        toast.info(`New post by ${userName || 'a student'}`, {
-          description: 'A new post has been shared in the community.',
-          action: {
-            label: 'View',
-            onClick: () => window.location.href = '/community'
-          },
-          duration: 5000,
-        });
-      }
-
-      if (type === 'GLOBAL_NOTIFICATION_RELOAD') {
-        queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      }
-    };
+    presenceChannel.presence.subscribe(['enter', 'leave', 'present', 'update'], updatePresenceData);
 
     const onStudentUpdate = (message: any) => {
       const { type, notification } = message.data;
@@ -254,7 +156,6 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
       });
     };
 
-    communityChannel.subscribe('update', onUpdate);
     if (studentChannel) {
       studentChannel.subscribe('update', onStudentUpdate);
       studentChannel.subscribe('new-grade', onNewGrade);
@@ -264,17 +165,16 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
       // Don't attempt cleanup if we've already closed the connection for Logout
       if (!ablyRef.current) return;
 
-      communityChannel.unsubscribe('update', onUpdate);
       if (studentChannel) {
         studentChannel.unsubscribe('update', onStudentUpdate);
         studentChannel.unsubscribe('new-grade', onNewGrade);
       }
-      communityChannel.presence.unsubscribe(['enter', 'leave', 'present', 'update'], updatePresenceData);
+      presenceChannel.presence.unsubscribe(['enter', 'leave', 'present', 'update'], updatePresenceData);
       ably.connection.off(handleStateChange);
       ably.connection.off('connected', enterPresence);
-      if (studentId) communityChannel.presence.leave();
+      if (studentId) presenceChannel.presence.leave();
     };
-  }, [queryClient, studentId, activePostId, pathname]);
+  }, [queryClient, studentId]);
 
   useEffect(() => {
     return () => {
@@ -286,7 +186,7 @@ export default function RealtimeProvider({ children }: { children: React.ReactNo
   }, []);
 
   return (
-    <RealtimeContext.Provider value={{ activePostId, setActivePostId, onlineMembers }}>
+    <RealtimeContext.Provider value={{ onlineMembers }}>
       {children}
     </RealtimeContext.Provider>
   );

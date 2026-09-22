@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import AssistantMarkdown from '@/components/community/AssistantMarkdown';
+import AssistantMarkdown from '@/components/assistant/AssistantMarkdown';
 
 interface TypewriterTextProps {
   content: string;

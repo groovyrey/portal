@@ -21,7 +21,7 @@ export default function Footer() {
   return (
     <footer className="bg-background border-t border-border mt-auto">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4 active:scale-95 transition-all w-fit">
@@ -54,16 +54,6 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/disclaimer" className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">Legal Notice</Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Community */}
-          <div>
-            <h3 className="text-[10px] font-bold text-foreground uppercase tracking-tight mb-4">Community</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/community" className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">Global Feed</Link>
               </li>
               <li>
                 <Link href={studentId ? `/student/${studentId}` : '/student'} className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium">Personal Profile</Link>

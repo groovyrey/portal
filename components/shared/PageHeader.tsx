@@ -15,13 +15,11 @@ export default function PageHeader() {
     if (path === '/grades/report') return 'Grade Record';
     if (path === '/subjects') return 'Schedule';
     if (path === '/accounts') return 'Accounts';
-    if (path === '/community') return 'Community';
     if (path.startsWith('/student/')) return 'Profile';
     if (path === '/eaf') return 'EAF';
     if (path === '/about') return 'About';
     if (path === '/disclaimer') return 'Disclaimer';
     if (path === '/school') return 'School';
-    if (path.startsWith('/post/')) return 'Post';
     return '';
   };
 
@@ -33,8 +31,6 @@ export default function PageHeader() {
   const handleBack = () => {
     if (window.history.length > 1) {
       router.back();
-    } else if (pathname.startsWith('/post/')) {
-      router.push('/community');
     } else {
       router.push('/');
     }

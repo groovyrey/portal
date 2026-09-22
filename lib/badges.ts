@@ -9,14 +9,6 @@ export const BADGES: Record<string, Badge> = {
     color: 'blue',
     permissions: [], // No permissions yet as requested
   },
-  community_active: {
-    id: 'community_active',
-    name: 'Community Active',
-    description: 'Actively participating in the community',
-    icon: 'MessageSquare',
-    color: 'slate',
-    permissions: [],
-  },
   beta_tester: {
     id: 'beta_tester',
     name: 'Beta Tester',
@@ -35,7 +27,7 @@ export const BADGES: Record<string, Badge> = {
   },
   };
 
-  export const BADGE_LIST = [BADGES.staff, BADGES.beta_tester, BADGES.community_active, BADGES.perfect_grade];/**
+  export const BADGE_LIST = [BADGES.staff, BADGES.beta_tester, BADGES.perfect_grade];/**
  * Checks if a user has a specific permission based on their badges
  * @param userBadges Array of badge IDs the user has
  * @param permission The permission string to check

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Home, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Home, Info } from 'lucide-react';
 import LottieAnimation from '@/components/ui/LottieAnimation';
 
 export default function NotFound() {
@@ -44,10 +44,10 @@ export default function NotFound() {
               Go Back
             </button>
             <Link 
-              href="/community"
+              href="/about"
               className="flex items-center justify-center gap-2 bg-card border border-border text-muted-foreground font-medium text-sm py-3 rounded-lg hover:bg-accent transition-colors active:opacity-70"
             >
-              <MessageSquare className="h-3.5 w-3.5" />
+              <Info className="h-3.5 w-3.5" />
               Help
             </Link>
           </div>

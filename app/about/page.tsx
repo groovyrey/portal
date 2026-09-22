@@ -14,7 +14,6 @@ import {
   LayoutGrid,
   Calendar,
   Wallet,
-  Globe,
   Smartphone,
   Download,
   CheckCircle2
@@ -96,7 +95,7 @@ export default function AboutPage() {
   const workspaceFeatures = [
     { title: 'Academic Portal', desc: 'Live grades & schedules.', icon: LayoutGrid },
     { title: 'Assistant AI', desc: 'Context-aware study buddy.', icon: BrainCircuit },
-    { title: 'Community Hub', desc: 'Connect with other LCCians.', icon: Globe },
+    { title: 'Student Profiles', desc: 'Browse LCCian profiles & badges.', icon: Users },
     { title: 'Financials', icon: ShieldCheck, desc: 'Track fees and balances.' },
   ];
 
@@ -105,8 +104,6 @@ export default function AboutPage() {
     { description: 'Schedules', icon: Calendar },
     { description: 'Financials', icon: Wallet },
     { description: 'Assistant AI', icon: BrainCircuit },
-    { description: 'LCCians', icon: Users },
-    { description: 'Community', icon: Globe },
     { description: 'Privacy', icon: ShieldCheck },
     { description: 'Sync', icon: Zap }
   ];
@@ -169,7 +166,7 @@ export default function AboutPage() {
             {[
               { label: 'Uptime', value: '99.9%', icon: Zap, color: 'text-primary' },
               { label: 'Avg Rating', value: stats.average || '0.0', icon: Star, color: 'text-amber-500' },
-              { label: 'LCCians', value: 'Community', icon: Users, color: 'text-primary' },
+              { label: 'AI Assistant', value: 'Gemini', icon: BrainCircuit, color: 'text-primary' },
               { label: 'Security', value: 'AES-256', icon: ShieldCheck, color: 'text-primary' },
             ].map((stat, i) => (
               <div key={i} className="text-center group">

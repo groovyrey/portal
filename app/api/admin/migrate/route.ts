@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
-  migrateCommunity, 
   migrateNotifications, 
   migrateActivityLogs,
   dropIncidentReports
@@ -15,7 +14,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await migrateCommunity();
     await migrateNotifications();
     await migrateActivityLogs();
     await dropIncidentReports();

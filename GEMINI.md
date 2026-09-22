@@ -126,7 +126,6 @@ The application requires a robust `.env.local` configuration:
 *   `schedules`: Array of classes stored as JSON.
 *   `financials`: Balance and payment history.
 *   `grades`: Semester grades.
-*   `community_posts`: Social features.
 *   `activity_logs`: User activity logs.
 
 
